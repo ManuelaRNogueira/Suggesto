@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'listaSugestoes.dart';
 
 class SugerirPage extends StatefulWidget {
   final Map<String, dynamic>? local;
@@ -9,18 +10,13 @@ class SugerirPage extends StatefulWidget {
   State<SugerirPage> createState() => _SugerirPageState();
 }
 
-class _SugerirPageState extends State<SugerirPage>
-    with SingleTickerProviderStateMixin {
-  int _currentIndex = 0;
-  final TextEditingController _controller = TextEditingController();
-  final int _maxChars = 500;
-  String? _categoriaSelecionada;
-  late AnimationController _animController;
-  late Animation<double> _fadeAnim;
-  late Animation<Offset> _slideAnim;
-  bool _enviado = false;
+class _SugerirPageState extends State<SugerirPage> {
+  final TextEditingController texto = TextEditingController();
+  final int maxCaracteres = 500;
+  String? categoriaSelecionada;
+  bool enviado = false;
 
-  final List<String> _categorias = [
+  final List<String> categorias = [
     'Atendimento',
     'Qualidade do produto',
     'Preço',
@@ -34,45 +30,47 @@ class _SugerirPageState extends State<SugerirPage>
   @override
   void initState() {
     super.initState();
-    _controller.addListener(() => setState(() {}));
-
-    _animController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-
-    _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
-
-    _slideAnim = Tween<Offset>(
-      begin: const Offset(0, 0.08),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
-
-    _animController.forward();
+    texto.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
-    _controller.dispose();
-    _animController.dispose();
+    texto.dispose();
     super.dispose();
   }
 
-  bool get _podeEnviar =>
-      _controller.text.trim().isNotEmpty &&
-      _categoriaSelecionada != null &&
-      !_enviado;
+  bool get podeEnviar =>
+      texto.text.trim().isNotEmpty &&
+      categoriaSelecionada != null &&
+      !enviado;
 
   void _enviar() {
-    if (!_podeEnviar) return;
-    setState(() => _enviado = true);
+    if (!podeEnviar) return;
+    setState(() => enviado = true);
+
+    final local = widget.local ??
+        {
+          'nome': 'BigJack',
+          'imagem':
+              'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=800&q=80',
+        };
+
+    // Adiciona na lista global
+    SugestoesStore.lista.insert(0, {
+      "local": local['nome'] ?? 'Local',
+      "imagem": local['imagem'] ?? '',
+      "categoria": categoriaSelecionada!,
+      "texto": texto.text.trim(),
+      "status": "Em análise",
+      "tempo": "agora mesmo",
+    });
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        backgroundColor: const Color(0xFF2D5A27),
+        backgroundColor: Color(0xFF2D5A27),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        content: const Row(
+        content: Row(
           children: [
             Icon(Icons.check_circle, color: Color(0xFF4CAF50)),
             SizedBox(width: 10),
@@ -82,19 +80,18 @@ class _SugerirPageState extends State<SugerirPage>
             ),
           ],
         ),
-        duration: const Duration(seconds: 2),
+        duration: Duration(seconds: 2),
       ),
     );
 
-    Future.delayed(const Duration(milliseconds: 2200), () {
+    Future.delayed(Duration(milliseconds: 2200), () {
       if (mounted) Navigator.of(context).pop();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final local =
-        widget.local ??
+    final local = widget.local ??
         {
           'nome': 'BigJack',
           'imagem':
@@ -102,32 +99,26 @@ class _SugerirPageState extends State<SugerirPage>
         };
 
     return Scaffold(
-      backgroundColor: const Color(0xFF12061E),
+      backgroundColor: Color(0xFF12061E),
       body: Column(
         children: [
           _buildAppBar(context),
           Expanded(
-            child: FadeTransition(
-              opacity: _fadeAnim,
-              child: SlideTransition(
-                position: _slideAnim,
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 8),
-                      _buildLocalInfo(local),
-                      const SizedBox(height: 20),
-                      _buildTextArea(),
-                      const SizedBox(height: 24),
-                      _buildCategoriasSection(),
-                      const SizedBox(height: 32),
-                      _buildEnviarButton(),
-                    ],
-                  ),
-                ),
+            child: SingleChildScrollView(
+              physics: BouncingScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 8),
+                  _buildLocalInfo(local),
+                  SizedBox(height: 20),
+                  _buildTextArea(),
+                  SizedBox(height: 24),
+                  _buildCategoriasSection(),
+                  SizedBox(height: 32),
+                  _buildEnviarButton(),
+                ],
               ),
             ),
           ),
@@ -137,10 +128,10 @@ class _SugerirPageState extends State<SugerirPage>
     );
   }
 
-  // ─── AppBar ────────────────────────────────────────────────────────
+  // APPBAR
   Widget _buildAppBar(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFF1A0A2E),
         boxShadow: [
           BoxShadow(
@@ -157,14 +148,11 @@ class _SugerirPageState extends State<SugerirPage>
           child: Row(
             children: [
               IconButton(
-                icon: const Icon(
-                  Icons.arrow_back_ios_new,
-                  color: Colors.white,
-                  size: 20,
-                ),
+                icon: Icon(Icons.arrow_back_ios_new,
+                    color: Colors.white, size: 20),
                 onPressed: () => Navigator.of(context).pop(),
               ),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Nova Sugestão',
                   textAlign: TextAlign.center,
@@ -176,8 +164,7 @@ class _SugerirPageState extends State<SugerirPage>
                   ),
                 ),
               ),
-              // Espaço para balancear o botão de voltar
-              const SizedBox(width: 48),
+              SizedBox(width: 48),
             ],
           ),
         ),
@@ -185,18 +172,17 @@ class _SugerirPageState extends State<SugerirPage>
     );
   }
 
-  // ─── Local Info ────────────────────────────────────────────────────
+  // INFORMACOES DO LOCAL
   Widget _buildLocalInfo(Map<String, dynamic> local) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E0E32),
+        color: Color(0xFF1E0E32),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF3A1A6A), width: 1),
+        border: Border.all(color: Color(0xFF3A1A6A), width: 1),
       ),
       child: Row(
         children: [
-          // Logo/Imagem do local
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: local['imagem'] != null
@@ -209,12 +195,11 @@ class _SugerirPageState extends State<SugerirPage>
                   )
                 : _placeholderLogo(),
           ),
-          const SizedBox(width: 14),
-          // Nome
+          SizedBox(width: 14),
           Expanded(
             child: Text(
               local['nome'] ?? 'Local',
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
                 fontSize: 18,
                 fontFamily: 'PoppinsSemiBold',
@@ -231,79 +216,74 @@ class _SugerirPageState extends State<SugerirPage>
       width: 52,
       height: 52,
       decoration: BoxDecoration(
-        color: const Color(0xFF2A1A4A),
+        color: Color(0xFF2A1A4A),
         borderRadius: BorderRadius.circular(10),
       ),
-      child: const Icon(Icons.storefront, color: Colors.white38, size: 28),
+      child: Icon(Icons.storefront, color: Colors.white38, size: 28),
     );
   }
 
   // ─── Text Area ─────────────────────────────────────────────────────
   Widget _buildTextArea() {
-    final charCount = _controller.text.length;
-    final isNearLimit = charCount > (_maxChars * 0.8);
+    final charCount = texto.text.length;
+    final isNearLimit = charCount > (maxCaracteres * 0.8);
 
-    return Column(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF1E0E32),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: _controller.text.isNotEmpty
-                  ? const Color(0xFF9B59D0)
-                  : const Color(0xFF3A1A6A),
-              width: 1.2,
+    return Container(
+      decoration: BoxDecoration(
+        color: Color(0xFF1E0E32),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: texto.text.isNotEmpty
+              ? Color(0xFF9B59D0)
+              : Color(0xFF3A1A6A),
+          width: 1.2,
+        ),
+      ),
+      child: Column(
+        children: [
+          TextField(
+            controller: texto,
+            maxLength: maxCaracteres,
+            maxLines: 6,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontFamily: 'Poppins',
+              height: 1.5,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Digite aqui sua sugestão.',
+              hintStyle: TextStyle(
+                color: Colors.white.withOpacity(0.3),
+                fontSize: 14,
+                fontFamily: 'Poppins',
+              ),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.all(16),
+              counterText: '',
             ),
           ),
-          child: Column(
-            children: [
-              TextField(
-                controller: _controller,
-                maxLength: _maxChars,
-                maxLines: 6,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontFamily: 'Poppins',
-                  height: 1.5,
-                ),
-                decoration: InputDecoration(
-                  hintText: 'Digite aqui sua sugestão.',
-                  hintStyle: TextStyle(
-                    color: Colors.white.withOpacity(0.3),
-                    fontSize: 14,
+          Padding(
+            padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  '$charCount/$maxCaracteres',
+                  style: TextStyle(
+                    color: isNearLimit
+                        ? Color(0xFFFF6B6B)
+                        : Colors.white.withOpacity(0.3),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
                     fontFamily: 'Poppins',
                   ),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.all(16),
-                  counterText: '',
                 ),
-              ),
-              // Contador de caracteres
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Text(
-                      '$charCount/$_maxChars',
-                      style: TextStyle(
-                        color: isNearLimit
-                            ? const Color(0xFFFF6B6B)
-                            : Colors.white.withOpacity(0.3),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        fontFamily: 'Poppins',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -312,57 +292,49 @@ class _SugerirPageState extends State<SugerirPage>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Sua sugestão diz respeito a',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontFamily: 'PoppinsSemiBold',
-          ),
-        ),
-        const SizedBox(height: 14),
-        // Grid de categorias 2 colunas
+        SizedBox(height: 14),
         GridView.builder(
           shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          physics: NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             mainAxisSpacing: 10,
             crossAxisSpacing: 10,
             childAspectRatio: 3.2,
           ),
-          itemCount: _categorias.length,
-          itemBuilder: (_, i) => _buildCategoriaChip(_categorias[i]),
+          itemCount: categorias.length,
+          itemBuilder: (_, i) => _buildCategoriaChip(categorias[i]),
         ),
       ],
     );
   }
 
   Widget _buildCategoriaChip(String label) {
-    final isSelected = _categoriaSelecionada == label;
+    final isSelected = categoriaSelecionada == label;
 
     return GestureDetector(
       onTap: () => setState(() {
-        _categoriaSelecionada = isSelected ? null : label;
+        categoriaSelecionada = isSelected ? null : label;
       }),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: Duration(milliseconds: 200),
         curve: Curves.easeOut,
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF6B2FA0) : const Color(0xFF2A1A4A),
+          color:
+              isSelected ? Color(0xFF6B2FA0) : Color(0xFF2A1A4A),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFF9B59D0)
-                : const Color(0xFF3A1A6A),
+                ? Color(0xFF9B59D0)
+                : Color(0xFF3A1A6A),
             width: 1.2,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: const Color(0xFF9B59D0).withOpacity(0.3),
+                    color: Color(0xFF9B59D0).withOpacity(0.3),
                     blurRadius: 8,
-                    offset: const Offset(0, 2),
+                    offset: Offset(0, 2),
                   ),
                 ]
               : [],
@@ -386,33 +358,33 @@ class _SugerirPageState extends State<SugerirPage>
   // ─── Botão Enviar ──────────────────────────────────────────────────
   Widget _buildEnviarButton() {
     return AnimatedOpacity(
-      opacity: _podeEnviar ? 1.0 : 0.45,
-      duration: const Duration(milliseconds: 200),
+      opacity: podeEnviar ? 1.0 : 0.45,
+      duration: Duration(milliseconds: 200),
       child: GestureDetector(
         onTap: _enviar,
         child: Container(
           width: double.infinity,
           height: 52,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
+            gradient: LinearGradient(
               colors: [Color(0xFF7B2FBE), Color(0xFF9B59D0)],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
             borderRadius: BorderRadius.circular(16),
-            boxShadow: _podeEnviar
+            boxShadow: podeEnviar
                 ? [
                     BoxShadow(
-                      color: const Color(0xFF9B59D0).withOpacity(0.4),
+                      color: Color(0xFF9B59D0).withOpacity(0.4),
                       blurRadius: 16,
-                      offset: const Offset(0, 4),
+                      offset: Offset(0, 4),
                     ),
                   ]
                 : [],
           ),
           child: Center(
-            child: _enviado
-                ? const SizedBox(
+            child: enviado
+                ? SizedBox(
                     width: 22,
                     height: 22,
                     child: CircularProgressIndicator(
@@ -420,7 +392,7 @@ class _SugerirPageState extends State<SugerirPage>
                       strokeWidth: 2.5,
                     ),
                   )
-                : const Text(
+                : Text(
                     'Enviar',
                     style: TextStyle(
                       color: Colors.white,
@@ -436,7 +408,7 @@ class _SugerirPageState extends State<SugerirPage>
   }
 
   // ─── Bottom Nav ────────────────────────────────────────────────────
-   int paginaAtual = 1;
+  int paginaAtual = 1;
   Widget barraNavegacao() {
     return Container(
       decoration: BoxDecoration(
@@ -458,22 +430,19 @@ class _SugerirPageState extends State<SugerirPage>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.home_filled,
-                      color: paginaAtual == 0 ? Colors.white : Colors.white54,
-                    ),
+                    Icon(Icons.home_filled,
+                        color:
+                            paginaAtual == 0 ? Colors.white : Colors.white54),
                     SizedBox(height: 4),
-                    Text(
-                      "Início",
-                      style: TextStyle(
-                        color: paginaAtual == 0 ? Colors.white : Colors.white54,
-                        fontSize: 10,
-                      ),
-                    ),
+                    Text("Início",
+                        style: TextStyle(
+                            color: paginaAtual == 0
+                                ? Colors.white
+                                : Colors.white54,
+                            fontSize: 10)),
                   ],
                 ),
               ),
-
               GestureDetector(
                 onTap: () {
                   setState(() => paginaAtual = 1);
@@ -482,23 +451,20 @@ class _SugerirPageState extends State<SugerirPage>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.forum,
-                      color: paginaAtual == 1 ? Colors.white : Colors.white54,
-                    ),
+                    Icon(Icons.forum,
+                        color:
+                            paginaAtual == 1 ? Colors.white : Colors.white54),
                     SizedBox(height: 4),
-                    Text(
-                      "Minhas\nSugestões",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: paginaAtual == 1 ? Colors.white : Colors.white54,
-                        fontSize: 10,
-                      ),
-                    ),
+                    Text("Minhas\nSugestões",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: paginaAtual == 1
+                                ? Colors.white
+                                : Colors.white54,
+                            fontSize: 10)),
                   ],
                 ),
               ),
-
               GestureDetector(
                 onTap: () {
                   setState(() => paginaAtual = 2);
@@ -507,22 +473,19 @@ class _SugerirPageState extends State<SugerirPage>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.monetization_on,
-                      color: paginaAtual == 2 ? Colors.white : Colors.white54,
-                    ),
+                    Icon(Icons.monetization_on,
+                        color:
+                            paginaAtual == 2 ? Colors.white : Colors.white54),
                     SizedBox(height: 4),
-                    Text(
-                      "Pontos",
-                      style: TextStyle(
-                        color: paginaAtual == 2 ? Colors.white : Colors.white54,
-                        fontSize: 10,
-                      ),
-                    ),
+                    Text("Pontos",
+                        style: TextStyle(
+                            color: paginaAtual == 2
+                                ? Colors.white
+                                : Colors.white54,
+                            fontSize: 10)),
                   ],
                 ),
               ),
-
               GestureDetector(
                 onTap: () {
                   setState(() => paginaAtual = 3);
@@ -531,18 +494,16 @@ class _SugerirPageState extends State<SugerirPage>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.person,
-                      color: paginaAtual == 3 ? Colors.white : Colors.white54,
-                    ),
+                    Icon(Icons.person,
+                        color:
+                            paginaAtual == 3 ? Colors.white : Colors.white54),
                     SizedBox(height: 4),
-                    Text(
-                      "Perfil",
-                      style: TextStyle(
-                        color: paginaAtual == 3 ? Colors.white : Colors.white54,
-                        fontSize: 10,
-                      ),
-                    ),
+                    Text("Perfil",
+                        style: TextStyle(
+                            color: paginaAtual == 3
+                                ? Colors.white
+                                : Colors.white54,
+                            fontSize: 10)),
                   ],
                 ),
               ),
