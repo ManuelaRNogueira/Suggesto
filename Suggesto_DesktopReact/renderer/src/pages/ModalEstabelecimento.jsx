@@ -21,6 +21,48 @@ const CATEGORIAS = [
   "Cafeteria", "Padaria", "Sorveteria", "Outro",
 ];
 
+/* ─── FUNÇÕES AUXILIARES DE VALIDAÇÃO MATEMÁTICA ────────────────────────── */
+const validarCNPJ = (cnpj) => {
+  const numeros = cnpj.replace(/[^\d]+/g, '');
+  if (numeros.length !== 14) return false;
+  if (/^(\d)\1+$/.test(numeros)) return false;
+
+  let tamanho = numeros.length - 2;
+  let numerosBase = numeros.substring(0, tamanho);
+  const digitosVerificadores = numeros.substring(tamanho);
+  let soma = 0;
+  let pos = tamanho - 7;
+
+  for (let i = tamanho; i >= 1; i--) {
+    soma += numerosBase.charAt(tamanho - i) * pos--;
+    if (pos < 2) pos = 9;
+  }
+
+  let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+  if (resultado !== parseInt(digitosVerificadores.charAt(0))) return false;
+
+  tamanho = tamanho + 1;
+  numerosBase = numeros.substring(0, tamanho);
+  soma = 0;
+  pos = tamanho - 7;
+
+  for (let i = tamanho; i >= 1; i--) {
+    soma += numerosBase.charAt(tamanho - i) * pos--;
+    if (pos < 2) pos = 9;
+  }
+
+  resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+  if (resultado !== parseInt(digitosVerificadores.charAt(1))) return false;
+
+  return true;
+};
+
+const validarTelefone = (telefone) => {
+  const numeros = telefone.replace(/[^\d]+/g, '');
+  return numeros.length === 10 || numeros.length === 11;
+};
+
+/* ─── COMPONENTE PRINCIPAL ───────────────────────────────────────────────────── */
 export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
   const [nome,      setNome]      = useState("");
   const [cnpj,      setCnpj]      = useState("");
@@ -30,6 +72,11 @@ export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
   const [preview,   setPreview]   = useState(null);
   const [salvando,  setSalvando]  = useState(false);
   const [dragOver,  setDragOver]  = useState(false);
+  
+  // Estados para capturar erros de validação local
+  const [cnpjInvalido, setCnpjInvalido] = useState(false);
+  const [telefoneInvalido, setTelefoneInvalido] = useState(false);
+  
   const fileRef = useRef();
 
   // ── Estado do Endereço Estruturado ──────────────────────────────────────────
@@ -50,7 +97,6 @@ export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
 
   // ── Consulta ViaCEP com Máscara Integrada ───────────────────────────────────
   const lidarComCep = async (e) => {
-    // Aplica máscara visual 00000-000 enquanto o usuário digita
     let valor = e.target.value.replace(/\D/g, "").slice(0, 8);
     if (valor.length > 5) {
       valor = valor.replace(/^(\d{5})(\d)/, "$1-$2");
@@ -72,7 +118,6 @@ export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
             cidade: dadosCep.localidade || "",
             estado: dadosCep.uf || ""
           }));
-          // Move o foco para o campo do número automaticamente
           setTimeout(() => document.getElementById("input-numero")?.focus(), 50);
         } else {
           alert("CEP não encontrado. Por favor, digite o endereço manualmente.");
@@ -80,6 +125,25 @@ export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
       } catch (error) {
         console.error("Erro ao buscar CEP:", error);
       }
+    }
+  };
+
+  // ── Gatilhos de validação ao perder o foco (onBlur) ─────────────────────────
+  const handleBlurCNPJ = (e) => {
+    const valor = e.target.value;
+    if (valor) {
+      setCnpjInvalido(!validarCNPJ(valor));
+    } else {
+      setCnpjInvalido(false);
+    }
+  };
+
+  const handleBlurTelefone = (e) => {
+    const valor = e.target.value;
+    if (valor) {
+      setTelefoneInvalido(!validarTelefone(valor));
+    } else {
+      setTelefoneInvalido(false);
     }
   };
 
@@ -101,6 +165,10 @@ export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
   // ── Submissão ───────────────────────────────────────────────────────────────
   const handleSalvar = async (e) => {
     e.preventDefault();
+    
+    // Bloqueio extra redundante de segurança antes do envio
+    if (cnpjInvalido || telefoneInvalido) return;
+
     setSalvando(true);
 
     const idGerente = localStorage.getItem("idUsuario");
@@ -112,7 +180,6 @@ export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
 
     const formData = new FormData();
     
-    // Espalha todo o objeto de endereço completo diretamente no JSON enviado ao Java
     const payloadEstabelecimento = {
       nome, 
       cnpj, 
@@ -253,14 +320,30 @@ export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
           <div className="form-grid-2">
             <Campo label="CNPJ" required>
               <input className="form-input" value={cnpj}
-                onChange={(e) => setCnpj(mascaraCnpj(e.target.value))} required
-                placeholder="00.000.000/0000-00" />
+                onChange={(e) => {
+                  setCnpj(mascaraCnpj(e.target.value));
+                  if (cnpjInvalido) setCnpjInvalido(false); // Limpa o aviso enquanto digita novamente
+                }} 
+                onBlur={handleBlurCNPJ}
+                required
+                placeholder="00.000.000/0000-00" 
+                style={cnpjInvalido ? { borderColor: '#ef4444', background: 'rgba(239, 68, 68, 0.04)' } : {}}
+              />
+              {cnpjInvalido && <span style={{ color: '#ef4444', fontSize: '0.7rem', fontWeight: 600, marginTop: '2px' }}>CNPJ inválido ou inexistente</span>}
             </Campo>
 
             <Campo label="Telefone" required>
               <input className="form-input" value={telefone}
-                onChange={(e) => setTelefone(mascaraTel(e.target.value))} required
-                placeholder="(00) 00000-0000" />
+                onChange={(e) => {
+                  setTelefone(mascaraTel(e.target.value));
+                  if (telefoneInvalido) setTelefoneInvalido(false); // Limpa o aviso enquanto redigita
+                }} 
+                onBlur={handleBlurTelefone}
+                required
+                placeholder="(00) 00000-0000" 
+                style={telefoneInvalido ? { borderColor: '#ef4444', background: 'rgba(239, 68, 68, 0.04)' } : {}}
+              />
+              {telefoneInvalido && <span style={{ color: '#ef4444', fontSize: '0.7rem', fontWeight: 600, marginTop: '2px' }}>Telefone incompleto</span>}
             </Campo>
           </div>
 
@@ -299,7 +382,12 @@ export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
             <button type="button" className="btn-cancelar" onClick={fecharModal}>
               Cancelar
             </button>
-            <button type="submit" className="btn-salvar" disabled={salvando}>
+            <button 
+              type="submit" 
+              className="btn-salvar" 
+              disabled={salvando || cnpjInvalido || telefoneInvalido}
+              style={(cnpjInvalido || telefoneInvalido) ? { opacity: 0.4, cursor: 'not-allowed' } : {}}
+            >
               {salvando ? (
                 <><span className="spinner" /> Registrando...</>
               ) : (
