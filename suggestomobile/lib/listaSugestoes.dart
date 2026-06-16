@@ -1,5 +1,5 @@
 //LIISTA DE TODAS AS SUGESTOES
-class SugestoesStore {
+class listaSugestoes {
   static final List<Map<String, String>> lista = [
     {
       "local": "Big Jack Hamburgueria",
@@ -8,6 +8,7 @@ class SugestoesStore {
       "texto": "Gostei muito da educação dos funcionários e da rapidez no atendimento.",
       "status": "Resolvida",
       "tempo": "há 2 dias",
+      "nota": "5",
     },
     {
       "local": "Café do Centro",
@@ -16,6 +17,7 @@ class SugestoesStore {
       "texto": "Seria interessante adicionar opções para pessoas com restrições alimentares.",
       "status": "Em análise",
       "tempo": "há 5 dias",
+      "nota": "3",
     },
     {
       "local": "Panobianco Academia",
@@ -24,6 +26,7 @@ class SugestoesStore {
       "texto": "O banheiro masculino está sem tampa em um vaso.",
       "status": "Resolvida",
       "tempo": "há 1 semana",
+      "nota": "4",
     },
   ];
 }

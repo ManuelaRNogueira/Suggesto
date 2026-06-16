@@ -9,20 +9,16 @@ class MinhasSugestoes extends StatefulWidget {
 }
 
 class _MinhasSugestoesState extends State<MinhasSugestoes> {
-  // 
-  List<Map<String, String>> get sugestoes => SugestoesStore.lista;
+  List<Map<String, String>> get sugestoes => listaSugestoes.lista;
 
-  // ─── Remover ───────────────────────────────────────────────────────
   void removerSugestao(int index) async {
     bool? remover = await showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           backgroundColor: Color(0xFF12061E),
-          title: Text("Remover sugestão",
-              style: TextStyle(color: Colors.white)),
-          content: Text("Deseja remover esta sugestão?",
-              style: TextStyle(color: Colors.white70)),
+          title: Text("Remover sugestão", style: TextStyle(color: Colors.white)),
+          content: Text("Deseja remover esta sugestão?", style: TextStyle(color: Colors.white70)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
@@ -42,7 +38,7 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
     }
   }
 
-  // ─── Card de sugestão ──────────────────────────────────────────────
+  // WIDGET DO CARD
   Widget sugestao({
     required String local,
     required String imagem,
@@ -50,8 +46,11 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
     required String texto,
     required String status,
     required String tempo,
+    required String nota,
     required int index,
   }) {
+    final notaInt = int.tryParse(nota) ?? 0;
+
     return Container(
       width: 450,
       padding: EdgeInsets.all(16),
@@ -82,6 +81,7 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // LINHA DO TOPO: nome + lixeira/status
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -102,8 +102,7 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
                           ),
                           SizedBox(height: 8),
                           Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 4),
+                            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
                               color: Color.fromARGB(80, 101, 26, 177),
                               borderRadius: BorderRadius.circular(20),
@@ -113,7 +112,7 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
                               style: TextStyle(
                                 color: Color.fromARGB(255, 147, 100, 236),
                                 fontSize: 12,
-                                fontFamily: "Poppins"
+                                fontFamily: "Poppins",
                               ),
                             ),
                           ),
@@ -126,19 +125,16 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
                           padding: EdgeInsets.zero,
                           constraints: BoxConstraints(),
                           onPressed: () => removerSugestao(index),
-                          icon: Icon(Icons.delete_outline,
-                              color: Colors.redAccent, size: 22),
+                          icon: Icon(Icons.delete_outline, color: Colors.redAccent, size: 22),
                         ),
                         SizedBox(height: 8),
                         Text(
                           status,
                           style: TextStyle(
-                            color: status == "Resolvida"
-                                ? Colors.green
-                                : Colors.orange,
+                            color: status == "Resolvida" ? Colors.green : Colors.orange,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            fontFamily: "Poppins"
+                            fontFamily: "Poppins",
                           ),
                         ),
                       ],
@@ -146,7 +142,20 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
                   ],
                 ),
 
-                SizedBox(height: 12),
+                SizedBox(height: 10),
+
+                // ESTRELAS
+                Row(
+                  children: List.generate(5, (i) {
+                    return Icon(
+                      i < notaInt ? Icons.star : Icons.star_border,
+                      color: i < notaInt ? Color(0xFFFFB800) : Colors.white24,
+                      size: 16,
+                    );
+                  }),
+                ),
+
+                SizedBox(height: 10),
 
                 Text(
                   texto,
@@ -165,9 +174,7 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
                   children: [
                     Icon(Icons.schedule, color: Colors.white54, size: 16),
                     SizedBox(width: 5),
-                    Text(tempo,
-                        style:
-                            TextStyle(color: Colors.white54, fontSize: 13, fontFamily: "Poppins")),
+                    Text(tempo, style: TextStyle(color: Colors.white54, fontSize: 13, fontFamily: "Poppins")),
                   ],
                 ),
               ],
@@ -190,7 +197,7 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
     );
   }
 
-  // ─── Bottom Nav ────────────────────────────────────────────────────
+  // BOTTOM NAV
   int paginaAtual = 1;
   Widget barraNavegacao() {
     return Container(
@@ -206,85 +213,36 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               GestureDetector(
-                onTap: () {
-                  setState(() => paginaAtual = 0);
-                  Navigator.pushNamed(context, '/home_cliente');
-                },
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.home_filled,
-                        color:
-                            paginaAtual == 0 ? Colors.white : Colors.white54),
-                    SizedBox(height: 4),
-                    Text("Início",
-                        style: TextStyle(
-                            color: paginaAtual == 0
-                                ? Colors.white
-                                : Colors.white54,
-                            fontSize: 10)),
-                  ],
-                ),
+                onTap: () { setState(() => paginaAtual = 0); Navigator.pushNamed(context, '/home_cliente'); },
+                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(Icons.home_filled, color: paginaAtual == 0 ? Colors.white : Colors.white54),
+                  SizedBox(height: 4),
+                  Text("Início", style: TextStyle(color: paginaAtual == 0 ? Colors.white : Colors.white54, fontSize: 10)),
+                ]),
               ),
               GestureDetector(
-                onTap: () {
-                  setState(() => paginaAtual = 1);
-                  Navigator.pushNamed(context, '/minhasSugestoes');
-                },
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.forum,
-                        color:
-                            paginaAtual == 1 ? Colors.white : Colors.white54),
-                    SizedBox(height: 4),
-                    Text("Minhas\nSugestões",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: paginaAtual == 1 ? Colors.white : Colors.white54, fontSize: 10,)),
-                  ],
-                ),
+                onTap: () { setState(() => paginaAtual = 1); Navigator.pushNamed(context, '/minhasSugestoes'); },
+                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(Icons.forum, color: paginaAtual == 1 ? Colors.white : Colors.white54),
+                  SizedBox(height: 4),
+                  Text("Minhas\nSugestões", textAlign: TextAlign.center, style: TextStyle(color: paginaAtual == 1 ? Colors.white : Colors.white54, fontSize: 10)),
+                ]),
               ),
               GestureDetector(
-                onTap: () {
-                  setState(() => paginaAtual = 2);
-                  Navigator.pushNamed(context, '/loja');
-                },
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.monetization_on,
-                        color:
-                            paginaAtual == 2 ? Colors.white : Colors.white54),
-                    SizedBox(height: 4),
-                    Text("Pontos",
-                        style: TextStyle(
-                            color: paginaAtual == 2
-                                ? Colors.white
-                                : Colors.white54,
-                            fontSize: 10)),
-                  ],
-                ),
+                onTap: () { setState(() => paginaAtual = 2); Navigator.pushNamed(context, '/loja'); },
+                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(Icons.monetization_on, color: paginaAtual == 2 ? Colors.white : Colors.white54),
+                  SizedBox(height: 4),
+                  Text("Pontos", style: TextStyle(color: paginaAtual == 2 ? Colors.white : Colors.white54, fontSize: 10)),
+                ]),
               ),
               GestureDetector(
-                onTap: () {
-                  setState(() => paginaAtual = 3);
-                  Navigator.pushNamed(context, '/perfil');
-                },
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.person,
-                        color:
-                            paginaAtual == 3 ? Colors.white : Colors.white54),
-                    SizedBox(height: 4),
-                    Text("Perfil",
-                        style: TextStyle(
-                            color: paginaAtual == 3
-                                ? Colors.white
-                                : Colors.white54,
-                            fontSize: 10)),
-                  ],
-                ),
+                onTap: () { setState(() => paginaAtual = 3); Navigator.pushNamed(context, '/perfil'); },
+                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(Icons.person, color: paginaAtual == 3 ? Colors.white : Colors.white54),
+                  SizedBox(height: 4),
+                  Text("Perfil", style: TextStyle(color: paginaAtual == 3 ? Colors.white : Colors.white54, fontSize: 10)),
+                ]),
               ),
             ],
           ),
@@ -293,7 +251,6 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
     );
   }
 
-  // ─── Build ─────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -306,11 +263,7 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
 
               Text(
                 "Minhas Sugestões",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 30,
-                  fontFamily: "PoppinsSemi",
-                ),
+                style: TextStyle(color: Colors.white, fontSize: 30, fontFamily: "PoppinsSemi"),
               ),
 
               SizedBox(height: 40),
@@ -326,6 +279,7 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
                     texto: sugestoes[index]["texto"]!,
                     status: sugestoes[index]["status"]!,
                     tempo: sugestoes[index]["tempo"]!,
+                    nota: sugestoes[index]["nota"] ?? "0",
                   ),
                 );
               }),

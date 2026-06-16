@@ -14,6 +14,7 @@ class _SugerirPageState extends State<SugerirPage> {
   final TextEditingController texto = TextEditingController();
   final int maxCaracteres = 500;
   String? categoriaSelecionada;
+  int notaSelecionada = 0; // 0 = nenhuma estrela
   bool enviado = false;
 
   final List<String> categorias = [
@@ -42,6 +43,7 @@ class _SugerirPageState extends State<SugerirPage> {
   bool get podeEnviar =>
       texto.text.trim().isNotEmpty &&
       categoriaSelecionada != null &&
+      notaSelecionada > 0 &&
       !enviado;
 
   void _enviar() {
@@ -51,18 +53,17 @@ class _SugerirPageState extends State<SugerirPage> {
     final local = widget.local ??
         {
           'nome': 'BigJack',
-          'imagem':
-              'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=800&q=80',
+          'imagem': 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=800&q=80',
         };
 
-    // Adiciona na lista global
-    SugestoesStore.lista.insert(0, {
+    listaSugestoes.lista.insert(0, {
       "local": local['nome'] ?? 'Local',
       "imagem": local['imagem'] ?? '',
       "categoria": categoriaSelecionada!,
       "texto": texto.text.trim(),
       "status": "Em análise",
       "tempo": "agora mesmo",
+      "nota": notaSelecionada.toString(),
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -94,15 +95,14 @@ class _SugerirPageState extends State<SugerirPage> {
     final local = widget.local ??
         {
           'nome': 'BigJack',
-          'imagem':
-              'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=800&q=80',
+          'imagem': 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=800&q=80',
         };
 
     return Scaffold(
       backgroundColor: Color(0xFF12061E),
       body: Column(
         children: [
-          _buildAppBar(context),
+          AppBar(context),
           Expanded(
             child: SingleChildScrollView(
               physics: BouncingScrollPhysics(),
@@ -111,13 +111,15 @@ class _SugerirPageState extends State<SugerirPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(height: 8),
-                  _buildLocalInfo(local),
+                  LocalInfo(local),
                   SizedBox(height: 20),
-                  _buildTextArea(),
+                  AreaTexto(),
+                  SizedBox(height: 20),
+                  Estrelas(),
                   SizedBox(height: 24),
-                  _buildCategoriasSection(),
+                  Categorias(),
                   SizedBox(height: 32),
-                  _buildEnviarButton(),
+                  botaoEnviar(),
                 ],
               ),
             ),
@@ -129,16 +131,12 @@ class _SugerirPageState extends State<SugerirPage> {
   }
 
   // APPBAR
-  Widget _buildAppBar(BuildContext context) {
+  Widget AppBar(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: Color(0xFF1A0A2E),
         boxShadow: [
-          BoxShadow(
-            color: Color(0x33000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
+          BoxShadow(color: Color(0x33000000), blurRadius: 8, offset: Offset(0, 2)),
         ],
       ),
       child: SafeArea(
@@ -148,8 +146,7 @@ class _SugerirPageState extends State<SugerirPage> {
           child: Row(
             children: [
               IconButton(
-                icon: Icon(Icons.arrow_back_ios_new,
-                    color: Colors.white, size: 20),
+                icon: Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
                 onPressed: () => Navigator.of(context).pop(),
               ),
               Expanded(
@@ -173,7 +170,7 @@ class _SugerirPageState extends State<SugerirPage> {
   }
 
   // INFORMACOES DO LOCAL
-  Widget _buildLocalInfo(Map<String, dynamic> local) {
+  Widget LocalInfo(Map<String, dynamic> local) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
@@ -191,19 +188,15 @@ class _SugerirPageState extends State<SugerirPage> {
                     width: 52,
                     height: 52,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _placeholderLogo(),
+                    errorBuilder: (_, __, ___) => Logo(),
                   )
-                : _placeholderLogo(),
+                : Logo(),
           ),
           SizedBox(width: 14),
           Expanded(
             child: Text(
               local['nome'] ?? 'Local',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontFamily: 'PoppinsSemiBold',
-              ),
+              style: TextStyle(color: Colors.white, fontSize: 18, fontFamily: 'PoppinsSemiBold'),
             ),
           ),
         ],
@@ -211,7 +204,7 @@ class _SugerirPageState extends State<SugerirPage> {
     );
   }
 
-  Widget _placeholderLogo() {
+  Widget Logo() {
     return Container(
       width: 52,
       height: 52,
@@ -223,8 +216,8 @@ class _SugerirPageState extends State<SugerirPage> {
     );
   }
 
-  // ─── Text Area ─────────────────────────────────────────────────────
-  Widget _buildTextArea() {
+  // CAMPO DE TEXTO
+  Widget AreaTexto() {
     final charCount = texto.text.length;
     final isNearLimit = charCount > (maxCaracteres * 0.8);
 
@@ -233,9 +226,7 @@ class _SugerirPageState extends State<SugerirPage> {
         color: Color(0xFF1E0E32),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: texto.text.isNotEmpty
-              ? Color(0xFF9B59D0)
-              : Color(0xFF3A1A6A),
+          color: texto.text.isNotEmpty ? Color(0xFF9B59D0) : Color(0xFF3A1A6A),
           width: 1.2,
         ),
       ),
@@ -245,19 +236,10 @@ class _SugerirPageState extends State<SugerirPage> {
             controller: texto,
             maxLength: maxCaracteres,
             maxLines: 6,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontFamily: 'Poppins',
-              height: 1.5,
-            ),
+            style: TextStyle(color: Colors.white, fontSize: 14, fontFamily: 'Poppins', height: 1.5),
             decoration: InputDecoration(
               hintText: 'Digite aqui sua sugestão.',
-              hintStyle: TextStyle(
-                color: Colors.white.withOpacity(0.3),
-                fontSize: 14,
-                fontFamily: 'Poppins',
-              ),
+              hintStyle: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 14, fontFamily: 'Poppins'),
               border: InputBorder.none,
               contentPadding: EdgeInsets.all(16),
               counterText: '',
@@ -271,9 +253,7 @@ class _SugerirPageState extends State<SugerirPage> {
                 Text(
                   '$charCount/$maxCaracteres',
                   style: TextStyle(
-                    color: isNearLimit
-                        ? Color(0xFFFF6B6B)
-                        : Colors.white.withOpacity(0.3),
+                    color: isNearLimit ? Color(0xFFFF6B6B) : Colors.white.withOpacity(0.3),
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                     fontFamily: 'Poppins',
@@ -287,8 +267,50 @@ class _SugerirPageState extends State<SugerirPage> {
     );
   }
 
-  // ─── Categorias ────────────────────────────────────────────────────
-  Widget _buildCategoriasSection() {
+  // ESTRELAS
+  Widget Estrelas() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      decoration: BoxDecoration(
+        color: Color(0xFF1E0E32),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: notaSelecionada > 0 ? Color(0xFF9B59D0) : Color(0xFF3A1A6A),
+          width: 1.2,
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Sua avaliação',
+            style: TextStyle(color: Colors.white70, fontSize: 14, fontFamily: 'Poppins'),
+          ),
+          Row(
+            children: List.generate(5, (i) {
+              final estrela = i + 1;
+              return GestureDetector(
+                onTap: () => setState(() {
+                  notaSelecionada = notaSelecionada == estrela ? 0 : estrela;
+                }),
+                child: Padding(
+                  padding: EdgeInsets.only(left: 4),
+                  child: Icon(
+                    estrela <= notaSelecionada ? Icons.star : Icons.star_border,
+                    color: estrela <= notaSelecionada ? Color(0xFFFFB800) : Colors.white30,
+                    size: 28,
+                  ),
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // CATEGORIAS
+  Widget Categorias() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -303,13 +325,13 @@ class _SugerirPageState extends State<SugerirPage> {
             childAspectRatio: 3.2,
           ),
           itemCount: categorias.length,
-          itemBuilder: (_, i) => _buildCategoriaChip(categorias[i]),
+          itemBuilder: (_, i) => CategoriaCard(categorias[i]),
         ),
       ],
     );
   }
 
-  Widget _buildCategoriaChip(String label) {
+  Widget CategoriaCard(String label) {
     final isSelected = categoriaSelecionada == label;
 
     return GestureDetector(
@@ -320,23 +342,14 @@ class _SugerirPageState extends State<SugerirPage> {
         duration: Duration(milliseconds: 200),
         curve: Curves.easeOut,
         decoration: BoxDecoration(
-          color:
-              isSelected ? Color(0xFF6B2FA0) : Color(0xFF2A1A4A),
+          color: isSelected ? Color(0xFF6B2FA0) : Color(0xFF2A1A4A),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected
-                ? Color(0xFF9B59D0)
-                : Color(0xFF3A1A6A),
+            color: isSelected ? Color(0xFF9B59D0) : Color(0xFF3A1A6A),
             width: 1.2,
           ),
           boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Color(0xFF9B59D0).withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
-                  ),
-                ]
+              ? [BoxShadow(color: Color(0xFF9B59D0).withOpacity(0.3), blurRadius: 8, offset: Offset(0, 2))]
               : [],
         ),
         child: Center(
@@ -355,8 +368,8 @@ class _SugerirPageState extends State<SugerirPage> {
     );
   }
 
-  // ─── Botão Enviar ──────────────────────────────────────────────────
-  Widget _buildEnviarButton() {
+  // BOTÃO ENVIAR
+  Widget botaoEnviar() {
     return AnimatedOpacity(
       opacity: podeEnviar ? 1.0 : 0.45,
       duration: Duration(milliseconds: 200),
@@ -373,13 +386,7 @@ class _SugerirPageState extends State<SugerirPage> {
             ),
             borderRadius: BorderRadius.circular(16),
             boxShadow: podeEnviar
-                ? [
-                    BoxShadow(
-                      color: Color(0xFF9B59D0).withOpacity(0.4),
-                      blurRadius: 16,
-                      offset: Offset(0, 4),
-                    ),
-                  ]
+                ? [BoxShadow(color: Color(0xFF9B59D0).withOpacity(0.4), blurRadius: 16, offset: Offset(0, 4))]
                 : [],
           ),
           child: Center(
@@ -387,10 +394,7 @@ class _SugerirPageState extends State<SugerirPage> {
                 ? SizedBox(
                     width: 22,
                     height: 22,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2.5,
-                    ),
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
                   )
                 : Text(
                     'Enviar',
@@ -407,7 +411,7 @@ class _SugerirPageState extends State<SugerirPage> {
     );
   }
 
-  // ─── Bottom Nav ────────────────────────────────────────────────────
+  // BOTTOM NAV
   int paginaAtual = 1;
   Widget barraNavegacao() {
     return Container(
@@ -423,89 +427,36 @@ class _SugerirPageState extends State<SugerirPage> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               GestureDetector(
-                onTap: () {
-                  setState(() => paginaAtual = 0);
-                  Navigator.pushNamed(context, '/home_cliente');
-                },
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.home_filled,
-                        color:
-                            paginaAtual == 0 ? Colors.white : Colors.white54),
-                    SizedBox(height: 4),
-                    Text("Início",
-                        style: TextStyle(
-                            color: paginaAtual == 0
-                                ? Colors.white
-                                : Colors.white54,
-                            fontSize: 10)),
-                  ],
-                ),
+                onTap: () { setState(() => paginaAtual = 0); Navigator.pushNamed(context, '/home_cliente'); },
+                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(Icons.home_filled, color: paginaAtual == 0 ? Colors.white : Colors.white54),
+                  SizedBox(height: 4),
+                  Text("Início", style: TextStyle(color: paginaAtual == 0 ? Colors.white : Colors.white54, fontSize: 10)),
+                ]),
               ),
               GestureDetector(
-                onTap: () {
-                  setState(() => paginaAtual = 1);
-                  Navigator.pushNamed(context, '/minhasSugestoes');
-                },
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.forum,
-                        color:
-                            paginaAtual == 1 ? Colors.white : Colors.white54),
-                    SizedBox(height: 4),
-                    Text("Minhas\nSugestões",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            color: paginaAtual == 1
-                                ? Colors.white
-                                : Colors.white54,
-                            fontSize: 10)),
-                  ],
-                ),
+                onTap: () { setState(() => paginaAtual = 1); Navigator.pushNamed(context, '/minhasSugestoes'); },
+                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(Icons.forum, color: paginaAtual == 1 ? Colors.white : Colors.white54),
+                  SizedBox(height: 4),
+                  Text("Minhas\nSugestões", textAlign: TextAlign.center, style: TextStyle(color: paginaAtual == 1 ? Colors.white : Colors.white54, fontSize: 10)),
+                ]),
               ),
               GestureDetector(
-                onTap: () {
-                  setState(() => paginaAtual = 2);
-                  Navigator.pushNamed(context, '/loja');
-                },
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.monetization_on,
-                        color:
-                            paginaAtual == 2 ? Colors.white : Colors.white54),
-                    SizedBox(height: 4),
-                    Text("Pontos",
-                        style: TextStyle(
-                            color: paginaAtual == 2
-                                ? Colors.white
-                                : Colors.white54,
-                            fontSize: 10)),
-                  ],
-                ),
+                onTap: () { setState(() => paginaAtual = 2); Navigator.pushNamed(context, '/loja'); },
+                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(Icons.monetization_on, color: paginaAtual == 2 ? Colors.white : Colors.white54),
+                  SizedBox(height: 4),
+                  Text("Pontos", style: TextStyle(color: paginaAtual == 2 ? Colors.white : Colors.white54, fontSize: 10)),
+                ]),
               ),
               GestureDetector(
-                onTap: () {
-                  setState(() => paginaAtual = 3);
-                  Navigator.pushNamed(context, '/perfil');
-                },
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.person,
-                        color:
-                            paginaAtual == 3 ? Colors.white : Colors.white54),
-                    SizedBox(height: 4),
-                    Text("Perfil",
-                        style: TextStyle(
-                            color: paginaAtual == 3
-                                ? Colors.white
-                                : Colors.white54,
-                            fontSize: 10)),
-                  ],
-                ),
+                onTap: () { setState(() => paginaAtual = 3); Navigator.pushNamed(context, '/perfil'); },
+                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(Icons.person, color: paginaAtual == 3 ? Colors.white : Colors.white54),
+                  SizedBox(height: 4),
+                  Text("Perfil", style: TextStyle(color: paginaAtual == 3 ? Colors.white : Colors.white54, fontSize: 10)),
+                ]),
               ),
             ],
           ),
