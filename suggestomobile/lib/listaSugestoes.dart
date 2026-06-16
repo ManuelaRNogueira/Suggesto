@@ -17,7 +17,7 @@ class listaSugestoes {
       "texto": "Seria interessante adicionar opções para pessoas com restrições alimentares.",
       "status": "Em análise",
       "tempo": "há 5 dias",
-      "nota": "3",
+      "nota": "2",
     },
     {
       "local": "Panobianco Academia",
@@ -26,7 +26,7 @@ class listaSugestoes {
       "texto": "O banheiro masculino está sem tampa em um vaso.",
       "status": "Resolvida",
       "tempo": "há 1 semana",
-      "nota": "4",
+      "nota": "3",
     },
   ];
 }
