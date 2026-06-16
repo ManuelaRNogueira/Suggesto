@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import './DetalhesEstabelecimento.css';
 
@@ -36,67 +36,99 @@ function formatarData(dataStr) {
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────────
 function DetalhesEstabelecimento() {
   const { id } = useParams();
+  const fileInputRef = useRef(null); // Ref para o input de arquivo escondido
   const [estab, setEstab]               = useState(null);
   const [mediaGeral, setMediaGeral]     = useState(0);
   const [carregando, setCarregando]     = useState(true);
   const [sugestoes, setSugestoes]       = useState([]);
   const [filtroSentimento, setFiltroS]  = useState('todos');
   const [filtroCategoria,  setFiltroC]  = useState('todos');
+  const [enviandoFoto, setEnviandoFoto] = useState(false);
+
+  const buscarDados = async () => {
+    try {
+      // 1. Busca os dados do estabelecimento
+      const resEstab = await fetch(`http://localhost:8080/api/estabelecimentos/${id}`);
+      if (resEstab.ok) {
+          setEstab(await resEstab.json());
+      }
+
+      // 2. Busca as avaliações reais do banco
+      const resAvaliacoes = await fetch(`http://localhost:8080/api/avaliacoes/estabelecimento/${id}`);
+      if (resAvaliacoes.ok) {
+          const avaliacoesDoBanco = await resAvaliacoes.json();
+          
+          let somaNotas = 0;
+
+          // 3. A TRADUÇÃO (Sentimento da Categoria + Nota)
+          const sugestoesFormatadas = avaliacoesDoBanco.map(av => {
+              somaNotas += av.nota;
+
+              let sent = 'ruim';
+              if (av.nota >= 4) sent = 'bom';
+              else if (av.nota === 3) sent = 'médio';
+
+              return {
+                  id: av.idAvaliacao,
+                  texto: av.comentario,
+                  nota: av.nota,
+                  sentimento: sent,
+                  categoria: av.categoria?.nomeCategoria?.toLowerCase() || 'sugestão',
+                  autor: av.usuario?.nome || 'Cliente Verificado',
+                  status: (av.status || 'analise').toLowerCase(),
+                  data: av.dataAvaliacao
+                    ? av.dataAvaliacao.split('T')[0]
+                    : new Date().toISOString().split('T')[0]
+              };
+          });
+
+          // 4. Calcula a Média Geral do Estabelecimento
+          const media = avaliacoesDoBanco.length > 0 
+              ? (somaNotas / avaliacoesDoBanco.length).toFixed(1) 
+              : 0;
+          
+          setMediaGeral(media);
+          setSugestoes(sugestoesFormatadas);
+      }
+    } catch (e) {
+      console.error('Erro ao buscar dados:', e);
+    } finally {
+      setCarregando(false);
+    }
+  };
 
   useEffect(() => {
-    const buscarDados = async () => {
-      try {
-        // 1. Busca os dados do estabelecimento
-        const resEstab = await fetch(`http://localhost:8080/api/estabelecimentos/${id}`);
-        if (resEstab.ok) {
-            setEstab(await resEstab.json());
-        }
-
-        // 2. Busca as avaliações reais do banco
-        const resAvaliacoes = await fetch(`http://localhost:8080/api/avaliacoes/estabelecimento/${id}`);
-        if (resAvaliacoes.ok) {
-            const avaliacoesDoBanco = await resAvaliacoes.json();
-            
-            let somaNotas = 0;
-
-            // 3. A TRADUÇÃO (Sentimento da Categoria + Nota)
-            const sugestoesFormatadas = avaliacoesDoBanco.map(av => {
-                somaNotas += av.nota;
-
-                let sent = 'ruim';
-                if (av.nota >= 4) sent = 'bom';
-                else if (av.nota === 3) sent = 'médio';
-
-                return {
-                    id: av.idAvaliacao,
-                    texto: av.comentario,
-                    nota: av.nota,
-                    sentimento: sent,
-                    categoria: av.categoria?.nomeCategoria?.toLowerCase() || 'sugestão',
-                    autor: av.usuario?.nome || 'Cliente Verificado',
-                    status: (av.status || 'analise').toLowerCase(),
-                    data: av.dataAvaliacao
-                      ? av.dataAvaliacao.split('T')[0]
-                      : new Date().toISOString().split('T')[0]
-                };
-            });
-
-            // 4. Calcula a Média Geral do Estabelecimento
-            const media = avaliacoesDoBanco.length > 0 
-                ? (somaNotas / avaliacoesDoBanco.length).toFixed(1) 
-                : 0;
-            
-            setMediaGeral(media);
-            setSugestoes(sugestoesFormatadas);
-        }
-      } catch (e) {
-        console.error('Erro ao buscar dados:', e);
-      } finally {
-        setCarregando(false);
-      }
-    };
     buscarDados();
   }, [id]);
+
+  // Função disparada ao selecionar uma nova foto
+  const lidarComTrocaFoto = async (e) => {
+    const arquivo = e.target.files[0];
+    if (!arquivo) return;
+
+    const formData = new FormData();
+    formData.append('foto', arquivo);
+
+    setEnviandoFoto(true);
+    try {
+      const res = await fetch(`http://localhost:8080/api/estabelecimentos/${id}/foto`, {
+        method: 'POST', // Bate certinho com o @PostMapping("/{id}/foto") do Java
+        body: formData,
+      });
+
+      if (res.ok) {
+        // Recarrega os dados para atualizar a foto na tela na mesma hora
+        await buscarDados();
+      } else {
+        alert('Erro ao enviar a nova foto.');
+      }
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      alert('Erro de conexão ao enviar foto.');
+    } finally {
+      setEnviandoFoto(false);
+    }
+  };
 
   const atualizarStatus = async (idAvaliacao, status) => {
     try {
@@ -139,7 +171,6 @@ function DetalhesEstabelecimento() {
     ruim:  sugestoes.filter((s) => s.sentimento === 'ruim').length,
   };
 
-  // ── Estados de carregamento ───────────────────────────────────────────────
   if (carregando) {
     return (
       <div className="estado-central">
@@ -156,6 +187,15 @@ function DetalhesEstabelecimento() {
       <div className="glow-1" />
       <div className="glow-2" />
 
+      {/* Input de arquivo invisível controlado pelo clique no botão de lápis */}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        style={{ display: 'none' }} 
+        accept="image/*"
+        onChange={lidarComTrocaFoto}
+      />
+
       {/* ── Cabeçalho ───────────────────────────────────────────────────── */}
       <header className="cabecalho">
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -167,17 +207,45 @@ function DetalhesEstabelecimento() {
           </Link>
         </div>
 
-        <div className="cabecalho-corpo">
-          <span className="badge-categoria">GERAL</span>
-          <h1 className="titulo-nome">{dados.nome}</h1>
-          <p className="texto-endereco">📍 {dados.endereco}</p>
-          
-          {/* Média Geral em Destaque */}
-          {mediaGeral > 0 && (
-            <div className="media-geral">
-              ⭐ {mediaGeral} <span className="media-geral-label">/ 5 Média</span>
+      <div className="cabecalho-container-flex">
+          {/* LADO ESQUERDO: TEXTOS */}
+          <div className="cabecalho-corpo">
+            <span className="badge-categoria">GERAL</span>
+            <h1 className="titulo-nome">{dados.nome}</h1>
+            <p className="texto-endereco">📍 {dados.endereco}</p>
+            
+            {mediaGeral > 0 && (
+              <div className="media-geral">
+                ⭐ {mediaGeral} <span className="media-geral-label">/ 5 Média</span>
+              </div>
+            )}
+          </div>
+
+          {/* LADO DIREITO: FOTO GRANDE EM DESTAQUE */}
+          <div className={`cabecalho-bloco-foto ${enviandoFoto ? 'processando' : ''}`}>
+            <div className="container-foto-estab">
+              {dados.fotoPath ? (
+                <img 
+                  src={`http://localhost:8080/uploads/${dados.fotoPath}`} 
+                  alt={dados.nome} 
+                  className="foto-estabelecimento"
+                />
+              ) : (
+                <div className="foto-estabelecimento-placeholder">
+                  {dados.nome.charAt(0).toUpperCase()}
+                </div>
+              )}
+              
+              <button 
+                className="btn-editar-foto" 
+                title="Alterar foto do estabelecimento"
+                onClick={() => fileInputRef.current.click()}
+                disabled={enviandoFoto}
+              >
+                {enviandoFoto ? '...' : '✏️ Editar Foto'}
+              </button>
             </div>
-          )}
+          </div>
         </div>
 
         {/* ── Mini-stats ──────────────────────────────────────────────── */}

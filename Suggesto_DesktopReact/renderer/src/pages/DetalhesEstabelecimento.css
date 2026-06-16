@@ -410,3 +410,127 @@
   animation: giro 0.8s linear infinite;
 }
 @keyframes giro { to { transform: rotate(360deg); } }
+
+
+/* Container modificado: de Grid para Flexbox colado */
+.cabecalho-container-flex {
+  display: flex;
+  justify-content: flex-start; /* Alinha tudo no começo, sem espalhar nas pontas */
+  align-items: center;
+  gap: 24px;                  /* Distância pequena e controlada entre o texto e a foto */
+  margin-bottom: 36px;
+  flex-wrap: wrap;            /* Mantém a segurança para telas menores */
+}
+
+/* Garante que o texto ocupe apenas o espaço que ele realmente precisa */
+.cabecalho-corpo {
+  flex: 0 1 auto;             /* Não força o texto a empurrar a foto para longe */
+  max-width: 500px;           /* Limite elegante para o nome não esmagar a imagem */
+}
+
+/* O bloco da foto agora fica fixo ao lado do texto */
+.cabecalho-bloco-foto {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: flex-start; /* Foto colada logo após o término do texto */
+}
+
+/* Mantemos o janelão cinematográfico intacto */
+.container-foto-estab {
+  position: relative;
+  width: 100%;
+  max-width: 540px;           /* Tamanho de destaque que você pediu */
+  height: 320px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 
+              0 0 0 1px rgba(167, 139, 250, 0.1);
+  background: #111122;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.container-foto-estab:hover {
+  border-color: rgba(167, 139, 250, 0.6);
+  box-shadow: 0 24px 48px rgba(167, 139, 250, 0.15), 0 0 20px rgba(167, 139, 250, 0.05);
+}
+
+.foto-estabelecimento {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Resto dos estilos (placeholder, btn-editar-foto, etc.) continuam exatamente iguais */
+
+/* Placeholder gigante caso o estabelecimento não tenha foto */
+.foto-estabelecimento-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 6rem; /* Letra enorme */
+  font-weight: 800;
+  color: rgba(167, 139, 250, 0.2);
+  background: radial-gradient(circle at center, rgba(167, 139, 250, 0.15) 0%, transparent 70%);
+}
+
+/* Botão de edição atualizado: agora é uma barra moderna na parte inferior */
+.btn-editar-foto {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 100%);
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 14px;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  backdrop-filter: blur(4px);
+  transition: all 0.2s ease;
+  opacity: 0; /* Fica escondido por padrão */
+  transform: translateY(10px);
+}
+
+/* O botão sobe com uma transição suave ao passar o mouse na foto */
+.container-foto-estab:hover .btn-editar-foto {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.btn-editar-foto:hover {
+  background: rgba(167, 139, 250, 0.9);
+  color: #080810;
+}
+
+.cabecalho-bloco-foto.processando {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Responsividade: Se a tela for pequena (celular), vira uma coluna só */
+@media (max-width: 900px) {
+  .cabecalho-container-flex {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .cabecalho-bloco-foto {
+    justify-content: center;
+  }
+  .container-foto-estab {
+    height: 220px;
+  }
+  .btn-editar-foto {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
