@@ -42,10 +42,14 @@ public class EstabelecimentoController {
             }
 
             if (arquivo != null && !arquivo.isEmpty()) {
-                String nomeArquivo = System.currentTimeMillis() + "_" + arquivo.getOriginalFilename();
+                // CORREÇÃO: Limpa o nome do arquivo ORIGINAL antes de gerar o caminho e salvar
+                String nomeLimpo = UploadStorage.normalizarNomeArquivo(arquivo.getOriginalFilename());
+                String nomeArquivo = System.currentTimeMillis() + "_" + nomeLimpo;
+                
                 Path caminho = UploadStorage.resolverArquivo(nomeArquivo);
                 Files.copy(arquivo.getInputStream(), caminho, StandardCopyOption.REPLACE_EXISTING);
-                novoEstabelecimento.setFotoPath(UploadStorage.normalizarNomeArquivo(nomeArquivo));
+                
+                novoEstabelecimento.setFotoPath(nomeArquivo);
             }
 
             Estabelecimento salvo = repository.save(novoEstabelecimento);
@@ -71,11 +75,14 @@ public class EstabelecimentoController {
         try {
             Estabelecimento estab = repository.findById(id).orElseThrow(() -> new RuntimeException("Não encontrado"));
 
-            String nomeArquivo = "estabelecimento_" + id + "_" + arquivo.getOriginalFilename();
+            // CORREÇÃO: Limpa o nome do arquivo ORIGINAL aqui também
+            String nomeLimpo = UploadStorage.normalizarNomeArquivo(arquivo.getOriginalFilename());
+            String nomeArquivo = "estabelecimento_" + id + "_" + nomeLimpo;
+            
             Path caminho = UploadStorage.resolverArquivo(nomeArquivo);
             Files.copy(arquivo.getInputStream(), caminho, StandardCopyOption.REPLACE_EXISTING);
 
-            estab.setFotoPath(UploadStorage.normalizarNomeArquivo(nomeArquivo));
+            estab.setFotoPath(nomeArquivo);
             repository.save(estab);
 
             return ResponseEntity.ok("Foto salva com sucesso!" + nomeArquivo);
@@ -101,13 +108,10 @@ public class EstabelecimentoController {
         } catch (Exception e) {
             return ResponseEntity.status(500).build();
         }
-
-
     }
 
     @GetMapping("/usuario/{idGerente}")
-public ResponseEntity<List<Estabelecimento>> listarPorAdmin(@PathVariable Long idGerente) {
- 
-    return ResponseEntity.ok(repository.buscarPorGerenteAtivos(idGerente));
-}
+    public ResponseEntity<List<Estabelecimento>> listarPorAdmin(@PathVariable Long idGerente) {
+        return ResponseEntity.ok(repository.buscarPorGerenteAtivos(idGerente));
+    }
 }
