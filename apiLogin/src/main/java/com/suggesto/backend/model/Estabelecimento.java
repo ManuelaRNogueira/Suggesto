@@ -94,4 +94,17 @@ public class Estabelecimento {
         }
         this.fotoPath = limpo;
     }
+
+// Adicione estes métodos aqui no finalzinho!
+    public Integer getAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(Integer ativo) {
+        this.ativo = ativo;
+    }
+
+
+
+
 }

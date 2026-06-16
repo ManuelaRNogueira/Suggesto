@@ -14,7 +14,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/estabelecimentos")
+@RequestMapping("/api/estabelecimentos")
 public class EstabelecimentoController {
 
     @Autowired
