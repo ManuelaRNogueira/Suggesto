@@ -10,8 +10,6 @@ build/
 .env.production.local
 
 # Bloquear pastas de arquivos da API Java
-apiLogin/uploads/
-uploads/
 apiLogin/target/
 target/
 .mvn/
