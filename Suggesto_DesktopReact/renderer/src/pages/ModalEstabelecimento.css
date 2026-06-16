@@ -136,6 +136,19 @@
   gap: 16px;
 }
 
+/* Customizações de Grid para o Novo Endereço Estruturado */
+.form-grid-cep-numero {
+  display: grid;
+  grid-template-columns: 2fr 1fr; /* CEP ganha mais espaço, número fica menor */
+  gap: 16px;
+}
+
+.form-grid-cidade-estado {
+  display: grid;
+  grid-template-columns: 3fr 1fr; /* Cidade maior, UF menor */
+  gap: 16px;
+}
+
 .campo-wrapper {
   display: flex;
   flex-direction: column;
@@ -169,7 +182,7 @@
   font-family: 'Inter', system-ui, sans-serif;
   outline: none;
   width: 100%;
-  transition: border-color .18s, background .18s;
+  transition: border-color .18s, background .18s, color .18s;
   box-sizing: border-box;
 }
 
@@ -182,6 +195,14 @@
   border-color: rgba(167, 139, 250, .55) !important;
   background: rgba(167, 139, 250, .07) !important;
   box-shadow: 0 0 0 3px rgba(167, 139, 250, .1);
+}
+
+/* Feedback visual para os campos preenchidos pelo ViaCEP que estão travados */
+.form-input:disabled {
+  background: rgba(255, 255, 255, 0.02);
+  color: rgba(226, 226, 240, 0.4);
+  border-color: rgba(255, 255, 255, 0.05);
+  cursor: not-allowed;
 }
 
 .form-select {
@@ -359,3 +380,4 @@
   -ms-overflow-style: none;  /* IE e Edge */
   scrollbar-width: none;  /* Firefox */
 }
+

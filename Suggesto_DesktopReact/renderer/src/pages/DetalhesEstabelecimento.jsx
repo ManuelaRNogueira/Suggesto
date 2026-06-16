@@ -212,7 +212,7 @@ function DetalhesEstabelecimento() {
           <div className="cabecalho-corpo">
             <span className="badge-categoria">GERAL</span>
             <h1 className="titulo-nome">{dados.nome}</h1>
-            <p className="texto-endereco">📍 {dados.endereco}</p>
+            <p className="texto-endereco">📍 {dados.rua}, {dados.numero} - {dados.bairro}, {dados.cidade} - {dados.estado}</p>
             
             {mediaGeral > 0 && (
               <div className="media-geral">

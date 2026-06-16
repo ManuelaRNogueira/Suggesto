@@ -24,7 +24,6 @@ const CATEGORIAS = [
 export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
   const [nome,      setNome]      = useState("");
   const [cnpj,      setCnpj]      = useState("");
-  const [endereco,  setEndereco]  = useState("");
   const [categoria, setCategoria] = useState("");
   const [telefone,  setTelefone]  = useState("");
   const [arquivo,   setArquivo]   = useState(null);
@@ -32,6 +31,57 @@ export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
   const [salvando,  setSalvando]  = useState(false);
   const [dragOver,  setDragOver]  = useState(false);
   const fileRef = useRef();
+
+  // ── Estado do Endereço Estruturado ──────────────────────────────────────────
+  const [enderecoCompleto, setEnderecoCompleto] = useState({
+    cep: "",
+    estado: "",
+    cidade: "",
+    bairro: "",
+    rua: "",
+    numero: "",
+    complemento: ""
+  });
+
+  const lidarComMudancaEndereco = (e) => {
+    const { name, value } = e.target;
+    setEnderecoCompleto(prev => ({ ...prev, [name]: value }));
+  };
+
+  // ── Consulta ViaCEP com Máscara Integrada ───────────────────────────────────
+  const lidarComCep = async (e) => {
+    // Aplica máscara visual 00000-000 enquanto o usuário digita
+    let valor = e.target.value.replace(/\D/g, "").slice(0, 8);
+    if (valor.length > 5) {
+      valor = valor.replace(/^(\d{5})(\d)/, "$1-$2");
+    }
+    
+    setEnderecoCompleto(prev => ({ ...prev, cep: valor }));
+
+    const cepLimpo = valor.replace(/\D/g, "");
+    if (cepLimpo.length === 8) {
+      try {
+        const resposta = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+        const dadosCep = await resposta.json();
+        
+        if (!dadosCep.erro) {
+          setEnderecoCompleto(prev => ({
+            ...prev,
+            rua: dadosCep.logradouro || "",
+            bairro: dadosCep.bairro || "",
+            cidade: dadosCep.localidade || "",
+            estado: dadosCep.uf || ""
+          }));
+          // Move o foco para o campo do número automaticamente
+          setTimeout(() => document.getElementById("input-numero")?.focus(), 50);
+        } else {
+          alert("CEP não encontrado. Por favor, digite o endereço manualmente.");
+        }
+      } catch (error) {
+        console.error("Erro ao buscar CEP:", error);
+      }
+    }
+  };
 
   // ── Lógica de arquivo ───────────────────────────────────────────────────────
   const aplicarArquivo = (file) => {
@@ -54,13 +104,27 @@ export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
     setSalvando(true);
 
     const idGerente = localStorage.getItem("idUsuario");
-    if (!idGerente) { alert("Erro: ID do gerente não encontrado."); setSalvando(false); return; }
+    if (!idGerente) { 
+      alert("Erro: ID do gerente não encontrado."); 
+      setSalvando(false); 
+      return; 
+    }
 
     const formData = new FormData();
+    
+    // Espalha todo o objeto de endereço completo diretamente no JSON enviado ao Java
+    const payloadEstabelecimento = {
+      nome, 
+      cnpj, 
+      categoria, 
+      telefone, 
+      idGerente,
+      ...enderecoCompleto 
+    };
+
     formData.append(
       "estabelecimento",
-      new Blob([JSON.stringify({ nome, cnpj, endereco, categoria, telefone, idGerente })],
-        { type: "application/json" })
+      new Blob([JSON.stringify(payloadEstabelecimento)], { type: "application/json" })
     );
     if (arquivo) formData.append("foto", arquivo);
 
@@ -142,11 +206,49 @@ export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
             </Campo>
           </div>
 
-          <Campo label="Endereço completo" required>
-            <input className="form-input" value={endereco}
-              onChange={(e) => setEndereco(e.target.value)} required
-              placeholder="Rua, número, bairro, cidade" />
+          {/* ── Bloco de Endereço via CEP ────────────────────────────────── */}
+          <div className="form-grid-cep-numero">
+            <Campo label="CEP" required>
+              <input className="form-input" name="cep" value={enderecoCompleto.cep}
+                onChange={lidarComCep} required placeholder="00000-000" />
+            </Campo>
+
+            <Campo label="Número" required>
+              <input className="form-input" id="input-numero" name="numero" 
+                value={enderecoCompleto.numero} onChange={lidarComMudancaEndereco} 
+                required placeholder="123" />
+            </Campo>
+          </div>
+
+          <Campo label="Rua / Logradouro" required>
+            <input className="form-input" name="rua" value={enderecoCompleto.rua}
+              onChange={lidarComMudancaEndereco} required placeholder="Avenida Central" />
           </Campo>
+
+          <div className="form-grid-2">
+            <Campo label="Bairro" required>
+              <input className="form-input" name="bairro" value={enderecoCompleto.bairro}
+                onChange={lidarComMudancaEndereco} required placeholder="Centro" />
+            </Campo>
+
+            <Campo label="Complemento">
+              <input className="form-input" name="complemento" value={enderecoCompleto.complemento}
+                onChange={lidarComMudancaEndereco} placeholder="Sala 4, Bloco B (Opcional)" />
+            </Campo>
+          </div>
+
+          <div className="form-grid-cidade-estado">
+            <Campo label="Cidade" required>
+              <input className="form-input" name="cidade" value={enderecoCompleto.cidade}
+                onChange={lidarComMudancaEndereco} required placeholder="Sua Cidade" disabled />
+            </Campo>
+
+            <Campo label="Estado (UF)" required>
+              <input className="form-input" name="estado" value={enderecoCompleto.estado}
+                onChange={lidarComMudancaEndereco} required placeholder="SP" disabled />
+            </Campo>
+          </div>
+          {/* ─────────────────────────────────────────────────────────────── */}
 
           <div className="form-grid-2">
             <Campo label="CNPJ" required>

@@ -1,9 +1,11 @@
 package com.suggesto.backend.model;
 
+import lombok.Data;
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "estabelecimento")
+@Data 
 public class Estabelecimento {
 
     @Id
@@ -20,9 +22,6 @@ public class Estabelecimento {
     @Column(name = "cnpj", nullable = false, unique = true)
     private String cnpj;
 
-    @Column(name = "endereco", nullable = false)
-    private String endereco;
-
     @Column(name = "categoria", nullable = false)
     private String categoria;
 
@@ -30,27 +29,32 @@ public class Estabelecimento {
     private String telefone;
 
     @Column(name = "id_gerente", nullable = false)
-    private long  idGerente;
+    private long idGerente;
 
-    public long getIdEstabelecimento() {
-        return idEstabelecimento;
-    }
+    @Column(name = "cep", nullable = false, length = 9)
+    private String cep;
 
-    public void setIdEstabelecimento(long idEstabelecimento) {
-        this.idEstabelecimento = idEstabelecimento;
-    }
+    @Column(name = "estado", nullable = false, length = 2)
+    private String estado;
 
+    @Column(name = "cidade", nullable = false, length = 100)
+    private String cidade;
 
-    public String getNome() {
-        return nome;
-    }
+    @Column(name = "bairro", nullable = false, length = 100)
+    private String bairro;
 
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
+    @Column(name = "rua", nullable = false, length = 150)
+    private String rua;
+
+    @Column(name = "numero", nullable = false, length = 20)
+    private String numero;
+
+    @Column(name = "complemento", length = 100)
+    private String complemento;
 
     private String fotoPath;
 
+    
     public String getFotoPath() {
         if (fotoPath == null || fotoPath.isBlank()) {
             return fotoPath;
@@ -89,54 +93,5 @@ public class Estabelecimento {
             limpo = limpo.substring("uploads/".length());
         }
         this.fotoPath = limpo;
-    }
-
-
-    public String getCnpj() {
-        return cnpj;
-    }
-
-    public void setCnpj(String cnpj) {
-        this.cnpj = cnpj;
-    }
-
-    public String getEndereco() {
-        return endereco;
-    }
-
-    public void setEndereco(String endereco) {
-        this.endereco = endereco;
-    }
-
-    public String getCategoria() {
-        return categoria;
-    }
-
-    public void setCategoria(String categoria) {
-        this.categoria = categoria;
-    }
-
-    public String getTelefone() {
-        return telefone;
-    }
-
-    public void setTelefone(String telefone) {
-        this.telefone = telefone;
-    }
-
-    public long getIdGerente() {
-        return idGerente;
-    }
-
-    public void setIdGerente(long idGerente) {
-        this.idGerente = idGerente;
-    }
-
-    public Integer getAtivo() {
-        return ativo;
-    }
-
-    public void setAtivo(Integer ativo) {
-        this.ativo = ativo;
     }
 }
