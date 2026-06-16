@@ -74,30 +74,29 @@ export default function Dashboard() {
         let somaNotaGeral = 0;
         let locaisAvaliados = [];
 
-        const buscas = estabs.map(
-          (e) =>
-            fetch(
-              `http://localhost:8080/api/avaliacoes/estabelecimento/${e.idEstabelecimento}`,
-            )
-              .then((res) => (res.ok ? res.json() : []))
-              .then((avaliacoes) => {
-                if (avaliacoes.length > 0) {
-                  totalSug += avaliacoes.length;
+        const buscas = estabs.map((e) =>
+          fetch(
+            `http://localhost:8080/api/avaliacoes/estabelecimento/${e.idEstabelecimento}`,
+          )
+            .then((res) => (res.ok ? res.json() : []))
+            .then((avaliacoes) => {
+              if (avaliacoes.length > 0) {
+                totalSug += avaliacoes.length;
 
-                  const somaLocal = avaliacoes.reduce(
-                    (acc, av) => acc + av.nota,
-                    0,
-                  );
-                  somaNotaGeral += somaLocal;
+                const somaLocal = avaliacoes.reduce(
+                  (acc, av) => acc + av.nota,
+                  0,
+                );
+                somaNotaGeral += somaLocal;
 
-                  locaisAvaliados.push({
-                    nome: e.nome,
-                    media: somaLocal / avaliacoes.length,
-                    qtd: avaliacoes.length,
-                  });
-                }
-              })
-              .catch(() => {}),
+                locaisAvaliados.push({
+                  nome: e.nome,
+                  media: somaLocal / avaliacoes.length,
+                  qtd: avaliacoes.length,
+                });
+              }
+            })
+            .catch(() => {}),
         );
 
         await Promise.all(buscas);
@@ -186,7 +185,10 @@ export default function Dashboard() {
 
         {!sidebarFechada && (
           <Link to="/recompensas" className="side-item side-item-destaque">
-            <div className="side-avatar" style={{ background: "rgba(124,58,237,0.25)" }}>
+            <div
+              className="side-avatar"
+              style={{ background: "rgba(124,58,237,0.25)" }}
+            >
               <Icon d={IC.star} size={14} />
             </div>
             <div>
@@ -424,7 +426,9 @@ function CardEstab({ estab, idx, deletando, onDeletar }) {
           <span style={{ color: cor, marginRight: 5 }}>
             <Icon d={IC.pin} size={13} />
           </span>
-          {estab.endereco}
+          {estab.rua && estab.numero
+            ? `${estab.rua}, ${estab.numero}${estab.bairro ? ` - ${estab.bairro}` : ""} (${estab.cidade}/${estab.estado})`
+            : "Endereço não informado"}
         </p>
 
         <Link
