@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'usuarios.dart';
+import 'listaUsuarios.dart';
 
 class PerfilCliPage extends StatefulWidget {
   const PerfilCliPage({super.key});
@@ -9,7 +9,6 @@ class PerfilCliPage extends StatefulWidget {
 }
 
 class _PerfilCliPageState extends State<PerfilCliPage> {
-  int _currentIndex = 3;
 
   // Dados do usuário logado (mock)
   final String _nome = 'Manuela';

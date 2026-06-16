@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'usuarios.dart';
+import 'listaUsuarios.dart';
 
 class Cadastro extends StatefulWidget {
   const Cadastro({super.key});
