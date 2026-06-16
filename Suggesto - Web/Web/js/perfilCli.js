@@ -39,22 +39,16 @@ function abrirEdicao() {
         usuarioAtual = {
             nome: localStorage.getItem("nomeUsuario") || document.getElementById("heroNome")?.textContent || "",
             email: document.getElementById("heroEmail")?.textContent || "",
-            telefone: "",
-            cidade: "",
             fotoUrl: ""
         };
     }
 
     const editNome = document.getElementById("editNome");
     const editEmail = document.getElementById("editEmail");
-    const editTelefone = document.getElementById("editTelefone");
-    const editCidade = document.getElementById("editCidade");
     const editFotoFile = document.getElementById("editFotoFile");
 
     if (editNome) editNome.value = usuarioAtual.nome || "";
     if (editEmail) editEmail.value = usuarioAtual.email || "";
-    if (editTelefone) editTelefone.value = usuarioAtual.telefone || "";
-    if (editCidade) editCidade.value = usuarioAtual.cidade || "";
     if (editFotoFile) editFotoFile.value = "";
 
     document.getElementById("modalEdicao")?.classList.add("aberto");
@@ -91,39 +85,30 @@ async function carregarDadosUsuario() {
 
         usuarioAtual = await resposta.json();
         preencherPerfil(usuarioAtual);
+        await carregarAtividadeRecente(idUsuario);
 
         if (usuarioAtual.nome) {
             localStorage.setItem("nomeUsuario", usuarioAtual.nome);
         }
     } catch (error) {
         console.error("Erro ao carregar perfil:", error);
-
-        const nome = localStorage.getItem("nomeUsuario") || "Usuário";
-        preencherPerfil({ nome, email: "", totalLocaisSalvos: 0, totalSugestoes: 0 });
+        renderizarAtividadeVazia();
     }
 }
 
 function preencherPerfil(usuario) {
     const nome = usuario.nome || "Usuário";
     const email = usuario.email || "";
-    const telefone = usuario.telefone || "";
-    const cidade = usuario.cidade || "";
     const fotoUrl = resolverUrlFoto(usuario.fotoUrl);
     const iniciais = gerarIniciais(nome);
-    const totalSalvos = usuario.totalLocaisSalvos ?? 0;
-    const totalSugestoes = usuario.totalSugestoes ?? 0;
+    const totalSalvos = Number(usuario.totalLocaisSalvos) || 0;
+    const totalSugestoes = Number(usuario.totalSugestoes) || 0;
+    const pontos = Number(usuario.pontos) || 0;
 
     setTexto("sidebarNome", nome);
     setTexto("sidebarAvatar", iniciais);
     setTexto("heroNome", nome);
     setTexto("heroEmail", email);
-
-    const heroCidade = document.getElementById("heroCidade");
-    if (heroCidade) {
-        heroCidade.textContent = cidade
-            ? `${cidade}${telefone ? " · " + telefone : ""}`
-            : (telefone || "");
-    }
 
     const heroPlanoWrap = document.getElementById("heroPlanoWrap");
     const heroPlanoNome = document.getElementById("heroPlanoNome");
@@ -142,8 +127,94 @@ function preencherPerfil(usuario) {
         `${totalSugestoes} sugest${totalSugestoes !== 1 ? "ões" : "ão"} enviada${totalSugestoes !== 1 ? "s" : ""}`);
     setTexto("statSalvos", totalSalvos);
     setTexto("statSugestoes", totalSugestoes);
+    setTexto("statPontos", formatarPontos(pontos));
 
-    aplicarNivelPerfil(usuario.pontos ?? 0);
+    aplicarNivelPerfil(pontos);
+}
+
+async function carregarAtividadeRecente(idUsuario) {
+    const container = document.getElementById("atividadeLista");
+    if (!container) return;
+
+    try {
+        const resposta = await fetch(`${API_BASE}/avaliacoes/usuario/${idUsuario}`);
+        if (!resposta.ok) throw new Error("Falha ao carregar atividade.");
+
+        const avaliacoes = await resposta.json();
+        const aprovadas = avaliacoes.filter(
+            (item) => (item.status || "").toLowerCase() === "resolvida"
+        ).length;
+        setTexto("statAprovadas", aprovadas);
+
+        const ordenadas = [...avaliacoes].sort((a, b) => {
+            const dataA = new Date(a.dataAvaliacao || 0).getTime();
+            const dataB = new Date(b.dataAvaliacao || 0).getTime();
+            return dataB - dataA;
+        });
+
+        const recentes = ordenadas.slice(0, 5);
+
+        if (!recentes.length) {
+            renderizarAtividadeVazia();
+            return;
+        }
+
+        container.innerHTML = recentes.map(montarItemAtividade).join("");
+    } catch (error) {
+        console.error("Erro ao carregar atividade:", error);
+        renderizarAtividadeVazia();
+    }
+}
+
+function montarItemAtividade(avaliacao) {
+    const status = (avaliacao.status || "analise").toLowerCase();
+    const nomeLoja = avaliacao.estabelecimento?.nome || "Estabelecimento";
+    const categoria = avaliacao.categoria?.nomeCategoria || "Geral";
+    const dataRelativa = formatarDataRelativa(avaliacao.dataAvaliacao);
+
+    let titulo = "Sugestão enviada";
+    if (status === "resolvida") titulo = "Sugestão aprovada";
+    if (status === "recusada") titulo = "Sugestão recusada";
+
+    return `
+        <div class="atividade-item">
+            <div class="atividade-info">
+                <p class="atividade-titulo">${titulo}</p>
+                <p class="atividade-sub">${nomeLoja} · ${categoria}</p>
+            </div>
+            <div class="atividade-data">${dataRelativa}</div>
+        </div>`;
+}
+
+function renderizarAtividadeVazia() {
+    const container = document.getElementById("atividadeLista");
+    if (container) {
+        container.innerHTML = `<p class="atividade-vazia">Nenhuma atividade recente registrada.</p>`;
+    }
+}
+
+function formatarDataRelativa(dataIso) {
+    if (!dataIso) return "—";
+
+    const data = new Date(dataIso);
+    if (Number.isNaN(data.getTime())) return "—";
+
+    const diffMs = Date.now() - data.getTime();
+    const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDias <= 0) return "hoje";
+    if (diffDias === 1) return "há 1 dia";
+    if (diffDias < 7) return `há ${diffDias} dias`;
+    if (diffDias < 30) {
+        const semanas = Math.floor(diffDias / 7);
+        return semanas === 1 ? "há 1 sem." : `há ${semanas} sem.`;
+    }
+
+    return data.toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+    });
 }
 
 function aplicarNivelPerfil(pontos) {
@@ -248,8 +319,6 @@ async function salvarEdicao() {
 
     const formData = new FormData();
     formData.append("nome", document.getElementById("editNome")?.value?.trim() || "");
-    formData.append("telefone", document.getElementById("editTelefone")?.value?.trim() || "");
-    formData.append("cidade", document.getElementById("editCidade")?.value?.trim() || "");
 
     const arquivoFoto = document.getElementById("editFotoFile")?.files?.[0];
     if (arquivoFoto) {
@@ -277,6 +346,7 @@ async function salvarEdicao() {
 
         usuarioAtual = await resposta.json();
         preencherPerfil(usuarioAtual);
+        await carregarAtividadeRecente(idUsuario);
 
         if (usuarioAtual.nome) {
             localStorage.setItem("nomeUsuario", usuarioAtual.nome);

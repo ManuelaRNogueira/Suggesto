@@ -5,6 +5,14 @@ let saldoAtual = 0;
 let resgateAtual = { id: null, nome: "", custo: 0 };
 let recompensasCache = [];
 
+function urlFotoEstabelecimento(fotoPath) {
+  const nome = fotoPath ? String(fotoPath).trim() : "";
+  if (!nome) return PLACEHOLDER_ESTABELECIMENTO;
+  if (nome.startsWith("http://") || nome.startsWith("https://")) return nome;
+  const relativo = nome.replace(/^uploads\//, "");
+  return `${API_BASE.replace("/api", "")}/uploads/${relativo}`;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const idUsuario = localStorage.getItem("idUsuario");
   if (!idUsuario) {
@@ -167,8 +175,6 @@ function renderizarMercado(lista) {
       itens.forEach((rec) => grade.appendChild(criarCardRecompensa(rec)));
       area.appendChild(secao);
     });
-
-  observarSecoes();
 }
 
 function criarCardRecompensa(rec) {
@@ -176,6 +182,7 @@ function criarCardRecompensa(rec) {
   const nome = rec.nome || "Recompensa";
   const desc = rec.descricao || "";
   const estabNome = rec.estabelecimento?.nome || "Parceiro";
+  const fotoUrl = urlFotoEstabelecimento(rec.estabelecimento?.fotoPath);
   const bloqueado = custo > saldoAtual;
 
   const card = document.createElement("div");
@@ -184,7 +191,8 @@ function criarCardRecompensa(rec) {
   card.dataset.id = String(rec.id);
 
   card.innerHTML = `
-    <div class="recomp-imagem recomp-img-generica">
+    <div class="recomp-imagem">
+      <img class="recomp-foto" src="${fotoUrl}" alt="${estabNome}" />
       <div class="recomp-overlay"></div>
       <span class="recomp-estabelecimento">${estabNome}</span>
     </div>
@@ -201,30 +209,20 @@ function criarCardRecompensa(rec) {
     </div>
   `;
 
+  const img = card.querySelector(".recomp-foto");
+  if (img) {
+    img.onerror = function () {
+      this.onerror = null;
+      this.src = PLACEHOLDER_ESTABELECIMENTO;
+    };
+  }
+
   const btn = card.querySelector(".recomp-btn");
   if (!bloqueado) {
     btn.addEventListener("click", () => abrirResgate(rec.id, nome, custo));
   }
 
   return card;
-}
-
-function observarSecoes() {
-  const observador = new IntersectionObserver((entradas) => {
-    entradas.forEach((entrada) => {
-      if (entrada.isIntersecting) {
-        entrada.target.style.opacity = "1";
-        entrada.target.style.transform = "translateY(0)";
-      }
-    });
-  }, { threshold: 0.1 });
-
-  document.querySelectorAll(".recomp-secao").forEach((secao, i) => {
-    secao.style.opacity = "0";
-    secao.style.transform = "translateY(20px)";
-    secao.style.transition = `opacity 0.5s ease ${i * 0.08}s, transform 0.5s ease ${i * 0.08}s`;
-    observador.observe(secao);
-  });
 }
 
 function filtrarRecompensas() {

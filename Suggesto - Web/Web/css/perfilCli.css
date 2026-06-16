@@ -621,6 +621,13 @@ body {
 /* ===== ATIVIDADE RECENTE ===== */
 .atividade-lista { display: flex; flex-direction: column; gap: 0; }
 
+.atividade-vazia {
+  padding: 20px 0;
+  font-size: 13px;
+  color: var(--texto-fraco, rgba(240, 240, 248, 0.55));
+  text-align: center;
+}
+
 .atividade-item {
   display: flex;
   align-items: center;

@@ -32,6 +32,22 @@ function urlFotoEstabelecimento(fotoPath) {
   return `http://localhost:8080/uploads/${relativo}`;
 }
 
+function formatarMediaEstabelecimento(estab) {
+  const candidatos = [
+    estab?.mediaAvaliacoes,
+    estab?.mediaAvaliacao,
+    estab?.notaMedia,
+    estab?.nota,
+  ];
+
+  for (const valor of candidatos) {
+    const num = Number(valor);
+    if (Number.isFinite(num) && num > 0) return num.toFixed(1);
+  }
+
+  return "N/A";
+}
+
 const SVG_SALVAR_OFF =
   '<svg class="salvar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>';
 const SVG_SALVAR_ON =
@@ -155,7 +171,7 @@ async function carregarEstabelecimentos() {
       notaDiv.className = "local-nota";
       notaDiv.innerHTML = `
                 <i class="fas fa-star"></i>
-                <span>${estab.nota ? estab.nota.toFixed(1) : "5.0"}</span>
+                <span>${formatarMediaEstabelecimento(estab)}</span>
             `;
 
       topoDiv.appendChild(nomeContainer);

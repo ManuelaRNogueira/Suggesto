@@ -14,7 +14,11 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function carregarSugestoesDoUsuario() {
-  const idUsuario = localStorage.getItem("idUsuario") || 11; // Seu ID de teste
+  const idUsuario = localStorage.getItem("idUsuario");
+  if (!idUsuario) {
+    window.location.href = "login.html";
+    return;
+  }
 
   try {
     const resposta = await fetch(`${API_BASE_URL}/usuario/${idUsuario}`);
@@ -26,7 +30,7 @@ async function carregarSugestoesDoUsuario() {
     todasAsSugestoes = await resposta.json();
 
     atualizarResumo(todasAsSugestoes);
-    aplicarFiltros(); // Chama a função que desenha a lista com os filtros atuais (que começam em "todos")
+    aplicarFiltros();
   } catch (erro) {
     console.error("Erro na requisição da API:", erro);
     document.getElementById("sugestoesList").innerHTML = `
@@ -42,14 +46,11 @@ function aplicarFiltros() {
     .value.toLowerCase()
     .trim();
 
-  // Controla o botão de limpar busca
   document.getElementById("btnLimparBusca").style.display = filtrosAtuais.texto
     ? "block"
     : "none";
 
-  // Filtra a lista completa com base no que o usuário clicou
   const listaFiltrada = todasAsSugestoes.filter((sugestao) => {
-    // 1. Filtro de Texto (Busca no nome do local ou no comentário)
     const nomeLoja = (
       sugestao.estabelecimento ? sugestao.estabelecimento.nome : ""
     ).toLowerCase();
@@ -58,17 +59,14 @@ function aplicarFiltros() {
       nomeLoja.includes(filtrosAtuais.texto) ||
       comentario.includes(filtrosAtuais.texto);
 
-    // 2. Filtro de Tipo (Sugestão, Crítica, Elogio)
     const tipoNoBanco = (sugestao.tipo || "").toLowerCase();
     const passaTipo =
       filtrosAtuais.tipo === "todos" || tipoNoBanco === filtrosAtuais.tipo;
 
-    // 3. Filtro de Categoria
     const catNoBanco =
       sugestao.categoria && sugestao.categoria.nomeCategoria
         ? sugestao.categoria.nomeCategoria.toLowerCase()
         : "";
-    // Simplificamos a categoria do banco tirando acentos e espaços para comparar com os chips
     const catNormalizada = catNoBanco
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
@@ -77,26 +75,21 @@ function aplicarFiltros() {
       filtrosAtuais.categoria === "todos" ||
       catNormalizada === filtrosAtuais.categoria;
 
-    // 4. Filtro de Status
     const statusNoBanco = (sugestao.status || "analise").toLowerCase();
     const passaStatus =
       filtrosAtuais.status === "todos" ||
       statusNoBanco === filtrosAtuais.status;
 
-    // A sugestão só aparece se passar em todos os testes!
     return passaTexto && passaTipo && passaCat && passaStatus;
   });
 
   renderizarLista(listaFiltrada);
 
-  // Atualiza o texto informando quantos resultados encontrou
-  const resultadosInfo = document.getElementById("resultadosInfo");
   const textoResultados = document.getElementById("resultadosTexto");
   const btnLimpar = document.getElementById("btnLimparTudo");
 
   textoResultados.innerText = `${listaFiltrada.length} sugestões encontradas`;
 
-  // Mostra o botão de "Limpar Filtros" se houver algum filtro ativo
   const temFiltro =
     filtrosAtuais.texto ||
     filtrosAtuais.tipo !== "todos" ||
@@ -105,7 +98,6 @@ function aplicarFiltros() {
   btnLimpar.style.display = temFiltro ? "inline-block" : "none";
 }
 
-// Funções chamadas pelos cliques nos Chips
 function filtrarTipo(botao, valor) {
   document
     .querySelectorAll(".chip-tipo")
@@ -141,7 +133,6 @@ function limparBusca() {
 function limparTudo() {
   limparBusca();
 
-  // Reseta todos os filtros para 'todos'
   filtrosAtuais = {
     texto: "",
     tipo: "todos",
@@ -149,7 +140,6 @@ function limparTudo() {
     status: "todos",
   };
 
-  // Reseta o visual dos botões
   document
     .querySelectorAll(".chip")
     .forEach((b) => b.classList.remove("chip-ativo"));
@@ -196,9 +186,12 @@ function renderizarLista(sugestoes) {
     }
 
     const tipoAtual = (sugestao.tipo || "sugestao").toLowerCase();
-    let iconeTipo = "💡";
-    if (tipoAtual === "critica") iconeTipo = "⚠️";
-    if (tipoAtual === "elogio") iconeTipo = "🏆";
+    const labelTipo =
+      tipoAtual === "critica"
+        ? "Crítica"
+        : tipoAtual === "elogio"
+          ? "Elogio"
+          : "Sugestão";
 
     const dataOriginal = sugestao.dataAvaliacao
       ? sugestao.dataAvaliacao.split("T")[0]
@@ -247,7 +240,7 @@ function renderizarLista(sugestoes) {
                           .toLowerCase()
                           .normalize("NFD")
                           .replace(/[\u0300-\u036f]/g, "")}">
-                            ${iconeTipo} ${nomeCategoria}
+                            ${labelTipo} · ${nomeCategoria}
                         </span>
                         <div class="card-estrelas">
                             ${gerarEstrelas(sugestao.nota)}

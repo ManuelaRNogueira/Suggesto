@@ -362,15 +362,6 @@
         <p class="header-saudacao">Meu espaço</p>
         <h1 class="header-titulo">Perfil</h1>
       </div>
-      <div class="header-acoes">
-        <button class="header-notif" title="Notificações">
-          <i class="fas fa-bell"></i>
-          <span class="notif-bolinha"></span>
-        </button>
-        <button class="header-notif" title="Configurações" onclick="abrirConfiguracoes()">
-          <i class="fas fa-cog"></i>
-        </button>
-      </div>
     </header>
 
     <!-- HERO DO PERFIL -->
@@ -406,7 +397,6 @@
             </div>
           </div>
           <p class="hero-email" id="heroEmail"></p>
-          <p class="hero-membro" id="heroCidade"></p>
         </div>
 
         <!-- Botão editar -->
@@ -586,54 +576,7 @@
             <button class="ver-tudo" onclick="abrirSecao('minhas-sugestoes')">Ver tudo</button>
           </div>
 
-          <div class="atividade-lista">
-
-            <div class="atividade-item">
-
-              <div class="atividade-info">
-                <p class="atividade-titulo">Sugestão aprovada</p>
-                <p class="atividade-sub">Big Jack Hamburgueria · Atendimento</p>
-              </div>
-              <div class="atividade-pontos atividade-pontos-positivo">+30 pts</div>
-            </div>
-
-            <div class="atividade-item">
-
-              <div class="atividade-info">
-                <p class="atividade-titulo">Sugestão enviada</p>
-                <p class="atividade-sub">Café do Centro · Produto/Serviço</p>
-              </div>
-              <div class="atividade-data">há 2 dias</div>
-            </div>
-
-            <div class="atividade-item">
-
-              <div class="atividade-info">
-                <p class="atividade-titulo">Sugestão aprovada</p>
-                <p class="atividade-sub">SmartFit Campinas · Estrutura</p>
-              </div>
-              <div class="atividade-pontos atividade-pontos-positivo">+30 pts</div>
-            </div>
-
-            <div class="atividade-item">
-
-              <div class="atividade-info">
-                <p class="atividade-titulo">Local salvo</p>
-                <p class="atividade-sub">Cantina Italiana · Vila Nova</p>
-              </div>
-              <div class="atividade-data">há 5 dias</div>
-            </div>
-
-            <div class="atividade-item">
-
-              <div class="atividade-info">
-                <p class="atividade-titulo">Sugestão enviada</p>
-                <p class="atividade-sub">PanoBianco Academia · Preço</p>
-              </div>
-              <div class="atividade-data">há 1 sem.</div>
-            </div>
-
-          </div>
+          <div class="atividade-lista" id="atividadeLista"></div>
         </div>
 
         <!-- CONQUISTAS -->
@@ -691,16 +634,6 @@
       <div class="campo-grupo">
         <label class="campo-label">E-mail</label>
         <input type="email" class="campo-input" id="editEmail" placeholder="Seu e-mail" readonly>
-      </div>
-
-      <div class="campo-grupo">
-        <label class="campo-label">Telefone</label>
-        <input type="tel" class="campo-input" id="editTelefone" placeholder="(00) 00000-0000">
-      </div>
-
-      <div class="campo-grupo">
-        <label class="campo-label">Cidade</label>
-        <input type="text" class="campo-input" id="editCidade" placeholder="Sua cidade">
       </div>
 
       <div class="campo-grupo">
