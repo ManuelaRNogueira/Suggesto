@@ -11,6 +11,10 @@ let filtrosAtuais = {
 document.addEventListener("DOMContentLoaded", () => {
   carregarDadosUsuario();
   carregarSugestoesDoUsuario();
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") carregarSugestoesDoUsuario();
+  });
 });
 
 async function carregarSugestoesDoUsuario() {
@@ -63,22 +67,16 @@ function aplicarFiltros() {
     const passaTipo =
       filtrosAtuais.tipo === "todos" || tipoNoBanco === filtrosAtuais.tipo;
 
-    const catNoBanco =
-      sugestao.categoria && sugestao.categoria.nomeCategoria
-        ? sugestao.categoria.nomeCategoria.toLowerCase()
-        : "";
-    const catNormalizada = catNoBanco
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .split(" ")[0];
+    const catEstab = slugCategoriaEstabelecimento(
+      sugestao.estabelecimento?.categoria
+    );
     const passaCat =
       filtrosAtuais.categoria === "todos" ||
-      catNormalizada === filtrosAtuais.categoria;
+      catEstab === filtrosAtuais.categoria;
 
-    const statusNoBanco = (sugestao.status || "analise").toLowerCase();
     const passaStatus =
       filtrosAtuais.status === "todos" ||
-      statusNoBanco === filtrosAtuais.status;
+      chaveStatus(sugestao.status) === filtrosAtuais.status;
 
     return passaTexto && passaTipo && passaCat && passaStatus;
   });
@@ -170,20 +168,11 @@ function renderizarLista(sugestoes) {
   listaVazia.style.display = "none";
 
   sugestoes.forEach((sugestao) => {
-    const statusAtual = (sugestao.status || "analise").toLowerCase();
-    const classeStatusFaixa = `card-faixa-${statusAtual}`;
-    const classeStatusTexto = `status-${statusAtual}`;
-
-    let iconeStatus = "fa-clock";
-    let textoStatus = "Em análise";
-    if (statusAtual === "resolvida") {
-      iconeStatus = "fa-check-circle";
-      textoStatus = "Resolvida";
-    }
-    if (statusAtual === "recusada") {
-      iconeStatus = "fa-times-circle";
-      textoStatus = "Recusada";
-    }
+    const statusChave = chaveStatus(sugestao.status);
+    const classeCard = `sugestao-card card-status-${statusChave}`;
+    const classeStatusTexto = `status-${statusChave}`;
+    const textoStatus = rotuloStatus(sugestao.status);
+    const icone = iconeStatus(sugestao.status);
 
     const tipoAtual = (sugestao.tipo || "sugestao").toLowerCase();
     const labelTipo =
@@ -204,9 +193,7 @@ function renderizarLista(sugestoes) {
       year: "numeric",
     });
 
-    const nomeCategoria = sugestao.categoria
-      ? sugestao.categoria.nomeCategoria
-      : "Geral";
+    const nomeCategoria = rotuloCategoriaAvaliacao(sugestao);
     const nomeLoja = sugestao.estabelecimento
       ? sugestao.estabelecimento.nome
       : "Estabelecimento";
@@ -217,8 +204,8 @@ function renderizarLista(sugestoes) {
     letrasAvatar = letrasAvatar.toUpperCase();
 
     const cardHTML = `
-            <div class="sugestao-card" data-id="${sugestao.idAvaliacao}">
-                <div class="card-faixa ${classeStatusFaixa}"></div>
+            <div class="${classeCard}" data-id="${sugestao.idAvaliacao}">
+                <div class="card-faixa card-faixa-${statusChave}"></div>
                 <div class="card-corpo">
                     <div class="card-topo">
                         <div class="card-esquerda">
@@ -230,16 +217,13 @@ function renderizarLista(sugestoes) {
                         </div>
                         <div class="card-direita">
                             <span class="card-status ${classeStatusTexto}">
-                                <i class="fas ${iconeStatus}"></i> ${textoStatus}
+                                <i class="fas ${icone}"></i> ${textoStatus}
                             </span>
                         </div>
                     </div>
 
                     <div class="card-tags">
-                        <span class="tag tag-${nomeCategoria
-                          .toLowerCase()
-                          .normalize("NFD")
-                          .replace(/[\u0300-\u036f]/g, "")}">
+                        <span class="tag ${classeTagCategoria(nomeCategoria)}">
                             ${labelTipo} · ${nomeCategoria}
                         </span>
                         <div class="card-estrelas">
@@ -267,15 +251,13 @@ function gerarEstrelas(nota) {
 
 function atualizarResumo(sugestoes) {
   const total = sugestoes.length;
-  const resolvidas = sugestoes.filter(
-    (s) => (s.status || "").toLowerCase() === "resolvida",
-  ).length;
+  const aprovadas = sugestoes.filter((s) => isStatusAprovado(s.status)).length;
   const pendentes = sugestoes.filter(
-    (s) => (s.status || "analise").toLowerCase() === "analise",
+    (s) => chaveStatus(s.status) === "analise",
   ).length;
 
   document.getElementById("totalSugestoes").innerText = total;
-  document.getElementById("totalResolvidas").innerText = resolvidas;
+  document.getElementById("totalResolvidas").innerText = aprovadas;
   document.getElementById("totalPendentes").innerText = pendentes;
 }
 

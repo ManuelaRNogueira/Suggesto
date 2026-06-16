@@ -4,6 +4,13 @@ let usuarioAtual = null;
 document.addEventListener("DOMContentLoaded", () => {
     iniciarEventos();
     carregarDadosUsuario();
+
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+            const idUsuario = localStorage.getItem("idUsuario");
+            if (idUsuario) carregarAtividadeRecente(idUsuario);
+        }
+    });
 });
 
 function iniciarEventos() {
@@ -141,9 +148,7 @@ async function carregarAtividadeRecente(idUsuario) {
         if (!resposta.ok) throw new Error("Falha ao carregar atividade.");
 
         const avaliacoes = await resposta.json();
-        const aprovadas = avaliacoes.filter(
-            (item) => (item.status || "").toLowerCase() === "resolvida"
-        ).length;
+        const aprovadas = avaliacoes.filter((item) => isStatusAprovado(item.status)).length;
         setTexto("statAprovadas", aprovadas);
 
         const ordenadas = [...avaliacoes].sort((a, b) => {
@@ -162,19 +167,20 @@ async function carregarAtividadeRecente(idUsuario) {
         container.innerHTML = recentes.map(montarItemAtividade).join("");
     } catch (error) {
         console.error("Erro ao carregar atividade:", error);
+        setTexto("statAprovadas", 0);
         renderizarAtividadeVazia();
     }
 }
 
 function montarItemAtividade(avaliacao) {
-    const status = (avaliacao.status || "analise").toLowerCase();
+    const statusChave = chaveStatus(avaliacao.status);
     const nomeLoja = avaliacao.estabelecimento?.nome || "Estabelecimento";
-    const categoria = avaliacao.categoria?.nomeCategoria || "Geral";
+    const categoria = rotuloCategoriaAvaliacao(avaliacao);
     const dataRelativa = formatarDataRelativa(avaliacao.dataAvaliacao);
 
     let titulo = "Sugestão enviada";
-    if (status === "resolvida") titulo = "Sugestão aprovada";
-    if (status === "recusada") titulo = "Sugestão recusada";
+    if (statusChave === "aceita") titulo = "Sugestão aprovada";
+    if (statusChave === "recusada") titulo = "Sugestão recusada";
 
     return `
         <div class="atividade-item">

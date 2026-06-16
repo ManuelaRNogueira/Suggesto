@@ -30,6 +30,22 @@ function obterIdUsuario() {
   return Number.isFinite(id) && id > 0 ? id : null;
 }
 
+function normalizarPlanoFidelidade(nomePlano) {
+  const chave = (nomePlano || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (chave.includes("ouro") || chave.includes("gold")) return "ouro";
+  if (chave.includes("prata") || chave.includes("silver")) return "prata";
+  if (chave.includes("bronze")) return "bronze";
+  return "bronze";
+}
+
+function aplicarTemaPlano(nomePlano) {
+  const painel = document.getElementById("painelSaldo");
+  if (!painel) return;
+
+  painel.classList.remove("plano-bronze", "plano-prata", "plano-ouro");
+  painel.classList.add(`plano-${normalizarPlanoFidelidade(nomePlano)}`);
+}
+
 async function carregarDadosUsuario() {
   const idUsuario = obterIdUsuario();
   if (!idUsuario) return;
@@ -47,10 +63,26 @@ async function carregarDadosUsuario() {
     }
 
     atualizarPainelSaldo(saldoAtual);
+    atualizarEstatisticasUsuario(usuario);
+    aplicarTemaPlano(usuario.nomePlano);
   } catch (error) {
     console.error("Erro ao carregar pontos:", error);
     mostrarToast("Não foi possível carregar seu saldo de pontos.");
   }
+}
+
+function atualizarEstatisticasUsuario(usuario) {
+  const totalSugestoes = Number(usuario.totalSugestoes) || 0;
+  const totalResgates = Number(usuario.totalResgates) || 0;
+
+  const elSugestoes = document.getElementById("estatSugestoes");
+  const elResgates = document.getElementById("estatResgates");
+
+  if (elSugestoes) elSugestoes.textContent = totalSugestoes;
+  if (elResgates) elResgates.textContent = totalResgates;
+
+  const elNivel = document.getElementById("estatNivel");
+  if (elNivel && usuario.nomePlano) elNivel.textContent = usuario.nomePlano;
 }
 
 function atualizarSidebar(nome) {
@@ -331,6 +363,7 @@ async function confirmarResgate() {
 
     atualizarPainelSaldo(saldoAtual);
     renderizarMercado(recompensasCache);
+    carregarDadosUsuario();
 
     mostrarToast(`Resgate de "${resgateAtual.nome}" realizado! Cupom: ${dados.codigoCupom}`);
   } catch (error) {

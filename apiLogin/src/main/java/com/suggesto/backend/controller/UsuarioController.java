@@ -4,6 +4,7 @@ import com.suggesto.backend.model.Usuario;
 import com.suggesto.backend.util.UploadStorage;
 import com.suggesto.backend.repository.AvaliacaoRepository;
 import com.suggesto.backend.repository.LocalSalvoRepository;
+import com.suggesto.backend.repository.ResgateRepository;
 import com.suggesto.backend.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -40,6 +41,9 @@ public class UsuarioController {
 
     @Autowired
     private AvaliacaoRepository avaliacaoRepository;
+
+    @Autowired
+    private ResgateRepository resgateRepository;
 
     @GetMapping("/{id}")
     public ResponseEntity<?> buscarPorId(@PathVariable Long id) {
@@ -147,6 +151,7 @@ public class UsuarioController {
         resposta.put("pontos", usuario.getPontos());
         resposta.put("totalLocaisSalvos", localSalvoRepository.countByUsuarioId(usuario.getId()));
         resposta.put("totalSugestoes", avaliacaoRepository.countByUsuario_Id(usuario.getId()));
+        resposta.put("totalResgates", resgateRepository.countByUsuario_Id(usuario.getId()));
         return resposta;
     }
 

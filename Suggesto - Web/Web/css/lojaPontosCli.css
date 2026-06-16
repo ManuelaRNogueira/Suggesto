@@ -215,6 +215,101 @@ body {
   background: #1c1b26;
   border: 1px solid rgba(255, 255, 255, 0.07);
   padding: 36px 40px;
+  transition: border-color var(--trans), box-shadow var(--trans);
+}
+
+.painel-saldo.plano-bronze {
+  border-color: rgba(180, 83, 9, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(217, 119, 6, 0.12), 0 8px 32px rgba(180, 83, 9, 0.08);
+}
+.painel-saldo.plano-bronze .saldo-numero { color: #f59e0b; }
+.painel-saldo.plano-bronze .saldo-barra-progresso {
+  background: linear-gradient(90deg, #92400e, #d97706);
+}
+.painel-saldo.plano-bronze .saldo-estatisticas {
+  border-color: rgba(217, 119, 6, 0.25);
+  background: rgba(217, 119, 6, 0.08);
+}
+
+.painel-saldo.plano-prata {
+  border-color: rgba(203, 213, 225, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(226, 232, 240, 0.1), 0 8px 32px rgba(148, 163, 184, 0.12);
+}
+.painel-saldo.plano-prata .saldo-numero {
+  color: #e2e8f0;
+  text-shadow: 0 0 18px rgba(226, 232, 240, 0.35);
+}
+.painel-saldo.plano-prata .saldo-barra-progresso {
+  background: linear-gradient(90deg, #94a3b8, #f8fafc);
+}
+.painel-saldo.plano-prata .saldo-estatisticas {
+  border-color: rgba(226, 232, 240, 0.22);
+  background: rgba(148, 163, 184, 0.1);
+}
+
+.painel-saldo.plano-ouro {
+  border-color: rgba(251, 191, 36, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.15), 0 10px 40px rgba(251, 191, 36, 0.12);
+  background: linear-gradient(135deg, #1c1b26 0%, rgba(120, 53, 15, 0.18) 100%);
+}
+.painel-saldo.plano-ouro .saldo-numero {
+  color: #fcd34d;
+  text-shadow: 0 0 24px rgba(251, 191, 36, 0.45);
+}
+.painel-saldo.plano-ouro .saldo-unidade { color: rgba(252, 211, 77, 0.65); }
+.painel-saldo.plano-ouro .saldo-barra-progresso {
+  background: linear-gradient(90deg, #b45309, #fbbf24, #fde68a);
+}
+.painel-saldo.plano-ouro .saldo-estatisticas {
+  border-color: rgba(251, 191, 36, 0.28);
+  background: rgba(251, 191, 36, 0.08);
+}
+.painel-saldo.plano-bronze::after {
+  content: "Bronze";
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #78350f;
+  background: linear-gradient(135deg, #fcd34d, #b45309);
+  border: 1px solid rgba(217, 119, 6, 0.45);
+}
+
+.painel-saldo.plano-prata::after {
+  content: "Prata";
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #334155;
+  background: linear-gradient(135deg, #f8fafc, #94a3b8);
+  border: 1px solid rgba(226, 232, 240, 0.45);
+}
+
+.painel-saldo.plano-ouro::after {
+  content: "Gold";
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #78350f;
+  background: linear-gradient(135deg, #fde68a, #fbbf24);
+  border: 1px solid rgba(251, 191, 36, 0.5);
 }
 .saldo-fundo { display: none; }
 .saldo-conteudo {
