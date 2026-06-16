@@ -20,4 +20,7 @@ public interface AvaliacaoRepository extends JpaRepository<Avaliacao, Long> {
     List<Avaliacao> buscarPorUsuario(@Param("usuarioId") Long usuarioId);
 
     long countByUsuario_Id(Long usuarioId);
+    List<Avaliacao> findAllByOrderByDataAvaliacaoDesc();
+    List<Avaliacao> findByEstabelecimentoIdEstabelecimentoInOrderByDataAvaliacaoDesc(List<Long> ids);
+    long countByEstabelecimentoIdEstabelecimento(long id);
 }

@@ -1,0 +1,200 @@
+package com.suggesto.backend.service;
+
+import com.suggesto.backend.model.Avaliacao;
+import com.suggesto.backend.model.Estabelecimento;
+import com.suggesto.backend.model.TipoUsuario;
+import com.suggesto.backend.model.Usuario;
+import com.suggesto.backend.repository.AvaliacaoRepository;
+import com.suggesto.backend.repository.EstabelecimentoRepository;
+import com.suggesto.backend.repository.ResgateRepository;
+import com.suggesto.backend.repository.UsuarioRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Service
+public class AdminService {
+
+    private static final Set<String> STATUS_IMPLEMENTADO = Set.of(
+            "aceita", "aceito", "resolvida", "resolvido", "implementado", "implementada"
+    );
+    private static final Set<String> STATUS_RECUSADO = Set.of("recusada", "recusado");
+    private static final Set<String> STATUS_ANALISE = Set.of("analise", "pendente", "pending");
+
+    @Autowired
+    private EstabelecimentoRepository estabelecimentoRepository;
+
+    @Autowired
+    private AvaliacaoRepository avaliacaoRepository;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private ResgateRepository resgateRepository;
+
+    public Map<String, Object> obterMetricas(Long idGerente) {
+        List<Estabelecimento> estabelecimentos = resolverEstabelecimentos(idGerente);
+        List<Long> ids = estabelecimentos.stream()
+                .map(Estabelecimento::getIdEstabelecimento)
+                .collect(Collectors.toList());
+
+        // CORREÇÃO: Nome do método alterado para bater com idEstabelecimento
+        List<Avaliacao> sugestoes = ids.isEmpty()
+                ? avaliacaoRepository.findAllByOrderByDataAvaliacaoDesc()
+                : avaliacaoRepository.findByEstabelecimentoIdEstabelecimentoInOrderByDataAvaliacaoDesc(ids);
+
+        LocalDateTime umaSemanaAtras = LocalDateTime.now().minus(7, ChronoUnit.DAYS);
+
+        int pendentes = 0;
+        int emAnalise = 0;
+        int implementados = 0;
+        int recusados = 0;
+        int novasSemana = 0;
+        Map<String, Integer> porCategoria = new LinkedHashMap<>();
+
+        for (Avaliacao a : sugestoes) {
+            String grupo = classificarStatus(a.getStatus());
+            switch (grupo) {
+                case "implementado" -> implementados++;
+                case "recusado" -> recusados++;
+                case "analise" -> emAnalise++;
+                default -> pendentes++;
+            }
+            if (a.getDataAvaliacao() != null && a.getDataAvaliacao().isAfter(umaSemanaAtras)) {
+                novasSemana++;
+            }
+            if (a.getCategoria() != null && a.getCategoria().getNomeCategoria() != null) {
+                String cat = a.getCategoria().getNomeCategoria();
+                porCategoria.merge(cat, 1, Integer::sum);
+            }
+        }
+
+        Map<String, Object> metricas = new LinkedHashMap<>();
+        metricas.put("totalUsuarios", usuarioRepository.countByTipoUsuario(TipoUsuario.Cliente));
+        metricas.put("totalAdmins", usuarioRepository.countByTipoUsuario(TipoUsuario.Administrador));
+        metricas.put("totalSugestoes", sugestoes.size());
+        metricas.put("totalResgates", resgateRepository.count());
+        metricas.put("totalEstabelecimentos", estabelecimentos.size());
+        metricas.put("novasSemana", novasSemana);
+        metricas.put("pendentes", pendentes);
+        metricas.put("emAnalise", emAnalise);
+        metricas.put("implementados", implementados);
+        metricas.put("recusados", recusados);
+        metricas.put("porCategoria", porCategoria);
+        metricas.put("sugestoesPorMes", calcularSugestoesPorMes(sugestoes, 6));
+        metricas.put("sugestoesRecentes", sugestoes.stream().limit(8).map(this::resumirSugestao).collect(Collectors.toList()));
+
+        return metricas;
+    }
+
+    public List<Map<String, Object>> listarSugestoes(Long idGerente) {
+        List<Estabelecimento> estabelecimentos = resolverEstabelecimentos(idGerente);
+        List<Long> ids = estabelecimentos.stream()
+                .map(Estabelecimento::getIdEstabelecimento)
+                .collect(Collectors.toList());
+
+        // CORREÇÃO: Nome do método alterado para bater com idEstabelecimento
+        List<Avaliacao> sugestoes = ids.isEmpty()
+                ? avaliacaoRepository.findAllByOrderByDataAvaliacaoDesc()
+                : avaliacaoRepository.findByEstabelecimentoIdEstabelecimentoInOrderByDataAvaliacaoDesc(ids);
+
+        return sugestoes.stream().map(this::resumirSugestao).collect(Collectors.toList());
+    }
+
+    public List<Map<String, Object>> listarUsuarios() {
+        return usuarioRepository.findAllByOrderByNomeAsc().stream()
+                .map(this::resumirUsuario)
+                .collect(Collectors.toList());
+    }
+
+    public List<Map<String, Object>> listarEstabelecimentos(Long idGerente) {
+        return resolverEstabelecimentos(idGerente).stream()
+                .map(e -> {
+                    Map<String, Object> item = new LinkedHashMap<>();
+                    item.put("id", e.getIdEstabelecimento());
+                    item.put("nome", e.getNome());
+                    item.put("cidade", e.getCidade());
+                    item.put("categoria", e.getCategoria());
+                    item.put("ativo", e.getAtivo());
+                    // CORREÇÃO: Ajustado de countByEstabelecimento_IdEstabelecimento para countByEstabelecimentoIdEstabelecimento
+                    item.put("totalSugestoes", avaliacaoRepository.countByEstabelecimentoIdEstabelecimento(e.getIdEstabelecimento()));
+                    return item;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private List<Estabelecimento> resolverEstabelecimentos(Long idGerente) {
+        if (idGerente == null) {
+            return estabelecimentoRepository.buscarTodosAtivos();
+        }
+        List<Estabelecimento> doGerente = estabelecimentoRepository.buscarPorGerenteAtivos(idGerente);
+        return doGerente.isEmpty() ? estabelecimentoRepository.buscarTodosAtivos() : doGerente;
+    }
+
+    private String classificarStatus(String status) {
+        if (status == null || status.isBlank()) {
+            return "pendente";
+        }
+        String s = status.trim().toLowerCase(Locale.ROOT);
+        if (STATUS_IMPLEMENTADO.contains(s)) return "implementado";
+        if (STATUS_RECUSADO.contains(s)) return "recusado";
+        if (STATUS_ANALISE.contains(s)) return "analise";
+        return "pendente";
+    }
+
+    private List<Map<String, Object>> calcularSugestoesPorMes(List<Avaliacao> sugestoes, int meses) {
+        List<Map<String, Object>> resultado = new ArrayList<>();
+        LocalDateTime agora = LocalDateTime.now();
+
+        for (int i = meses - 1; i >= 0; i--) {
+            LocalDateTime inicio = agora.minusMonths(i).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+            LocalDateTime fim = inicio.plusMonths(1);
+            long count = sugestoes.stream()
+                    .filter(a -> a.getDataAvaliacao() != null
+                            && !a.getDataAvaliacao().isBefore(inicio)
+                            && a.getDataAvaliacao().isBefore(fim))
+                    .count();
+
+            Map<String, Object> mes = new LinkedHashMap<>();
+            mes.put("mes", inicio.format(DateTimeFormatter.ofPattern("MMM", new Locale("pt", "BR"))));
+            mes.put("total", count);
+            resultado.add(mes);
+        }
+        return resultado;
+    }
+
+    private Map<String, Object> resumirSugestao(Avaliacao a) {
+        Map<String, Object> item = new LinkedHashMap<>();
+        item.put("id", a.getIdAvaliacao());
+        item.put("comentario", a.getComentario());
+        item.put("status", a.getStatus());
+        item.put("statusUi", classificarStatus(a.getStatus()));
+        item.put("nota", a.getNota());
+        item.put("dataAvaliacao", a.getDataAvaliacao());
+        item.put("categoria", a.getCategoria() != null ? a.getCategoria().getNomeCategoria() : null);
+        item.put("autor", a.getUsuario() != null ? a.getUsuario().getNome() : null);
+        item.put("autorId", a.getUsuario() != null ? a.getUsuario().getId() : null);
+        item.put("estabelecimento", a.getEstabelecimento() != null ? a.getEstabelecimento().getNome() : null);
+        item.put("estabelecimentoId", a.getEstabelecimento() != null ? a.getEstabelecimento().getIdEstabelecimento() : null);
+        return item;
+    }
+
+    private Map<String, Object> resumirUsuario(Usuario u) {
+        Map<String, Object> item = new LinkedHashMap<>();
+        item.put("id", u.getId());
+        item.put("nome", u.getNome());
+        item.put("email", u.getEmail());
+        item.put("telefone", u.getTelefone());
+        item.put("cidade", u.getCidade());
+        item.put("tipoUsuario", u.getTipoUsuario() != null ? u.getTipoUsuario().name() : null);
+        item.put("pontos", u.getPontos());
+        item.put("plano", u.getPlano() != null ? u.getPlano().getNome() : null);
+        return item;
+    }
+}
