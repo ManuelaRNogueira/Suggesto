@@ -68,6 +68,8 @@ export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
   const [cnpj,      setCnpj]      = useState("");
   const [categoria, setCategoria] = useState("");
   const [telefone,  setTelefone]  = useState("");
+  const [horarioAbertura,   setHorarioAbertura]   = useState("");
+  const [horarioFechamento, setHorarioFechamento] = useState("");
   const [arquivo,   setArquivo]   = useState(null);
   const [preview,   setPreview]   = useState(null);
   const [salvando,  setSalvando]  = useState(false);
@@ -179,14 +181,20 @@ export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
     }
 
     const formData = new FormData();
-    
+
+    const horarioFuncionamento =
+      horarioAbertura && horarioFechamento
+        ? `Seg. a Dom.: ${horarioAbertura} – ${horarioFechamento}`
+        : "";
+
     const payloadEstabelecimento = {
-      nome, 
-      cnpj, 
-      categoria, 
-      telefone, 
+      nome,
+      cnpj,
+      categoria,
+      telefone,
+      horarioFuncionamento,
       idGerente,
-      ...enderecoCompleto 
+      ...enderecoCompleto
     };
 
     formData.append(
@@ -344,6 +352,19 @@ export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
                 style={telefoneInvalido ? { borderColor: '#ef4444', background: 'rgba(239, 68, 68, 0.04)' } : {}}
               />
               {telefoneInvalido && <span style={{ color: '#ef4444', fontSize: '0.7rem', fontWeight: 600, marginTop: '2px' }}>Telefone incompleto</span>}
+            </Campo>
+          </div>
+
+          {/* ── Horário de funcionamento ─────────────────────────────────── */}
+          <div className="form-grid-2">
+            <Campo label="Abre às">
+              <input type="time" className="form-input" value={horarioAbertura}
+                onChange={(e) => setHorarioAbertura(e.target.value)} />
+            </Campo>
+
+            <Campo label="Fecha às">
+              <input type="time" className="form-input" value={horarioFechamento}
+                onChange={(e) => setHorarioFechamento(e.target.value)} />
             </Campo>
           </div>
 
