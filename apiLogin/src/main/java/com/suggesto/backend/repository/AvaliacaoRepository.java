@@ -23,4 +23,8 @@ public interface AvaliacaoRepository extends JpaRepository<Avaliacao, Long> {
     List<Avaliacao> findAllByOrderByDataAvaliacaoDesc();
     List<Avaliacao> findByEstabelecimentoIdEstabelecimentoInOrderByDataAvaliacaoDesc(List<Long> ids);
     long countByEstabelecimentoIdEstabelecimento(long id);
+
+    @Query("SELECT a.estabelecimento.idEstabelecimento, AVG(a.nota), COUNT(a) " +
+           "FROM Avaliacao a GROUP BY a.estabelecimento.idEstabelecimento")
+    List<Object[]> calcularMediaEContagemPorEstabelecimento();
 }

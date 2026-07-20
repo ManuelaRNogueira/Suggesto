@@ -175,15 +175,15 @@ body {
 
 .estab-logo-wrap { flex-shrink: 0; }
 .estab-logo {
-  width: 72px; height: 72px; border-radius: 14px;
-  object-fit: contain; background: #fff; padding: 6px;
+  width: 88px; height: 88px; border-radius: 16px;
+  object-fit: cover;
   border: 2px solid rgba(255,255,255,0.1);
 }
 .estab-logo-placeholder {
-  width: 72px; height: 72px; border-radius: 14px;
+  width: 88px; height: 88px; border-radius: 16px;
   background: var(--roxo-bg); border: 2px solid var(--roxo-borda);
   display: none; align-items: center; justify-content: center;
-  font-size: 26px; color: var(--roxo-claro);
+  font-size: 30px; color: var(--roxo-claro);
 }
 
 .estab-dados { flex: 1; min-width: 0; }
@@ -276,8 +276,8 @@ body {
   display: flex; align-items: center; gap: 32px;
   background: var(--fundo2); border: 1px solid var(--borda);
   border-radius: 16px; padding: 20px 24px;
-  margin: 20px 32px 0; max-width: 836px;
-  /* 900px container - 32px*2 padding */
+  margin: 20px auto 0; max-width: 836px;
+  /* 900px container - 32px*2 padding, mesma centralização da lista de avaliações abaixo */
 }
 .resumo-nota { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
 .resumo-num {
@@ -330,31 +330,21 @@ body {
   white-space: nowrap;
 }
 
+.sug-estrelas { display: flex; gap: 2px; margin-bottom: 10px; }
+.sug-estrelas i { font-size: 12px; color: var(--amarelo); }
+.sug-estrelas i.vazia { color: var(--borda); }
+
 .sug-texto { font-size: 14px; color: var(--texto-fraco); line-height: 1.65; margin-bottom: 14px; }
 
 .sug-rodape { display: flex; align-items: center; justify-content: space-between; }
-.sug-likes {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 12px; color: var(--texto-mfraco);
-  background: none; border: none; cursor: pointer;
-  padding: 5px 10px; border-radius: 8px; transition: var(--anim);
-}
-.sug-likes:hover { background: rgba(255,255,255,0.04); color: var(--texto-fraco); }
-.sug-likes.curtido { color: var(--roxo-claro); }
-.sug-likes i { font-size: 13px; }
 
-.sug-visita { font-size: 11px; color: var(--texto-mfraco); }
-
-/* Resposta do estabelecimento */
-.sug-resposta {
-  margin-top: 12px; padding: 12px 14px;
-  background: var(--fundo3); border-left: 3px solid var(--roxo-claro);
-  border-radius: 0 10px 10px 0;
+.sug-status {
+  display: inline-block; font-size: 11px; font-weight: 600;
+  padding: 3px 10px; border-radius: 999px;
 }
-.sug-resp-header { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-.sug-resp-header i { font-size: 12px; color: var(--roxo-claro); }
-.sug-resp-header span { font-size: 11px; font-weight: 600; color: var(--roxo-claro); }
-.sug-resp-texto { font-size: 13px; color: var(--texto-fraco); line-height: 1.6; }
+.sug-status-aceita   { background: var(--verde-bg); color: var(--verde); }
+.sug-status-recusada { background: rgba(248,113,113,0.12); color: #f87171; }
+.sug-status-analise  { background: rgba(251,191,36,0.12); color: var(--amarelo); }
 
 /* ===== VAZIO ===== */
 .vazio {
@@ -462,6 +452,12 @@ body {
   font-size: 11px; color: var(--texto-mfraco); pointer-events: none;
 }
 
+.modal-estrelas { display: flex; gap: 8px; }
+.modal-estrelas i {
+  font-size: 22px; color: var(--amarelo); cursor: pointer; transition: var(--anim);
+}
+.modal-estrelas i.vazia { color: var(--borda); }
+
 .modal-acoes { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
 .btn-cancelar {
   padding: 10px 18px; border-radius: 10px;
@@ -509,8 +505,8 @@ body {
   .toast { left: 50%; }
 }
 @media (max-width: 480px) {
-  .estab-logo { width: 56px; height: 56px; }
-  .estab-logo-placeholder { width: 56px; height: 56px; }
+  .estab-logo { width: 64px; height: 64px; }
+  .estab-logo-placeholder { width: 64px; height: 64px; }
   .estab-nome { font-size: 16px; }
   .resumo-avaliacao { flex-direction: column; gap: 16px; }
 }

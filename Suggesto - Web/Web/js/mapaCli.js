@@ -1,16 +1,16 @@
 const dadosEstab = {
-  nome:       sessionStorage.getItem('loc_nome')       || 'Big Jack Hamburgueria',
-  endereco:   sessionStorage.getItem('loc_endereco')   || 'R. Oliveira Cardoso, 376, Jardim Chapadão, Campinas, SP',
-  telefone:   sessionStorage.getItem('loc_telefone')   || '(19) 3210-3025',
-  horario:    sessionStorage.getItem('loc_horario')    || 'Seg. a Dom.: 11:00 – 22:30',
-  fecha:      sessionStorage.getItem('loc_fecha')      || '22:30',
-  nota:       sessionStorage.getItem('loc_nota')       || '4.8',
-  avaliacoes: sessionStorage.getItem('loc_avaliacoes') || '127',
-  logo:       sessionStorage.getItem('loc_logo')       || 'imagens/bigjack.png',
+  id:         sessionStorage.getItem('loc_id')         || '',
+  nome:       sessionStorage.getItem('loc_nome')       || 'Estabelecimento',
+  endereco:   sessionStorage.getItem('loc_endereco')   || '',
+  telefone:   sessionStorage.getItem('loc_telefone')   || '',
+  horario:    sessionStorage.getItem('loc_horario')    || '',
+  nota:       sessionStorage.getItem('loc_nota')       || '',
+  avaliacoes: sessionStorage.getItem('loc_avaliacoes') || '0',
+  logo:       sessionStorage.getItem('loc_logo')       || '',
 };
 
 // Limpa sessionStorage logo após ler
-['loc_nome','loc_endereco','loc_telefone','loc_horario','loc_fecha',
+['loc_id','loc_nome','loc_endereco','loc_telefone','loc_horario',
  'loc_nota','loc_avaliacoes','loc_logo']
   .forEach(k => sessionStorage.removeItem(k));
 
@@ -34,10 +34,10 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── PREENCHER DADOS NA TELA ──────────────────────────────────────────
 function preencherDados() {
   document.getElementById('nomeEstab').textContent      = dadosEstab.nome;
-  document.getElementById('enderecoEstab').textContent  = dadosEstab.endereco;
-  document.getElementById('horarioEstab').textContent   = dadosEstab.horario;
-  document.getElementById('telefoneEstab').textContent  = dadosEstab.telefone;
-  document.getElementById('notaEstab').textContent      = dadosEstab.nota;
+  document.getElementById('enderecoEstab').textContent  = dadosEstab.endereco || 'Endereço não informado';
+  document.getElementById('horarioEstab').textContent   = dadosEstab.horario || 'Horário não informado';
+  document.getElementById('telefoneEstab').textContent  = dadosEstab.telefone || 'Não informado';
+  document.getElementById('notaEstab').textContent      = dadosEstab.nota || '—';
   document.getElementById('totalAvaliacoes').textContent = `(${dadosEstab.avaliacoes} avaliações)`;
   document.getElementById('modalSubtitulo').textContent = dadosEstab.nome;
   document.title = `${dadosEstab.nome} — Suggesto`;
@@ -285,21 +285,33 @@ function verificarSeFavorito() {
 
 
 // ── VERIFICAR STATUS ABERTO/FECHADO ──────────────────────────────────
+// Não há horário estruturado no backend, apenas texto livre — extrai o
+// último horário (HH:MM) citado no texto para estimar o fechamento.
 function verificarStatus() {
-  const agora    = new Date();
-  const [hF, mF] = dadosEstab.fecha.split(':').map(Number);
-  const fechaMin = hF * 60 + mF;
-  const agoraMin = agora.getHours() * 60 + agora.getMinutes();
-  const aberto   = agoraMin >= 10 * 60 && agoraMin < fechaMin;
-
   const dot   = document.getElementById('statusDot');
   const texto = document.getElementById('statusTexto');
   const fecha = document.getElementById('statusFecha');
 
+  const horarios = (dadosEstab.horario || '').match(/(\d{1,2}):(\d{2})/g);
+  if (!horarios || horarios.length === 0) {
+    dot.className     = 'status-dot status-fechado';
+    texto.textContent = 'Horário indisponível';
+    texto.className   = 'status-texto fechado';
+    fecha.textContent = '';
+    return;
+  }
+
+  const fechaStr = horarios[horarios.length - 1];
+  const [hF, mF] = fechaStr.split(':').map(Number);
+  const fechaMin = hF * 60 + mF;
+  const agora    = new Date();
+  const agoraMin = agora.getHours() * 60 + agora.getMinutes();
+  const aberto   = agoraMin < fechaMin;
+
   dot.className     = `status-dot ${aberto ? 'status-aberto' : 'status-fechado'}`;
   texto.textContent = aberto ? 'Aberto' : 'Fechado';
   texto.className   = `status-texto${aberto ? '' : ' fechado'}`;
-  fecha.textContent = aberto ? `Fecha às ${dadosEstab.fecha}` : 'Abre amanhã às 11:00';
+  fecha.textContent = aberto ? `Fecha às ${fechaStr}` : 'Fechado agora';
 }
 
 

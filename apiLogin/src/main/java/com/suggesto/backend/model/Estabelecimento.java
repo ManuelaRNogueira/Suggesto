@@ -52,7 +52,17 @@ public class Estabelecimento {
     @Column(name = "complemento", length = 100)
     private String complemento;
 
+    @Column(name = "horario_funcionamento", length = 150)
+    private String horarioFuncionamento;
+
     private String fotoPath;
+
+    // Calculados a partir das avaliações, não persistidos no banco.
+    @Transient
+    private Double mediaAvaliacoes;
+
+    @Transient
+    private Long totalAvaliacoes;
 
     
     public String getFotoPath() {

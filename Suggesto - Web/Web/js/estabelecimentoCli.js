@@ -1,107 +1,57 @@
-const est = {
-  nome:       sessionStorage.getItem('est_nome')       || 'Big Jack Hamburgueria',
-  categoria:  sessionStorage.getItem('est_categoria')  || 'Restaurante',
-  endereco:   sessionStorage.getItem('est_endereco')   || 'R. Oliveira Cardoso, 376, Jardim Chapadão, Campinas, SP',
-  telefone:   sessionStorage.getItem('est_telefone')   || '(19) 3210-3025',
-  horario:    sessionStorage.getItem('est_horario')    || 'Seg. a Dom.: 11:00 – 22:30',
-  fecha:      sessionStorage.getItem('est_fecha')      || '22:30',
-  nota:       sessionStorage.getItem('est_nota')       || '4.8',
-  avaliacoes: sessionStorage.getItem('est_avaliacoes') || '127',
-  logo:       sessionStorage.getItem('est_logo')       || 'imagens/bigjack.png',
-};
+const API_BASE = "http://localhost:8080/api";
 
-// Limpa o sessionStorage após ler
-['est_nome','est_categoria','est_endereco','est_telefone',
- 'est_horario','est_fecha','est_nota','est_avaliacoes','est_logo']
-  .forEach(k => sessionStorage.removeItem(k));
-
-
-// ── SUGESTÕES DE EXEMPLO ─────────────────────────────────────────────
-// Em produção, essas sugestões viriam de uma API/banco de dados.
-// Por enquanto, usamos dados fictícios para demonstrar a interface.
-const sugestoesExemplo = [
-  {
-    id: 1,
-    usuario: 'Maria S.',
-    iniciais: 'MS',
-    data: 'há 2 dias',
-    categoria: 'Atendimento',
-    texto: 'O atendimento poderia ser mais rápido nos horários de pico. Esperei mais de 20 minutos para ser atendido numa terça-feira ao meio-dia.',
-    likes: 12,
-    curtido: false,
-    visita: 'Esta semana',
-    resposta: {
-      texto: 'Olá Maria! Obrigado pelo feedback. Estamos treinando novos funcionários para melhorar o tempo de atendimento nos horários de pico. Volte em breve!'
-    }
-  },
-  {
-    id: 2,
-    usuario: 'Carlos M.',
-    iniciais: 'CM',
-    data: 'há 5 dias',
-    categoria: 'Produto',
-    texto: 'Sugestão: adicionar opção de hambúrguer vegetariano ou vegano ao cardápio. Tenho amigos que não comem carne e ficamos sem opção para indicar o lugar.',
-    likes: 28,
-    curtido: false,
-    visita: 'Semana passada',
-    resposta: null
-  },
-  {
-    id: 3,
-    usuario: 'Ana L.',
-    iniciais: 'AL',
-    data: 'há 1 semana',
-    categoria: 'Estrutura',
-    texto: 'O espaço é muito bom, mas seria ótimo ter mais tomadas disponíveis para carregar celular. Muitas pessoas trabalham de lá durante a semana.',
-    likes: 9,
-    curtido: false,
-    visita: 'Semana passada',
-    resposta: null
-  },
-  {
-    id: 4,
-    usuario: 'Pedro R.',
-    iniciais: 'PR',
-    data: 'há 2 semanas',
-    categoria: 'Atendimento',
-    texto: 'Excelente atendimento! Só sugiro que o sistema de senhas seja melhorado — fica difícil ouvir quando chamam o número.',
-    likes: 6,
-    curtido: false,
-    visita: 'Semana passada',
-    resposta: {
-      texto: 'Olá Pedro! Já estamos avaliando um sistema de display para facilitar a visualização dos pedidos. Obrigado pela sugestão!'
-    }
-  },
-  {
-    id: 5,
-    usuario: 'Julia F.',
-    iniciais: 'JF',
-    data: 'há 3 semanas',
-    categoria: 'Limpeza',
-    texto: 'Os banheiros precisam de atenção com mais frequência, especialmente nos finais de semana quando o movimento é maior.',
-    likes: 17,
-    curtido: false,
-    visita: 'Mais de 15 dias',
-    resposta: null
-  },
-];
-
-// ── ESTADO ───────────────────────────────────────────────────────────
+let est = null;        // dados reais do estabelecimento carregado da API
+let avaliacoes = [];    // avaliações reais do estabelecimento
 let salvo = false;
 let filtroAtivo = 'todas';
-let sugestoes = [...sugestoesExemplo];
+let notaSelecionada = 0;
 
 
 // ── INICIALIZA ────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   carregarDadosUsuario();
-  preencherHeader();
-  verificarStatus();
-  verificarSeFavorito();
-  renderizarResumo();
-  renderizarSugestoes();
   configurarContador();
+
+  const id = obterIdEstabelecimento();
+  if (!id) {
+    mostrarErroCarregamento();
+    return;
+  }
+
+  await carregarEstabelecimento(id);
+  if (est) {
+    await carregarAvaliacoes(id);
+    verificarSeFavorito();
+  }
 });
+
+function obterIdEstabelecimento() {
+  const params = new URLSearchParams(window.location.search);
+  const id = Number(params.get('id'));
+  return Number.isFinite(id) && id > 0 ? id : null;
+}
+
+function urlFotoEstabelecimento(fotoPath) {
+  if (!fotoPath) return '';
+  if (/^https?:\/\//i.test(fotoPath)) return fotoPath;
+  return `http://localhost:8080/uploads/${fotoPath}`;
+}
+
+function montarEndereco(dados) {
+  const partes = [
+    [dados.rua, dados.numero].filter(Boolean).join(', '),
+    dados.complemento,
+    dados.bairro,
+    [dados.cidade, dados.estado].filter(Boolean).join(' - '),
+  ].filter(p => p && String(p).trim());
+  return partes.join(', ');
+}
+
+function escapeHtml(texto) {
+  const div = document.createElement('div');
+  div.textContent = texto ?? '';
+  return div.innerHTML;
+}
 
 
 // ── CARREGAR NOME DO USUÁRIO ─────────────────────────────────────────
@@ -118,72 +68,173 @@ function carregarDadosUsuario() {
 }
 
 
+// ── CARREGAR ESTABELECIMENTO REAL ──────────────────────────────────────
+async function carregarEstabelecimento(id) {
+  try {
+    const resposta = await fetch(`${API_BASE}/estabelecimentos/${id}`);
+    if (!resposta.ok) throw new Error('Estabelecimento não encontrado.');
+    const dados = await resposta.json();
+
+    est = {
+      id: dados.idEstabelecimento,
+      nome: dados.nome || 'Estabelecimento',
+      categoria: dados.categoria || '—',
+      telefone: dados.telefone || '',
+      endereco: montarEndereco(dados),
+      horario: dados.horarioFuncionamento || '',
+      logo: urlFotoEstabelecimento(dados.fotoPath),
+    };
+
+    preencherHeader();
+    verificarStatus();
+  } catch (erro) {
+    console.error('Erro ao carregar estabelecimento:', erro);
+    mostrarErroCarregamento();
+  }
+}
+
+function mostrarErroCarregamento() {
+  document.getElementById('nomeEstab').textContent = 'Estabelecimento não encontrado';
+  document.getElementById('categoriaEstab').textContent = '—';
+  document.getElementById('enderecoCurto').textContent = '—';
+  document.getElementById('notaEstab').textContent = '—';
+  document.getElementById('totalAvaliacoes').textContent = '(0)';
+  document.getElementById('resumoNota').textContent = '—';
+  document.getElementById('resumoTotal').textContent = '0 avaliações';
+  document.getElementById('resumoEstrelas').innerHTML = '';
+  document.getElementById('resumoBarras').innerHTML = '';
+  document.getElementById('listaSugestoes').innerHTML = '';
+  document.getElementById('vazio').style.display = 'flex';
+  document.getElementById('statusTexto').textContent = 'Indisponível';
+  document.getElementById('statusDot').className = 'status-dot status-fechado';
+  document.getElementById('statusHora').textContent = '';
+  mostrarToast('Não foi possível carregar este estabelecimento.', 'erro');
+}
+
+
 // ── PREENCHER HEADER ─────────────────────────────────────────────────
 function preencherHeader() {
   document.title = `${est.nome} — Suggesto`;
 
   document.getElementById('nomeEstab').textContent      = est.nome;
-  document.getElementById('notaEstab').textContent      = est.nota;
-  document.getElementById('totalAvaliacoes').textContent = `(${est.avaliacoes})`;
-  document.getElementById('categoriaEstab').textContent  = est.categoria;
-  document.getElementById('enderecoCurto').textContent   = est.endereco.split(',').slice(-2).join(',').trim();
-  document.getElementById('enderecoCompleto').textContent = est.endereco;
-  document.getElementById('horarioEstab').textContent    = est.horario;
-  document.getElementById('telefoneEstab').textContent   = est.telefone;
+  document.getElementById('categoriaEstab').textContent = est.categoria;
+  document.getElementById('enderecoCurto').textContent  = est.endereco
+    ? est.endereco.split(',').slice(-2).join(',').trim()
+    : 'Endereço não informado';
+  document.getElementById('enderecoCompleto').textContent = est.endereco || 'Endereço não informado';
+  document.getElementById('horarioEstab').textContent    = est.horario || 'Horário não informado';
+  document.getElementById('telefoneEstab').textContent   = est.telefone || 'Não informado';
   document.getElementById('modalNomeEstab').textContent  = est.nome;
+
+  const itemTelefone = document.getElementById('itemTelefone');
+  if (itemTelefone) itemTelefone.style.cursor = est.telefone ? 'pointer' : 'default';
 
   // Logo
   const logo = document.getElementById('logoEstab');
+  const placeholder = document.getElementById('logoPlaceholder');
   if (est.logo) {
     logo.src = est.logo;
+    logo.style.display = '';
+    placeholder.style.display = 'none';
   } else {
     logo.style.display = 'none';
-    document.getElementById('logoPlaceholder').style.display = 'flex';
+    placeholder.style.display = 'flex';
   }
 }
 
 
 // ── VERIFICAR STATUS ABERTO/FECHADO ──────────────────────────────────
+// Não há campo estruturado de horário no backend, apenas um texto livre.
+// Tentamos extrair o último horário (HH:MM) citado no texto como horário de fechamento.
 function verificarStatus() {
-  const agora = new Date();
-  const [hF, mF] = est.fecha.split(':').map(Number);
-  const fechaMin = hF * 60 + mF;
-  const agoraMin = agora.getHours() * 60 + agora.getMinutes();
-  const aberto = agoraMin >= 10 * 60 && agoraMin < fechaMin;
-
   const dot   = document.getElementById('statusDot');
   const texto = document.getElementById('statusTexto');
   const hora  = document.getElementById('statusHora');
 
+  const horarios = (est.horario || '').match(/(\d{1,2}):(\d{2})/g);
+  if (!horarios || horarios.length === 0) {
+    dot.className     = 'status-dot status-fechado';
+    texto.textContent = 'Horário indisponível';
+    texto.className   = 'status-texto fechado';
+    hora.textContent  = '';
+    return;
+  }
+
+  const fechaStr = horarios[horarios.length - 1];
+  const [hF, mF] = fechaStr.split(':').map(Number);
+  const fechaMin = hF * 60 + mF;
+
+  const agora = new Date();
+  const agoraMin = agora.getHours() * 60 + agora.getMinutes();
+  const aberto = agoraMin < fechaMin;
+
   dot.className     = `status-dot ${aberto ? 'status-aberto' : 'status-fechado'}`;
   texto.textContent = aberto ? 'Aberto' : 'Fechado';
   texto.className   = `status-texto${aberto ? '' : ' fechado'}`;
-  hora.textContent  = aberto ? `Fecha às ${est.fecha}` : 'Abre amanhã às 11:00';
+  hora.textContent  = aberto ? `Fecha às ${fechaStr}` : 'Fechado agora';
 }
 
 
-// ── RESUMO DE AVALIAÇÃO ───────────────────────────────────────────────
+// ── CARREGAR AVALIAÇÕES REAIS ──────────────────────────────────────────
+async function carregarAvaliacoes(id) {
+  try {
+    const resposta = await fetch(`${API_BASE}/avaliacoes/estabelecimento/${id}`);
+    if (!resposta.ok) throw new Error('Erro ao buscar avaliações.');
+    const dados = await resposta.json();
+    avaliacoes = Array.isArray(dados) ? dados : [];
+  } catch (erro) {
+    console.error('Erro ao carregar avaliações:', erro);
+    avaliacoes = [];
+  }
+
+  popularFiltros();
+  renderizarResumo();
+  renderizarSugestoes();
+}
+
+function popularFiltros() {
+  const barra = document.getElementById('filtrosCategoria');
+  if (!barra) return;
+
+  const categorias = [...new Set(
+    avaliacoes.map(a => a.categoria && a.categoria.nomeCategoria).filter(Boolean)
+  )];
+
+  barra.innerHTML = '<button class="filtro ativo" onclick="filtrar(this, \'todas\')">Todas</button>' +
+    categorias.map(c => `<button class="filtro" onclick="filtrar(this, '${c.replace(/'/g, "\\'")}')">${escapeHtml(c)}</button>`).join('');
+
+  filtroAtivo = 'todas';
+}
+
+
+// ── RESUMO DE AVALIAÇÃO (calculado a partir das avaliações reais) ─────
 function renderizarResumo() {
-  const nota = parseFloat(est.nota);
-  const total = parseInt(est.avaliacoes);
+  const total = avaliacoes.length;
+  const soma = avaliacoes.reduce((acc, a) => acc + (Number(a.nota) || 0), 0);
+  const media = total > 0 ? soma / total : 0;
+  const mediaTexto = total > 0 ? media.toFixed(1) : '—';
 
-  // Estrelas
+  document.getElementById('notaEstab').textContent       = mediaTexto;
+  document.getElementById('totalAvaliacoes').textContent = `(${total})`;
+  document.getElementById('resumoNota').textContent      = mediaTexto;
+  document.getElementById('resumoTotal').textContent     = `${total} ${total === 1 ? 'avaliação' : 'avaliações'}`;
+
   const el = document.getElementById('resumoEstrelas');
-  document.getElementById('resumoNota').textContent = est.nota;
-  document.getElementById('resumoTotal').textContent = `${total} avaliações`;
-
   el.innerHTML = '';
   for (let i = 1; i <= 5; i++) {
     const star = document.createElement('i');
-    star.className = i <= Math.round(nota) ? 'fas fa-star' : 'fas fa-star vazia';
+    star.className = i <= Math.round(media) ? 'fas fa-star' : 'fas fa-star vazia';
     el.appendChild(star);
   }
 
-  // Barras de distribuição (simuladas com base na nota)
-  const dist = gerarDistribuicao(nota, total);
+  const dist = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  avaliacoes.forEach(a => {
+    const nota = Math.round(Number(a.nota));
+    if (dist[nota] !== undefined) dist[nota]++;
+  });
+
   const barrasEl = document.getElementById('resumoBarras');
   barrasEl.innerHTML = '';
-
   for (let i = 5; i >= 1; i--) {
     const pct = total > 0 ? Math.round((dist[i] / total) * 100) : 0;
     barrasEl.innerHTML += `
@@ -197,33 +248,15 @@ function renderizarResumo() {
   }
 }
 
-// Gera distribuição de avaliações com base na nota média
-function gerarDistribuicao(nota, total) {
-  const pesos = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-  if (nota >= 4.5)      { pesos[5] = 0.6; pesos[4] = 0.25; pesos[3] = 0.1; pesos[2] = 0.03; pesos[1] = 0.02; }
-  else if (nota >= 4.0) { pesos[5] = 0.4; pesos[4] = 0.35; pesos[3] = 0.15; pesos[2] = 0.07; pesos[1] = 0.03; }
-  else if (nota >= 3.0) { pesos[5] = 0.2; pesos[4] = 0.3; pesos[3] = 0.3; pesos[2] = 0.15; pesos[1] = 0.05; }
-  else                   { pesos[5] = 0.05; pesos[4] = 0.1; pesos[3] = 0.2; pesos[2] = 0.35; pesos[1] = 0.3; }
 
-  let acum = 0;
-  const dist = {};
-  [5, 4, 3, 2].forEach(n => {
-    dist[n] = Math.round(total * pesos[n]);
-    acum += dist[n];
-  });
-  dist[1] = total - acum;
-  return dist;
-}
-
-
-// ── RENDERIZAR SUGESTÕES ──────────────────────────────────────────────
+// ── RENDERIZAR SUGESTÕES/AVALIAÇÕES REAIS ──────────────────────────────
 function renderizarSugestoes() {
   const lista = document.getElementById('listaSugestoes');
   const vazio = document.getElementById('vazio');
 
   const filtradas = filtroAtivo === 'todas'
-    ? sugestoes
-    : sugestoes.filter(s => s.categoria.toLowerCase().includes(filtroAtivo.toLowerCase()));
+    ? avaliacoes
+    : avaliacoes.filter(a => (a.categoria && a.categoria.nomeCategoria) === filtroAtivo);
 
   if (filtradas.length === 0) {
     lista.innerHTML = '';
@@ -232,40 +265,61 @@ function renderizarSugestoes() {
   }
 
   vazio.style.display = 'none';
-  lista.innerHTML = filtradas.map(s => `
-    <div class="sugestao-card" id="card-${s.id}">
+  lista.innerHTML = filtradas
+    .slice()
+    .sort((a, b) => new Date(b.dataAvaliacao) - new Date(a.dataAvaliacao))
+    .map(renderizarCardSugestao)
+    .join('');
+}
+
+function renderizarCardSugestao(a) {
+  const nomeUsuario = (a.usuario && a.usuario.nome) || 'Usuário';
+  const iniciais = obterIniciais(nomeUsuario);
+  const nota = Number(a.nota) || 0;
+  const estrelasHtml = Array.from({ length: 5 }, (_, i) =>
+    `<i class="fas fa-star${i < nota ? '' : ' vazia'}"></i>`).join('');
+  const categoriaNome = (a.categoria && a.categoria.nomeCategoria) || 'Geral';
+  const dataFormatada = formatarData(a.dataAvaliacao);
+
+  const statusChave = typeof chaveStatus === 'function' ? chaveStatus(a.status) : 'analise';
+  const statusLabel = typeof rotuloStatus === 'function' ? rotuloStatus(a.status) : (a.status || '');
+
+  return `
+    <div class="sugestao-card" id="card-${a.idAvaliacao}">
       <div class="sug-topo">
         <div class="sug-usuario">
-          <div class="sug-avatar">${s.iniciais}</div>
+          <div class="sug-avatar">${escapeHtml(iniciais)}</div>
           <div class="sug-user-info">
-            <span class="sug-nome">${s.usuario}</span>
-            <span class="sug-data">${s.data}</span>
+            <span class="sug-nome">${escapeHtml(nomeUsuario)}</span>
+            <span class="sug-data">${dataFormatada}</span>
           </div>
         </div>
-        <span class="sug-categoria">${s.categoria}</span>
+        <span class="sug-categoria">${escapeHtml(categoriaNome)}</span>
       </div>
 
-      <p class="sug-texto">${s.texto}</p>
+      <div class="sug-estrelas">${estrelasHtml}</div>
 
-      ${s.resposta ? `
-        <div class="sug-resposta">
-          <div class="sug-resp-header">
-            <i class="fas fa-store"></i>
-            <span>Resposta do estabelecimento</span>
-          </div>
-          <p class="sug-resp-texto">${s.resposta.texto}</p>
-        </div>
-      ` : ''}
+      <p class="sug-texto">${escapeHtml(a.comentario || '')}</p>
 
       <div class="sug-rodape">
-        <button class="sug-likes ${s.curtido ? 'curtido' : ''}" onclick="curtir(${s.id})">
-          <i class="${s.curtido ? 'fas' : 'far'} fa-thumbs-up"></i>
-          ${s.likes} ${s.likes === 1 ? 'pessoa achou útil' : 'pessoas acharam útil'}
-        </button>
-        <span class="sug-visita">Visita: ${s.visita}</span>
+        <span class="sug-status sug-status-${statusChave}">${escapeHtml(statusLabel)}</span>
       </div>
     </div>
-  `).join('');
+  `;
+}
+
+function formatarData(iso) {
+  if (!iso) return '';
+  const data = new Date(iso);
+  if (isNaN(data.getTime())) return '';
+  return data.toLocaleDateString('pt-BR');
+}
+
+function obterIniciais(nome) {
+  const p = nome.split(' ');
+  let ini = p[0].charAt(0).toUpperCase();
+  if (p.length > 1) ini += p[p.length - 1].charAt(0).toUpperCase();
+  return ini;
 }
 
 
@@ -274,17 +328,6 @@ function filtrar(botao, categoria) {
   document.querySelectorAll('.filtro').forEach(b => b.classList.remove('ativo'));
   botao.classList.add('ativo');
   filtroAtivo = categoria;
-  renderizarSugestoes();
-}
-
-
-// ── CURTIR SUGESTÃO ───────────────────────────────────────────────────
-function curtir(id) {
-  const sug = sugestoes.find(s => s.id === id);
-  if (!sug) return;
-
-  sug.curtido = !sug.curtido;
-  sug.likes += sug.curtido ? 1 : -1;
   renderizarSugestoes();
 }
 
@@ -307,46 +350,82 @@ function trocarAba(botao, id) {
 }
 
 
-// ── SALVAR LOCAL ─────────────────────────────────────────────────────
-function salvarLocal() {
-  salvo = !salvo;
+// ── SALVAR LOCAL (favoritos reais via API) ─────────────────────────────
+async function salvarLocal() {
+  if (!est) return;
+
+  const usuarioId = Number(localStorage.getItem('idUsuario'));
+  if (!Number.isFinite(usuarioId) || usuarioId <= 0) {
+    window.location.href = 'login.html';
+    return;
+  }
+
   const btn = document.getElementById('btnSalvar');
   const icone = document.getElementById('iconeSalvar');
+  const novoEstado = !salvo;
 
-  btn.classList.toggle('salvo', salvo);
-  icone.className = salvo ? 'fas fa-bookmark' : 'far fa-bookmark';
-  mostrarToast(salvo ? 'Local salvo nos favoritos!' : 'Local removido dos favoritos');
+  try {
+    if (novoEstado) {
+      const resposta = await fetch(`${API_BASE}/locais-salvos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuarioId, estabelecimentoId: est.id }),
+      });
+      if (!resposta.ok) throw new Error('Erro ao salvar favorito.');
+    } else {
+      const resposta = await fetch(`${API_BASE}/locais-salvos/${usuarioId}/${est.id}`, {
+        method: 'DELETE',
+      });
+      if (!resposta.ok) throw new Error('Erro ao remover favorito.');
+    }
 
-  const favoritos = JSON.parse(localStorage.getItem('sg_favoritos') || '[]');
-  if (salvo) {
-    if (!favoritos.includes(est.nome)) favoritos.push(est.nome);
-  } else {
-    const idx = favoritos.indexOf(est.nome);
-    if (idx > -1) favoritos.splice(idx, 1);
+    salvo = novoEstado;
+    btn.classList.toggle('salvo', salvo);
+    icone.className = salvo ? 'fas fa-bookmark' : 'far fa-bookmark';
+    mostrarToast(salvo ? 'Local salvo nos favoritos!' : 'Local removido dos favoritos');
+  } catch (erro) {
+    console.error('Erro ao alternar favorito:', erro);
+    mostrarToast('Não foi possível atualizar os favoritos.', 'erro');
   }
-  localStorage.setItem('sg_favoritos', JSON.stringify(favoritos));
 }
 
-function verificarSeFavorito() {
-  const favoritos = JSON.parse(localStorage.getItem('sg_favoritos') || '[]');
-  if (favoritos.includes(est.nome)) {
-    salvo = true;
-    document.getElementById('btnSalvar').classList.add('salvo');
-    document.getElementById('iconeSalvar').className = 'fas fa-bookmark';
+async function verificarSeFavorito() {
+  const usuarioId = Number(localStorage.getItem('idUsuario'));
+  if (!Number.isFinite(usuarioId) || usuarioId <= 0 || !est) return;
+
+  try {
+    const resposta = await fetch(`${API_BASE}/locais-salvos/usuario/${usuarioId}`);
+    if (!resposta.ok) return;
+    const salvos = await resposta.json();
+    const estaSalvo = Array.isArray(salvos) && salvos.some(s => Number(s.idEstabelecimento) === Number(est.id));
+
+    if (estaSalvo) {
+      salvo = true;
+      document.getElementById('btnSalvar').classList.add('salvo');
+      document.getElementById('iconeSalvar').className = 'fas fa-bookmark';
+    }
+  } catch (erro) {
+    console.error('Erro ao verificar favorito:', erro);
   }
 }
 
 
 // ── IR PARA O MAPA ────────────────────────────────────────────────────
-// Passa os dados para a tela de mapa existente via sessionStorage
+// Passa os dados reais para a tela de mapa existente via sessionStorage
 function irParaMapa() {
+  if (!est) return;
+
+  const total = avaliacoes.length;
+  const soma = avaliacoes.reduce((acc, a) => acc + (Number(a.nota) || 0), 0);
+  const media = total > 0 ? (soma / total).toFixed(1) : '';
+
+  sessionStorage.setItem('loc_id',         est.id);
   sessionStorage.setItem('loc_nome',       est.nome);
   sessionStorage.setItem('loc_endereco',   est.endereco);
   sessionStorage.setItem('loc_telefone',   est.telefone);
   sessionStorage.setItem('loc_horario',    est.horario);
-  sessionStorage.setItem('loc_fecha',      est.fecha);
-  sessionStorage.setItem('loc_nota',       est.nota);
-  sessionStorage.setItem('loc_avaliacoes', est.avaliacoes);
+  sessionStorage.setItem('loc_nota',       media);
+  sessionStorage.setItem('loc_avaliacoes', String(total));
   sessionStorage.setItem('loc_logo',       est.logo);
   window.location.href = 'mapaCli.html';
 }
@@ -354,6 +433,7 @@ function irParaMapa() {
 
 // ── LIGAR ────────────────────────────────────────────────────────────
 function ligarPara() {
+  if (!est || !est.telefone) return;
   const numero = est.telefone.replace(/\D/g, '');
   window.location.href = `tel:${numero}`;
 }
@@ -366,6 +446,9 @@ function abrirModal() {
 
 function fecharModal() {
   document.getElementById('modalSugestao').classList.remove('aberto');
+  document.getElementById('textSugestao').value = '';
+  document.getElementById('contador').textContent = '0/300';
+  selecionarNotaModal(0);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -378,7 +461,16 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') fecharModal();
 });
 
-function enviarSugestao() {
+function selecionarNotaModal(v) {
+  notaSelecionada = v;
+  document.querySelectorAll('#modalEstrelas i').forEach((el, i) => {
+    el.classList.toggle('vazia', i >= v);
+  });
+}
+
+async function enviarSugestao() {
+  if (!est) return;
+
   const texto = document.getElementById('textSugestao').value.trim();
   if (!texto) {
     const campo = document.getElementById('textSugestao');
@@ -387,38 +479,56 @@ function enviarSugestao() {
     return;
   }
 
-  const categoria = document.getElementById('selectCategoria').value;
-  const visita    = document.getElementById('selectVisita').value;
+  if (!notaSelecionada) {
+    mostrarToast('Selecione uma nota antes de enviar.', 'erro');
+    return;
+  }
 
-  // Adiciona a sugestão no topo da lista
-  const nova = {
-    id: Date.now(),
-    usuario: localStorage.getItem('nomeUsuario') || 'Você',
-    iniciais: obterIniciais(localStorage.getItem('nomeUsuario') || 'VC'),
-    data: 'agora',
-    categoria,
-    texto,
-    likes: 0,
-    curtido: false,
-    visita,
-    resposta: null,
+  const usuarioId = Number(localStorage.getItem('idUsuario'));
+  if (!Number.isFinite(usuarioId) || usuarioId <= 0) {
+    mostrarToast('Você precisa estar logado para enviar uma sugestão.', 'erro');
+    return;
+  }
+
+  const idCategoria = Number(document.getElementById('selectCategoria').value);
+
+  const payload = {
+    idUsuario: usuarioId,
+    idEstabelecimento: est.id,
+    idCategoria,
+    nota: notaSelecionada,
+    comentario: texto,
+    tipo: 'sugestao',
   };
 
-  sugestoes.unshift(nova);
-  fecharModal();
-  document.getElementById('textSugestao').value = '';
-  document.getElementById('contador').textContent = '0/300';
-  filtroAtivo = 'todas';
-  document.querySelectorAll('.filtro').forEach((b, i) => b.classList.toggle('ativo', i === 0));
-  renderizarSugestoes();
-  mostrarToast('Sugestão enviada com sucesso!');
-}
+  const btnEnviar = document.querySelector('.btn-enviar');
+  const textoOriginal = btnEnviar.innerHTML;
+  btnEnviar.disabled = true;
+  btnEnviar.innerHTML = 'Enviando...';
 
-function obterIniciais(nome) {
-  const p = nome.split(' ');
-  let ini = p[0].charAt(0).toUpperCase();
-  if (p.length > 1) ini += p[p.length - 1].charAt(0).toUpperCase();
-  return ini;
+  try {
+    const resposta = await fetch(`${API_BASE}/avaliacoes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!resposta.ok) {
+      const erroTexto = await resposta.text();
+      throw new Error(erroTexto || 'Erro ao enviar sugestão.');
+    }
+
+    fecharModal();
+    mostrarToast('Sugestão enviada com sucesso!');
+
+    await carregarAvaliacoes(est.id);
+  } catch (erro) {
+    console.error('Erro ao enviar sugestão:', erro);
+    mostrarToast('Não foi possível enviar sua sugestão. Tente novamente.', 'erro');
+  } finally {
+    btnEnviar.disabled = false;
+    btnEnviar.innerHTML = textoOriginal;
+  }
 }
 
 

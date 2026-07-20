@@ -132,7 +132,11 @@ async function carregarEstabelecimentos() {
       imagemDiv.appendChild(imgFoto);
 
       imagemDiv.addEventListener("click", () => {
-        window.location.href = "estabelecimentoCli.html";
+        if (!idCerto) {
+          console.error("Erro: ID do estabelecimento não encontrado.");
+          return;
+        }
+        window.location.href = `estabelecimentoCli.html?id=${idCerto}`;
       });
 
       const categoriaSpan = document.createElement("span");
