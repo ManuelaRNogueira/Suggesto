@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api")
@@ -25,6 +26,17 @@ public class AuthController {
     private PlanoRepository planoRepository;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+    // DDD (11-99) + celular (9 dígitos, iniciando em 9) ou fixo (8 dígitos, iniciando em 2-5)
+    private static final Pattern TELEFONE_PATTERN = Pattern.compile("^[1-9][1-9](?:9\\d{8}|[2-5]\\d{7})$");
+
+    private boolean isTelefoneValido(String telefone) {
+        String digitos = telefone.replaceAll("\\D", "");
+        if (digitos.length() > 11 && digitos.startsWith("55")) {
+            digitos = digitos.substring(2);
+        }
+        return TELEFONE_PATTERN.matcher(digitos).matches();
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> loginGeral(@RequestBody Map<String, String> dados) {
@@ -66,8 +78,15 @@ public class AuthController {
             novoUsuario.setSenha(passwordEncoder.encode(senha.trim()));
             novoUsuario.setTipoUsuario(tipoUsuario);
 
-            if (dados.get("telefone") != null) {
-                novoUsuario.setTelefone(((String) dados.get("telefone")).trim());
+            String telefone = (String) dados.get("telefone");
+            if (telefone != null && !telefone.isBlank()) {
+                if (!isTelefoneValido(telefone)) {
+                    return ResponseEntity.badRequest().body(Map.of(
+                            "success", false,
+                            "message", "Telefone inválido. Informe um número de telefone brasileiro válido, com DDD."
+                    ));
+                }
+                novoUsuario.setTelefone(telefone.trim());
             }
             if (dados.get("cidade") != null) {
                 novoUsuario.setCidade(((String) dados.get("cidade")).trim());

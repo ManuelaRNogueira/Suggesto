@@ -62,6 +62,14 @@ document.querySelectorAll('.form input, .form select').forEach(elemento => {
     elemento.addEventListener('change', () => elemento.classList.remove('input-erro'));
 });
 
+function isTelefoneValido(telefone) {
+    let digitos = telefone.replace(/\D/g, '');
+    if (digitos.length > 11 && digitos.startsWith('55')) {
+        digitos = digitos.slice(2);
+    }
+    return /^[1-9][1-9](?:9\d{8}|[2-5]\d{7})$/.test(digitos);
+}
+
 function obterRole() {
     if (isPaginaAdmin()) return "admin";
 
@@ -116,6 +124,11 @@ function validarCampos() {
             mostrarMensagem("Informe seu telefone.");
             return false;
         }
+        if (telefone && telefone.value.trim() && !isTelefoneValido(telefone.value)) {
+            telefone.classList.add('input-erro');
+            mostrarMensagem("Digite um telefone válido, com DDD (ex: (11) 91234-5678).");
+            return false;
+        }
         if (cidade && !cidade.value.trim()) {
             cidade.classList.add('input-erro');
             mostrarMensagem("Informe sua cidade.");
@@ -142,6 +155,12 @@ function validarCampos() {
         if (cpf.value.trim().length < 11) {
             cpf.classList.add('input-erro');
             mostrarMensagem("Digite um CPF válido.");
+            return false;
+        }
+
+        if (!isTelefoneValido(telefone.value)) {
+            telefone.classList.add('input-erro');
+            mostrarMensagem("Digite um telefone válido, com DDD (ex: (11) 91234-5678).");
             return false;
         }
     }
