@@ -148,6 +148,14 @@ async function carregarEstabelecimentos() {
       imagemDiv.appendChild(categoriaSpan);
       imagemDiv.appendChild(btnFavorito);
 
+      const status = calcularStatusEstabelecimento(estab.horarioFuncionamento);
+      if (status.disponivel) {
+        const statusSpan = document.createElement("span");
+        statusSpan.className = `local-status ${status.aberto ? "aberto" : "fechado"}`;
+        statusSpan.innerHTML = `<span class="local-status-dot"></span>${status.label}`;
+        imagemDiv.appendChild(statusSpan);
+      }
+
       const infoDiv = document.createElement("div");
       infoDiv.className = "local-info";
 

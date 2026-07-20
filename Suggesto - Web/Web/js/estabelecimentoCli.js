@@ -144,34 +144,17 @@ function preencherHeader() {
 
 
 // ── VERIFICAR STATUS ABERTO/FECHADO ──────────────────────────────────
-// Não há campo estruturado de horário no backend, apenas um texto livre.
-// Tentamos extrair o último horário (HH:MM) citado no texto como horário de fechamento.
 function verificarStatus() {
   const dot   = document.getElementById('statusDot');
   const texto = document.getElementById('statusTexto');
   const hora  = document.getElementById('statusHora');
 
-  const horarios = (est.horario || '').match(/(\d{1,2}):(\d{2})/g);
-  if (!horarios || horarios.length === 0) {
-    dot.className     = 'status-dot status-fechado';
-    texto.textContent = 'Horário indisponível';
-    texto.className   = 'status-texto fechado';
-    hora.textContent  = '';
-    return;
-  }
+  const status = calcularStatusEstabelecimento(est.horario);
 
-  const fechaStr = horarios[horarios.length - 1];
-  const [hF, mF] = fechaStr.split(':').map(Number);
-  const fechaMin = hF * 60 + mF;
-
-  const agora = new Date();
-  const agoraMin = agora.getHours() * 60 + agora.getMinutes();
-  const aberto = agoraMin < fechaMin;
-
-  dot.className     = `status-dot ${aberto ? 'status-aberto' : 'status-fechado'}`;
-  texto.textContent = aberto ? 'Aberto' : 'Fechado';
-  texto.className   = `status-texto${aberto ? '' : ' fechado'}`;
-  hora.textContent  = aberto ? `Fecha às ${fechaStr}` : 'Fechado agora';
+  dot.className     = `status-dot ${status.aberto ? 'status-aberto' : 'status-fechado'}`;
+  texto.textContent = status.label;
+  texto.className   = `status-texto${status.aberto ? '' : ' fechado'}`;
+  hora.textContent  = status.detalhe;
 }
 
 

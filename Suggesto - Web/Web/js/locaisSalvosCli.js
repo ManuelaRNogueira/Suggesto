@@ -114,6 +114,11 @@ function criarCardSalvo(estab) {
     card.dataset.estabelecimentoId = String(idCerto);
   }
 
+  const status = calcularStatusEstabelecimento(estab.horarioFuncionamento);
+  const statusHtml = status.disponivel
+    ? `<span class="local-status ${status.aberto ? 'aberto' : 'fechado'}"><span class="local-status-dot"></span>${status.label}</span>`
+    : '';
+
   card.innerHTML = `
     <div class="local-imagem">
       <img class="local-foto" src="${imagemURL}" alt="${nomeCerto}"
@@ -123,6 +128,7 @@ function criarCardSalvo(estab) {
         data-estabelecimento-id="${idCerto ?? ''}">
         <i class="fas fa-heart"></i>
       </button>
+      ${statusHtml}
     </div>
     <div class="local-info">
       <div class="local-info-topo">
