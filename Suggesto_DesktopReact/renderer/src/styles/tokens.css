@@ -1,0 +1,192 @@
+/* Tokens do painel administrativo.
+   Mesma linguagem visual das telas logadas do site (inicioCli, perfilCli,
+   sugestoesCli, lojaPontosCli) e do css/admBase.css do projeto web. */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --fundo: #121214;
+  --fundo-2: #1a1924;
+  --fundo-3: #1c1b26;
+
+  --roxo: #6366f1;
+  --roxo-claro: #818cf8;
+  --roxo-bg: rgba(99, 102, 241, 0.12);
+  --borda-roxa: rgba(99, 102, 241, 0.25);
+
+  --texto: #f0f0f8;
+  --texto-fraco: rgba(240, 240, 248, 0.55);
+  --texto-mfraco: rgba(240, 240, 248, 0.3);
+  --borda: rgba(255, 255, 255, 0.07);
+
+  --verde: #22c55e;
+  --amarelo: #eab308;
+  --azul: #60a5fa;
+  --vermelho: #ef4444;
+  --laranja: #f59e0b;
+
+  --fonte: 'Inter', system-ui, sans-serif;
+  --lateral: 240px;
+  --raio: 16px;
+  --raio-sm: 8px;
+  --trans: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Cores por status de sugestão. Cor aqui é significado, nunca decoração. */
+.st-pendente { --st: var(--amarelo); }
+.st-analise { --st: var(--azul); }
+.st-implementado { --st: var(--verde); }
+.st-recusado { --st: var(--vermelho); }
+
+/* ── Blocos compartilhados entre as telas do painel ────────────────────── */
+
+.adm-cartao {
+  background: var(--fundo-2);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  padding: 20px;
+}
+
+.adm-cartao-titulo {
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.adm-cartao-topo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.adm-cartao-nota {
+  font-size: 0.75rem;
+  color: var(--texto-mfraco);
+}
+
+/* Marcador de status: ponto + texto, sem cápsula pesada */
+.adm-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--st, var(--texto-fraco));
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.adm-pill::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.adm-num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.adm-vazio {
+  padding: 28px 20px;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--texto-mfraco);
+}
+
+.adm-erro {
+  padding: 14px 16px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.08);
+  border-radius: var(--raio-sm);
+  color: #fca5a5;
+  font-size: 0.8125rem;
+}
+
+/* Botões */
+.adm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--fonte);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--texto-fraco);
+  background: transparent;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-sm);
+  padding: 7px 13px;
+  cursor: pointer;
+  transition: var(--trans);
+  white-space: nowrap;
+}
+
+.adm-btn:hover:not(:disabled) {
+  color: var(--texto);
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.adm-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.adm-btn-cor {
+  color: var(--st);
+  border-color: color-mix(in srgb, var(--st) 30%, transparent);
+}
+
+.adm-btn-cor:hover:not(:disabled) {
+  color: var(--st);
+  background: color-mix(in srgb, var(--st) 12%, transparent);
+  border-color: color-mix(in srgb, var(--st) 48%, transparent);
+}
+
+.adm-btn-principal {
+  background: var(--roxo);
+  border-color: var(--roxo);
+  color: #fff;
+  font-weight: 600;
+}
+
+.adm-btn-principal:hover:not(:disabled) {
+  background: var(--roxo-claro);
+  border-color: var(--roxo-claro);
+  color: #fff;
+}
+
+/* Campos */
+.adm-campo {
+  width: 100%;
+  font-family: var(--fonte);
+  font-size: 0.8125rem;
+  color: var(--texto);
+  background: var(--fundo-3);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-sm);
+  padding: 9px 12px;
+  transition: var(--trans);
+}
+
+.adm-campo::placeholder { color: var(--texto-mfraco); }
+
+.adm-campo:focus {
+  outline: none;
+  border-color: var(--borda-roxa);
+  background: var(--fundo-2);
+}
+
+.adm-rotulo {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--texto-fraco);
+  margin-bottom: 6px;
+}

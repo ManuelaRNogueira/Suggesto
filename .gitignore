@@ -24,3 +24,5 @@ target/
 *.sln
 *.sw?
 Thumbs.db
+# Build do renderer (Vite)
+dist/

@@ -26,6 +26,9 @@ public class AdminService {
     private static final Set<String> STATUS_RECUSADO = Set.of("recusada", "recusado");
     private static final Set<String> STATUS_ANALISE = Set.of("analise", "pendente", "pending");
 
+    private static final int MESES_PADRAO = 6;
+    private static final int MESES_MAXIMO = 24;
+
     @Autowired
     private EstabelecimentoRepository estabelecimentoRepository;
 
@@ -38,7 +41,8 @@ public class AdminService {
     @Autowired
     private ResgateRepository resgateRepository;
 
-    public Map<String, Object> obterMetricas(Long idGerente) {
+    public Map<String, Object> obterMetricas(Long idGerente, Integer meses) {
+        int janela = (meses == null) ? MESES_PADRAO : Math.max(1, Math.min(meses, MESES_MAXIMO));
         List<Estabelecimento> estabelecimentos = resolverEstabelecimentos(idGerente);
         List<Long> ids = estabelecimentos.stream()
                 .map(Estabelecimento::getIdEstabelecimento)
@@ -87,7 +91,8 @@ public class AdminService {
         metricas.put("implementados", implementados);
         metricas.put("recusados", recusados);
         metricas.put("porCategoria", porCategoria);
-        metricas.put("sugestoesPorMes", calcularSugestoesPorMes(sugestoes, 6));
+        metricas.put("meses", janela);
+        metricas.put("sugestoesPorMes", calcularSugestoesPorMes(sugestoes, janela));
         metricas.put("sugestoesRecentes", sugestoes.stream().limit(8).map(this::resumirSugestao).collect(Collectors.toList()));
 
         return metricas;
@@ -114,7 +119,9 @@ public class AdminService {
     }
 
     public List<Map<String, Object>> listarEstabelecimentos(Long idGerente) {
-        return resolverEstabelecimentos(idGerente).stream()
+        // Aqui devolvemos ativos e inativos: o painel mostra a tag de situação.
+        // As métricas continuam contando só os ativos.
+        return resolverEstabelecimentosIncluindoInativos(idGerente).stream()
                 .map(e -> {
                     Map<String, Object> item = new LinkedHashMap<>();
                     item.put("id", e.getIdEstabelecimento());
@@ -135,6 +142,14 @@ public class AdminService {
         }
         List<Estabelecimento> doGerente = estabelecimentoRepository.buscarPorGerenteAtivos(idGerente);
         return doGerente.isEmpty() ? estabelecimentoRepository.buscarTodosAtivos() : doGerente;
+    }
+
+    private List<Estabelecimento> resolverEstabelecimentosIncluindoInativos(Long idGerente) {
+        if (idGerente == null) {
+            return estabelecimentoRepository.findAll();
+        }
+        List<Estabelecimento> doGerente = estabelecimentoRepository.findByIdGerente(idGerente);
+        return doGerente.isEmpty() ? estabelecimentoRepository.findAll() : doGerente;
     }
 
     private String classificarStatus(String status) {
@@ -193,6 +208,7 @@ public class AdminService {
         item.put("telefone", u.getTelefone());
         item.put("cidade", u.getCidade());
         item.put("tipoUsuario", u.getTipoUsuario() != null ? u.getTipoUsuario().name() : null);
+        item.put("cargo", u.getCargo());
         item.put("pontos", u.getPontos());
         item.put("plano", u.getPlano() != null ? u.getPlano().getNome() : null);
         return item;

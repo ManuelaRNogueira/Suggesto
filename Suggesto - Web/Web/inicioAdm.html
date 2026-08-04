@@ -1,632 +1,93 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resumo — Suggesto</title>
   <link rel="icon" type="image/png" href="imagens/logo.png">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cotil – Colégio Técnico</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/inicioAdm.css">
-<style>
-
-    .sidebar {
-    width: 256px;
-    min-height: 100vh;
-    background: #0f0e1c;
-    border-right: 1px solid rgba(255,255,255,0.05);
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    top: 0; left: 0; bottom: 0;
-    z-index: 10;
-    overflow: hidden;
-  }
-
-  .sidebar::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, #7c6dfa, transparent);
-    opacity: 0.4;
-  }
-
-  .sidebar-logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 28px 20px 24px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    flex-shrink: 0;
-  }
-
-  .logo-icon {
-    width: 38px;
-  height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: none; /* REMOVE o quadrado roxo */
-  }
-
-  .logo-img-sidebar {
-    width: 22px; height: 22px;
-    object-fit: contain;
-  }
-
-  .logo-text {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 15px;
-    color: #e8e6ff;
-    letter-spacing: -0.01em;
-  }
-  .logo-text span {
-    display: block;
-    font-size: 10px;
-    font-weight: 400;
-    color: #6b6890;
-    font-family: 'DM Sans', sans-serif;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    margin-top: 1px;
-  }
-
-  .sidebar-nav {
-    flex: 1;
-    padding: 16px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    overflow-y: auto;
-  }
-
-  .nav-section-label {
-    font-size: 9px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: #6b6890;
-    padding: 16px 8px 6px;
-    font-weight: 600;
-    opacity: 0.6;
-  }
-
-  .nav-item {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    padding: 9px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 13.5px;
-    font-weight: 500;
-    color: #6b6890;
-    transition: all 0.18s ease;
-    text-decoration: none;
-    position: relative;
-    letter-spacing: 0.01em;
-    border: 1px solid transparent;
-  }
-
-  .nav-item:hover {
-    background: rgba(255,255,255,0.05);
-    color: #9b97c4;
-  }
-
-  .nav-item.active {
-    background: linear-gradient(90deg, rgba(124,109,250,0.18), rgba(124,109,250,0.06));
-    color: #e8e6ff;
-    border-color: rgba(124,109,250,0.2);
-  }
-
-  .nav-item.active::before {
-    content: '';
-    position: absolute;
-    left: -1px; top: 25%; bottom: 25%;
-    width: 3px;
-    background: linear-gradient(to bottom, #7c6dfa, #a78bfa);
-    border-radius: 0 3px 3px 0;
-  }
-
-  .nav-icon {
-    width: 17px; height: 17px;
-    flex-shrink: 0;
-    opacity: 0.5;
-    transition: opacity 0.18s;
-  }
-  .nav-item:hover .nav-icon { opacity: 0.75; }
-  .nav-item.active .nav-icon { opacity: 1; }
-
-  .nav-badge {
-    margin-left: auto;
-    background: rgba(124,109,250,0.2);
-    color: #a78bfa;
-    font-size: 10px;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 20px;
-    border: 1px solid rgba(124,109,250,0.25);
-    letter-spacing: 0.02em;
-  }
-
-  .sidebar-footer {
-    padding: 12px;
-    border-top: 1px solid rgba(255,255,255,0.05);
-    flex-shrink: 0;
-  }
-
-  .user-card {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: background 0.18s;
-    border: 1px solid transparent;
-  }
-  .user-card:hover {
-    background: rgba(255,255,255,0.04);
-    border-color: rgba(255,255,255,0.06);
-  }
-
-  .sb-avatar {
-    width: 34px; height: 34px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #7c6dfa, #a78bfa);
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 12px; color: #fff;
-    flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(124,109,250,0.3);
-    letter-spacing: 0.04em;
-  }
-
-  .sb-user-info { flex: 1; min-width: 0; }
-  .sb-user-name {
-    font-size: 13px; font-weight: 600;
-    color: #e8e6ff;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    letter-spacing: -0.01em;
-  }
-  .sb-user-role { font-size: 11px; color: #6b6890; margin-top: 1px; }
-
-  .user-sair {
-    width: 28px; height: 28px;
-    border-radius: 6px;
-    background: none;
-    border: 1px solid rgba(255,255,255,0.07);
-    color: #6b6890;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    transition: all 0.18s;
-    flex-shrink: 0;
-  }
-  .user-sair:hover {
-    background: rgba(248,113,113,0.13);
-    border-color: rgba(248,113,113,0.3);
-    color: #f87171;
-  }
-
-  /* Ajusta margin do main para a nova largura da sidebar */
-  .main { margin-left: 256px !important; }
-
-
-
-  .logo-icon {
-  width: 42px !important;
-  height: 42px !important;
-}
-
-.logo-img-sidebar {
-  width: 90% !important;
-  height: 90% !important;
-}
-
-
-.sidebar-logo img,
-.logo-img {
-  width: 40px;   /* ajusta aqui */
-  height: 40px;
-  object-fit: contain;
-}
-
-  .sb-user-info { flex: 1; min-width: 0; }
-  .sb-user-name {
-    font-size: 13px; font-weight: 600;
-    color: #e8e6ff;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    letter-spacing: -0.01em;
-  }
-  .sb-user-role { font-size: 11px; color: #6b6890; margin-top: 1px; }
-
-  .user-sair {
-    width: 28px; height: 28px;
-    border-radius: 6px;
-    background: none;
-    border: 1px solid rgba(255,255,255,0.07);
-    color: #6b6890;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    transition: all 0.18s;
-    flex-shrink: 0;
-  }
-  .user-sair:hover {
-    background: rgba(248,113,113,0.13);
-    border-color: rgba(248,113,113,0.3);
-    color: #f87171;
-  }
-
-  /* Ajusta margin do main para a nova largura da sidebar */
-  .main { margin-left: 256px !important; }
-</style>
+  <link rel="stylesheet" href="css/admBase.css">
+  <link rel="stylesheet" href="css/inicioAdm.css">
 </head>
 <body>
 
-<!-- SIDEBAR -->
-<aside class="sidebar">
+<main class="resumo">
 
-  <!-- LOGO -->
-  <div class="sidebar-logo">
-    <img src="imagens/logo.png" class="logo-img">
-    <div class="logo-text">
-      Suggesto
-      <span>Plataforma de Feedbacks</span>
-    </div>
-  </div>
-
-  <!-- NAV -->
-  <nav class="sidebar-nav">
-
-    <div class="nav-section-label">Principal</div>
-
-    <a class="nav-item active" href="inicioAdm.html">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-        <polyline points="9 22 9 12 15 12 15 22"/>
-      </svg>
-      Início
-    </a>
-
-    <a class="nav-item " href="sugestoesAdm.html">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-      </svg>
-      Sugestões
-     <span class="nav-badge">24</span>
-    </a>
-
-    <a class="nav-item" href="estatisticasAdm.html">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-        <path d="M18 20V10M12 20V4M6 20v-6"/>
-      </svg>
-      Estatísticas
-    </a>
-
-    <a class="nav-item" href="perfilAdm.html">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-        <circle cx="9" cy="7" r="4"/>
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-      </svg>
-      Usuários
-    </a>
-
-    <!--<div class="nav-section-label">Sistema</div>
-
-    <a class="nav-item" href="#">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-        <circle cx="12" cy="12" r="3"/>
-        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
-      </svg>
-      Configurações
-    </a>
-
-    <a class="nav-item" href="perfilAdm.html">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-      </svg>
-      Notificações
-    </a>-->
-
-  </nav>
-
-  <!-- FOOTER DO USUÁRIO -->
-  <div class="sidebar-footer">
-    <div class="user-card">
-      <div class="avatar">AD</div>
-      <div class="user-info">
-        <div class="user-name">Administrador</div>
-        <div class="user-role">Admin · Suggesto</div>
+  <header class="resumo-topo">
+    <div class="resumo-marca">
+      <img src="imagens/logo.png" alt="" class="resumo-logo">
+      <div>
+        <p class="resumo-titulo">Resumo</p>
+        <p class="resumo-sub" id="resumoSub">Carregando…</p>
       </div>
-      <button class="user-sair" title="Sair">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-          <polyline points="16 17 21 12 16 7"/>
-          <line x1="21" y1="12" x2="9" y2="12"/>
+    </div>
+
+    <div class="resumo-conta">
+      <span class="resumo-avatar" id="contaAvatar">—</span>
+      <span class="resumo-conta-info">
+        <strong id="contaNome">—</strong>
+        <small id="contaEmail">Administrador</small>
+      </span>
+      <button type="button" class="resumo-sair" id="btnSair" title="Sair">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>
         </svg>
       </button>
     </div>
+  </header>
+
+  <div id="erro" class="resumo-erro" hidden></div>
+
+  <section class="resumo-kpis" id="kpis"></section>
+
+  <section class="resumo-cartao">
+    <div class="resumo-cartao-topo">
+      <h2>Distribuição por status</h2>
+      <span class="resumo-nota" id="totalNota"></span>
+    </div>
+    <div class="resumo-barra" id="barra"></div>
+    <ul class="resumo-status" id="status"></ul>
+  </section>
+
+  <div class="resumo-grade">
+    <section class="resumo-cartao">
+      <div class="resumo-cartao-topo">
+        <h2>Chegaram por último</h2>
+      </div>
+      <ul class="resumo-recentes" id="recentes"></ul>
+    </section>
+
+    <div class="resumo-coluna">
+      <section class="resumo-cartao">
+        <div class="resumo-cartao-topo">
+          <h2>Assuntos mais citados</h2>
+        </div>
+        <ul class="resumo-cats" id="categorias"></ul>
+      </section>
+
+      <section class="resumo-cartao">
+        <div class="resumo-cartao-topo">
+          <h2>Seus locais</h2>
+        </div>
+        <ul class="resumo-locais" id="locais"></ul>
+      </section>
+    </div>
   </div>
 
-</aside>
-
-<!-- MAIN -->
-<main class="main">
-
-  <!-- TOPBAR -->
-  <div class="topbar">
-    <div class="topbar-left">
-      <h1>Início</h1>
-      <p>Cotil – Colégio Técnico · Painel de Sugestões</p>
+  <aside class="resumo-desktop">
+    <div>
+      <p class="resumo-desktop-titulo">Precisa triar, responder ou analisar?</p>
+      <p class="resumo-desktop-txt">
+        Esta página é só para consulta rápida. A gestão completa das sugestões,
+        as estatísticas e a equipe ficam no aplicativo para computador.
+      </p>
     </div>
-    <div class="topbar-right">
-      <div class="search-box">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        Pesquisar…
-      </div>
-      <div class="notif-btn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        <span class="notif-dot"></span>
-      </div>
-    </div>
-  </div>
+    <a class="resumo-desktop-btn" href="download.html">Baixar o app</a>
+  </aside>
 
-  <!-- CONTENT GRID -->
-  <div class="content">
-
-    <!-- COL MAIN -->
-    <div class="col-main">
-
-      <!-- KPIs -->
-      <div class="kpi-row">
-        <div class="kpi-card purple">
-          <div class="kpi-label">Novas Sugestões</div>
-          <div class="kpi-value">24</div>
-          <div class="kpi-sub">Esta semana</div>
-          <div class="kpi-icon">💬</div>
-        </div>
-        <div class="kpi-card yellow">
-          <div class="kpi-label">Pendentes</div>
-          <div class="kpi-value">15</div>
-          <div class="kpi-sub">Aguardando análise</div>
-          <div class="kpi-icon">⏳</div>
-        </div>
-        <div class="kpi-card green">
-          <div class="kpi-label">Implementados</div>
-          <div class="kpi-value">42</div>
-          <div class="kpi-sub">Total geral</div>
-          <div class="kpi-icon">✅</div>
-        </div>
-        <div class="kpi-card red">
-          <div class="kpi-label">Recusados</div>
-          <div class="kpi-value">6</div>
-          <div class="kpi-sub">Total geral</div>
-          <div class="kpi-icon">❌</div>
-        </div>
-      </div>
-
-      <!-- STATUS DAS SUGESTÕES -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Status das Sugestões</div>
-          <div class="card-action">Ver relatório →</div>
-        </div>
-
-        <div class="status-list">
-          <div class="status-row">
-            <div class="status-icon pending">⏳</div>
-            <div class="status-info">
-              <div class="status-name">Pendentes</div>
-              <div class="status-desc">Aguardando avaliação</div>
-            </div>
-            <div class="status-count pending">15</div>
-          </div>
-          <div class="status-row">
-            <div class="status-icon analysis">🔍</div>
-            <div class="status-info">
-              <div class="status-name">Em análise</div>
-              <div class="status-desc">Em processo de revisão</div>
-            </div>
-            <div class="status-count analysis">9</div>
-          </div>
-          <div class="status-row">
-            <div class="status-icon done">✅</div>
-            <div class="status-info">
-              <div class="status-name">Implementados</div>
-              <div class="status-desc">Aprovados e executados</div>
-            </div>
-            <div class="status-count done">42</div>
-          </div>
-          <div class="status-row">
-            <div class="status-icon rejected">❌</div>
-            <div class="status-info">
-              <div class="status-name">Recusados</div>
-              <div class="status-desc">Não aprovados</div>
-            </div>
-            <div class="status-count rejected">6</div>
-          </div>
-        </div>
-
-        <!-- Progress bars -->
-        <div style="margin-top:20px; display:flex; flex-direction:column; gap:6px;">
-          <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text3); margin-bottom:4px;">
-            <span>Distribuição total (72 sugestões)</span>
-            <span>100%</span>
-          </div>
-          <div style="height:8px; border-radius:6px; background:var(--surface3); overflow:hidden; display:flex; gap:2px;">
-            <div style="width:20.8%; background:var(--yellow); border-radius:6px 0 0 6px;" title="Pendentes 15"></div>
-            <div style="width:12.5%; background:var(--blue);" title="Em análise 9"></div>
-            <div style="width:58.3%; background:var(--green);" title="Implementados 42"></div>
-            <div style="width:8.4%; background:var(--red); border-radius:0 6px 6px 0;" title="Recusados 6"></div>
-          </div>
-          <div style="display:flex; gap:14px; margin-top:4px; flex-wrap:wrap;">
-            <span style="font-size:11px; color:var(--yellow);">● Pendentes 20.8%</span>
-            <span style="font-size:11px; color:var(--blue);">● Em análise 12.5%</span>
-            <span style="font-size:11px; color:var(--green);">● Implementados 58.3%</span>
-            <span style="font-size:11px; color:var(--red);">● Recusados 8.4%</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- SUGESTÕES RECENTES -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Sugestões Recentes</div>
-          <div class="card-action">Ver todas →</div>
-        </div>
-
-        <div class="suggestion-list">
-          <div class="suggestion-item">
-            <div class="suggestion-top">
-              <span class="pill pending">Pendente</span>
-              <span class="time-ago">há 2h</span>
-            </div>
-            <div class="suggestion-title">Melhorar a iluminação do pátio</div>
-            <div class="suggestion-cat">Categoria: <span>Estrutura</span></div>
-          </div>
-
-          <div class="suggestion-item">
-            <div class="suggestion-top">
-              <span class="pill analysis">Em análise</span>
-              <span class="time-ago">há 5h</span>
-            </div>
-            <div class="suggestion-title">Adicionar mais opções vegetarianas</div>
-            <div class="suggestion-cat">Categoria: <span>Produtos e Serviços</span></div>
-          </div>
-
-          <div class="suggestion-item">
-            <div class="suggestion-top">
-              <span class="pill done">Implementado</span>
-              <span class="time-ago">há 1d</span>
-            </div>
-            <div class="suggestion-title">Melhorar atendimento da secretaria</div>
-            <div class="suggestion-cat">Categoria: <span>Atendimento</span></div>
-          </div>
-
-          <div class="suggestion-item">
-            <div class="suggestion-top">
-              <span class="pill rejected">Recusado</span>
-              <span class="time-ago">há 2d</span>
-            </div>
-            <div class="suggestion-title">Ampliar o horário da biblioteca</div>
-            <div class="suggestion-cat">Categoria: <span>Infraestrutura</span></div>
-          </div>
-
-          <div class="suggestion-item">
-            <div class="suggestion-top">
-              <span class="pill pending">Pendente</span>
-              <span class="time-ago">há 3d</span>
-            </div>
-            <div class="suggestion-title">Instalar bebedouros nos laboratórios</div>
-            <div class="suggestion-cat">Categoria: <span>Estrutura</span></div>
-          </div>
-        </div>
-      </div>
-
-    </div><!-- /col-main -->
-
-    <!-- COL SIDE -->
-    <div class="col-side">
-
-      <!-- ENGAJAMENTO -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Engajamento</div>
-          <div class="card-action">↑ +18% este mês</div>
-        </div>
-        <div class="engagement-value">+18%</div>
-        <div class="engagement-label">Crescimento mensal de participação</div>
-        <div class="spark" id="spark"></div>
-      </div>
-
-      <!-- DONUT CHART -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Distribuição</div>
-        </div>
-        <div class="donut-wrap">
-          <svg class="donut" width="110" height="110" viewBox="0 0 110 110">
-            <circle cx="55" cy="55" r="40" fill="none" stroke="var(--surface3)" stroke-width="14"/>
-            <circle cx="55" cy="55" r="40" fill="none" stroke="var(--green)" stroke-width="14"
-              stroke-dasharray="146.6 251.3" stroke-dashoffset="62.8" stroke-linecap="round"/>
-            <circle cx="55" cy="55" r="40" fill="none" stroke="var(--yellow)" stroke-width="14"
-              stroke-dasharray="52.3 251.3" stroke-dashoffset="-83.8" stroke-linecap="round"/>
-            <circle cx="55" cy="55" r="40" fill="none" stroke="var(--blue)" stroke-width="14"
-              stroke-dasharray="31.4 251.3" stroke-dashoffset="-136.1" stroke-linecap="round"/>
-            <circle cx="55" cy="55" r="40" fill="none" stroke="var(--red)" stroke-width="14"
-              stroke-dasharray="21.1 251.3" stroke-dashoffset="-167.5" stroke-linecap="round"/>
-            <text x="55" y="50" text-anchor="middle" fill="var(--text)" font-family="Syne,sans-serif" font-size="14" font-weight="800">72</text>
-            <text x="55" y="64" text-anchor="middle" fill="var(--text3)" font-family="DM Sans,sans-serif" font-size="9">total</text>
-          </svg>
-
-          <div class="donut-legend">
-            <div class="legend-item">
-              <div class="legend-dot" style="background:var(--green)"></div>
-              Implementados
-              <span class="legend-val">42</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-dot" style="background:var(--yellow)"></div>
-              Pendentes
-              <span class="legend-val">15</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-dot" style="background:var(--blue)"></div>
-              Em análise
-              <span class="legend-val">9</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-dot" style="background:var(--red)"></div>
-              Recusados
-              <span class="legend-val">6</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ATIVIDADE RECENTE -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Atividade Recente</div>
-        </div>
-        <div class="activity-list">
-          <div class="activity-item">
-            <div class="act-dot p">⏳</div>
-            <div class="act-body">
-              <div class="act-title">Nova sugestão enviada</div>
-              <div class="act-meta">Iluminação do pátio · há 2h</div>
-            </div>
-          </div>
-          <div class="activity-item">
-            <div class="act-dot a">🔍</div>
-            <div class="act-body">
-              <div class="act-title">Sugestão em análise</div>
-              <div class="act-meta">Opções vegetarianas · há 5h</div>
-            </div>
-          </div>
-          <div class="activity-item">
-            <div class="act-dot d">✅</div>
-            <div class="act-body">
-              <div class="act-title">Sugestão implementada</div>
-              <div class="act-meta">Atendimento secretaria · há 1d</div>
-            </div>
-          </div>
-          <div class="activity-item">
-            <div class="act-dot r">❌</div>
-            <div class="act-body">
-              <div class="act-title">Sugestão recusada</div>
-              <div class="act-meta">Horário da biblioteca · há 2d</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div><!-- /col-side -->
-
-  </div><!-- /content -->
 </main>
 
+<script src="js/admApi.js"></script>
 <script src="js/inicioAdm.js"></script>
 </body>
 </html>

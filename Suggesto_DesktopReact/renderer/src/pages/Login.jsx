@@ -37,7 +37,7 @@ export default function Login({ aoLogar }) {
 
   const handleLogin = async () => {
     try {
-      const resposta = await fetch("http://localhost:8080/api/login", {
+      const resposta = await fetch("http://localhost:8080/api/login/admin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), senha: senha }),
@@ -50,6 +50,7 @@ export default function Login({ aoLogar }) {
         localStorage.setItem("nomeUsuario", resultado.nome)
         localStorage.setItem("emailUsuario", email)
         localStorage.setItem("idUsuario", resultado.idUsuario)
+        localStorage.setItem("tipoUsuario", resultado.tipoUsuario)
 
         setMensagem("Conectando...");
         setMsgColor("#c8e6c9");

@@ -1,3 +1,6 @@
+// Acesso à API administrativa usado pelo resumo web (somente leitura).
+// A gestão completa — triagem, estatísticas, equipe — vive no app desktop.
+
 const ADM_API_BASE = "http://localhost:8080/api";
 
 function admIdGerente() {
@@ -12,8 +15,8 @@ function admVerificarSessao() {
   return true;
 }
 
-async function admFetchJson(url, opcoes = {}) {
-  const resposta = await fetch(url, opcoes);
+async function admFetchJson(url) {
+  const resposta = await fetch(url);
   if (!resposta.ok) {
     const erro = await resposta.text().catch(() => "");
     throw new Error(erro || `Erro ${resposta.status}`);
@@ -31,33 +34,12 @@ async function admBuscarMetricas() {
   return admFetchJson(`${ADM_API_BASE}/admin/metricas${admQueryGerente()}`);
 }
 
-async function admBuscarSugestoes() {
-  return admFetchJson(`${ADM_API_BASE}/admin/sugestoes${admQueryGerente()}`);
-}
-
-async function admBuscarUsuarios() {
-  return admFetchJson(`${ADM_API_BASE}/admin/usuarios`);
-}
-
 async function admBuscarEstabelecimentos() {
   return admFetchJson(`${ADM_API_BASE}/admin/estabelecimentos${admQueryGerente()}`);
 }
 
-async function admAtualizarStatusSugestao(id, status) {
-  return admFetchJson(`${ADM_API_BASE}/avaliacoes/${id}/status`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status }),
-  });
-}
-
-async function admExcluirEstabelecimento(id) {
-  const resposta = await fetch(`${ADM_API_BASE}/estabelecimentos/${id}`, { method: "DELETE" });
-  if (!resposta.ok) throw new Error(`Erro ${resposta.status}`);
-}
-
-async function admBloquearUsuario(id) {
-  return admFetchJson(`${ADM_API_BASE}/admin/usuarios/${id}/bloquear`, { method: "PUT" });
+async function admBuscarUsuario(id) {
+  return admFetchJson(`${ADM_API_BASE}/usuarios/${id}`);
 }
 
 function admIniciais(nome) {
@@ -69,8 +51,7 @@ function admFormatarData(iso) {
   if (!iso) return "—";
   const data = new Date(iso);
   if (Number.isNaN(data.getTime())) return "—";
-  const diff = Date.now() - data.getTime();
-  const horas = Math.floor(diff / 3600000);
+  const horas = Math.floor((Date.now() - data.getTime()) / 3600000);
   if (horas < 1) return "agora";
   if (horas < 24) return `há ${horas}h`;
   const dias = Math.floor(horas / 24);
@@ -88,17 +69,15 @@ function admLabelStatus(statusUi) {
   return mapa[statusUi] || "Pendente";
 }
 
-function admMostrarToast(msg, tipo = "ok") {
-  let toast = document.getElementById("admToast");
-  if (!toast) {
-    toast = document.createElement("div");
-    toast.id = "admToast";
-    toast.className = "toast";
-    document.body.appendChild(toast);
-  }
-  toast.textContent = msg;
-  toast.classList.toggle("toast-erro", tipo === "erro");
-  toast.classList.add("visivel");
-  clearTimeout(toast._timer);
-  toast._timer = setTimeout(() => toast.classList.remove("visivel"), 3200);
+// Sugestão não tem campo de título no banco — só comentário.
+function admTituloSugestao(comentario) {
+  if (!comentario || !comentario.trim()) return "Sugestão sem descrição";
+  const limpo = comentario.trim().replace(/\s+/g, " ");
+  return limpo.length > 90 ? `${limpo.slice(0, 90)}…` : limpo;
+}
+
+function admEscapar(texto) {
+  const div = document.createElement("div");
+  div.textContent = texto ?? "";
+  return div.innerHTML;
 }

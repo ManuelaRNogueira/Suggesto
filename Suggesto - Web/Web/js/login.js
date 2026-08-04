@@ -64,7 +64,8 @@ async function entrarSuggesto() {
             // 1. Guardamos os dados no navegador para usar nas próximas telas
             localStorage.setItem("idUsuario", resultado.idUsuario);
             localStorage.setItem("nomeUsuario", resultado.nome);
-            localStorage.setItem("tipoUsuario", resultado.tipoUsuario); 
+            localStorage.setItem("tipoUsuario", resultado.tipoUsuario);
+            localStorage.setItem("emailUsuario", dadosLogin.email);
             
             // 2. REDIRECIONAMENTO DINÂMICO
             // O Java manda exatamente a string do Enum (ex: "Administrador" ou "Cliente")
