@@ -1,121 +1,442 @@
- // ── FILTRO POR STATUS ──
-  let statusAtivo = 'todos';
-  let catAtiva = 'todas';
+// ======================================================
+// CADASTRO DO ESTABELECIMENTO - SUGGESTO
+// ======================================================
 
-  function filtrarStatus(btn, status) {
-    statusAtivo = status;
-    document.querySelectorAll('.filtro-chip').forEach(b => b.classList.remove('ativo'));
-    btn.classList.add('ativo');
-    aplicarFiltros();
-  }
+let dadosEstabelecimento = {};
 
-  // ── FILTRO POR CATEGORIA ──
-  function filtrarCategoria(item, cat) {
-    catAtiva = cat;
-    document.querySelectorAll('.cat-item').forEach(i => i.classList.remove('ativo'));
-    item.classList.add('ativo');
-    aplicarFiltros();
-  }
 
-  // ── FILTRO POR BUSCA ──
-  function filtrarBusca() { aplicarFiltros(); }
+// ======================================================
+// TOAST
+// ======================================================
 
-  // ── APLICAR TODOS OS FILTROS ──
-  function aplicarFiltros() {
-    const busca = document.getElementById('campoBusca').value.toLowerCase();
-    const cards = document.querySelectorAll('.sugestao-card');
-    const vazio = document.getElementById('listaVazia');
-    let visiveis = 0;
+function mostrarMensagem(mensagem, sucesso = false) {
+    const toast = document.getElementById("toastErro");
+    const mensagemToast = document.getElementById("toastMsgErro");
 
-    cards.forEach(card => {
-      const status  = card.dataset.status;
-      const cat     = card.dataset.cat;
-      const titulo  = card.dataset.titulo.toLowerCase();
+    mensagemToast.textContent = mensagem;
 
-      const passaStatus = statusAtivo === 'todos' || status === statusAtivo;
-      const passCat     = catAtiva === 'todas' || cat === catAtiva;
-      const passBusca   = titulo.includes(busca);
-
-      const visivel = passaStatus && passCat && passBusca;
-      card.style.display = visivel ? '' : 'none';
-      if (visivel) visiveis++;
-    });
-
-    vazio.classList.toggle('visivel', visiveis === 0);
-  }
-
-  // ── ORDENAR ──
-  function ordenarLista(criterio) {
-    const lista = document.getElementById('listaSugestoes');
-    const cards = [...lista.querySelectorAll('.sugestao-card')];
-
-    cards.sort((a, b) => {
-      if (criterio === 'recente') return parseInt(a.dataset.tempo) - parseInt(b.dataset.tempo);
-      if (criterio === 'antigo')  return parseInt(b.dataset.tempo) - parseInt(a.dataset.tempo);
-      if (criterio === 'az')      return a.dataset.titulo.localeCompare(b.dataset.titulo);
-    });
-
-    cards.forEach(c => lista.appendChild(c));
-  }
-
-  // ── MUDAR STATUS DO CARD ──
-  function mudarStatus(btn, novoStatus) {
-    const card = btn.closest('.sugestao-card');
-    const pill = card.querySelector('.pill');
-    const acoes = card.querySelector('.sugestao-acoes');
-
-    // Atualiza classes
-    card.className = `sugestao-card ${novoStatus}`;
-    card.dataset.status = novoStatus;
-
-    // Atualiza pill
-    const labels = { pendente: 'Pendente', analise: 'Em análise', implementado: 'Implementado', recusado: 'Recusado' };
-    pill.className = `pill ${novoStatus}`;
-    pill.textContent = labels[novoStatus];
-
-    // Atualiza ações
-    if (novoStatus === 'implementado') {
-      acoes.innerHTML = '<span style="font-size:12px;color:var(--green);">✅ Concluído e implementado</span>';
-    } else if (novoStatus === 'recusado') {
-      acoes.innerHTML = '<span style="font-size:12px;color:var(--red);">❌ Sugestão não aprovada</span>';
-    } else if (novoStatus === 'analise') {
-      acoes.innerHTML = `
-        <button class="btn-acao verde"    onclick="mudarStatus(this,'implementado')">✅ Implementar</button>
-        <button class="btn-acao vermelho" onclick="mudarStatus(this,'recusado')">❌ Recusar</button>`;
+    if (sucesso) {
+        toast.classList.add("sucesso");
+    } else {
+        toast.classList.remove("sucesso");
     }
 
-    mostrarToast(`Status atualizado para "${labels[novoStatus]}"`);
-  }
+    toast.classList.add("visivel");
 
-  // ── MODAL ──
-  function abrirModal() { document.getElementById('modalNova').classList.add('aberto'); }
-  function fecharModal() { document.getElementById('modalNova').classList.remove('aberto'); }
+    setTimeout(() => {
+        toast.classList.remove("visivel");
+    }, 3000);
+}
 
-  document.getElementById('modalNova').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('modalNova')) fecharModal();
-  });
 
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') fecharModal();
-  });
+// ======================================================
+// ETAPA 1 → ETAPA 2
+// ======================================================
 
-  function salvarSugestao() {
-    const titulo = document.getElementById('novoTitulo').value.trim();
-    const cat    = document.getElementById('novaCat').value;
-    if (!titulo) {
-      document.getElementById('novoTitulo').style.borderColor = 'var(--red)';
-      setTimeout(() => document.getElementById('novoTitulo').style.borderColor = '', 1500);
-      return;
+function irParaEtapa2() {
+
+    const nome = document.getElementById("nomeEstabelecimento").value.trim();
+    const cnpj = document.getElementById("cnpj").value.trim();
+    const categoria = document.getElementById("categoria").value;
+    const telefone = document.getElementById("telefoneEstabelecimento").value.trim();
+    const cidade = document.getElementById("cidade").value.trim();
+    const endereco = document.getElementById("endereco").value.trim();
+
+
+    // Validação
+    if (!nome) {
+        mostrarMensagem("Digite o nome do estabelecimento.");
+        return;
     }
-    fecharModal();
-    document.getElementById('novoTitulo').value = '';
-    mostrarToast('Sugestão criada com sucesso!');
-  }
 
-  // ── TOAST ──
-  function mostrarToast(msg) {
-    const toast = document.getElementById('toast');
-    document.getElementById('toastMsg').textContent = msg;
-    toast.classList.add('visivel');
-    setTimeout(() => toast.classList.remove('visivel'), 3000);
-  }
+    if (!cnpj) {
+        mostrarMensagem("Digite o CNPJ do estabelecimento.");
+        return;
+    }
+
+    if (!categoria) {
+        mostrarMensagem("Selecione o segmento do estabelecimento.");
+        return;
+    }
+
+    if (!telefone) {
+        mostrarMensagem("Digite o telefone do estabelecimento.");
+        return;
+    }
+
+    if (!cidade) {
+        mostrarMensagem("Digite a cidade do estabelecimento.");
+        return;
+    }
+
+    if (!endereco) {
+        mostrarMensagem("Digite o endereço do estabelecimento.");
+        return;
+    }
+
+
+    // Guarda os dados para utilizar no cadastro final
+    dadosEstabelecimento = {
+        nome: nome,
+        cnpj: cnpj,
+        categoria: categoria,
+        telefone: telefone,
+        cidade: cidade,
+        endereco: endereco
+    };
+
+
+    // Esconde etapa 1
+    document.getElementById("etapaEstabelecimento").style.display = "none";
+
+    // Mostra etapa 2
+    document.getElementById("etapaResponsavel").style.display = "block";
+
+
+    // Atualiza indicador
+    document.getElementById("indicador1").classList.remove("ativa");
+    document.getElementById("indicador2").classList.add("ativa");
+
+
+    // Atualiza textos
+    document.getElementById("tituloCadastro").textContent =
+        "Cadastre o responsável";
+
+    document.getElementById("subtituloCadastro").textContent =
+        "Agora crie o acesso do responsável pelo estabelecimento.";
+}
+
+
+// ======================================================
+// ETAPA 2 → ETAPA 1
+// ======================================================
+
+function voltarParaEtapa1() {
+
+    // Esconde etapa 2
+    document.getElementById("etapaResponsavel").style.display = "none";
+
+    // Mostra etapa 1
+    document.getElementById("etapaEstabelecimento").style.display = "block";
+
+
+    // Atualiza indicador
+    document.getElementById("indicador2").classList.remove("ativa");
+    document.getElementById("indicador1").classList.add("ativa");
+
+
+    // Volta os textos
+    document.getElementById("tituloCadastro").textContent =
+        "Cadastre seu estabelecimento";
+
+    document.getElementById("subtituloCadastro").textContent =
+        "Comece criando o perfil do seu estabelecimento no Suggesto.";
+}
+
+
+// ======================================================
+// CADASTRO FINAL
+// ======================================================
+
+function cadastrar() {
+
+    const nomeCompleto =
+        document.getElementById("nomeCompleto").value.trim();
+
+    const usuario =
+        document.getElementById("usuario").value.trim();
+
+    const cpf =
+        document.getElementById("cpf").value.trim();
+
+    const email =
+        document.getElementById("email").value.trim();
+
+    const telefone =
+        document.getElementById("telefone").value.trim();
+
+    const senha =
+        document.getElementById("senha").value;
+
+    const confirmarSenha =
+        document.getElementById("confirmarSenha").value;
+
+
+    // ==================================================
+    // VALIDAÇÕES
+    // ==================================================
+
+    if (!nomeCompleto) {
+        mostrarMensagem("Digite seu nome completo.");
+        return;
+    }
+
+    if (!usuario) {
+        mostrarMensagem("Digite um nome de usuário.");
+        return;
+    }
+
+    if (!cpf) {
+        mostrarMensagem("Digite seu CPF.");
+        return;
+    }
+
+    if (!email) {
+        mostrarMensagem("Digite seu e-mail.");
+        return;
+    }
+
+    if (!telefone) {
+        mostrarMensagem("Digite seu telefone.");
+        return;
+    }
+
+    if (!senha) {
+        mostrarMensagem("Digite uma senha.");
+        return;
+    }
+
+    if (senha.length < 6) {
+        mostrarMensagem("A senha deve ter pelo menos 6 caracteres.");
+        return;
+    }
+
+    if (!confirmarSenha) {
+        mostrarMensagem("Confirme sua senha.");
+        return;
+    }
+
+    if (senha !== confirmarSenha) {
+        mostrarMensagem("As senhas não coincidem.");
+        return;
+    }
+
+
+    // ==================================================
+    // DADOS COMPLETOS
+    // ==================================================
+
+    const cadastro = {
+
+        estabelecimento: dadosEstabelecimento,
+
+        responsavel: {
+            nomeCompleto: nomeCompleto,
+            usuario: usuario,
+            cpf: cpf,
+            email: email,
+            telefone: telefone,
+            senha: senha
+        }
+
+    };
+
+
+    console.log("CADASTRO COMPLETO:");
+    console.log(cadastro);
+
+
+    // ==================================================
+    // GERA CÓDIGO DO ESTABELECIMENTO
+    // ==================================================
+
+    const codigo =
+        "SGT-" +
+        Math.floor(100000 + Math.random() * 900000);
+
+
+    document.getElementById("codigoEstabelecimento").textContent = codigo;
+
+
+    // ==================================================
+    // ESCONDE ETAPA 2
+    // ==================================================
+
+    document.getElementById("etapaResponsavel").style.display = "none";
+
+
+    // ==================================================
+    // MOSTRA TELA DE SUCESSO
+    // ==================================================
+
+    document.getElementById("cadastroSucesso").style.display = "block";
+
+
+    // Atualiza indicador
+    document.getElementById("indicador1").classList.remove("ativa");
+    document.getElementById("indicador2").classList.add("ativa");
+
+
+    // Atualiza título
+    document.getElementById("tituloCadastro").textContent =
+        "Tudo certo!";
+
+    document.getElementById("subtituloCadastro").textContent =
+        "Seu estabelecimento foi cadastrado no Suggesto.";
+
+
+    mostrarMensagem(
+        "Estabelecimento cadastrado com sucesso!",
+        true
+    );
+}
+
+
+// ======================================================
+// IR PARA LOGIN
+// ======================================================
+
+function irParaLogin() {
+
+    // Se você tiver uma página login.html:
+    window.location.href = "login.html";
+
+    // Se estiver usando outro sistema de rotas,
+    // troque a linha acima pela rota correspondente.
+}
+
+
+// ======================================================
+// MÁSCARA DE CNPJ
+// ======================================================
+
+const campoCnpj = document.getElementById("cnpj");
+
+if (campoCnpj) {
+
+    campoCnpj.addEventListener("input", function () {
+
+        let valor = this.value.replace(/\D/g, "");
+
+        valor = valor.substring(0, 14);
+
+        valor = valor.replace(/^(\d{2})(\d)/, "$1.$2");
+        valor = valor.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
+        valor = valor.replace(
+            /^(\d{2})\.(\d{3})\.(\d{3})(\d)/,
+            "$1.$2.$3/$4"
+        );
+        valor = valor.replace(
+            /^(\d{2})\.(\d{3})\.(\d{3})\/(\d{4})(\d)/,
+            "$1.$2.$3/$4-$5"
+        );
+
+        this.value = valor;
+    });
+}
+
+
+// ======================================================
+// MÁSCARA DE CPF
+// ======================================================
+
+const campoCpf = document.getElementById("cpf");
+
+if (campoCpf) {
+
+    campoCpf.addEventListener("input", function () {
+
+        let valor = this.value.replace(/\D/g, "");
+
+        valor = valor.substring(0, 11);
+
+        valor = valor.replace(/^(\d{3})(\d)/, "$1.$2");
+        valor = valor.replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3");
+        valor = valor.replace(
+            /^(\d{3})\.(\d{3})\.(\d{3})(\d)/,
+            "$1.$2.$3-$4"
+        );
+
+        this.value = valor;
+    });
+}
+
+
+// ======================================================
+// MÁSCARA DE TELEFONE DO ESTABELECIMENTO
+// ======================================================
+
+const campoTelefoneEstabelecimento =
+    document.getElementById("telefoneEstabelecimento");
+
+if (campoTelefoneEstabelecimento) {
+
+    campoTelefoneEstabelecimento.addEventListener("input", function () {
+
+        let valor = this.value.replace(/\D/g, "");
+
+        valor = valor.substring(0, 11);
+
+        if (valor.length <= 10) {
+
+            valor = valor.replace(
+                /^(\d{2})(\d)/,
+                "($1) $2"
+            );
+
+            valor = valor.replace(
+                /(\d{4})(\d)/,
+                "$1-$2"
+            );
+
+        } else {
+
+            valor = valor.replace(
+                /^(\d{2})(\d)/,
+                "($1) $2"
+            );
+
+            valor = valor.replace(
+                /(\d{5})(\d)/,
+                "$1-$2"
+            );
+        }
+
+        this.value = valor;
+    });
+}
+
+
+// ======================================================
+// MÁSCARA DE TELEFONE DO RESPONSÁVEL
+// ======================================================
+
+const campoTelefone =
+    document.getElementById("telefone");
+
+if (campoTelefone) {
+
+    campoTelefone.addEventListener("input", function () {
+
+        let valor = this.value.replace(/\D/g, "");
+
+        valor = valor.substring(0, 11);
+
+        if (valor.length <= 10) {
+
+            valor = valor.replace(
+                /^(\d{2})(\d)/,
+                "($1) $2"
+            );
+
+            valor = valor.replace(
+                /(\d{4})(\d)/,
+                "$1-$2"
+            );
+
+        } else {
+
+            valor = valor.replace(
+                /^(\d{2})(\d)/,
+                "($1) $2"
+            );
+
+            valor = valor.replace(
+                /(\d{5})(\d)/,
+                "$1-$2"
+            );
+        }
+
+        this.value = valor;
+    });
+}
