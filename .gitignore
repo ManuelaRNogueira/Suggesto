@@ -26,3 +26,6 @@ target/
 Thumbs.db
 # Build do renderer (Vite)
 dist/
+
+# Uploads de usuário (gerados em runtime, não versionados)
+uploads/

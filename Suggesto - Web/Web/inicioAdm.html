@@ -3,37 +3,84 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Resumo — Suggesto</title>
+  <title>Painel Admin — Suggesto</title>
   <link rel="icon" type="image/png" href="imagens/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/admBase.css">
   <link rel="stylesheet" href="css/inicioAdm.css">
 </head>
 <body>
 
-<main class="resumo">
-
-  <header class="resumo-topo">
-    <div class="resumo-marca">
-      <img src="imagens/logo.png" alt="" class="resumo-logo">
-      <div>
-        <p class="resumo-titulo">Resumo</p>
-        <p class="resumo-sub" id="resumoSub">Carregando…</p>
-      </div>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">
+      <img src="imagens/logo.png" alt="Logo" class="logo-img-sidebar">
     </div>
+    <div class="logo-text">
+      Suggesto
+      <span>Painel Admin</span>
+    </div>
+  </div>
 
-    <div class="resumo-conta">
-      <span class="resumo-avatar" id="contaAvatar">—</span>
-      <span class="resumo-conta-info">
-        <strong id="contaNome">—</strong>
-        <small id="contaEmail">Administrador</small>
-      </span>
-      <button type="button" class="resumo-sair" id="btnSair" title="Sair">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Principal</div>
+
+    <a class="nav-item active" href="inicioAdm.html">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      Início
+    </a>
+
+    <a class="nav-item nav-item-disabled" href="download.html" data-desktop-only="true">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      Sugestões
+      <span class="nav-badge">App</span>
+    </a>
+
+    <a class="nav-item nav-item-disabled" href="download.html" data-desktop-only="true">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M18 20V10M12 20V4M6 20v-6"/>
+      </svg>
+      Estatísticas
+      <span class="nav-badge">App</span>
+    </a>
+
+    <a class="nav-item nav-item-disabled" href="download.html" data-desktop-only="true">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      Perfil
+      <span class="nav-badge">App</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="sb-avatar" id="contaAvatar">—</div>
+      <div class="sb-user-info">
+        <div class="sb-user-name" id="contaNome">—</div>
+        <div class="sb-user-role" id="contaEmail">Administrador</div>
+      </div>
+      <button type="button" class="user-sair" id="btnSair" title="Sair">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
         </svg>
       </button>
     </div>
+  </div>
+</aside>
+
+<main class="conteudo">
+
+  <header class="conteudo-header">
+    <p class="header-saudacao" id="resumoSub">Carregando…</p>
+    <h1 class="header-titulo">Painel administrativo</h1>
   </header>
 
   <div id="erro" class="resumo-erro" hidden></div>
@@ -86,6 +133,20 @@
   </aside>
 
 </main>
+
+<div class="modal-fundo" id="modalDesktop">
+  <div class="modal">
+    <div class="modal-topo">
+      <h3 class="modal-titulo">Disponível no app</h3>
+      <button type="button" class="modal-fechar" id="btnFecharDesktop">&times;</button>
+    </div>
+    <p class="modal-sub">
+      Esta seção faz parte do aplicativo para computador. Aqui no site fica só o
+      resumo para consulta rápida.
+    </p>
+    <a class="botao-modal" href="download.html">Baixar o app</a>
+  </div>
+</div>
 
 <script src="js/admApi.js"></script>
 <script src="js/inicioAdm.js"></script>
