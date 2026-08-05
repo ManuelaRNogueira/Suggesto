@@ -18,6 +18,23 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.clear();
     window.location.href = "login.html";
   });
+
+  const modal = document.getElementById("modalDesktop");
+
+  document.querySelectorAll("[data-desktop-only]").forEach(item => {
+    item.addEventListener("click", e => {
+      e.preventDefault();
+      modal.classList.add("aberto");
+    });
+  });
+
+  document.getElementById("btnFecharDesktop").addEventListener("click", () => {
+    modal.classList.remove("aberto");
+  });
+
+  modal.addEventListener("click", e => {
+    if (e.target === modal) modal.classList.remove("aberto");
+  });
 });
 
 function montarConta() {
