@@ -77,7 +77,7 @@ document.querySelectorAll('.func-card, .papel-card, .caixa').forEach(elemento =>
 
 // ===== NAVEGAÇÃO =====
 function abrirCadastro() {
-  window.location.href = "cadastro.html";
+  window.location.href = "cadastroAdm.html";
 }
 
 function abrirEntrar() {
