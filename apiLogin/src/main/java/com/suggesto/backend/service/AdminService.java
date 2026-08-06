@@ -137,6 +137,7 @@ public class AdminService {
                     item.put("cidade", e.getCidade());
                     item.put("categoria", e.getCategoria());
                     item.put("ativo", e.getAtivo());
+                    item.put("codigoAcesso", e.getCodigoAcesso());
                     // CORREÇÃO: Ajustado de countByEstabelecimento_IdEstabelecimento para countByEstabelecimentoIdEstabelecimento
                     item.put("totalSugestoes", avaliacaoRepository.countByEstabelecimentoIdEstabelecimento(e.getIdEstabelecimento()));
                     return item;

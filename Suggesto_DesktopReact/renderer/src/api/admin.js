@@ -48,6 +48,26 @@ export function buscarUsuario(id) {
   return fetchJson(`${API_BASE}/usuarios/${id}`);
 }
 
+export function buscarSolicitacoes() {
+  return fetchJson(`${API_BASE}/estabelecimentos/solicitacoes${queryGerente()}`);
+}
+
+export function aceitarSolicitacao(id) {
+  return fetchJson(`${API_BASE}/estabelecimentos/solicitacoes/${id}/aceitar`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idGerente: idGerente() }),
+  });
+}
+
+export function recusarSolicitacao(id) {
+  return fetchJson(`${API_BASE}/estabelecimentos/solicitacoes/${id}/recusar`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idGerente: idGerente() }),
+  });
+}
+
 export function atualizarStatusSugestao(id, status) {
   return fetchJson(`${API_BASE}/avaliacoes/${id}/status`, {
     method: "PATCH",

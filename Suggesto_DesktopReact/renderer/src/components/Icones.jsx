@@ -22,6 +22,8 @@ export const IC = {
   lapis: "M12 20h9 M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z",
   local: "M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z M12 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z",
   logo: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5",
+  sino: "M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 0 1-3.46 0",
+  copiar: "M9 9h11v11H9z M5 15V5a1 1 0 0 1 1-1h10",
 };
 
 export default function Icone({ d, size = 16, className }) {

@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import Icone, { IC } from "./Icones";
-import { buscarMetricas, iniciais } from "../api/admin";
+import { buscarMetricas, buscarSolicitacoes, iniciais } from "../api/admin";
 import "../styles/tokens.css";
 import "./AdminShell.css";
 
 const NAV = [
   { para: "/", rotulo: "Início", icone: IC.inicio, fim: true },
-  { para: "/sugestoes", rotulo: "Sugestões", icone: IC.chat, badge: true },
+  { para: "/sugestoes", rotulo: "Sugestões", icone: IC.chat, badgeChave: "sugestoes" },
   { para: "/estatisticas", rotulo: "Estatísticas", icone: IC.barras },
   { para: "/estabelecimentos", rotulo: "Estabelecimentos", icone: IC.predios },
+  { para: "/solicitacoes", rotulo: "Solicitações", icone: IC.sino, badgeChave: "solicitacoes" },
 ];
 
 export default function AdminShell() {
-  const [badge, setBadge] = useState(null);
+  const [badges, setBadges] = useState({});
   const [usuario, setUsuario] = useState({ nome: "", email: "" });
 
   useEffect(() => {
@@ -26,8 +27,11 @@ export default function AdminShell() {
   useEffect(() => {
     let vivo = true;
     buscarMetricas()
-      .then((m) => vivo && setBadge(m.novasSemana ?? null))
-      .catch(() => vivo && setBadge(null));
+      .then((m) => vivo && setBadges((b) => ({ ...b, sugestoes: m.novasSemana ?? null })))
+      .catch(() => vivo && setBadges((b) => ({ ...b, sugestoes: null })));
+    buscarSolicitacoes()
+      .then((lista) => vivo && setBadges((b) => ({ ...b, solicitacoes: lista.length })))
+      .catch(() => vivo && setBadges((b) => ({ ...b, solicitacoes: null })));
     return () => {
       vivo = false;
     };
@@ -65,8 +69,8 @@ export default function AdminShell() {
             >
               <Icone d={item.icone} size={17} className="adm-nav-icone" />
               {item.rotulo}
-              {item.badge && badge > 0 && (
-                <span className="adm-nav-badge adm-num">{badge}</span>
+              {item.badgeChave && badges[item.badgeChave] > 0 && (
+                <span className="adm-nav-badge adm-num">{badges[item.badgeChave]}</span>
               )}
             </NavLink>
           ))}

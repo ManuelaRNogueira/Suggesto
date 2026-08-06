@@ -48,14 +48,10 @@ async function entrarNaEquipe() {
         const resultado = await resposta.json();
 
         if (resposta.ok && resultado.success) {
-            if (resultado.idGerente) {
-                localStorage.setItem('idGerenteEfetivo', resultado.idGerente);
-            }
-
             document.getElementById('areaFormulario').style.display = 'none';
             document.getElementById('formCodigo').style.display = 'none';
             document.getElementById('mensagemSucesso').textContent =
-                `Agora você faz parte da equipe de ${resultado.nomeEstabelecimento}.`;
+                `O administrador principal de ${resultado.nomeEstabelecimento} vai analisar seu pedido. Você recebe acesso assim que for aceito.`;
             document.getElementById('codigoSucesso').style.display = 'block';
         } else {
             codigoInput.classList.add('input-erro');

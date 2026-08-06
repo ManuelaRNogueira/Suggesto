@@ -1,10 +1,12 @@
 package com.suggesto.backend.controller;
 
 import com.suggesto.backend.model.Estabelecimento;
+import com.suggesto.backend.model.SolicitacaoEquipe;
 import com.suggesto.backend.model.TipoUsuario;
 import com.suggesto.backend.model.Usuario;
 import com.suggesto.backend.repository.AvaliacaoRepository;
 import com.suggesto.backend.repository.EstabelecimentoRepository;
+import com.suggesto.backend.repository.SolicitacaoEquipeRepository;
 import com.suggesto.backend.repository.UsuarioRepository;
 import com.suggesto.backend.util.UploadStorage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +35,9 @@ public class EstabelecimentoController {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private SolicitacaoEquipeRepository solicitacaoRepository;
 
     private static final String ALFABETO_CODIGO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -140,6 +145,20 @@ public class EstabelecimentoController {
                 ));
             }
 
+            if (usuario.getEstabelecimento() != null) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "Você já faz parte de um estabelecimento."
+                ));
+            }
+
+            if (solicitacaoRepository.findByUsuario_Id(usuario.getId()).isPresent()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "Você já tem uma solicitação pendente. Aguarde o administrador responder."
+                ));
+            }
+
             Optional<Estabelecimento> estabOpt = repository.findByCodigoAcessoAndAtivo(codigo.trim().toUpperCase());
             if (estabOpt.isEmpty()) {
                 return ResponseEntity.status(404).body(Map.of(
@@ -149,14 +168,17 @@ public class EstabelecimentoController {
             }
 
             Estabelecimento estabelecimento = estabOpt.get();
-            usuario.setEstabelecimento(estabelecimento);
-            usuarioRepository.save(usuario);
+
+            SolicitacaoEquipe solicitacao = new SolicitacaoEquipe();
+            solicitacao.setUsuario(usuario);
+            solicitacao.setEstabelecimento(estabelecimento);
+            solicitacaoRepository.save(solicitacao);
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
-                    "message", "Você entrou na equipe!",
-                    "nomeEstabelecimento", estabelecimento.getNome(),
-                    "idGerente", estabelecimento.getIdGerente()
+                    "pendente", true,
+                    "message", "Solicitação enviada! Aguarde a aprovação do administrador principal.",
+                    "nomeEstabelecimento", estabelecimento.getNome()
             ));
 
         } catch (NumberFormatException e) {
@@ -169,6 +191,94 @@ public class EstabelecimentoController {
             return ResponseEntity.status(500).body(Map.of(
                     "success", false,
                     "message", "Erro interno ao entrar na equipe: " + e.getMessage()
+            ));
+        }
+    }
+
+    @GetMapping("/solicitacoes")
+    public ResponseEntity<?> listarSolicitacoes(@RequestParam(value = "idGerente", required = false) Long idGerente) {
+        if (idGerente == null) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        List<Map<String, Object>> lista = solicitacaoRepository
+                .findByEstabelecimento_IdGerenteOrderByDataSolicitacaoAsc(idGerente)
+                .stream()
+                .map(s -> {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("id", s.getId());
+                    item.put("nomeUsuario", s.getUsuario().getNome());
+                    item.put("emailUsuario", s.getUsuario().getEmail());
+                    item.put("estabelecimentoId", s.getEstabelecimento().getIdEstabelecimento());
+                    item.put("nomeEstabelecimento", s.getEstabelecimento().getNome());
+                    item.put("dataSolicitacao", s.getDataSolicitacao());
+                    return item;
+                })
+                .collect(java.util.stream.Collectors.toList());
+
+        return ResponseEntity.ok(lista);
+    }
+
+    @PostMapping("/solicitacoes/{id}/aceitar")
+    public ResponseEntity<?> aceitarSolicitacao(@PathVariable Long id, @RequestBody Map<String, Object> dados) {
+        return resolverSolicitacao(id, dados, true);
+    }
+
+    @PostMapping("/solicitacoes/{id}/recusar")
+    public ResponseEntity<?> recusarSolicitacao(@PathVariable Long id, @RequestBody Map<String, Object> dados) {
+        return resolverSolicitacao(id, dados, false);
+    }
+
+    private ResponseEntity<?> resolverSolicitacao(Long id, Map<String, Object> dados, boolean aceitar) {
+        try {
+            Object idGerenteObj = dados.get("idGerente");
+            if (idGerenteObj == null) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "Informe o administrador responsável."
+                ));
+            }
+            Long idGerente = Long.valueOf(idGerenteObj.toString());
+
+            Optional<SolicitacaoEquipe> solicitacaoOpt = solicitacaoRepository.findById(id);
+            if (solicitacaoOpt.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of(
+                        "success", false,
+                        "message", "Solicitação não encontrada."
+                ));
+            }
+
+            SolicitacaoEquipe solicitacao = solicitacaoOpt.get();
+            if (solicitacao.getEstabelecimento().getIdGerente() != idGerente) {
+                return ResponseEntity.status(403).body(Map.of(
+                        "success", false,
+                        "message", "Você não pode responder a essa solicitação."
+                ));
+            }
+
+            if (aceitar) {
+                Usuario usuario = solicitacao.getUsuario();
+                usuario.setEstabelecimento(solicitacao.getEstabelecimento());
+                usuarioRepository.save(usuario);
+            }
+
+            solicitacaoRepository.delete(solicitacao);
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", aceitar ? "Solicitação aceita." : "Solicitação recusada."
+            ));
+
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Administrador inválido."
+            ));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "message", "Erro interno ao responder a solicitação: " + e.getMessage()
             ));
         }
     }
