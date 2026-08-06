@@ -3,58 +3,186 @@
 
 <head>
   <link rel="icon" type="image/png" href="imagens/logo.png">
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Suggesto - Login</title>
-  <link rel="stylesheet" href="style.css">
+
+  <title>Suggesto - Cadastro</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <link
-    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap"
-    rel="stylesheet">
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
   <link rel="stylesheet" href="css/cadastro.css">
 </head>
 
 <body>
+
   <div class="cadastro-page">
+
+    <button
+      type="button"
+      class="botao-voltar-pagina"
+      onclick="history.back()"
+      aria-label="Voltar"
+    >
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M10 12.5L5.5 8l4.5-4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+
     <div class="cadastro-card">
+
+      <!-- CABEÇALHO -->
       <div class="logo-area">
-        <h2 class="titulo">Cadastre-se</h2>
+
+        <h2 class="titulo">
+          Crie sua conta
+        </h2>
+
+        <p class="subtitulo">
+          Cadastre-se para enviar sugestões e acompanhar respostas dos seus estabelecimentos favoritos.
+        </p>
+
       </div>
 
-      <div class="form">
-    <input type="text" id="usuario" placeholder="Nome de Usuário">
-    <input type="email" id="email" placeholder="Email">
-    <input type="tel" id="telefone" placeholder="Telefone">
-    <input type="text" id="cidade" placeholder="Cidade">
-    <input type="password" id="senha" placeholder="Senha">
-    <input type="password" id="confirmarSenha" placeholder="Confirme sua senha">
 
-    <div class="radio-group">
-        <label class="radio-container" for="cliente">
-            <input type="radio" id="cliente" name="role" value="cliente" checked>
-            <span class="checkmark"></span>
-            Cliente
-        </label>
+      <!-- ========================= -->
+      <!-- SELETOR DE PERFIL -->
+      <!-- ========================= -->
 
-        <label class="radio-container" for="admin">
-            <input type="radio" id="admin" name="role" value="admin" onchange="window.location.href='planos.html'">
-            <span class="checkmark"></span>
-            Administrador
-        </label>
+      <div class="seletor-papel">
+        <button type="button" class="papel-opcao ativa" id="papelCliente">
+          Cliente
+        </button>
+        <button type="button" class="papel-opcao" id="papelAdmin" onclick="window.location.href='cadastroAdm.html'">
+          Administrador
+        </button>
+      </div>
+
+
+      <!-- ========================= -->
+      <!-- FORMULÁRIO - CLIENTE -->
+      <!-- ========================= -->
+
+      <div class="form etapa-form ativa" id="formCliente">
+
+        <div class="campo-grupo">
+          <label for="usuario">
+            Nome de usuário
+          </label>
+
+          <input
+            type="text"
+            id="usuario"
+            placeholder="Ex.: joao.silva"
+          >
+        </div>
+
+
+        <div class="campo-grupo">
+          <label for="email">
+            E-mail
+          </label>
+
+          <input
+            type="email"
+            id="email"
+            placeholder="seuemail@exemplo.com"
+          >
+        </div>
+
+
+        <div class="ladoalado">
+
+          <div class="campo-grupo">
+            <label for="telefone">
+              Telefone
+            </label>
+
+            <input
+              type="tel"
+              id="telefone"
+              placeholder="(00) 00000-0000"
+            >
+          </div>
+
+
+          <div class="campo-grupo">
+            <label for="cidade">
+              Cidade
+            </label>
+
+            <input
+              type="text"
+              id="cidade"
+              placeholder="Ex.: Campinas"
+            >
+          </div>
+
+        </div>
+
+
+        <div class="ladoalado">
+
+          <div class="campo-grupo">
+            <label for="senha">
+              Senha
+            </label>
+
+            <input
+              type="password"
+              id="senha"
+              placeholder="Crie uma senha"
+            >
+          </div>
+
+
+          <div class="campo-grupo">
+            <label for="confirmarSenha">
+              Confirmar senha
+            </label>
+
+            <input
+              type="password"
+              id="confirmarSenha"
+              placeholder="Repita sua senha"
+            >
+          </div>
+
+        </div>
+
+
+        <button
+          type="button"
+          class="botao-principal"
+          onclick="cadastrar()"
+        >
+          Cadastrar
+        </button>
+
+      </div>
+
     </div>
-      
 
-    <button onclick="cadastrar()">Cadastrar</button>
-</div>
-    </div>
   </div>
 
-  <div class="toast-erro" id="toastErro">
-        <span id="toastMsgErro">Mensagem de erro aqui</span>
-    </div>
+
+  <!-- TOAST -->
+  <div
+    class="toast-erro"
+    id="toastErro"
+  >
+    <span id="toastMsgErro">
+      Mensagem de erro aqui
+    </span>
+  </div>
+
 
   <script src="js/cadastro.js" defer></script>
+
 </body>
 
 </html>

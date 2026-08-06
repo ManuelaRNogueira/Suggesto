@@ -87,6 +87,63 @@ body {
 
 
 /* =========================================
+   VOLTAR (TOPO DA PÁGINA)
+========================================= */
+
+.botao-voltar-pagina {
+    position: fixed;
+
+    top: 24px;
+    left: 24px;
+
+    z-index: 2;
+
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    background: rgba(255, 255, 255, 0.04);
+
+    color: rgba(240, 240, 245, 0.7);
+
+    backdrop-filter: blur(10px);
+
+    cursor: pointer;
+
+    transition: 0.25s;
+}
+
+
+.botao-voltar-pagina:hover {
+    background: rgba(124, 58, 237, 0.15);
+
+    border-color: rgba(124, 58, 237, 0.4);
+
+    color: #c084fc;
+
+    transform: translateX(-2px);
+}
+
+
+@media (max-width: 700px) {
+
+    .botao-voltar-pagina {
+        top: 16px;
+        left: 16px;
+    }
+
+}
+
+
+/* =========================================
    CARD
 ========================================= */
 
@@ -203,6 +260,65 @@ body {
     line-height: 1.5;
 
     margin-bottom: 30px;
+}
+
+
+/* =========================================
+   SELETOR DE PERFIL
+========================================= */
+
+.seletor-papel {
+    display: flex;
+
+    gap: 6px;
+
+    padding: 4px;
+
+    margin-bottom: 26px;
+
+    border-radius: 999px;
+
+    background: #13131a;
+
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+
+.papel-opcao {
+    flex: 1;
+
+    padding: 11px;
+
+    border: none;
+    border-radius: 999px;
+
+    background: transparent;
+
+    color: rgba(240, 240, 245, 0.55);
+
+    font-family: 'Syne', sans-serif;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.25s;
+}
+
+
+.papel-opcao:hover {
+    color: rgba(240, 240, 245, 0.85);
+}
+
+
+.papel-opcao.ativa {
+    background: #7c3aed;
+
+    color: white;
+
+    box-shadow:
+        0 6px 18px rgba(124, 58, 237, 0.35);
 }
 
 

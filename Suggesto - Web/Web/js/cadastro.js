@@ -1,40 +1,6 @@
 const toastErro = document.getElementById('toastErro');
 const toastMsgErro = document.getElementById('toastMsgErro');
 
-function isPaginaAdmin() {
-    return window.location.pathname.includes('cadastroAdm');
-}
-
-document.addEventListener("DOMContentLoaded", function () {
-    const camposAdmin = document.getElementById("campos-admin");
-
-    if (isPaginaAdmin()) {
-        if (camposAdmin) camposAdmin.style.display = "block";
-
-        const planoEscolhido = sessionStorage.getItem("planoEscolhido");
-        const elPlano = document.getElementById("planoSelecionado");
-
-        if (elPlano && planoEscolhido) {
-            elPlano.style.display = "block";
-            elPlano.textContent = `Plano selecionado: ${planoEscolhido}`;
-        }
-    } else if (camposAdmin) {
-        function atualizarCampos() {
-            const selecionado = document.querySelector('input[name="role"]:checked');
-            if (!selecionado) return;
-
-            camposAdmin.style.display = selecionado.value === "admin" ? "block" : "none";
-            limparErros();
-        }
-
-        document.body.addEventListener("change", function (e) {
-            if (e.target.name === "role") atualizarCampos();
-        });
-
-        atualizarCampos();
-    }
-});
-
 function mostrarMensagem(mensagem, tipo = 'erro') {
     toastMsgErro.textContent = mensagem;
 
@@ -52,14 +18,13 @@ function mostrarMensagem(mensagem, tipo = 'erro') {
 }
 
 function limparErros() {
-    document.querySelectorAll('.form input, .form select').forEach(elemento => {
+    document.querySelectorAll('.form input').forEach(elemento => {
         elemento.classList.remove('input-erro');
     });
 }
 
-document.querySelectorAll('.form input, .form select').forEach(elemento => {
+document.querySelectorAll('.form input').forEach(elemento => {
     elemento.addEventListener('input', () => elemento.classList.remove('input-erro'));
-    elemento.addEventListener('change', () => elemento.classList.remove('input-erro'));
 });
 
 function isTelefoneValido(telefone) {
@@ -70,25 +35,21 @@ function isTelefoneValido(telefone) {
     return /^[1-9][1-9](?:9\d{8}|[2-5]\d{7})$/.test(digitos);
 }
 
-function obterRole() {
-    if (isPaginaAdmin()) return "admin";
-
-    const roleElement = document.querySelector('input[name="role"]:checked');
-    return roleElement ? roleElement.value : "cliente";
-}
-
 function validarCampos() {
     limparErros();
 
     const usuario = document.getElementById('usuario');
     const email = document.getElementById('email');
+    const telefone = document.getElementById('telefone');
+    const cidade = document.getElementById('cidade');
     const senha = document.getElementById('senha');
     const confirmarSenha = document.getElementById('confirmarSenha');
-    const role = obterRole();
 
-    if (!usuario.value.trim() || !email.value.trim() || !senha.value.trim() || !confirmarSenha.value.trim()) {
+    if (!usuario.value.trim() || !email.value.trim() || !telefone.value.trim() || !cidade.value.trim() || !senha.value.trim() || !confirmarSenha.value.trim()) {
         if (!usuario.value.trim()) usuario.classList.add('input-erro');
         if (!email.value.trim()) email.classList.add('input-erro');
+        if (!telefone.value.trim()) telefone.classList.add('input-erro');
+        if (!cidade.value.trim()) cidade.classList.add('input-erro');
         if (!senha.value.trim()) senha.classList.add('input-erro');
         if (!confirmarSenha.value.trim()) confirmarSenha.classList.add('input-erro');
 
@@ -99,6 +60,12 @@ function validarCampos() {
     if (!email.value.includes("@") || !email.value.includes(".")) {
         email.classList.add('input-erro');
         mostrarMensagem("Digite um endereço de e-mail válido.");
+        return false;
+    }
+
+    if (!isTelefoneValido(telefone.value)) {
+        telefone.classList.add('input-erro');
+        mostrarMensagem("Digite um telefone válido, com DDD (ex: (11) 91234-5678).");
         return false;
     }
 
@@ -115,98 +82,26 @@ function validarCampos() {
         return false;
     }
 
-    const telefone = document.getElementById('telefone');
-    const cidade = document.getElementById('cidade');
-
-    if (role === 'cliente') {
-        if (telefone && !telefone.value.trim()) {
-            telefone.classList.add('input-erro');
-            mostrarMensagem("Informe seu telefone.");
-            return false;
-        }
-        if (telefone && telefone.value.trim() && !isTelefoneValido(telefone.value)) {
-            telefone.classList.add('input-erro');
-            mostrarMensagem("Digite um telefone válido, com DDD (ex: (11) 91234-5678).");
-            return false;
-        }
-        if (cidade && !cidade.value.trim()) {
-            cidade.classList.add('input-erro');
-            mostrarMensagem("Informe sua cidade.");
-            return false;
-        }
-    }
-
-    if (role === 'admin') {
-        const nomeCompleto = document.getElementById('nomeCompleto');
-        const cpf = document.getElementById('cpf');
-        const cargo = document.getElementById('cargo');
-
-        if (!nomeCompleto?.value.trim() || !cpf?.value.trim() || !telefone?.value.trim() || !cargo?.value || !cidade?.value.trim()) {
-            if (!nomeCompleto?.value.trim()) nomeCompleto?.classList.add('input-erro');
-            if (!cpf?.value.trim()) cpf?.classList.add('input-erro');
-            if (!telefone?.value.trim()) telefone?.classList.add('input-erro');
-            if (!cargo?.value) cargo?.classList.add('input-erro');
-            if (!cidade?.value.trim()) cidade?.classList.add('input-erro');
-
-            mostrarMensagem("Preencha todos os campos de administrador.");
-            return false;
-        }
-
-        if (cpf.value.trim().length < 11) {
-            cpf.classList.add('input-erro');
-            mostrarMensagem("Digite um CPF válido.");
-            return false;
-        }
-
-        if (!isTelefoneValido(telefone.value)) {
-            telefone.classList.add('input-erro');
-            mostrarMensagem("Digite um telefone válido, com DDD (ex: (11) 91234-5678).");
-            return false;
-        }
-    }
-
     return true;
 }
 
 async function cadastrar() {
-    const role = obterRole();
-
-    if (role === 'admin') {
-        const planoEscolhido = sessionStorage.getItem("planoEscolhido");
-        if (!planoEscolhido || !planoEscolhido.trim()) {
-            mostrarMensagem("Você precisa escolher um plano antes de cadastrar!");
-            window.location.href = 'planos.html';
-            return;
-        }
-    }
-
     if (!validarCampos()) return;
 
-    const botao = document.querySelector('.form button');
+    const botao = document.querySelector('#formCliente .botao-principal');
     const textoOriginal = botao.innerText;
 
     botao.innerText = "Processando...";
     botao.disabled = true;
 
-    const telefoneEl = document.getElementById('telefone');
-    const cidadeEl = document.getElementById('cidade');
-
     const novoUsuario = {
         nome: document.getElementById('usuario').value.trim(),
         email: document.getElementById('email').value.trim(),
         senha: document.getElementById('senha').value.trim(),
-        tipoUsuario: role === "admin" ? "Administrador" : "Cliente",
-        telefone: telefoneEl ? telefoneEl.value.trim() : "",
-        cidade: cidadeEl ? cidadeEl.value.trim() : ""
+        tipoUsuario: "Cliente",
+        telefone: document.getElementById('telefone').value.trim(),
+        cidade: document.getElementById('cidade').value.trim()
     };
-
-    if (role === "admin") {
-        const nomeCompleto = document.getElementById('nomeCompleto');
-        novoUsuario.nome = nomeCompleto ? nomeCompleto.value.trim() : novoUsuario.nome;
-        novoUsuario.cpf = document.getElementById('cpf').value.trim();
-        novoUsuario.cargo = document.getElementById('cargo').value;
-        novoUsuario.plano = sessionStorage.getItem("planoEscolhido");
-    }
 
     try {
         const resposta = await fetch("http://localhost:8080/api/cadastro", {
@@ -218,10 +113,6 @@ async function cadastrar() {
         const resultado = await resposta.json();
 
         if (resposta.ok) {
-            if (role === "admin") {
-                sessionStorage.removeItem("planoEscolhido");
-            }
-
             mostrarMensagem("Cadastro realizado com sucesso! Redirecionando...", "sucesso");
 
             setTimeout(() => {
@@ -251,14 +142,14 @@ telefone.addEventListener("input", function() {
     }
 
     if (valor.length > 6) {
-        telefone.value = "(" + valor.substring(0, 2) + ") " 
-        + valor.substring(2, 7) + "-" 
+        telefone.value = "(" + valor.substring(0, 2) + ") "
+        + valor.substring(2, 7) + "-"
         + valor.substring(7);
-    } 
+    }
     else if (valor.length > 2) {
-        telefone.value = "(" + valor.substring(0, 2) + ") " 
+        telefone.value = "(" + valor.substring(0, 2) + ") "
         + valor.substring(2);
-    } 
+    }
     else {
         telefone.value = valor;
     }
