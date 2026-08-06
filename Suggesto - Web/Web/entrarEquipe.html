@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <link rel="icon" type="image/png" href="imagens/logo.png">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Suggesto - Entrar em equipe</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="css/cadastro.css">
+</head>
+
+<body>
+
+  <div class="cadastro-page">
+
+    <button
+      type="button"
+      class="botao-voltar-pagina"
+      onclick="history.back()"
+      aria-label="Voltar"
+    >
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M10 12.5L5.5 8l4.5-4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+
+    <div class="cadastro-card">
+
+      <div class="logo-area">
+
+        <h2 class="titulo">
+          Entrar em uma equipe existente
+        </h2>
+
+        <p class="subtitulo">
+          Se você foi convidado para fazer parte da equipe de um estabelecimento, você vai precisar de uma conta de administrador e do código do estabelecimento. Você já tem uma conta no Suggesto?
+        </p>
+
+      </div>
+
+      <div class="form">
+
+        <button
+          type="button"
+          class="botao-principal"
+          onclick="window.location.href='login.html?equipe=1'"
+        >
+          Já tenho conta
+        </button>
+
+        <button
+          type="button"
+          class="botao-voltar"
+          style="width: 100%; margin-top: 12px;"
+          onclick="window.location.href='cadastro.html?equipe=1'"
+        >
+          Ainda não tenho conta
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</body>
+
+</html>

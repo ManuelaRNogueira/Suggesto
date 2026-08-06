@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <link rel="icon" type="image/png" href="imagens/logo.png">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Suggesto - Entrar na equipe</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="css/cadastro.css">
+</head>
+
+<body>
+
+  <div class="cadastro-page">
+
+    <button
+      type="button"
+      class="botao-voltar-pagina"
+      onclick="history.back()"
+      aria-label="Voltar"
+    >
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M10 12.5L5.5 8l4.5-4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+
+    <div class="cadastro-card">
+
+      <div class="logo-area" id="areaFormulario">
+
+        <h2 class="titulo">
+          Quase lá!
+        </h2>
+
+        <p class="subtitulo">
+          Digite o código do estabelecimento para entrar na equipe.
+        </p>
+
+      </div>
+
+      <div class="form" id="formCodigo">
+
+        <div class="campo-grupo">
+          <label for="codigo">
+            Código do estabelecimento
+          </label>
+
+          <input
+            type="text"
+            id="codigo"
+            placeholder="SGT-XXXXXX"
+            maxlength="10"
+          >
+        </div>
+
+        <button
+          type="button"
+          class="botao-principal"
+          onclick="entrarNaEquipe()"
+        >
+          Entrar na equipe
+        </button>
+
+      </div>
+
+
+      <!-- ========================= -->
+      <!-- SUCESSO -->
+      <!-- ========================= -->
+
+      <div
+        class="cadastro-sucesso"
+        id="codigoSucesso"
+        style="display: none;"
+      >
+
+        <div class="icone-sucesso">
+          ✓
+        </div>
+
+        <h2>
+          Você entrou na equipe!
+        </h2>
+
+        <p id="mensagemSucesso">
+          Agora você faz parte da equipe do estabelecimento.
+        </p>
+
+        <button
+          type="button"
+          class="botao-principal"
+          onclick="window.location.href='inicioAdm.html'"
+        >
+          Ir para o painel
+        </button>
+
+        <button
+          type="button"
+          class="botao-voltar"
+          style="width: 100%; margin-top: 12px;"
+          onclick="window.location.href='download.html'"
+        >
+          Baixar o app para gerenciar
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- TOAST -->
+  <div
+    class="toast-erro"
+    id="toastErro"
+  >
+    <span id="toastMsgErro">
+      Mensagem de erro aqui
+    </span>
+  </div>
+
+
+  <script src="js/entrarCodigo.js" defer></script>
+
+</body>
+
+</html>

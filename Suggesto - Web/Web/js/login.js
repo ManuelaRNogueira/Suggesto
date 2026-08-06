@@ -14,6 +14,11 @@ function mostrarErro(mensagem) {
 
 senhaInput.addEventListener('input', () => senhaInput.classList.remove('input-erro'));
 
+if (new URLSearchParams(window.location.search).get('equipe') === '1') {
+    const linkCadastro = document.getElementById('linkCadastro');
+    if (linkCadastro) linkCadastro.href = 'cadastro.html?equipe=1';
+}
+
 function validarCampos() {
     const email = emailInput.value.trim();
     const senha = senhaInput.value.trim();
@@ -60,16 +65,28 @@ async function entrarSuggesto() {
 
         // O backend Java retorna status 200 (ok) e "success": true quando dá certo
         if (resposta.ok && resultado.success) {
-            
+
+            const modoEquipe = new URLSearchParams(window.location.search).get('equipe') === '1';
+
+            if (modoEquipe && resultado.tipoUsuario !== "Administrador") {
+                mostrarErro("Você precisa de uma conta de administrador para entrar em uma equipe.");
+                botao.innerText = textoOriginal;
+                botao.disabled = false;
+                return;
+            }
+
             // 1. Guardamos os dados no navegador para usar nas próximas telas
             localStorage.setItem("idUsuario", resultado.idUsuario);
             localStorage.setItem("nomeUsuario", resultado.nome);
             localStorage.setItem("tipoUsuario", resultado.tipoUsuario);
             localStorage.setItem("emailUsuario", dadosLogin.email);
-            
+            localStorage.setItem("idGerenteEfetivo", resultado.idGerenteEfetivo ?? resultado.idUsuario);
+
             // 2. REDIRECIONAMENTO DINÂMICO
-            // O Java manda exatamente a string do Enum (ex: "Administrador" ou "Cliente")
-            if (resultado.tipoUsuario === "Administrador") {
+            if (modoEquipe) {
+                window.location.href = "entrarCodigo.html";
+            } else if (resultado.tipoUsuario === "Administrador") {
+                // O Java manda exatamente a string do Enum (ex: "Administrador" ou "Cliente")
                 window.location.href = "inicioAdm.html";
             } else {
                 window.location.href = "inicioCli.html";

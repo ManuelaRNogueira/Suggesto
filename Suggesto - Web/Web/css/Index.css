@@ -302,6 +302,21 @@ img { max-width: 100%; display: block; }
   justify-content: center;
 }
 
+.hero-link-equipe {
+  font-size: 14px;
+  color: var(--cor-texto-fraco);
+}
+
+.hero-link-equipe a {
+  color: var(--cor-roxo-claro);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.hero-link-equipe a:hover {
+  text-decoration: underline;
+}
+
 .hero-numeros {
   display: flex;
   align-items: center;

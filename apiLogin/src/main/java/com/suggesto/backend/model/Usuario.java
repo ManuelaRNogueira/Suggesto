@@ -50,6 +50,10 @@ public class Usuario {
     @JoinColumn(name = "plano_id")
     private Plano plano;
 
+    @ManyToOne
+    @JoinColumn(name = "estabelecimento_id")
+    private Estabelecimento estabelecimento;
+
     public Long getId() {
         return id;
     }

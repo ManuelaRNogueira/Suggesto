@@ -1,6 +1,15 @@
 const toastErro = document.getElementById('toastErro');
 const toastMsgErro = document.getElementById('toastMsgErro');
 
+const modoEquipe = new URLSearchParams(window.location.search).get('equipe') === '1';
+
+if (modoEquipe) {
+    document.getElementById('seletorPapel').style.display = 'none';
+    document.getElementById('avisoEquipe').style.display = 'block';
+    document.getElementById('tituloCadastro').textContent = 'Crie sua conta de administrador';
+    document.getElementById('subtituloCadastro').textContent = 'Depois de criar sua conta, você vai entrar com o código do estabelecimento.';
+}
+
 function mostrarMensagem(mensagem, tipo = 'erro') {
     toastMsgErro.textContent = mensagem;
 
@@ -98,7 +107,7 @@ async function cadastrar() {
         nome: document.getElementById('usuario').value.trim(),
         email: document.getElementById('email').value.trim(),
         senha: document.getElementById('senha').value.trim(),
-        tipoUsuario: "Cliente",
+        tipoUsuario: modoEquipe ? "Administrador" : "Cliente",
         telefone: document.getElementById('telefone').value.trim(),
         cidade: document.getElementById('cidade').value.trim()
     };
@@ -116,7 +125,7 @@ async function cadastrar() {
             mostrarMensagem("Cadastro realizado com sucesso! Redirecionando...", "sucesso");
 
             setTimeout(() => {
-                window.location.href = "login.html";
+                window.location.href = modoEquipe ? "login.html?equipe=1" : "login.html";
             }, 2000);
         } else {
             mostrarMensagem(resultado.message || "Erro ao cadastrar. Verifique os dados.");

@@ -107,11 +107,12 @@ public class AuthController {
                 }
             }
 
-            repository.save(novoUsuario);
+            Usuario salvo = repository.save(novoUsuario);
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
-                    "message", "Cadastro realizado com sucesso!"
+                    "message", "Cadastro realizado com sucesso!",
+                    "idUsuario", salvo.getId()
             ));
 
         } catch (IllegalArgumentException e) {
@@ -200,12 +201,17 @@ public class AuthController {
                         ));
                     }
 
+                    Long idGerenteEfetivo = usuario.getEstabelecimento() != null
+                            ? usuario.getEstabelecimento().getIdGerente()
+                            : usuario.getId();
+
                     return ResponseEntity.ok(Map.of(
                             "success", true,
                             "message", "Login autorizado",
                             "nome", usuario.getNome() != null ? usuario.getNome() : "Usuário",
                             "idUsuario", usuario.getId(),
-                            "tipoUsuario", usuario.getTipoUsuario().name()
+                            "tipoUsuario", usuario.getTipoUsuario().name(),
+                            "idGerenteEfetivo", idGerenteEfetivo
                     ));
                 }
             }

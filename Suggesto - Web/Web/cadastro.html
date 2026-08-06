@@ -38,13 +38,17 @@
       <!-- CABEÇALHO -->
       <div class="logo-area">
 
-        <h2 class="titulo">
+        <h2 class="titulo" id="tituloCadastro">
           Crie sua conta
         </h2>
 
-        <p class="subtitulo">
+        <p class="subtitulo" id="subtituloCadastro">
           Cadastre-se para enviar sugestões e acompanhar respostas dos seus estabelecimentos favoritos.
         </p>
+
+        <div class="plano-badge" id="avisoEquipe" style="display: none;">
+          Você está criando uma conta de administrador para entrar em uma equipe existente
+        </div>
 
       </div>
 
@@ -53,11 +57,11 @@
       <!-- SELETOR DE PERFIL -->
       <!-- ========================= -->
 
-      <div class="seletor-papel">
+      <div class="seletor-papel" id="seletorPapel">
         <button type="button" class="papel-opcao ativa" id="papelCliente">
           Cliente
         </button>
-        <button type="button" class="papel-opcao" id="papelAdmin" onclick="window.location.href='cadastroAdm.html'">
+        <button type="button" class="papel-opcao" id="papelAdmin" onclick="window.location.href='planos.html'">
           Administrador
         </button>
       </div>

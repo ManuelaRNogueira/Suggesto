@@ -3,6 +3,26 @@
 // ======================================================
 
 let dadosEstabelecimento = {};
+let idUsuarioCriado = null;
+
+
+// ======================================================
+// PLANO SELECIONADO
+// ======================================================
+
+const planoEscolhido = sessionStorage.getItem("planoEscolhido");
+
+if (!planoEscolhido) {
+    window.location.href = "planos.html";
+} else {
+    const planoBadge = document.getElementById("planoBadge");
+    const planoBadgeNome = document.getElementById("planoBadgeNome");
+
+    if (planoBadge && planoBadgeNome) {
+        planoBadgeNome.textContent = planoEscolhido;
+        planoBadge.style.display = "inline-flex";
+    }
+}
 
 
 // ======================================================
@@ -39,8 +59,13 @@ function irParaEtapa2() {
     const cnpj = document.getElementById("cnpj").value.trim();
     const categoria = document.getElementById("categoria").value;
     const telefone = document.getElementById("telefoneEstabelecimento").value.trim();
+    const cep = document.getElementById("cep").value.trim();
+    const estado = document.getElementById("estado").value.trim().toUpperCase();
+    const rua = document.getElementById("rua").value.trim();
+    const numero = document.getElementById("numero").value.trim();
+    const bairro = document.getElementById("bairro").value.trim();
     const cidade = document.getElementById("cidade").value.trim();
-    const endereco = document.getElementById("endereco").value.trim();
+    const complemento = document.getElementById("complemento").value.trim();
 
 
     // Validação
@@ -64,13 +89,33 @@ function irParaEtapa2() {
         return;
     }
 
-    if (!cidade) {
-        mostrarMensagem("Digite a cidade do estabelecimento.");
+    if (!cep) {
+        mostrarMensagem("Digite o CEP do estabelecimento.");
         return;
     }
 
-    if (!endereco) {
-        mostrarMensagem("Digite o endereço do estabelecimento.");
+    if (!estado || estado.length !== 2) {
+        mostrarMensagem("Digite o estado (UF) do estabelecimento.");
+        return;
+    }
+
+    if (!rua) {
+        mostrarMensagem("Digite a rua do estabelecimento.");
+        return;
+    }
+
+    if (!numero) {
+        mostrarMensagem("Digite o número do estabelecimento.");
+        return;
+    }
+
+    if (!bairro) {
+        mostrarMensagem("Digite o bairro do estabelecimento.");
+        return;
+    }
+
+    if (!cidade) {
+        mostrarMensagem("Digite a cidade do estabelecimento.");
         return;
     }
 
@@ -81,8 +126,13 @@ function irParaEtapa2() {
         cnpj: cnpj,
         categoria: categoria,
         telefone: telefone,
+        cep: cep,
+        estado: estado,
+        rua: rua,
+        numero: numero,
+        bairro: bairro,
         cidade: cidade,
-        endereco: endereco
+        complemento: complemento
     };
 
 
@@ -138,7 +188,7 @@ function voltarParaEtapa1() {
 // CADASTRO FINAL
 // ======================================================
 
-function cadastrar() {
+async function cadastrar() {
 
     const nomeCompleto =
         document.getElementById("nomeCompleto").value.trim();
@@ -213,72 +263,97 @@ function cadastrar() {
 
 
     // ==================================================
-    // DADOS COMPLETOS
+    // ENVIA PARA O BACKEND
     // ==================================================
 
-    const cadastro = {
+    const botao = document.querySelector("#etapaResponsavel .botao-principal");
+    const textoOriginal = botao.innerText;
 
-        estabelecimento: dadosEstabelecimento,
+    botao.innerText = "Processando...";
+    botao.disabled = true;
 
-        responsavel: {
-            nomeCompleto: nomeCompleto,
-            usuario: usuario,
-            cpf: cpf,
-            email: email,
-            telefone: telefone,
-            senha: senha
+    try {
+        // Passo 1 — cria o usuário responsável (só se ainda não foi criado,
+        // para permitir tentar de novo sem duplicar a conta caso o passo 2 falhe).
+        if (!idUsuarioCriado) {
+            const respostaUsuario = await fetch("http://localhost:8080/api/cadastro", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    nome: nomeCompleto,
+                    email: email,
+                    senha: senha,
+                    tipoUsuario: "Administrador",
+                    telefone: telefone,
+                    cpf: cpf,
+                    plano: planoEscolhido
+                })
+            });
+
+            const resultadoUsuario = await respostaUsuario.json();
+
+            if (!respostaUsuario.ok) {
+                mostrarMensagem(resultadoUsuario.message || "Erro ao criar sua conta.");
+                botao.innerText = textoOriginal;
+                botao.disabled = false;
+                return;
+            }
+
+            idUsuarioCriado = resultadoUsuario.idUsuario;
         }
 
-    };
+        // Passo 2 — cria o estabelecimento vinculado ao usuário responsável.
+        const formData = new FormData();
+        formData.append("estabelecimento", new Blob([JSON.stringify({
+            ...dadosEstabelecimento,
+            idGerente: idUsuarioCriado
+        })], { type: "application/json" }));
 
+        const respostaEstab = await fetch("http://localhost:8080/api/estabelecimentos", {
+            method: "POST",
+            body: formData
+        });
 
-    console.log("CADASTRO COMPLETO:");
-    console.log(cadastro);
+        const textoResposta = await respostaEstab.text();
+        let estabelecimentoSalvo;
+        try {
+            estabelecimentoSalvo = JSON.parse(textoResposta);
+        } catch {
+            estabelecimentoSalvo = textoResposta;
+        }
 
+        if (!respostaEstab.ok) {
+            mostrarMensagem(
+                typeof estabelecimentoSalvo === "string"
+                    ? estabelecimentoSalvo
+                    : "Erro ao cadastrar o estabelecimento."
+            );
+            botao.innerText = textoOriginal;
+            botao.disabled = false;
+            return;
+        }
 
-    // ==================================================
-    // GERA CÓDIGO DO ESTABELECIMENTO
-    // ==================================================
+        sessionStorage.removeItem("planoEscolhido");
 
-    const codigo =
-        "SGT-" +
-        Math.floor(100000 + Math.random() * 900000);
+        document.getElementById("codigoEstabelecimento").textContent = estabelecimentoSalvo.codigoAcesso;
 
+        document.getElementById("etapaResponsavel").style.display = "none";
+        document.getElementById("cadastroSucesso").style.display = "block";
 
-    document.getElementById("codigoEstabelecimento").textContent = codigo;
+        document.getElementById("indicador1").classList.remove("ativa");
+        document.getElementById("indicador2").classList.add("ativa");
 
+        document.getElementById("tituloCadastro").textContent = "Tudo certo!";
+        document.getElementById("subtituloCadastro").textContent = "Seu estabelecimento foi cadastrado no Suggesto.";
 
-    // ==================================================
-    // ESCONDE ETAPA 2
-    // ==================================================
+        mostrarMensagem("Estabelecimento cadastrado com sucesso!", true);
 
-    document.getElementById("etapaResponsavel").style.display = "none";
-
-
-    // ==================================================
-    // MOSTRA TELA DE SUCESSO
-    // ==================================================
-
-    document.getElementById("cadastroSucesso").style.display = "block";
-
-
-    // Atualiza indicador
-    document.getElementById("indicador1").classList.remove("ativa");
-    document.getElementById("indicador2").classList.add("ativa");
-
-
-    // Atualiza título
-    document.getElementById("tituloCadastro").textContent =
-        "Tudo certo!";
-
-    document.getElementById("subtituloCadastro").textContent =
-        "Seu estabelecimento foi cadastrado no Suggesto.";
-
-
-    mostrarMensagem(
-        "Estabelecimento cadastrado com sucesso!",
-        true
-    );
+    } catch (error) {
+        console.error("Erro:", error);
+        mostrarMensagem("Servidor offline. Verifique se a sua API Java está rodando.");
+        botao.innerText = textoOriginal;
+        botao.disabled = false;
+    }
 }
 
 
@@ -293,6 +368,46 @@ function irParaLogin() {
 
     // Se estiver usando outro sistema de rotas,
     // troque a linha acima pela rota correspondente.
+}
+
+
+// ======================================================
+// BUSCA DE ENDEREÇO PELO CEP (ViaCEP)
+// ======================================================
+
+const campoCep = document.getElementById("cep");
+
+if (campoCep) {
+
+    campoCep.addEventListener("input", async function () {
+
+        let valor = this.value.replace(/\D/g, "");
+        valor = valor.substring(0, 8);
+
+        if (valor.length > 5) {
+            valor = valor.replace(/^(\d{5})(\d)/, "$1-$2");
+        }
+
+        this.value = valor;
+
+        const cepLimpo = valor.replace(/\D/g, "");
+
+        if (cepLimpo.length === 8) {
+            try {
+                const resposta = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+                const dados = await resposta.json();
+
+                if (!dados.erro) {
+                    document.getElementById("rua").value = dados.logradouro || "";
+                    document.getElementById("bairro").value = dados.bairro || "";
+                    document.getElementById("cidade").value = dados.localidade || "";
+                    document.getElementById("estado").value = dados.uf || "";
+                }
+            } catch (error) {
+                console.error("Erro ao buscar CEP:", error);
+            }
+        }
+    });
 }
 
 

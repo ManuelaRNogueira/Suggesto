@@ -52,6 +52,10 @@
           Comece criando o perfil do seu estabelecimento no Suggesto.
         </p>
 
+        <div class="plano-badge" id="planoBadge" style="display: none;">
+          Plano selecionado: <strong id="planoBadgeNome"></strong>
+        </div>
+
       </div>
 
 
@@ -135,20 +139,96 @@
         </div>
 
 
+        <div class="campo-grupo">
+          <label for="telefoneEstabelecimento">
+            Telefone
+          </label>
+
+          <input
+            type="tel"
+            id="telefoneEstabelecimento"
+            placeholder="(00) 00000-0000"
+          >
+        </div>
+
+
         <div class="ladoalado">
 
           <div class="campo-grupo">
-            <label for="telefoneEstabelecimento">
-              Telefone
+            <label for="cep">
+              CEP
             </label>
 
             <input
-              type="tel"
-              id="telefoneEstabelecimento"
-              placeholder="(00) 00000-0000"
+              type="text"
+              id="cep"
+              placeholder="00000-000"
+              maxlength="9"
             >
           </div>
 
+
+          <div class="campo-grupo">
+            <label for="estado">
+              Estado
+            </label>
+
+            <input
+              type="text"
+              id="estado"
+              placeholder="UF"
+              maxlength="2"
+              style="text-transform: uppercase;"
+            >
+          </div>
+
+        </div>
+
+
+        <div class="campo-grupo">
+          <label for="rua">
+            Rua
+          </label>
+
+          <input
+            type="text"
+            id="rua"
+            placeholder="Ex.: Rua das Flores"
+          >
+        </div>
+
+
+        <div class="ladoalado">
+
+          <div class="campo-grupo">
+            <label for="numero">
+              Número
+            </label>
+
+            <input
+              type="text"
+              id="numero"
+              placeholder="Ex.: 123"
+            >
+          </div>
+
+
+          <div class="campo-grupo">
+            <label for="bairro">
+              Bairro
+            </label>
+
+            <input
+              type="text"
+              id="bairro"
+              placeholder="Ex.: Centro"
+            >
+          </div>
+
+        </div>
+
+
+        <div class="ladoalado">
 
           <div class="campo-grupo">
             <label for="cidade">
@@ -162,19 +242,19 @@
             >
           </div>
 
-        </div>
 
+          <div class="campo-grupo">
+            <label for="complemento">
+              Complemento
+            </label>
 
-        <div class="campo-grupo">
-          <label for="endereco">
-            Endereço
-          </label>
+            <input
+              type="text"
+              id="complemento"
+              placeholder="Opcional"
+            >
+          </div>
 
-          <input
-            type="text"
-            id="endereco"
-            placeholder="Rua, número e bairro"
-          >
         </div>
 
 

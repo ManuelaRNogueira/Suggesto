@@ -31,6 +31,9 @@ public class Estabelecimento {
     @Column(name = "id_gerente", nullable = false)
     private long idGerente;
 
+    @Column(name = "codigo_acesso", unique = true, length = 12)
+    private String codigoAcesso;
+
     @Column(name = "cep", nullable = false, length = 9)
     private String cep;
 

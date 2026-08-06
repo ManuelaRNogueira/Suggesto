@@ -4,7 +4,7 @@
 const ADM_API_BASE = "http://localhost:8080/api";
 
 function admIdGerente() {
-  return localStorage.getItem("idUsuario");
+  return localStorage.getItem("idGerenteEfetivo") || localStorage.getItem("idUsuario");
 }
 
 function admVerificarSessao() {

@@ -1,8 +1,11 @@
 package com.suggesto.backend.controller;
 
 import com.suggesto.backend.model.Estabelecimento;
+import com.suggesto.backend.model.TipoUsuario;
+import com.suggesto.backend.model.Usuario;
 import com.suggesto.backend.repository.AvaliacaoRepository;
 import com.suggesto.backend.repository.EstabelecimentoRepository;
+import com.suggesto.backend.repository.UsuarioRepository;
 import com.suggesto.backend.util.UploadStorage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -12,9 +15,11 @@ import org.springframework.web.multipart.MultipartFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/estabelecimentos")
@@ -25,6 +30,24 @@ public class EstabelecimentoController {
 
     @Autowired
     private AvaliacaoRepository avaliacaoRepository;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    private static final String ALFABETO_CODIGO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    private static final SecureRandom RANDOM = new SecureRandom();
+
+    private String gerarCodigoAcessoUnico() {
+        String codigo;
+        do {
+            StringBuilder sufixo = new StringBuilder();
+            for (int i = 0; i < 6; i++) {
+                sufixo.append(ALFABETO_CODIGO.charAt(RANDOM.nextInt(ALFABETO_CODIGO.length())));
+            }
+            codigo = "SGT-" + sufixo;
+        } while (repository.existsByCodigoAcesso(codigo));
+        return codigo;
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> buscarPorId(@PathVariable Long id) {
@@ -50,22 +73,96 @@ public class EstabelecimentoController {
                 novoEstabelecimento.setAtivo(1);
             }
 
+            novoEstabelecimento.setCodigoAcesso(gerarCodigoAcessoUnico());
+
             if (arquivo != null && !arquivo.isEmpty()) {
                 // CORREÇÃO: Limpa o nome do arquivo ORIGINAL antes de gerar o caminho e salvar
                 String nomeLimpo = UploadStorage.normalizarNomeArquivo(arquivo.getOriginalFilename());
                 String nomeArquivo = System.currentTimeMillis() + "_" + nomeLimpo;
-                
+
                 Path caminho = UploadStorage.resolverArquivo(nomeArquivo);
                 Files.copy(arquivo.getInputStream(), caminho, StandardCopyOption.REPLACE_EXISTING);
-                
+
                 novoEstabelecimento.setFotoPath(nomeArquivo);
             }
 
             Estabelecimento salvo = repository.save(novoEstabelecimento);
+
+            // Vincula o criador (dono/gerente) como membro do estabelecimento também,
+            // para usar a mesma lógica de quem entra depois via código de acesso.
+            usuarioRepository.findById(salvo.getIdGerente()).ifPresent(dono -> {
+                dono.setEstabelecimento(salvo);
+                usuarioRepository.save(dono);
+            });
+
             return ResponseEntity.ok(salvo);
 
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Erro ao salvar estabelecimento: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/entrar")
+    public ResponseEntity<?> entrarComCodigo(@RequestBody Map<String, Object> dados) {
+        try {
+            Object idUsuarioObj = dados.get("usuarioId");
+            String codigo = (String) dados.get("codigo");
+
+            if (idUsuarioObj == null || codigo == null || codigo.isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "Informe o usuário e o código do estabelecimento."
+                ));
+            }
+
+            Long idUsuario = Long.valueOf(idUsuarioObj.toString());
+
+            Optional<Usuario> usuarioOpt = usuarioRepository.findById(idUsuario);
+            if (usuarioOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "Usuário não encontrado."
+                ));
+            }
+
+            Usuario usuario = usuarioOpt.get();
+            if (usuario.getTipoUsuario() != TipoUsuario.Administrador) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "Você precisa ser um administrador para entrar em uma equipe."
+                ));
+            }
+
+            Optional<Estabelecimento> estabOpt = repository.findByCodigoAcessoAndAtivo(codigo.trim().toUpperCase());
+            if (estabOpt.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of(
+                        "success", false,
+                        "message", "Código inválido. Confira com o responsável pelo estabelecimento."
+                ));
+            }
+
+            Estabelecimento estabelecimento = estabOpt.get();
+            usuario.setEstabelecimento(estabelecimento);
+            usuarioRepository.save(usuario);
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Você entrou na equipe!",
+                    "nomeEstabelecimento", estabelecimento.getNome(),
+                    "idGerente", estabelecimento.getIdGerente()
+            ));
+
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Usuário inválido."
+            ));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "message", "Erro interno ao entrar na equipe: " + e.getMessage()
+            ));
         }
     }
 

@@ -4,7 +4,7 @@
 export const API_BASE = "http://localhost:8080/api";
 
 export function idGerente() {
-  return localStorage.getItem("idUsuario");
+  return localStorage.getItem("idGerenteEfetivo") || localStorage.getItem("idUsuario");
 }
 
 function queryGerente(extra = {}) {
