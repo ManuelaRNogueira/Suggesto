@@ -37,7 +37,7 @@ export function buscarSugestoes() {
 }
 
 export function buscarUsuarios() {
-  return fetchJson(`${API_BASE}/admin/usuarios`);
+  return fetchJson(`${API_BASE}/admin/usuarios${queryGerente()}`);
 }
 
 export function buscarEstabelecimentos() {

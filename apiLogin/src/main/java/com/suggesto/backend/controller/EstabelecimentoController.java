@@ -133,6 +133,13 @@ public class EstabelecimentoController {
                 ));
             }
 
+            if (repository.existsByIdGerenteAndAtivo(usuario.getId(), 1)) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "Você já é o administrador principal de um estabelecimento e não pode entrar na equipe de outro."
+                ));
+            }
+
             Optional<Estabelecimento> estabOpt = repository.findByCodigoAcessoAndAtivo(codigo.trim().toUpperCase());
             if (estabOpt.isEmpty()) {
                 return ResponseEntity.status(404).body(Map.of(

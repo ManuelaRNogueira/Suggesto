@@ -79,9 +79,13 @@ public class AdminService {
             }
         }
 
+        long totalAdmins = idGerente == null
+                ? usuarioRepository.countByTipoUsuario(TipoUsuario.Administrador)
+                : usuarioRepository.countByEstabelecimento_IdGerente(idGerente);
+
         Map<String, Object> metricas = new LinkedHashMap<>();
         metricas.put("totalUsuarios", usuarioRepository.countByTipoUsuario(TipoUsuario.Cliente));
-        metricas.put("totalAdmins", usuarioRepository.countByTipoUsuario(TipoUsuario.Administrador));
+        metricas.put("totalAdmins", totalAdmins);
         metricas.put("totalSugestoes", sugestoes.size());
         metricas.put("totalResgates", resgateRepository.count());
         metricas.put("totalEstabelecimentos", estabelecimentos.size());
@@ -112,8 +116,12 @@ public class AdminService {
         return sugestoes.stream().map(this::resumirSugestao).collect(Collectors.toList());
     }
 
-    public List<Map<String, Object>> listarUsuarios() {
-        return usuarioRepository.findAllByOrderByNomeAsc().stream()
+    public List<Map<String, Object>> listarUsuarios(Long idGerente) {
+        List<Usuario> usuarios = idGerente == null
+                ? usuarioRepository.findAllByOrderByNomeAsc()
+                : usuarioRepository.findByEstabelecimento_IdGerenteOrderByNomeAsc(idGerente);
+
+        return usuarios.stream()
                 .map(this::resumirUsuario)
                 .collect(Collectors.toList());
     }
@@ -211,6 +219,7 @@ public class AdminService {
         item.put("cargo", u.getCargo());
         item.put("pontos", u.getPontos());
         item.put("plano", u.getPlano() != null ? u.getPlano().getNome() : null);
+        item.put("principal", u.getEstabelecimento() != null && u.getEstabelecimento().getIdGerente() == u.getId());
         return item;
     }
 }

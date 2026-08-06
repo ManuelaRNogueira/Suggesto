@@ -25,6 +25,8 @@ export default function Perfil() {
   const [aviso, setAviso] = useState(null);
 
   const id = idGerente();
+  const meuId = localStorage.getItem("idUsuario");
+  const souPrincipal = String(meuId) === String(id);
 
   useEffect(() => {
     if (!id) {
@@ -87,6 +89,7 @@ export default function Perfil() {
           <h2 className="per-nome">
             {usuario.nome || "Sem nome"}
             <span className="per-tag">{usuario.tipoUsuario || "—"}</span>
+            {souPrincipal && <span className="per-tag per-tag-principal">Admin principal</span>}
           </h2>
           <p className="per-email">{usuario.email || "—"}</p>
           <p className="per-id adm-num">ID #{usuario.id}</p>
@@ -121,7 +124,6 @@ export default function Perfil() {
               <Linha rotulo="Nome" valor={usuario.nome} />
               <Linha rotulo="E-mail" valor={usuario.email} />
               <Linha rotulo="Telefone" valor={usuario.telefone} />
-              <Linha rotulo="Cidade" valor={usuario.cidade} />
               <Linha rotulo="Plano" valor={usuario.nomePlano} />
             </dl>
           </section>
@@ -154,7 +156,10 @@ export default function Perfil() {
                     <span className="per-admin-info">
                       <span className="per-admin-nome">
                         {a.nome}
-                        {String(a.id) === String(id) && (
+                        {a.principal && (
+                          <span className="per-admin-principal">principal</span>
+                        )}
+                        {String(a.id) === String(meuId) && (
                           <span className="per-admin-voce">você</span>
                         )}
                       </span>
@@ -239,11 +244,10 @@ function Atalho({ para, icone, titulo, sub }) {
   );
 }
 
-// A API só aceita nome, telefone e cidade — e-mail não é editável por aqui.
+// E-mail não é editável por aqui.
 function ModalEdicao({ usuario, onFechar, onSalvar }) {
   const [nome, setNome] = useState(usuario.nome || "");
   const [telefone, setTelefone] = useState(usuario.telefone || "");
-  const [cidade, setCidade] = useState(usuario.cidade || "");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState(null);
 
@@ -262,7 +266,7 @@ function ModalEdicao({ usuario, onFechar, onSalvar }) {
     setSalvando(true);
     setErro(null);
     try {
-      await onSalvar({ nome: nome.trim(), telefone: telefone.trim(), cidade: cidade.trim() });
+      await onSalvar({ nome: nome.trim(), telefone: telefone.trim() });
     } catch (err) {
       setErro(err.message);
       setSalvando(false);
@@ -295,14 +299,6 @@ function ModalEdicao({ usuario, onFechar, onSalvar }) {
             value={telefone}
             onChange={(e) => setTelefone(e.target.value)}
             placeholder="(19) 99999-0000"
-          />
-        </label>
-        <label className="per-campo">
-          <span className="adm-rotulo">Cidade</span>
-          <input
-            className="adm-campo"
-            value={cidade}
-            onChange={(e) => setCidade(e.target.value)}
           />
         </label>
         <p className="per-modal-nota">

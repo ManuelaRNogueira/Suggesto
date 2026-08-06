@@ -30,8 +30,9 @@ public class AdminController {
     }
 
     @GetMapping("/usuarios")
-    public ResponseEntity<List<Map<String, Object>>> usuarios() {
-        return ResponseEntity.ok(adminService.listarUsuarios());
+    public ResponseEntity<List<Map<String, Object>>> usuarios(
+            @RequestParam(value = "idGerente", required = false) Long idGerente) {
+        return ResponseEntity.ok(adminService.listarUsuarios(idGerente));
     }
 
     @GetMapping("/estabelecimentos")

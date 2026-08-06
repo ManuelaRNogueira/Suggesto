@@ -22,4 +22,6 @@ public interface EstabelecimentoRepository extends JpaRepository<Estabelecimento
     Optional<Estabelecimento> findByCodigoAcessoAndAtivo(@Param("codigo") String codigo);
 
     boolean existsByCodigoAcesso(String codigoAcesso);
+
+    boolean existsByIdGerenteAndAtivo(long idGerente, Integer ativo);
 }
