@@ -50,6 +50,45 @@ body {
     right: -50px;
 }
 
+/* ===== VOLTAR (TOPO DA PÁGINA) ===== */
+.botao-voltar-pagina {
+    position: fixed;
+    top: 24px;
+    left: 24px;
+    z-index: 2;
+
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(240, 240, 245, 0.7);
+
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+    transition: 0.25s;
+}
+
+.botao-voltar-pagina:hover {
+    background: rgba(124, 58, 237, 0.15);
+    border-color: rgba(124, 58, 237, 0.4);
+    color: #c084fc;
+    transform: translateX(-2px);
+}
+
+@media (max-width: 700px) {
+    .botao-voltar-pagina {
+        top: 16px;
+        left: 16px;
+    }
+}
+
 /* ===== CARD ===== */
 .login-card {
     position: relative;
@@ -104,6 +143,16 @@ body {
 .form input:focus {
     border-color: rgba(124, 58, 237, 0.6);
     box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.15);
+}
+
+.form input:-webkit-autofill,
+.form input:-webkit-autofill:hover,
+.form input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #f0f0f5;
+    -webkit-box-shadow: 0 0 0 1000px #13131a inset;
+    box-shadow: 0 0 0 1000px #13131a inset;
+    caret-color: #f0f0f5;
+    transition: background-color 5000s ease-in-out 0s;
 }
 
 /* ===== BOTÃO ===== */

@@ -264,6 +264,42 @@ body {
 
 
 /* =========================================
+   PLANO SELECIONADO
+========================================= */
+
+.plano-badge {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    margin: -6px auto 24px;
+
+    padding: 8px 16px;
+
+    border-radius: 999px;
+
+    background: rgba(124, 58, 237, 0.1);
+
+    border: 1px solid rgba(124, 58, 237, 0.3);
+
+    color: rgba(240, 240, 245, 0.75);
+
+    font-size: 13px;
+}
+
+
+.plano-badge strong {
+    color: #c084fc;
+
+    font-family: 'Syne', sans-serif;
+
+    font-weight: 700;
+}
+
+
+/* =========================================
    SELETOR DE PERFIL
 ========================================= */
 
@@ -414,6 +450,20 @@ body {
 
     box-shadow:
         0 0 0 2px rgba(124, 58, 237, 0.12);
+}
+
+
+.form input:-webkit-autofill,
+.form input:-webkit-autofill:hover,
+.form input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #f0f0f5;
+
+    -webkit-box-shadow: 0 0 0 1000px #13131a inset;
+    box-shadow: 0 0 0 1000px #13131a inset;
+
+    caret-color: #f0f0f5;
+
+    transition: background-color 5000s ease-in-out 0s;
 }
 
 
