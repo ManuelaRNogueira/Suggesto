@@ -1,9 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400..800&display=swap');
 /* ===== VARIÁVEIS ===== */
 :root {
   --cor-fundo: #121214;
   --cor-fundo-2: #1a1924;
   --cor-fundo-3: #1c1b26;
-  --cor-roxo: #6366f1;
+  --cor-roxo: #7c3aed;
   --cor-roxo-claro: #818cf8;
   --cor-texto: #f0f0f8;
   --cor-texto-fraco: rgba(240, 240, 248, 0.55);
@@ -16,6 +17,7 @@
   --arredondado: 8px;
   --arredondado-sm: 6px;
   --animacao: 0.2s ease;
+  --fonte-titulo: 'Syne', sans-serif;
 }
 
 /* ===== RESET ===== */
@@ -228,14 +230,33 @@ body {
 /* ===== BANNER DE SUGESTÃO ===== */
 .banner-sugestao {
   position: relative;
-  border-radius: 8px;
+  border-radius: 24px;
   overflow: hidden;
-  background: #1c1b26;
-  border: 1px solid var(--cor-borda);
+  background: linear-gradient(135deg, #1a0a3a 0%, #2d1060 50%, #1a0a3a 100%);
+  border: 1px solid var(--cor-borda-roxa);
   min-height: 200px;
 }
 
-.banner-fundo { display: none; }
+.banner-fundo {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.banner-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+}
+.banner-orb-1 {
+  width: 300px; height: 300px;
+  background: rgba(124, 58, 237, 0.4);
+  top: -80px; left: -60px;
+}
+.banner-orb-2 {
+  width: 200px; height: 200px;
+  background: rgba(167, 139, 250, 0.2);
+  bottom: -40px; right: 100px;
+}
 
 .banner-conteudo {
   position: relative;
@@ -249,7 +270,7 @@ body {
 
 .banner-texto { flex: 1; }
 .banner-texto h2 {
-  font-family: var(--fonte);
+  font-family: var(--fonte-titulo);
   font-size: clamp(22px, 3vw, 34px);
   font-weight: 800;
   color: #fff;
@@ -273,7 +294,7 @@ body {
   gap: 8px;
   border-radius: 999px;
   padding: 11px 22px;
-  font-family: var(--fonte);
+  font-family: var(--fonte-texto);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -303,9 +324,10 @@ body {
 }
 .ilustracao-card {
   position: absolute;
-  background: #1a1924;
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 6px;
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
   padding: 10px 14px;
   display: flex;
   align-items: center;
@@ -333,6 +355,12 @@ body {
   display: flex; align-items: center; justify-content: center;
   font-size: 22px;
   color: #fff;
+  box-shadow: 0 8px 30px rgba(124, 58, 237, 0.5);
+  animation: flutuar 3s ease-in-out infinite;
+}
+@keyframes flutuar {
+  0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+  50% { transform: translate(-50%, -50%) translateY(-6px); }
 }
 
 /* ===== FAIXA SOLICITAR ===== */
