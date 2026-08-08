@@ -294,14 +294,21 @@ public class EstabelecimentoController {
     }
 
     @PostMapping("/{id}/foto")
-    public ResponseEntity<?> uploadFoto(@PathVariable Long id, @RequestParam("foto") MultipartFile arquivo) {
+    public ResponseEntity<?> uploadFoto(
+            @PathVariable Long id,
+            @RequestParam("foto") MultipartFile arquivo,
+            @RequestParam("idSolicitante") Long idSolicitante) {
         try {
             Estabelecimento estab = repository.findById(id).orElseThrow(() -> new RuntimeException("Não encontrado"));
+
+            if (estab.getIdGerente() != idSolicitante) {
+                return ResponseEntity.status(403).body("Apenas o administrador principal pode editar este estabelecimento.");
+            }
 
             // CORREÇÃO: Limpa o nome do arquivo ORIGINAL aqui também
             String nomeLimpo = UploadStorage.normalizarNomeArquivo(arquivo.getOriginalFilename());
             String nomeArquivo = "estabelecimento_" + id + "_" + nomeLimpo;
-            
+
             Path caminho = UploadStorage.resolverArquivo(nomeArquivo);
             Files.copy(arquivo.getInputStream(), caminho, StandardCopyOption.REPLACE_EXISTING);
 
@@ -311,6 +318,98 @@ public class EstabelecimentoController {
             return ResponseEntity.ok("Foto salva com sucesso!" + nomeArquivo);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Erro ao salvar estabelecimento: " + e.getMessage());
+        }
+    }
+
+    @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> atualizar(
+            @PathVariable Long id,
+            @RequestPart("estabelecimento") Estabelecimento dadosAtualizados,
+            @RequestPart(value = "foto", required = false) MultipartFile arquivo,
+            @RequestParam("idSolicitante") Long idSolicitante) {
+        try {
+            Estabelecimento estab = repository.findById(id).orElse(null);
+            if (estab == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            if (estab.getIdGerente() != idSolicitante) {
+                return ResponseEntity.status(403).body("Apenas o administrador principal pode editar este estabelecimento.");
+            }
+
+            estab.setNome(dadosAtualizados.getNome());
+            estab.setCnpj(dadosAtualizados.getCnpj());
+            estab.setCategoria(dadosAtualizados.getCategoria());
+            estab.setTelefone(dadosAtualizados.getTelefone());
+            estab.setCep(dadosAtualizados.getCep());
+            estab.setEstado(dadosAtualizados.getEstado());
+            estab.setCidade(dadosAtualizados.getCidade());
+            estab.setBairro(dadosAtualizados.getBairro());
+            estab.setRua(dadosAtualizados.getRua());
+            estab.setNumero(dadosAtualizados.getNumero());
+            estab.setComplemento(dadosAtualizados.getComplemento());
+            estab.setHorarioFuncionamento(dadosAtualizados.getHorarioFuncionamento());
+
+            if (arquivo != null && !arquivo.isEmpty()) {
+                String nomeLimpo = UploadStorage.normalizarNomeArquivo(arquivo.getOriginalFilename());
+                String nomeArquivo = "estabelecimento_" + id + "_" + System.currentTimeMillis() + "_" + nomeLimpo;
+
+                Path caminho = UploadStorage.resolverArquivo(nomeArquivo);
+                Files.copy(arquivo.getInputStream(), caminho, StandardCopyOption.REPLACE_EXISTING);
+
+                estab.setFotoPath(nomeArquivo);
+            }
+
+            Estabelecimento salvo = repository.save(estab);
+            return ResponseEntity.ok(salvo);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao atualizar estabelecimento: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}/administradores/{idUsuario}")
+    public ResponseEntity<?> removerAdministrador(
+            @PathVariable Long id,
+            @PathVariable Long idUsuario,
+            @RequestParam("idSolicitante") Long idSolicitante) {
+        try {
+            Estabelecimento estab = repository.findById(id).orElse(null);
+            if (estab == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            if (estab.getIdGerente() != idSolicitante) {
+                return ResponseEntity.status(403).body(Map.of(
+                        "success", false,
+                        "message", "Apenas o administrador principal pode gerenciar a equipe."
+                ));
+            }
+
+            if (estab.getIdGerente() == idUsuario) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "O administrador principal não pode remover a si mesmo."
+                ));
+            }
+
+            Usuario usuario = usuarioRepository.findById(idUsuario).orElse(null);
+            if (usuario == null || usuario.getEstabelecimento() == null
+                    || usuario.getEstabelecimento().getIdEstabelecimento() != id) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "Esse administrador não faz parte da equipe deste estabelecimento."
+                ));
+            }
+
+            usuario.setEstabelecimento(null);
+            usuarioRepository.save(usuario);
+
+            return ResponseEntity.ok(Map.of("success", true));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "message", "Erro ao remover administrador: " + e.getMessage()
+            ));
         }
     }
 
