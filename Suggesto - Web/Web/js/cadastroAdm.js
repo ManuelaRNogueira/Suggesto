@@ -4,6 +4,7 @@
 
 let dadosEstabelecimento = {};
 let idUsuarioCriado = null;
+let fotoEstabelecimentoSelecionada = null;
 
 
 // ======================================================
@@ -66,6 +67,8 @@ function irParaEtapa2() {
     const bairro = document.getElementById("bairro").value.trim();
     const cidade = document.getElementById("cidade").value.trim();
     const complemento = document.getElementById("complemento").value.trim();
+    const horarioAbertura = document.getElementById("horarioAbertura").value;
+    const horarioFechamento = document.getElementById("horarioFechamento").value;
 
 
     // Validação
@@ -132,7 +135,10 @@ function irParaEtapa2() {
         numero: numero,
         bairro: bairro,
         cidade: cidade,
-        complemento: complemento
+        complemento: complemento,
+        horarioFuncionamento: horarioAbertura && horarioFechamento
+            ? `Seg. a Dom.: ${horarioAbertura} – ${horarioFechamento}`
+            : ""
     };
 
 
@@ -308,6 +314,10 @@ async function cadastrar() {
             ...dadosEstabelecimento,
             idGerente: idUsuarioCriado
         })], { type: "application/json" }));
+
+        if (fotoEstabelecimentoSelecionada) {
+            formData.append("foto", fotoEstabelecimentoSelecionada);
+        }
 
         const respostaEstab = await fetch("http://localhost:8080/api/estabelecimentos", {
             method: "POST",
@@ -508,6 +518,32 @@ if (campoTelefoneEstabelecimento) {
         }
 
         this.value = valor;
+    });
+}
+
+
+// ======================================================
+// FOTO DO ESTABELECIMENTO
+// ======================================================
+
+const campoFotoEstabelecimento = document.getElementById("fotoEstabelecimento");
+
+if (campoFotoEstabelecimento) {
+
+    campoFotoEstabelecimento.addEventListener("change", function () {
+
+        const arquivo = this.files[0];
+        const preview = document.getElementById("previewFotoEstabelecimento");
+
+        if (!arquivo) {
+            fotoEstabelecimentoSelecionada = null;
+            preview.style.display = "none";
+            return;
+        }
+
+        fotoEstabelecimentoSelecionada = arquivo;
+        preview.src = URL.createObjectURL(arquivo);
+        preview.style.display = "block";
     });
 }
 
