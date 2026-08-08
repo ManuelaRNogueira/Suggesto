@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import ModalEditarEstabelecimento from './ModalEditarEstabelecimento';
 import './DetalhesEstabelecimento.css';
 
 // ─── CONFIGURAÇÃO DE FILTROS ──────────────────────────────────────────────────
@@ -36,14 +37,16 @@ function formatarData(dataStr) {
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────────
 function DetalhesEstabelecimento() {
   const { id } = useParams();
-  const fileInputRef = useRef(null); // Ref para o input de arquivo escondido
   const [estab, setEstab]               = useState(null);
   const [mediaGeral, setMediaGeral]     = useState(0);
   const [carregando, setCarregando]     = useState(true);
   const [sugestoes, setSugestoes]       = useState([]);
   const [filtroSentimento, setFiltroS]  = useState('todos');
   const [filtroCategoria,  setFiltroC]  = useState('todos');
-  const [enviandoFoto, setEnviandoFoto] = useState(false);
+  const [editando, setEditando]         = useState(false);
+
+  const meuId = localStorage.getItem('idUsuario');
+  const souPrincipal = !!estab && String(meuId) === String(estab.idGerente);
 
   const buscarDados = async () => {
     try {
@@ -100,35 +103,6 @@ function DetalhesEstabelecimento() {
   useEffect(() => {
     buscarDados();
   }, [id]);
-
-  // Função disparada ao selecionar uma nova foto
-  const lidarComTrocaFoto = async (e) => {
-    const arquivo = e.target.files[0];
-    if (!arquivo) return;
-
-    const formData = new FormData();
-    formData.append('foto', arquivo);
-
-    setEnviandoFoto(true);
-    try {
-      const res = await fetch(`http://localhost:8080/api/estabelecimentos/${id}/foto`, {
-        method: 'POST', // Bate certinho com o @PostMapping("/{id}/foto") do Java
-        body: formData,
-      });
-
-      if (res.ok) {
-        // Recarrega os dados para atualizar a foto na tela na mesma hora
-        await buscarDados();
-      } else {
-        alert('Erro ao enviar a nova foto.');
-      }
-    } catch (error) {
-      console.error('Erro no upload:', error);
-      alert('Erro de conexão ao enviar foto.');
-    } finally {
-      setEnviandoFoto(false);
-    }
-  };
 
   const atualizarStatus = async (idAvaliacao, status) => {
     try {
@@ -187,15 +161,6 @@ function DetalhesEstabelecimento() {
       <div className="glow-1" />
       <div className="glow-2" />
 
-      {/* Input de arquivo invisível controlado pelo clique no botão de lápis */}
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        style={{ display: 'none' }} 
-        accept="image/*"
-        onChange={lidarComTrocaFoto}
-      />
-
       {/* ── Cabeçalho ───────────────────────────────────────────────────── */}
       <header className="cabecalho">
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -222,12 +187,12 @@ function DetalhesEstabelecimento() {
           </div>
 
           {/* LADO DIREITO: FOTO GRANDE EM DESTAQUE */}
-          <div className={`cabecalho-bloco-foto ${enviandoFoto ? 'processando' : ''}`}>
+          <div className="cabecalho-bloco-foto">
             <div className="container-foto-estab">
               {dados.fotoPath ? (
-                <img 
-                  src={`http://localhost:8080/uploads/${dados.fotoPath}`} 
-                  alt={dados.nome} 
+                <img
+                  src={`http://localhost:8080/uploads/${dados.fotoPath}`}
+                  alt={dados.nome}
                   className="foto-estabelecimento"
                 />
               ) : (
@@ -235,15 +200,16 @@ function DetalhesEstabelecimento() {
                   {dados.nome.charAt(0).toUpperCase()}
                 </div>
               )}
-              
-              <button 
-                className="btn-editar-foto" 
-                title="Alterar foto do estabelecimento"
-                onClick={() => fileInputRef.current.click()}
-                disabled={enviandoFoto}
-              >
-                {enviandoFoto ? '...' : '✏️ Editar Foto'}
-              </button>
+
+              {souPrincipal && (
+                <button
+                  className="btn-editar-foto"
+                  title="Editar estabelecimento"
+                  onClick={() => setEditando(true)}
+                >
+                  ✏️ Editar estabelecimento
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -401,6 +367,14 @@ function DetalhesEstabelecimento() {
           })
         )}
       </main>
+
+      {editando && estab && (
+        <ModalEditarEstabelecimento
+          estab={estab}
+          fecharModal={() => setEditando(false)}
+          aoSalvar={(atualizado) => setEstab(atualizado)}
+        />
+      )}
     </div>
   );
 }
