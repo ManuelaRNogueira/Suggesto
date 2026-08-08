@@ -42,16 +42,24 @@ public class AdminService {
     private ResgateRepository resgateRepository;
 
     public Map<String, Object> obterMetricas(Long idGerente, Integer meses) {
+        return obterMetricas(idGerente, meses, null);
+    }
+
+    public Map<String, Object> obterMetricas(Long idGerente, Integer meses, Long idEstabelecimento) {
         int janela = (meses == null) ? MESES_PADRAO : Math.max(1, Math.min(meses, MESES_MAXIMO));
         List<Estabelecimento> estabelecimentos = resolverEstabelecimentos(idGerente);
+
+        if (idEstabelecimento != null) {
+            estabelecimentos = estabelecimentos.stream()
+                    .filter(e -> e.getIdEstabelecimento() == idEstabelecimento)
+                    .collect(Collectors.toList());
+        }
+
         List<Long> ids = estabelecimentos.stream()
                 .map(Estabelecimento::getIdEstabelecimento)
                 .collect(Collectors.toList());
 
-        // CORREÇÃO: Nome do método alterado para bater com idEstabelecimento
-        List<Avaliacao> sugestoes = ids.isEmpty()
-                ? avaliacaoRepository.findAllByOrderByDataAvaliacaoDesc()
-                : avaliacaoRepository.findByEstabelecimentoIdEstabelecimentoInOrderByDataAvaliacaoDesc(ids);
+        List<Avaliacao> sugestoes = buscarSugestoesPorEstabelecimentos(idGerente, ids);
 
         LocalDateTime umaSemanaAtras = LocalDateTime.now().minus(7, ChronoUnit.DAYS);
 
@@ -108,12 +116,23 @@ public class AdminService {
                 .map(Estabelecimento::getIdEstabelecimento)
                 .collect(Collectors.toList());
 
-        // CORREÇÃO: Nome do método alterado para bater com idEstabelecimento
-        List<Avaliacao> sugestoes = ids.isEmpty()
-                ? avaliacaoRepository.findAllByOrderByDataAvaliacaoDesc()
-                : avaliacaoRepository.findByEstabelecimentoIdEstabelecimentoInOrderByDataAvaliacaoDesc(ids);
+        List<Avaliacao> sugestoes = buscarSugestoesPorEstabelecimentos(idGerente, ids);
 
         return sugestoes.stream().map(this::resumirSugestao).collect(Collectors.toList());
+    }
+
+    // Só busca todas as avaliações do sistema quando não há filtro de gerente nenhum.
+    // Quando há um idGerente (ou um estabelecimento específico selecionado) mas a lista de
+    // estabelecimentos resultante está vazia, o resultado tem que ser vazio também —
+    // nunca deve "vazar" sugestões de outros donos.
+    private List<Avaliacao> buscarSugestoesPorEstabelecimentos(Long idGerente, List<Long> ids) {
+        if (idGerente == null) {
+            return avaliacaoRepository.findAllByOrderByDataAvaliacaoDesc();
+        }
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        return avaliacaoRepository.findByEstabelecimentoIdEstabelecimentoInOrderByDataAvaliacaoDesc(ids);
     }
 
     public List<Map<String, Object>> listarUsuarios(Long idGerente) {
@@ -149,16 +168,16 @@ public class AdminService {
         if (idGerente == null) {
             return estabelecimentoRepository.buscarTodosAtivos();
         }
-        List<Estabelecimento> doGerente = estabelecimentoRepository.buscarPorGerenteAtivos(idGerente);
-        return doGerente.isEmpty() ? estabelecimentoRepository.buscarTodosAtivos() : doGerente;
+        // Nunca cair para "todos os estabelecimentos" aqui: um gerente sem locais
+        // vinculados deve ver uma lista vazia, não os locais de outros donos.
+        return estabelecimentoRepository.buscarPorGerenteAtivos(idGerente);
     }
 
     private List<Estabelecimento> resolverEstabelecimentosIncluindoInativos(Long idGerente) {
         if (idGerente == null) {
             return estabelecimentoRepository.findAll();
         }
-        List<Estabelecimento> doGerente = estabelecimentoRepository.findByIdGerente(idGerente);
-        return doGerente.isEmpty() ? estabelecimentoRepository.findAll() : doGerente;
+        return estabelecimentoRepository.findByIdGerente(idGerente);
     }
 
     private String classificarStatus(String status) {

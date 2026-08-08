@@ -19,8 +19,9 @@ public class AdminController {
     @GetMapping("/metricas")
     public ResponseEntity<Map<String, Object>> metricas(
             @RequestParam(value = "idGerente", required = false) Long idGerente,
-            @RequestParam(value = "meses", required = false) Integer meses) {
-        return ResponseEntity.ok(adminService.obterMetricas(idGerente, meses));
+            @RequestParam(value = "meses", required = false) Integer meses,
+            @RequestParam(value = "idEstabelecimento", required = false) Long idEstabelecimento) {
+        return ResponseEntity.ok(adminService.obterMetricas(idGerente, meses, idEstabelecimento));
     }
 
     @GetMapping("/sugestoes")

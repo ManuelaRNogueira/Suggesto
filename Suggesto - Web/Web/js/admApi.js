@@ -30,8 +30,23 @@ function admQueryGerente() {
   return id ? `?idGerente=${id}` : "";
 }
 
+// Estabelecimento escolhido em "Seus locais" para filtrar o resumo. Vazio = todos os locais.
+function admEstabelecimentoSelecionado() {
+  return localStorage.getItem("admEstabelecimentoSelecionado") || "";
+}
+
+function admDefinirEstabelecimentoSelecionado(id) {
+  if (id) localStorage.setItem("admEstabelecimentoSelecionado", id);
+  else localStorage.removeItem("admEstabelecimentoSelecionado");
+}
+
 async function admBuscarMetricas() {
-  return admFetchJson(`${ADM_API_BASE}/admin/metricas${admQueryGerente()}`);
+  const base = admQueryGerente();
+  const idEstab = admEstabelecimentoSelecionado();
+  const query = idEstab
+    ? `${base}${base ? "&" : "?"}idEstabelecimento=${idEstab}`
+    : base;
+  return admFetchJson(`${ADM_API_BASE}/admin/metricas${query}`);
 }
 
 async function admBuscarEstabelecimentos() {
@@ -47,16 +62,14 @@ function admIniciais(nome) {
   return nome.trim().split(/\s+/).slice(0, 2).map(p => p[0]?.toUpperCase() || "").join("");
 }
 
+// Data e hora completas em que a sugestão chegou (ex: "08/08/2026 às 16:32").
 function admFormatarData(iso) {
   if (!iso) return "—";
   const data = new Date(iso);
   if (Number.isNaN(data.getTime())) return "—";
-  const horas = Math.floor((Date.now() - data.getTime()) / 3600000);
-  if (horas < 1) return "agora";
-  if (horas < 24) return `há ${horas}h`;
-  const dias = Math.floor(horas / 24);
-  if (dias < 7) return `há ${dias}d`;
-  return data.toLocaleDateString("pt-BR");
+  const dataFmt = data.toLocaleDateString("pt-BR");
+  const horaFmt = data.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  return `${dataFmt} às ${horaFmt}`;
 }
 
 function admLabelStatus(statusUi) {

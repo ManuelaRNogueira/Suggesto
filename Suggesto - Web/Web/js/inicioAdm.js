@@ -45,13 +45,16 @@ function montarConta() {
   if (email) document.getElementById("contaEmail").textContent = email;
 }
 
+let estabelecimentosCache = [];
+
 async function carregar() {
   try {
-    const [metricas, estabelecimentos] = await Promise.all([
-      admBuscarMetricas(),
-      admBuscarEstabelecimentos().catch(() => []),
-    ]);
-    renderar(metricas, estabelecimentos);
+    const estabelecimentos = await admBuscarEstabelecimentos().catch(() => []);
+    estabelecimentosCache = estabelecimentos || [];
+    validarSelecaoLocal(estabelecimentosCache);
+
+    const metricas = await admBuscarMetricas();
+    renderar(metricas, estabelecimentosCache);
   } catch (e) {
     const alvo = document.getElementById("erro");
     alvo.textContent =
@@ -59,6 +62,35 @@ async function carregar() {
       "Verifique se a API está rodando em localhost:8080.";
     alvo.hidden = false;
     document.getElementById("resumoSub").textContent = "Sem conexão com a API";
+  }
+}
+
+// Se o local escolhido anteriormente não pertence mais a este gerente, limpa a seleção.
+function validarSelecaoLocal(estabelecimentos) {
+  const selecionado = admEstabelecimentoSelecionado();
+  if (!selecionado) return;
+  const existe = estabelecimentos.some(e => String(e.id) === String(selecionado));
+  if (!existe) admDefinirEstabelecimentoSelecionado(null);
+}
+
+async function selecionarLocal(id) {
+  if (id === null) {
+    admDefinirEstabelecimentoSelecionado(null);
+  } else {
+    const atual = admEstabelecimentoSelecionado();
+    admDefinirEstabelecimentoSelecionado(atual === String(id) ? null : id);
+  }
+  renderarLocais(estabelecimentosCache);
+
+  try {
+    const metricas = await admBuscarMetricas();
+    renderar(metricas, estabelecimentosCache);
+  } catch (e) {
+    const alvo = document.getElementById("erro");
+    alvo.textContent =
+      `Não foi possível carregar os dados (${e.message}). ` +
+      "Verifique se a API está rodando em localhost:8080.";
+    alvo.hidden = false;
   }
 }
 
@@ -127,7 +159,7 @@ function renderarStatus(faixas, total) {
 function renderarRecentes(lista) {
   const alvo = document.getElementById("recentes");
   if (lista.length === 0) {
-    alvo.innerHTML = `<li class="vazio">Nada novo por aqui.</li>`;
+    alvo.innerHTML = "";
     return;
   }
 
@@ -172,8 +204,24 @@ function renderarLocais(lista) {
     return;
   }
 
-  alvo.innerHTML = lista.slice(0, 6).map(e => `
-    <li class="local">
+  const selecionado = admEstabelecimentoSelecionado();
+
+  const itemTodos = `
+    <li class="local local-clicavel${selecionado ? "" : " selecionado"}"
+        role="button" tabindex="0"
+        onclick="selecionarLocal(null)"
+        onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selecionarLocal(null);}">
+      <span class="local-info">
+        <span class="local-nome">Todos os locais</span>
+        <span class="local-meta">Resumo combinado</span>
+      </span>
+    </li>`;
+
+  const itensLocais = lista.slice(0, 6).map(e => `
+    <li class="local local-clicavel${String(e.id) === selecionado ? " selecionado" : ""}"
+        role="button" tabindex="0"
+        onclick="selecionarLocal(${e.id})"
+        onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selecionarLocal(${e.id});}">
       <span class="local-info">
         <span class="local-nome">${admEscapar(e.nome)}</span>
         <span class="local-meta">${admEscapar(e.cidade || "—")}</span>
@@ -181,4 +229,6 @@ function renderarLocais(lista) {
       <span class="local-num" title="Sugestões recebidas">${e.totalSugestoes ?? 0}</span>
       <span class="local-tag${e.ativo === 1 ? " ativo" : ""}">${e.ativo === 1 ? "Ativo" : "Inativo"}</span>
     </li>`).join("");
+
+  alvo.innerHTML = itemTodos + itensLocais;
 }

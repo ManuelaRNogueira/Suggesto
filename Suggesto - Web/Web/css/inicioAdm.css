@@ -561,11 +561,38 @@
   display: flex;
   align-items: center;
   gap: 11px;
-  padding: 9px 0;
+  padding: 9px 8px;
   border-top: 1px solid var(--cor-borda);
+  border-radius: var(--radius-sm);
 }
 
 .local:first-child { border-top: none; }
+
+.local-clicavel {
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  border: 1px solid transparent;
+  margin: 0 -8px;
+  width: calc(100% + 16px);
+}
+
+.local-clicavel:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.local-clicavel:focus-visible {
+  outline: none;
+  border-color: var(--cor-roxo);
+}
+
+.local-clicavel.selecionado {
+  background: rgba(124, 109, 250, 0.1);
+  border-color: rgba(124, 109, 250, 0.3);
+}
+
+.local-clicavel.selecionado .local-nome {
+  color: var(--cor-roxo-claro, var(--cor-roxo));
+}
 
 .local-info { flex: 1; min-width: 0; }
 
