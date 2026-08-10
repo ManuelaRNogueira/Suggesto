@@ -24,6 +24,7 @@ export default function ModalEditarEstabelecimento({ estab, fecharModal, aoSalva
   const [cnpj, setCnpj] = useState(estab.cnpj || "");
   const [categoria, setCategoria] = useState(estab.categoria || "");
   const [telefone, setTelefone] = useState(estab.telefone || "");
+  const [sobre, setSobre] = useState(estab.sobre || "");
   const [horarioAbertura, setHorarioAbertura] = useState(horariosIniciais.abertura);
   const [horarioFechamento, setHorarioFechamento] = useState(horariosIniciais.fechamento);
   const [endereco, setEndereco] = useState({
@@ -133,7 +134,7 @@ export default function ModalEditarEstabelecimento({ estab, fecharModal, aoSalva
         : "";
 
     const payload = {
-      nome, cnpj, categoria, telefone, horarioFuncionamento,
+      nome, cnpj, categoria, telefone, horarioFuncionamento, sobre,
       ...endereco,
     };
 
@@ -275,6 +276,20 @@ export default function ModalEditarEstabelecimento({ estab, fecharModal, aoSalva
               <input type="time" className="form-input" value={horarioFechamento} onChange={(e) => setHorarioFechamento(e.target.value)} />
             </Campo>
           </div>
+
+          <Campo label="Sobre o estabelecimento">
+            <textarea
+              className="form-input form-textarea"
+              placeholder="Conte a história do local, o que vocês servem, o que torna o lugar especial…"
+              value={sobre}
+              onChange={(e) => setSobre(e.target.value)}
+              rows={4}
+              maxLength={1000}
+            />
+            <p className="edit-codigo-nota">
+              Esse texto aparece na aba “Sobre” da página do estabelecimento no site.
+            </p>
+          </Campo>
 
           <Campo label="Foto do estabelecimento">
             <div

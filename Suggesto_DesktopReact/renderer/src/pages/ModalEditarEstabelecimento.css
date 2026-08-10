@@ -114,6 +114,13 @@
   color: #e2e2f0;
 }
 
+.form-textarea {
+  resize: vertical;
+  min-height: 92px;
+  line-height: 1.6;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
 .edit-codigo-nota {
   font-size: .72rem;
   color: #5a5a78;

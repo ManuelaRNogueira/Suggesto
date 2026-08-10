@@ -80,6 +80,7 @@ async function carregarEstabelecimento(id) {
       telefone: dados.telefone || '',
       endereco: montarEndereco(dados),
       horario: dados.horarioFuncionamento || '',
+      sobre: dados.sobre || '',
       logo: urlFotoEstabelecimento(dados.fotoPath),
     };
 
@@ -126,6 +127,18 @@ function preencherHeader() {
 
   const itemTelefone = document.getElementById('itemTelefone');
   if (itemTelefone) itemTelefone.style.cursor = est.telefone ? 'pointer' : 'default';
+
+  // O bloco "Sobre" só aparece quando o estabelecimento preencheu o texto no painel.
+  const blocoSobre = document.getElementById('sobreTextoBloco');
+  const textoSobre = document.getElementById('sobreTexto');
+  if (blocoSobre && textoSobre) {
+    if (est.sobre) {
+      textoSobre.textContent = est.sobre;
+      blocoSobre.style.display = '';
+    } else {
+      blocoSobre.style.display = 'none';
+    }
+  }
 
   // Logo
   const logo = document.getElementById('logoEstab');

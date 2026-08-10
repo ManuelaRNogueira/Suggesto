@@ -58,6 +58,10 @@ public class Estabelecimento {
     @Column(name = "horario_funcionamento", length = 150)
     private String horarioFuncionamento;
 
+    // Texto livre que o admin escreve sobre o local — alimenta a aba "Sobre" do site.
+    @Column(name = "sobre", columnDefinition = "TEXT")
+    private String sobre;
+
     private String fotoPath;
 
     // Calculados a partir das avaliações, não persistidos no banco.
@@ -106,6 +110,14 @@ public class Estabelecimento {
             limpo = limpo.substring("uploads/".length());
         }
         this.fotoPath = limpo;
+    }
+
+    public String getSobre() {
+        return sobre;
+    }
+
+    public void setSobre(String sobre) {
+        this.sobre = sobre;
     }
 
 // Adicione estes métodos aqui no finalzinho!

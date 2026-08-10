@@ -377,6 +377,7 @@ public class EstabelecimentoController {
             estab.setNumero(dadosAtualizados.getNumero());
             estab.setComplemento(dadosAtualizados.getComplemento());
             estab.setHorarioFuncionamento(dadosAtualizados.getHorarioFuncionamento());
+            estab.setSobre(dadosAtualizados.getSobre());
 
             if (arquivo != null && !arquivo.isEmpty()) {
                 String nomeLimpo = UploadStorage.normalizarNomeArquivo(arquivo.getOriginalFilename());
