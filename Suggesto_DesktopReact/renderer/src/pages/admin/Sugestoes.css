@@ -292,3 +292,33 @@
   .sug-painel { position: static; }
   .sug-busca { width: 220px; }
 }
+
+/* ── Selo de nível do autor (prioridade de resposta) ───────────────────── */
+.sug-nivel {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.sug-nivel.nivel-prata {
+  color: #cbd5e1;
+  background: rgba(203, 213, 225, 0.12);
+  border: 1px solid rgba(203, 213, 225, 0.3);
+}
+
+.sug-nivel.nivel-ouro {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.sug-nivel.nivel-platina {
+  color: #818cf8;
+  background: rgba(129, 140, 248, 0.14);
+  border: 1px solid rgba(129, 140, 248, 0.35);
+}

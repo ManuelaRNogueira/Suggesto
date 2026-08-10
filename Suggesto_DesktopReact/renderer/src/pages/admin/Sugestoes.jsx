@@ -92,6 +92,9 @@ export default function Sugestoes() {
           tituloSugestao(b.comentario),
           "pt-BR",
         );
+      // Prioridade: clientes de nível mais alto sobem na fila; empate cai na data.
+      if (ordem === "prioridade")
+        return (b.prioridade || 1) - (a.prioridade || 1) || data(b) - data(a);
       return data(b) - data(a);
     });
   }, [sugestoes, busca, status, categoria, ordem]);
@@ -219,6 +222,7 @@ export default function Sugestoes() {
           onChange={(e) => setOrdem(e.target.value)}
         >
           <option value="recente">Mais recentes</option>
+          <option value="prioridade">Prioridade (nível)</option>
           <option value="antigo">Mais antigas</option>
           <option value="nota">Maior nota</option>
           <option value="az">A–Z</option>
@@ -344,6 +348,11 @@ function Cartao({ sugestao, salvando, onMudar }) {
         <span className="sug-card-autor">
           <span className="sug-card-avatar">{iniciais(sugestao.autor)}</span>
           {sugestao.autor || "Autor desconhecido"}
+          {sugestao.nivelAutor && sugestao.nivelAutor !== "bronze" && (
+            <span className={`sug-nivel nivel-${sugestao.nivelAutor}`}>
+              {sugestao.nivelAutorNome}
+            </span>
+          )}
         </span>
         <span className="sug-card-sep">·</span>
         <span>{sugestao.categoria || "Sem categoria"}</span>

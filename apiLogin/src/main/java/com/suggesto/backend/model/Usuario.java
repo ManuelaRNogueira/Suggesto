@@ -1,6 +1,7 @@
 package com.suggesto.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.suggesto.backend.util.NivelUtil;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -159,5 +160,17 @@ public class Usuario {
 
     public void setPontos(Integer pontos) {
         this.pontos = pontos != null ? Math.max(0, pontos) : 0;
+    }
+
+    // Derivados dos pontos — não persistidos, mas serializados no JSON para o
+    // front não precisar recalcular a régua de níveis em cada tela.
+    @Transient
+    public String getNivel() {
+        return NivelUtil.idNivel(getPontos());
+    }
+
+    @Transient
+    public String getNivelNome() {
+        return NivelUtil.nomeNivel(getPontos());
     }
 }

@@ -8,6 +8,7 @@ import com.suggesto.backend.repository.AvaliacaoRepository;
 import com.suggesto.backend.repository.EstabelecimentoRepository;
 import com.suggesto.backend.repository.ResgateRepository;
 import com.suggesto.backend.repository.UsuarioRepository;
+import com.suggesto.backend.util.NivelUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -228,6 +229,12 @@ public class AdminService {
         item.put("categoria", a.getCategoria() != null ? a.getCategoria().getNomeCategoria() : null);
         item.put("autor", a.getUsuario() != null ? a.getUsuario().getNome() : null);
         item.put("autorId", a.getUsuario() != null ? a.getUsuario().getId() : null);
+        // Nível do autor: define a prioridade de resposta e o selo mostrado na fila.
+        Integer pontosAutor = a.getUsuario() != null ? a.getUsuario().getPontos() : 0;
+        item.put("nivelAutor", NivelUtil.idNivel(pontosAutor));
+        item.put("nivelAutorNome", NivelUtil.nomeNivel(pontosAutor));
+        item.put("prioridade", NivelUtil.prioridade(pontosAutor));
+        item.put("resposta", a.getResposta());
         item.put("estabelecimento", a.getEstabelecimento() != null ? a.getEstabelecimento().getNome() : null);
         item.put("estabelecimentoId", a.getEstabelecimento() != null ? a.getEstabelecimento().getIdEstabelecimento() : null);
         return item;

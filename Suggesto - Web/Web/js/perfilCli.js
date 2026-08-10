@@ -117,13 +117,16 @@ function preencherPerfil(usuario) {
     setTexto("heroNome", nome);
     setTexto("heroEmail", email);
 
+    // O selo do topo mostra o nível conquistado por pontos (Bronze/Prata/Ouro/
+    // Platina) — antes mostrava o plano, que é coisa de administrador.
     const heroPlanoWrap = document.getElementById("heroPlanoWrap");
     const heroPlanoNome = document.getElementById("heroPlanoNome");
-    if (usuario.nomePlano && heroPlanoWrap && heroPlanoNome) {
-        heroPlanoNome.textContent = usuario.nomePlano;
+    const heroBadge = document.getElementById("heroPlano");
+    const nivelAtual = calcularNivel(pontos).atual;
+    if (heroPlanoWrap && heroPlanoNome) {
+        heroPlanoNome.textContent = nivelAtual.nome;
+        if (heroBadge) heroBadge.className = `nivel-badge ${classeNivel(nivelAtual.id)}`;
         heroPlanoWrap.style.display = "";
-    } else if (heroPlanoWrap) {
-        heroPlanoWrap.style.display = "none";
     }
 
     atualizarAvatar(fotoUrl, iniciais);

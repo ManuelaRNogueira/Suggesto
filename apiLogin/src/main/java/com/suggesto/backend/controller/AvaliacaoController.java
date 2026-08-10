@@ -4,6 +4,7 @@ import com.suggesto.backend.dto.AvaliacaoRequestDTO;
 import com.suggesto.backend.model.Avaliacao;
 import com.suggesto.backend.repository.AvaliacaoRepository;
 import com.suggesto.backend.service.AvaliacaoService;
+import com.suggesto.backend.util.NivelUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/avaliacoes")
@@ -43,6 +45,23 @@ public class AvaliacaoController {
             Map<String, String> erro = new HashMap<>();
             erro.put("erro", e.getMessage());
             return ResponseEntity.badRequest().body(erro);
+        }
+    }
+
+    // Feed de destaque da home do cliente: posts recentes de quem já subiu de
+    // nível (Ouro/Platina). É o benefício visível de "destaque de posts".
+    @GetMapping("/destaques")
+    public ResponseEntity<List<Avaliacao>> destaques() {
+        try {
+            List<Avaliacao> destaques = avaliacaoRepository.findAllByOrderByDataAvaliacaoDesc().stream()
+                    .filter(a -> a.getUsuario() != null
+                            && NivelUtil.prioridade(a.getUsuario().getPontos()) >= 3)
+                    .limit(6)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(destaques);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
         }
     }
 

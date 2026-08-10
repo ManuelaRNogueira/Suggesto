@@ -150,6 +150,8 @@ public class UsuarioController {
         resposta.put("tipoUsuario", usuario.getTipoUsuario() != null ? usuario.getTipoUsuario().name() : "");
         resposta.put("nomePlano", usuario.getPlano() != null ? usuario.getPlano().getNome() : "");
         resposta.put("pontos", usuario.getPontos());
+        resposta.put("nivel", usuario.getNivel());
+        resposta.put("nivelNome", usuario.getNivelNome());
         resposta.put("totalLocaisSalvos", localSalvoRepository.countByUsuarioId(usuario.getId()));
         resposta.put("totalSugestoes", avaliacaoRepository.countByUsuario_Id(usuario.getId()));
         resposta.put("totalResgates", resgateRepository.countByUsuario_Id(usuario.getId()));
