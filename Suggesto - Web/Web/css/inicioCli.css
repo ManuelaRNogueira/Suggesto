@@ -388,6 +388,19 @@ body {
   font-weight: 700;
   color: var(--cor-texto);
 }
+
+/* Cidade do cliente ao lado de "Perto de você" */
+.locais-titulo-cidade {
+  margin-left: 8px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(124, 109, 250, 0.15);
+  border: 1px solid rgba(124, 109, 250, 0.25);
+  color: #a78bfa;
+  font-size: 12px;
+  font-weight: 600;
+  vertical-align: middle;
+}
 .locais-filtro {
   display: flex;
   align-items: center;

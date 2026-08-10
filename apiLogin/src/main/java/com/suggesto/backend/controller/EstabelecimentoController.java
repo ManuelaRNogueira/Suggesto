@@ -20,10 +20,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.SecureRandom;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/estabelecimentos")
@@ -474,6 +476,34 @@ public class EstabelecimentoController {
     @GetMapping("/usuario/{idGerente}")
     public ResponseEntity<List<Estabelecimento>> listarPorAdmin(@PathVariable Long idGerente) {
         return ResponseEntity.ok(repository.buscarPorGerenteAtivos(idGerente));
+    }
+
+    // Recomendação simples por proximidade: estabelecimentos ativos na mesma cidade
+    // do cliente, dos mais bem avaliados para os menos. Sem geolocalização.
+    @GetMapping("/recomendados")
+    public ResponseEntity<List<Estabelecimento>> recomendados(@RequestParam("idUsuario") Long idUsuario) {
+        try {
+            String cidade = usuarioRepository.findById(idUsuario)
+                    .map(Usuario::getCidade)
+                    .orElse(null);
+
+            if (cidade == null || cidade.isBlank()) {
+                return ResponseEntity.ok(List.of());
+            }
+
+            List<Estabelecimento> daCidade = repository.buscarTodosAtivos().stream()
+                    .filter(e -> TextoUtil.mesmoTexto(cidade, e.getCidade()))
+                    .collect(Collectors.toList());
+
+            aplicarMediasDeAvaliacao(daCidade);
+            daCidade.sort(Comparator.comparingDouble(
+                    (Estabelecimento e) -> e.getMediaAvaliacoes() == null ? 0d : e.getMediaAvaliacoes()
+            ).reversed());
+
+            return ResponseEntity.ok(daCidade);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
     }
 
     // Preenche a média/contagem de avaliações (calculadas, não persistidas) de cada estabelecimento.

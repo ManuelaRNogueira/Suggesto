@@ -56,6 +56,7 @@ const SVG_SALVAR_ON =
 document.addEventListener("DOMContentLoaded", () => {
   carregarDadosUsuario();
   carregarEstabelecimentos();
+  carregarRecomendados();
 });
 
 function abrirSugestao() {
@@ -92,6 +93,38 @@ async function carregarIdsSalvos() {
   }
 }
 
+// Recomendação por proximidade: estabelecimentos da mesma cidade do cliente.
+// A seção só existe se o cliente tem cidade cadastrada e há locais por lá.
+async function carregarRecomendados() {
+  const secao = document.getElementById("recomendadosSecao");
+  const grade = document.getElementById("recomendadosGrade");
+  const idUsuario = obterIdUsuario();
+  if (!secao || !grade || !idUsuario) return;
+
+  try {
+    const resposta = await fetch(
+      `${API_BASE}/estabelecimentos/recomendados?idUsuario=${idUsuario}`,
+    );
+    if (!resposta.ok) return;
+
+    const estabelecimentos = await resposta.json();
+    if (!Array.isArray(estabelecimentos) || estabelecimentos.length === 0) return;
+
+    const cidade = estabelecimentos[0].cidade;
+    const rotuloCidade = document.getElementById("recomendadosCidade");
+    if (rotuloCidade && cidade) rotuloCidade.textContent = cidade;
+
+    grade.innerHTML = "";
+    estabelecimentos
+      .slice(0, 6)
+      .forEach((estab) => grade.appendChild(criarCardEstabelecimento(estab)));
+
+    secao.style.display = "";
+  } catch (error) {
+    console.error("Erro ao carregar recomendados:", error);
+  }
+}
+
 async function carregarEstabelecimentos() {
   const grade = document.getElementById("locaisGrade");
   if (!grade) return;
@@ -105,115 +138,7 @@ async function carregarEstabelecimentos() {
     grade.innerHTML = "";
 
     estabelecimentos.forEach((estab) => {
-      const card = document.createElement("div");
-      card.className = "local-card";
-
-      const categoriaCard = estab.categoria
-        ? estab.categoria.toLowerCase()
-        : "outros";
-      card.dataset.categoria = categoriaCard;
-
-      const nomeCerto = estab.nome || "Nome Indisponível";
-      const idCerto = obterIdEstabelecimento(estab);
-      const jaSalvo = idCerto ? locaisSalvosIds.has(idCerto) : false;
-      const imagemURL = urlFotoEstabelecimento(estab.fotoPath);
-
-      const imagemDiv = document.createElement("div");
-      imagemDiv.className = "local-imagem";
-
-      const imgFoto = document.createElement("img");
-      imgFoto.className = "local-foto";
-      imgFoto.alt = nomeCerto;
-      imgFoto.src = imagemURL;
-      imgFoto.onerror = function () {
-        this.onerror = null;
-        this.src = PLACEHOLDER_ESTABELECIMENTO;
-      };
-      imagemDiv.appendChild(imgFoto);
-
-      imagemDiv.addEventListener("click", () => {
-        if (!idCerto) {
-          console.error("Erro: ID do estabelecimento não encontrado.");
-          return;
-        }
-        window.location.href = `estabelecimentoCli.html?id=${idCerto}`;
-      });
-
-      const categoriaSpan = document.createElement("span");
-      categoriaSpan.className = "local-categoria";
-      categoriaSpan.textContent = estab.categoria || "Local";
-
-      const btnFavorito = criarBotaoFavorito(idCerto, jaSalvo);
-
-      imagemDiv.appendChild(categoriaSpan);
-      imagemDiv.appendChild(btnFavorito);
-
-      const status = calcularStatusEstabelecimento(estab.horarioFuncionamento);
-      if (status.disponivel) {
-        const statusSpan = document.createElement("span");
-        statusSpan.className = `local-status ${status.aberto ? "aberto" : "fechado"}`;
-        statusSpan.innerHTML = `<span class="local-status-dot"></span>${status.label}`;
-        imagemDiv.appendChild(statusSpan);
-      }
-
-      const infoDiv = document.createElement("div");
-      infoDiv.className = "local-info";
-
-      const topoDiv = document.createElement("div");
-      topoDiv.className = "local-info-topo";
-
-      const nomeContainer = document.createElement("div");
-
-      const nomeEl = document.createElement("h3");
-      nomeEl.className = "local-nome";
-      nomeEl.textContent = nomeCerto;
-
-      const enderecoEl = document.createElement("p");
-      enderecoEl.className = "local-endereco";
-      const enderecoCompleto = estab.rua
-        ? `${estab.rua}, ${estab.numero}${estab.bairro ? ` - ${estab.bairro}` : ""} (${estab.cidade}/${estab.estado})`
-        : "Endereço não informado";
-
-      enderecoEl.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${enderecoCompleto}`;
-
-      nomeContainer.appendChild(nomeEl);
-      nomeContainer.appendChild(enderecoEl);
-
-      const notaDiv = document.createElement("div");
-      notaDiv.className = "local-nota";
-      notaDiv.innerHTML = `
-                <i class="fas fa-star"></i>
-                <span>${formatarMediaEstabelecimento(estab)}</span>
-            `;
-
-      topoDiv.appendChild(nomeContainer);
-      topoDiv.appendChild(notaDiv);
-
-      const rodapeDiv = document.createElement("div");
-      rodapeDiv.className = "local-rodape";
-
-      const tagSpan = document.createElement("span");
-      tagSpan.className = "local-tag";
-      tagSpan.textContent = `#${estab.categoria || "Sugestão"}`;
-
-      const botao = document.createElement("button");
-      botao.className = "local-btn-sugestao";
-      botao.innerHTML = `<i class="fas fa-comment-alt"></i> Sugerir`;
-
-      botao.addEventListener("click", () => {
-        irParaPaginaSugestao(nomeCerto, idCerto);
-      });
-
-      rodapeDiv.appendChild(tagSpan);
-      rodapeDiv.appendChild(botao);
-
-      infoDiv.appendChild(topoDiv);
-      infoDiv.appendChild(rodapeDiv);
-
-      card.appendChild(imagemDiv);
-      card.appendChild(infoDiv);
-
-      grade.appendChild(card);
+      grade.appendChild(criarCardEstabelecimento(estab));
     });
   } catch (error) {
     console.error("Erro ao carregar estabelecimentos:", error);
@@ -224,6 +149,118 @@ async function carregarEstabelecimentos() {
             </p>
         `;
   }
+}
+
+function criarCardEstabelecimento(estab) {
+  const card = document.createElement("div");
+  card.className = "local-card";
+
+  const categoriaCard = estab.categoria
+    ? estab.categoria.toLowerCase()
+    : "outros";
+  card.dataset.categoria = categoriaCard;
+
+  const nomeCerto = estab.nome || "Nome Indisponível";
+  const idCerto = obterIdEstabelecimento(estab);
+  const jaSalvo = idCerto ? locaisSalvosIds.has(idCerto) : false;
+  const imagemURL = urlFotoEstabelecimento(estab.fotoPath);
+
+  const imagemDiv = document.createElement("div");
+  imagemDiv.className = "local-imagem";
+
+  const imgFoto = document.createElement("img");
+  imgFoto.className = "local-foto";
+  imgFoto.alt = nomeCerto;
+  imgFoto.src = imagemURL;
+  imgFoto.onerror = function () {
+    this.onerror = null;
+    this.src = PLACEHOLDER_ESTABELECIMENTO;
+  };
+  imagemDiv.appendChild(imgFoto);
+
+  imagemDiv.addEventListener("click", () => {
+    if (!idCerto) {
+      console.error("Erro: ID do estabelecimento não encontrado.");
+      return;
+    }
+    window.location.href = `estabelecimentoCli.html?id=${idCerto}`;
+  });
+
+  const categoriaSpan = document.createElement("span");
+  categoriaSpan.className = "local-categoria";
+  categoriaSpan.textContent = estab.categoria || "Local";
+
+  const btnFavorito = criarBotaoFavorito(idCerto, jaSalvo);
+
+  imagemDiv.appendChild(categoriaSpan);
+  imagemDiv.appendChild(btnFavorito);
+
+  const status = calcularStatusEstabelecimento(estab.horarioFuncionamento);
+  if (status.disponivel) {
+    const statusSpan = document.createElement("span");
+    statusSpan.className = `local-status ${status.aberto ? "aberto" : "fechado"}`;
+    statusSpan.innerHTML = `<span class="local-status-dot"></span>${status.label}`;
+    imagemDiv.appendChild(statusSpan);
+  }
+
+  const infoDiv = document.createElement("div");
+  infoDiv.className = "local-info";
+
+  const topoDiv = document.createElement("div");
+  topoDiv.className = "local-info-topo";
+
+  const nomeContainer = document.createElement("div");
+
+  const nomeEl = document.createElement("h3");
+  nomeEl.className = "local-nome";
+  nomeEl.textContent = nomeCerto;
+
+  const enderecoEl = document.createElement("p");
+  enderecoEl.className = "local-endereco";
+  const enderecoCompleto = estab.rua
+    ? `${estab.rua}, ${estab.numero}${estab.bairro ? ` - ${estab.bairro}` : ""} (${estab.cidade}/${estab.estado})`
+    : "Endereço não informado";
+
+  enderecoEl.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${enderecoCompleto}`;
+
+  nomeContainer.appendChild(nomeEl);
+  nomeContainer.appendChild(enderecoEl);
+
+  const notaDiv = document.createElement("div");
+  notaDiv.className = "local-nota";
+  notaDiv.innerHTML = `
+            <i class="fas fa-star"></i>
+            <span>${formatarMediaEstabelecimento(estab)}</span>
+        `;
+
+  topoDiv.appendChild(nomeContainer);
+  topoDiv.appendChild(notaDiv);
+
+  const rodapeDiv = document.createElement("div");
+  rodapeDiv.className = "local-rodape";
+
+  const tagSpan = document.createElement("span");
+  tagSpan.className = "local-tag";
+  tagSpan.textContent = `#${estab.categoria || "Sugestão"}`;
+
+  const botao = document.createElement("button");
+  botao.className = "local-btn-sugestao";
+  botao.innerHTML = `<i class="fas fa-comment-alt"></i> Sugerir`;
+
+  botao.addEventListener("click", () => {
+    irParaPaginaSugestao(nomeCerto, idCerto);
+  });
+
+  rodapeDiv.appendChild(tagSpan);
+  rodapeDiv.appendChild(botao);
+
+  infoDiv.appendChild(topoDiv);
+  infoDiv.appendChild(rodapeDiv);
+
+  card.appendChild(imagemDiv);
+  card.appendChild(infoDiv);
+
+  return card;
 }
 
 function criarBotaoFavorito(estabelecimentoId, salvo) {

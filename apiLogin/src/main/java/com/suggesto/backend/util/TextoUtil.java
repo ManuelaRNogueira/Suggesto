@@ -1,5 +1,6 @@
 package com.suggesto.backend.util;
 
+import java.text.Normalizer;
 import java.util.Locale;
 import java.util.Set;
 
@@ -12,6 +13,22 @@ public final class TextoUtil {
     private static final Set<String> CONECTIVOS = Set.of("de", "da", "do", "das", "dos", "e");
 
     private TextoUtil() {
+    }
+
+    // Compara texto livre ignorando acento, caixa e espaços extras — é assim que
+    // a cidade do cliente casa com a do estabelecimento sem exigir digitação idêntica.
+    public static boolean mesmoTexto(String a, String b) {
+        String na = normalizarParaComparacao(a);
+        return !na.isEmpty() && na.equals(normalizarParaComparacao(b));
+    }
+
+    public static String normalizarParaComparacao(String texto) {
+        if (texto == null) {
+            return "";
+        }
+        String semAcento = Normalizer.normalize(texto.trim(), Normalizer.Form.NFD)
+                .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+        return semAcento.replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
     }
 
     public static String capitalizarNomeProprio(String texto) {
