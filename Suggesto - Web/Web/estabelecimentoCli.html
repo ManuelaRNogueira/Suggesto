@@ -23,7 +23,7 @@
     <nav class="sidebar-nav">
       <div class="nav-section-label">Principal</div>
 
-      <a class="nav-item" href="inicioCli.html">
+      <a class="nav-item active" href="inicioCli.html">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
           <polyline points="9 22 9 12 15 12 15 22"/>
@@ -45,7 +45,7 @@
         Pontos
       </a>
 
-      <a class="nav-item active" href="locaisSalvosCli.html">
+      <a class="nav-item" href="locaisSalvosCli.html">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
           <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
         </svg>
@@ -155,7 +155,7 @@
           <div class="filtros" id="filtrosCategoria">
             <button class="filtro ativo" onclick="filtrar(this, 'todas')">Todas</button>
           </div>
-          <button class="btn-nova-sugestao" onclick="abrirModal()">
+          <button class="btn-nova-sugestao" onclick="irParaSugestao()">
             <i class="fas fa-plus"></i>
             Sugerir
           </button>
@@ -181,7 +181,7 @@
           <i class="fas fa-comment-slash"></i>
           <p>Nenhuma sugestão encontrada</p>
           <span>Seja o primeiro a sugerir algo para este local!</span>
-          <button class="btn-nova-sugestao" onclick="abrirModal()">
+          <button class="btn-nova-sugestao" onclick="irParaSugestao()">
             <i class="fas fa-plus"></i> Fazer sugestão
           </button>
         </div>
@@ -229,64 +229,13 @@
         <i class="fas fa-directions"></i>
         Como chegar
       </button>
-      <button class="btn-sugerir" onclick="abrirModal()">
+      <button class="btn-sugerir" onclick="irParaSugestao()">
         <i class="fas fa-comment-alt"></i>
         Nova sugestão
       </button>
     </div>
 
   </main>
-
-  <!-- MODAL: NOVA SUGESTÃO -->
-  <div class="modal-fundo" id="modalSugestao">
-    <div class="modal">
-      <div class="modal-topo">
-        <h3 class="modal-titulo">Fazer sugestão</h3>
-        <button class="modal-fechar" onclick="fecharModal()"><i class="fas fa-times"></i></button>
-      </div>
-      <p class="modal-sub" id="modalNomeEstab">—</p>
-
-      <div class="campo-grupo">
-        <label class="campo-label">Categoria</label>
-        <select class="campo-input" id="selectCategoria">
-          <option value="1">Atendimento</option>
-          <option value="2">Qualidade do produto</option>
-          <option value="3">Preço</option>
-          <option value="4">Estrutura</option>
-          <option value="5">Ambiente</option>
-          <option value="6">Higiene</option>
-          <option value="7">Cardápio</option>
-          <option value="8">Outro</option>
-        </select>
-      </div>
-
-      <div class="campo-grupo">
-        <label class="campo-label">Sua nota</label>
-        <div class="modal-estrelas" id="modalEstrelas">
-          <i class="fas fa-star vazia" data-v="1" onclick="selecionarNotaModal(1)"></i>
-          <i class="fas fa-star vazia" data-v="2" onclick="selecionarNotaModal(2)"></i>
-          <i class="fas fa-star vazia" data-v="3" onclick="selecionarNotaModal(3)"></i>
-          <i class="fas fa-star vazia" data-v="4" onclick="selecionarNotaModal(4)"></i>
-          <i class="fas fa-star vazia" data-v="5" onclick="selecionarNotaModal(5)"></i>
-        </div>
-      </div>
-
-      <div class="campo-grupo">
-        <label class="campo-label">Sua sugestão</label>
-        <textarea class="campo-input campo-textarea" id="textSugestao"
-          placeholder="Descreva sua sugestão com detalhes..."></textarea>
-        <span class="campo-contador" id="contador">0/300</span>
-      </div>
-
-      <div class="modal-acoes">
-        <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
-        <button class="btn-enviar" onclick="enviarSugestao()">
-          <i class="fas fa-paper-plane"></i>
-          Enviar
-        </button>
-      </div>
-    </div>
-  </div>
 
   <!-- TOAST -->
   <div class="toast" id="toast">

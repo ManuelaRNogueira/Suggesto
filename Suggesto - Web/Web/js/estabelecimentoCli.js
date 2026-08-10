@@ -4,13 +4,11 @@ let est = null;        // dados reais do estabelecimento carregado da API
 let avaliacoes = [];    // avaliações reais do estabelecimento
 let salvo = false;
 let filtroAtivo = 'todas';
-let notaSelecionada = 0;
 
 
 // ── INICIALIZA ────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   carregarDadosUsuario();
-  configurarContador();
 
   const id = obterIdEstabelecimento();
   if (!id) {
@@ -422,112 +420,12 @@ function ligarPara() {
 }
 
 
-// ── MODAL: NOVA SUGESTÃO ──────────────────────────────────────────────
-function abrirModal() {
-  document.getElementById('modalSugestao').classList.add('aberto');
-}
-
-function fecharModal() {
-  document.getElementById('modalSugestao').classList.remove('aberto');
-  document.getElementById('textSugestao').value = '';
-  document.getElementById('contador').textContent = '0/300';
-  selecionarNotaModal(0);
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('modalSugestao').addEventListener('click', e => {
-    if (e.target === document.getElementById('modalSugestao')) fecharModal();
-  });
-});
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') fecharModal();
-});
-
-function selecionarNotaModal(v) {
-  notaSelecionada = v;
-  document.querySelectorAll('#modalEstrelas i').forEach((el, i) => {
-    el.classList.toggle('vazia', i >= v);
-  });
-}
-
-async function enviarSugestao() {
+// ── NOVA SUGESTÃO ──────────────────────────────────────────────────────
+// Leva para o mesmo fluxo de sugestão usado em InicioCli.html, em vez de
+// um modal próprio duplicado.
+function irParaSugestao() {
   if (!est) return;
-
-  const texto = document.getElementById('textSugestao').value.trim();
-  if (!texto) {
-    const campo = document.getElementById('textSugestao');
-    campo.style.borderColor = 'rgba(248,113,113,0.6)';
-    setTimeout(() => campo.style.borderColor = '', 1800);
-    return;
-  }
-
-  if (!notaSelecionada) {
-    mostrarToast('Selecione uma nota antes de enviar.', 'erro');
-    return;
-  }
-
-  const usuarioId = Number(localStorage.getItem('idUsuario'));
-  if (!Number.isFinite(usuarioId) || usuarioId <= 0) {
-    mostrarToast('Você precisa estar logado para enviar uma sugestão.', 'erro');
-    return;
-  }
-
-  const idCategoria = Number(document.getElementById('selectCategoria').value);
-
-  const payload = {
-    idUsuario: usuarioId,
-    idEstabelecimento: est.id,
-    idCategoria,
-    nota: notaSelecionada,
-    comentario: texto,
-    tipo: 'sugestao',
-  };
-
-  const btnEnviar = document.querySelector('.btn-enviar');
-  const textoOriginal = btnEnviar.innerHTML;
-  btnEnviar.disabled = true;
-  btnEnviar.innerHTML = 'Enviando...';
-
-  try {
-    const resposta = await fetch(`${API_BASE}/avaliacoes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    if (!resposta.ok) {
-      const erroTexto = await resposta.text();
-      throw new Error(erroTexto || 'Erro ao enviar sugestão.');
-    }
-
-    fecharModal();
-    mostrarToast('Sugestão enviada com sucesso!');
-
-    await carregarAvaliacoes(est.id);
-  } catch (erro) {
-    console.error('Erro ao enviar sugestão:', erro);
-    mostrarToast('Não foi possível enviar sua sugestão. Tente novamente.', 'erro');
-  } finally {
-    btnEnviar.disabled = false;
-    btnEnviar.innerHTML = textoOriginal;
-  }
-}
-
-
-// ── CONTADOR DO TEXTAREA ──────────────────────────────────────────────
-function configurarContador() {
-  const textarea = document.getElementById('textSugestao');
-  const contador = document.getElementById('contador');
-  if (!textarea || !contador) return;
-
-  textarea.addEventListener('input', () => {
-    const len = textarea.value.length;
-    contador.textContent = `${len}/300`;
-    if (len > 280) contador.style.color = '#f87171';
-    else contador.style.color = '';
-    if (len > 300) textarea.value = textarea.value.slice(0, 300);
-  });
+  window.location.href = `./fazerSugestao.html?id=${est.id}&nome=${encodeURIComponent(est.nome)}`;
 }
 
 
