@@ -510,3 +510,29 @@ body {
   .estab-nome { font-size: 16px; }
   .resumo-avaliacao { flex-direction: column; gap: 16px; }
 }
+
+/* ── Resposta do estabelecimento ─────────────────────────────────────── */
+.sug-resposta {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--roxo-bg);
+  border: 1px solid var(--roxo-borda);
+  border-left: 3px solid var(--roxo-claro);
+}
+
+.sug-resposta-rotulo {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--roxo-claro);
+  margin-bottom: 6px;
+}
+
+.sug-resposta-texto {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+}

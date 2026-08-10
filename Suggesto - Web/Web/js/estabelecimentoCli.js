@@ -282,6 +282,14 @@ function renderizarCardSugestao(a) {
 
       <p class="sug-texto">${escapeHtml(a.comentario || '')}</p>
 
+      ${a.resposta ? `
+        <div class="sug-resposta">
+          <span class="sug-resposta-rotulo">
+            <i class="fas fa-reply"></i> Resposta do estabelecimento
+          </span>
+          <p class="sug-resposta-texto">${escapeHtml(a.resposta)}</p>
+        </div>` : ''}
+
       <div class="sug-rodape">
         <span class="sug-status sug-status-${statusChave}">${escapeHtml(statusLabel)}</span>
       </div>

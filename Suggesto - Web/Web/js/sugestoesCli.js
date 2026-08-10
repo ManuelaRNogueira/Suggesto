@@ -232,6 +232,14 @@ function renderizarLista(sugestoes) {
                     </div>
 
                     <p class="card-texto">${sugestao.comentario}</p>
+
+                    ${sugestao.resposta ? `
+                    <div class="card-resposta">
+                        <span class="card-resposta-rotulo">
+                            <i class="fas fa-reply"></i> Resposta de ${nomeLoja}
+                        </span>
+                        <p class="card-resposta-texto">${sugestao.resposta}</p>
+                    </div>` : ""}
                 </div>
             </div>
         `;

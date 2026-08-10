@@ -57,6 +57,37 @@ public class AvaliacaoController {
         }
     }
 
+    @PatchMapping("/{id}/resposta")
+    public ResponseEntity<?> responder(
+            @PathVariable("id") Long id,
+            @RequestBody Map<String, Object> body) {
+        try {
+            Object idAdminBruto = body.get("idAdmin");
+            if (idAdminBruto == null) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "Campo idAdmin é obrigatório."
+                ));
+            }
+            Long idAdmin = Long.valueOf(idAdminBruto.toString());
+            String resposta = body.get("resposta") == null ? null : body.get("resposta").toString();
+
+            Avaliacao atualizada = avaliacaoService.responder(id, idAdmin, resposta);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Resposta enviada.",
+                    "avaliacao", atualizada
+            ));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(Map.of("success", false, "message", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+
     @PatchMapping("/{id}/status")
     public ResponseEntity<?> atualizarStatus(
             @PathVariable("id") Long id,

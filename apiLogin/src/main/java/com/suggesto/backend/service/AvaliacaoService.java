@@ -80,6 +80,40 @@ public class AvaliacaoService {
         return avaliacaoRepository.save(avaliacao);
     }
 
+    // Só um administrador do próprio estabelecimento pode responder à sugestão:
+    // ou é o gerente principal, ou faz parte da equipe vinculada a ele.
+    @Transactional
+    public Avaliacao responder(Long idAvaliacao, Long idAdmin, String texto) {
+        if (texto == null || texto.isBlank()) {
+            throw new IllegalArgumentException("A resposta não pode ficar vazia.");
+        }
+
+        Avaliacao avaliacao = avaliacaoRepository.findById(idAvaliacao)
+                .orElseThrow(() -> new IllegalArgumentException("Sugestão não encontrada."));
+
+        Estabelecimento alvo = avaliacao.getEstabelecimento();
+        if (alvo == null) {
+            throw new IllegalArgumentException("Sugestão sem estabelecimento vinculado.");
+        }
+
+        Usuario admin = usuarioRepository.findById(idAdmin)
+                .orElseThrow(() -> new IllegalArgumentException("Administrador não encontrado."));
+
+        boolean ehGerente = alvo.getIdGerente() == idAdmin;
+        boolean ehDaEquipe = admin.getEstabelecimento() != null
+                && admin.getEstabelecimento().getIdEstabelecimento() == alvo.getIdEstabelecimento();
+
+        if (!ehGerente && !ehDaEquipe) {
+            throw new SecurityException("Você não faz parte da equipe deste estabelecimento.");
+        }
+
+        avaliacao.setResposta(texto.trim());
+        avaliacao.setDataResposta(LocalDateTime.now());
+        avaliacao.setRespondidoPor(admin.getNome());
+
+        return avaliacaoRepository.save(avaliacao);
+    }
+
     private String normalizarStatus(String status) {
         if (status == null || status.isBlank()) {
             throw new IllegalArgumentException("Status inválido.");

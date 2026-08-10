@@ -45,6 +45,9 @@ function DetalhesEstabelecimento() {
   const [filtroSentimento, setFiltroS]  = useState('todos');
   const [filtroCategoria,  setFiltroC]  = useState('todos');
   const [editando, setEditando]         = useState(false);
+  const [respondendoId, setRespondendoId] = useState(null);
+  const [textoResposta, setTextoResposta] = useState('');
+  const [enviandoResposta, setEnviandoResposta] = useState(false);
 
   const meuId = localStorage.getItem('idUsuario');
   const souPrincipal = !!estab && String(meuId) === String(estab.idGerente);
@@ -80,6 +83,9 @@ function DetalhesEstabelecimento() {
                   categoria: av.categoria?.nomeCategoria?.toLowerCase() || 'sugestão',
                   autor: av.usuario?.nome || 'Cliente Verificado',
                   status: (av.status || 'pendente').toLowerCase(),
+                  resposta: av.resposta || null,
+                  respondidoPor: av.respondidoPor || null,
+                  dataResposta: av.dataResposta || null,
                   data: av.dataAvaliacao
                     ? av.dataAvaliacao.split('T')[0]
                     : new Date().toISOString().split('T')[0]
@@ -124,6 +130,48 @@ function DetalhesEstabelecimento() {
     } catch (e) {
       console.error(e);
       alert(e.message || 'Não foi possível atualizar a sugestão.');
+    }
+  };
+
+  const abrirResposta = (s) => {
+    setRespondendoId(s.id);
+    setTextoResposta(s.resposta || '');
+  };
+
+  const cancelarResposta = () => {
+    setRespondendoId(null);
+    setTextoResposta('');
+  };
+
+  const enviarResposta = async (idAvaliacao) => {
+    setEnviandoResposta(true);
+    try {
+      const r = await fetch(`http://localhost:8080/api/avaliacoes/${idAvaliacao}/resposta`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idAdmin: meuId, resposta: textoResposta }),
+      });
+      const dados = await r.json().catch(() => null);
+      if (!r.ok) throw new Error(dados?.message || 'Erro ao enviar resposta.');
+
+      const salva = dados.avaliacao;
+      setSugestoes((prev) =>
+        prev.map((s) =>
+          s.id === idAvaliacao
+            ? {
+                ...s,
+                resposta: salva.resposta,
+                respondidoPor: salva.respondidoPor,
+                dataResposta: salva.dataResposta,
+              }
+            : s
+        )
+      );
+      cancelarResposta();
+    } catch (e) {
+      alert(e.message || 'Não foi possível enviar a resposta.');
+    } finally {
+      setEnviandoResposta(false);
     }
   };
 
@@ -348,24 +396,88 @@ function DetalhesEstabelecimento() {
                   <span className="card-status-tag">{s.status}</span>
                 </div>
 
-                {!statusAceito(s.status) && s.status !== 'recusada' && s.status !== 'recusado' && (
-                  <div className="card-acoes-admin">
-                    <button
-                      type="button"
-                      className="btn-aceitar"
-                      onClick={() => atualizarStatus(s.id, 'ACEITA')}
-                    >
-                      Aceitar (+500 pts)
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-recusar"
-                      onClick={() => atualizarStatus(s.id, 'RECUSADA')}
-                    >
-                      Recusar
-                    </button>
+                {s.resposta && respondendoId !== s.id && (
+                  <div className="card-resposta">
+                    <div className="card-resposta-topo">
+                      <span className="card-resposta-rotulo">Resposta do estabelecimento</span>
+                      <button
+                        type="button"
+                        className="card-resposta-editar"
+                        onClick={() => abrirResposta(s)}
+                      >
+                        Editar
+                      </button>
+                    </div>
+                    <p className="card-resposta-texto">{s.resposta}</p>
+                    {s.respondidoPor && (
+                      <span className="card-resposta-autor">
+                        por {s.respondidoPor}
+                        {s.dataResposta && ` · ${formatarData(s.dataResposta.split('T')[0])}`}
+                      </span>
+                    )}
                   </div>
                 )}
+
+                {respondendoId === s.id && (
+                  <div className="card-resposta-form">
+                    <textarea
+                      className="card-resposta-campo"
+                      placeholder="Escreva a resposta que o cliente vai ver…"
+                      value={textoResposta}
+                      onChange={(e) => setTextoResposta(e.target.value)}
+                      rows={3}
+                      autoFocus
+                    />
+                    <div className="card-resposta-acoes">
+                      <button
+                        type="button"
+                        className="btn-recusar"
+                        onClick={cancelarResposta}
+                        disabled={enviandoResposta}
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-aceitar"
+                        onClick={() => enviarResposta(s.id)}
+                        disabled={enviandoResposta || !textoResposta.trim()}
+                      >
+                        {enviandoResposta ? 'Enviando…' : 'Enviar resposta'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="card-acoes-admin">
+                  {!s.resposta && respondendoId !== s.id && (
+                    <button
+                      type="button"
+                      className="btn-responder"
+                      onClick={() => abrirResposta(s)}
+                    >
+                      Responder
+                    </button>
+                  )}
+                  {!statusAceito(s.status) && s.status !== 'recusada' && s.status !== 'recusado' && (
+                    <>
+                      <button
+                        type="button"
+                        className="btn-aceitar"
+                        onClick={() => atualizarStatus(s.id, 'ACEITA')}
+                      >
+                        Aceitar (+500 pts)
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-recusar"
+                        onClick={() => atualizarStatus(s.id, 'RECUSADA')}
+                      >
+                        Recusar
+                      </button>
+                    </>
+                  )}
+                </div>
               </article>
             );
           })

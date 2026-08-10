@@ -35,6 +35,16 @@ public class Avaliacao {
     @Column(name = "data_avaliacao")
     private LocalDateTime dataAvaliacao;
 
+    @Column(name = "resposta", columnDefinition = "TEXT")
+    private String resposta;
+
+    @Column(name = "data_resposta")
+    private LocalDateTime dataResposta;
+
+    // Nome do administrador que respondeu, guardado no momento da resposta.
+    @Column(name = "respondido_por", length = 150)
+    private String respondidoPor;
+
     @ManyToOne
     @JoinColumn(name = "id_estabelecimento")
     private Estabelecimento estabelecimento;
@@ -110,5 +120,29 @@ public class Avaliacao {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getResposta() {
+        return resposta;
+    }
+
+    public void setResposta(String resposta) {
+        this.resposta = resposta;
+    }
+
+    public LocalDateTime getDataResposta() {
+        return dataResposta;
+    }
+
+    public void setDataResposta(LocalDateTime dataResposta) {
+        this.dataResposta = dataResposta;
+    }
+
+    public String getRespondidoPor() {
+        return respondidoPor;
+    }
+
+    public void setRespondidoPor(String respondidoPor) {
+        this.respondidoPor = respondidoPor;
     }
 }
