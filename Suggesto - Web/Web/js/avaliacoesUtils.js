@@ -26,8 +26,7 @@ function chaveStatus(status) {
     return "aceita";
   }
   if (["recusada", "recusado"].includes(s)) return "recusada";
-  if (["analise", "emanalise", "em analise", "pendente"].includes(s)) return "analise";
-  return "analise";
+  return "pendente";
 }
 
 function isStatusAprovado(status) {
@@ -38,7 +37,7 @@ function rotuloStatus(status) {
   const chave = chaveStatus(status);
   if (chave === "aceita") return "Aprovada";
   if (chave === "recusada") return "Recusada";
-  return "Em análise";
+  return "Pendente";
 }
 
 function iconeStatus(status) {

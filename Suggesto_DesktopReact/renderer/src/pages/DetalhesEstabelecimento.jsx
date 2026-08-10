@@ -79,7 +79,7 @@ function DetalhesEstabelecimento() {
                   sentimento: sent,
                   categoria: av.categoria?.nomeCategoria?.toLowerCase() || 'sugestão',
                   autor: av.usuario?.nome || 'Cliente Verificado',
-                  status: (av.status || 'analise').toLowerCase(),
+                  status: (av.status || 'pendente').toLowerCase(),
                   data: av.dataAvaliacao
                     ? av.dataAvaliacao.split('T')[0]
                     : new Date().toISOString().split('T')[0]

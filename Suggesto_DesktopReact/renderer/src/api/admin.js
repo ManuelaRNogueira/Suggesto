@@ -118,7 +118,6 @@ export function formatarData(iso) {
 
 export const STATUS = [
   { id: "pendente", label: "Pendente", envia: "pendente" },
-  { id: "analise", label: "Em análise", envia: "analise" },
   { id: "implementado", label: "Implementado", envia: "implementado" },
   { id: "recusado", label: "Recusado", envia: "recusado" },
 ];

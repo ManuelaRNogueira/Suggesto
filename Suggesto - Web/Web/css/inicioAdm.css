@@ -279,7 +279,6 @@
 /* ── Cores por status ──────────────────────────────────────────────────── */
 
 .st-pendente { --st: var(--cor-amarelo); }
-.st-analise { --st: var(--cor-azul); }
 .st-implementado { --st: var(--cor-verde); }
 .st-recusado { --st: var(--cor-vermelho); }
 

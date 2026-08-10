@@ -75,7 +75,6 @@ function admFormatarData(iso) {
 function admLabelStatus(statusUi) {
   const mapa = {
     pendente: "Pendente",
-    analise: "Em análise",
     implementado: "Implementado",
     recusado: "Recusado",
   };

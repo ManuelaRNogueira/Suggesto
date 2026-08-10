@@ -344,7 +344,7 @@ body {
 }
 .sug-status-aceita   { background: var(--verde-bg); color: var(--verde); }
 .sug-status-recusada { background: rgba(248,113,113,0.12); color: #f87171; }
-.sug-status-analise  { background: rgba(251,191,36,0.12); color: var(--amarelo); }
+.sug-status-pendente { background: rgba(251,191,36,0.12); color: var(--amarelo); }
 
 /* ===== VAZIO ===== */
 .vazio {

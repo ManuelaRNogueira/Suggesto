@@ -253,7 +253,7 @@ function atualizarResumo(sugestoes) {
   const total = sugestoes.length;
   const aprovadas = sugestoes.filter((s) => isStatusAprovado(s.status)).length;
   const pendentes = sugestoes.filter(
-    (s) => chaveStatus(s.status) === "analise",
+    (s) => chaveStatus(s.status) === "pendente",
   ).length;
 
   document.getElementById("totalSugestoes").innerText = total;

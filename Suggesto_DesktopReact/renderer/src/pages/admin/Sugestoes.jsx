@@ -17,10 +17,9 @@ const POR_PAGINA = 12;
 
 // Transições oferecidas em cada estado. Estado final não oferece ação.
 const ACOES = {
-  pendente: ["analise", "implementado", "recusado"],
-  analise: ["implementado", "recusado"],
+  pendente: ["implementado", "recusado"],
   implementado: [],
-  recusado: ["analise"],
+  recusado: ["pendente"],
 };
 
 export default function Sugestoes() {
@@ -372,11 +371,11 @@ function Cartao({ sugestao, salvando, onMudar }) {
                     ? IC.check
                     : destino === "recusado"
                       ? IC.x
-                      : IC.lupa
+                      : IC.relogio
                 }
                 size={13}
               />
-              {destino === "analise" ? "Analisar" : labelStatus(destino)}
+              {destino === "pendente" ? "Reabrir" : labelStatus(destino)}
             </button>
           ))}
         </div>

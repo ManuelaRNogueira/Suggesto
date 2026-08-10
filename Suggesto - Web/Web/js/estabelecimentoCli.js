@@ -262,7 +262,7 @@ function renderizarCardSugestao(a) {
   const categoriaNome = (a.categoria && a.categoria.nomeCategoria) || 'Geral';
   const dataFormatada = formatarData(a.dataAvaliacao);
 
-  const statusChave = typeof chaveStatus === 'function' ? chaveStatus(a.status) : 'analise';
+  const statusChave = typeof chaveStatus === 'function' ? chaveStatus(a.status) : 'pendente';
   const statusLabel = typeof rotuloStatus === 'function' ? rotuloStatus(a.status) : (a.status || '');
 
   return `

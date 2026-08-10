@@ -262,7 +262,6 @@ export default function Estatisticas() {
             <ul className="est-situacao">
               {[
                 ["pendente", metricas.pendentes],
-                ["analise", metricas.emAnalise],
                 ["implementado", metricas.implementados],
                 ["recusado", metricas.recusados],
               ].map(([id, qtd]) => (

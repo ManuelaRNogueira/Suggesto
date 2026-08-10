@@ -53,7 +53,7 @@ public class AvaliacaoService {
         avaliacao.setNota(dto.getNota());
         avaliacao.setComentario(dto.getComentario());
         avaliacao.setDataAvaliacao(LocalDateTime.now());
-        avaliacao.setStatus("analise");
+        avaliacao.setStatus("pendente");
         avaliacao.setEstabelecimento(est);
         avaliacao.setCategoria(categoria);
         avaliacao.setUsuario(usuario);

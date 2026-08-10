@@ -3,7 +3,6 @@
 
 const FAIXAS = [
   { id: "pendente", chave: "pendentes", desc: "Aguardando triagem" },
-  { id: "analise", chave: "emAnalise", desc: "Em revisão" },
   { id: "implementado", chave: "implementados", desc: "Aprovadas e executadas" },
   { id: "recusado", chave: "recusados", desc: "Não aprovadas" },
 ];
@@ -123,7 +122,6 @@ function renderarKpis(metricas, faixas, total) {
     </div>`;
 
   const demais = faixas
-    .filter(f => f.id !== "analise")
     .map(f => `
       <div class="kpi st-${f.id}">
         <p class="kpi-rot">${admLabelStatus(f.id)}</p>

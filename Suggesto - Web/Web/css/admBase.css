@@ -156,7 +156,7 @@ body {
   letter-spacing: 0.04em;
 }
 
-.pill.pendente, .pill.analise { background: rgba(234, 179, 8, 0.12); color: var(--cor-amarelo); }
+.pill.pendente { background: rgba(234, 179, 8, 0.12); color: var(--cor-amarelo); }
 .pill.implementado { background: rgba(34, 197, 94, 0.12); color: var(--cor-verde); }
 .pill.recusado { background: rgba(239, 68, 68, 0.12); color: var(--cor-vermelho); }
 

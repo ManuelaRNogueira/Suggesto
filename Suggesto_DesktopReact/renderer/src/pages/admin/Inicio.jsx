@@ -12,7 +12,6 @@ import "./Inicio.css";
 
 const FAIXAS = [
   { id: "pendente", chave: "pendentes", desc: "Aguardando triagem" },
-  { id: "analise", chave: "emAnalise", desc: "Em revisão" },
   { id: "implementado", chave: "implementados", desc: "Aprovadas e executadas" },
   { id: "recusado", chave: "recusados", desc: "Não aprovadas" },
 ];
@@ -79,15 +78,13 @@ export default function Inicio() {
             {metricas.totalEstabelecimentos === 1 ? "estabelecimento" : "estabelecimentos"}
           </p>
         </div>
-        {faixas
-          .filter((f) => f.id !== "analise")
-          .map((f) => (
-            <div key={f.id} className={`ini-kpi st-${f.id}`}>
-              <p className="ini-kpi-rot">{labelStatus(f.id)}</p>
-              <p className="ini-kpi-val adm-num">{f.qtd}</p>
-              <p className="ini-kpi-sub">{f.pct.toFixed(1)}% do total</p>
-            </div>
-          ))}
+        {faixas.map((f) => (
+          <div key={f.id} className={`ini-kpi st-${f.id}`}>
+            <p className="ini-kpi-rot">{labelStatus(f.id)}</p>
+            <p className="ini-kpi-val adm-num">{f.qtd}</p>
+            <p className="ini-kpi-sub">{f.pct.toFixed(1)}% do total</p>
+          </div>
+        ))}
       </div>
 
       <div className="ini-grade">

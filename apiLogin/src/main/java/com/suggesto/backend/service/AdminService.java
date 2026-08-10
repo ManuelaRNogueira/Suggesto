@@ -24,7 +24,6 @@ public class AdminService {
             "aceita", "aceito", "resolvida", "resolvido", "implementado", "implementada"
     );
     private static final Set<String> STATUS_RECUSADO = Set.of("recusada", "recusado");
-    private static final Set<String> STATUS_ANALISE = Set.of("analise", "pendente", "pending");
 
     private static final int MESES_PADRAO = 6;
     private static final int MESES_MAXIMO = 24;
@@ -64,7 +63,6 @@ public class AdminService {
         LocalDateTime umaSemanaAtras = LocalDateTime.now().minus(7, ChronoUnit.DAYS);
 
         int pendentes = 0;
-        int emAnalise = 0;
         int implementados = 0;
         int recusados = 0;
         int novasSemana = 0;
@@ -75,7 +73,6 @@ public class AdminService {
             switch (grupo) {
                 case "implementado" -> implementados++;
                 case "recusado" -> recusados++;
-                case "analise" -> emAnalise++;
                 default -> pendentes++;
             }
             if (a.getDataAvaliacao() != null && a.getDataAvaliacao().isAfter(umaSemanaAtras)) {
@@ -96,7 +93,6 @@ public class AdminService {
         metricas.put("totalEstabelecimentos", estabelecimentos.size());
         metricas.put("novasSemana", novasSemana);
         metricas.put("pendentes", pendentes);
-        metricas.put("emAnalise", emAnalise);
         metricas.put("implementados", implementados);
         metricas.put("recusados", recusados);
         metricas.put("porCategoria", porCategoria);
@@ -197,7 +193,6 @@ public class AdminService {
         String s = status.trim().toLowerCase(Locale.ROOT);
         if (STATUS_IMPLEMENTADO.contains(s)) return "implementado";
         if (STATUS_RECUSADO.contains(s)) return "recusado";
-        if (STATUS_ANALISE.contains(s)) return "analise";
         return "pendente";
     }
 

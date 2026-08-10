@@ -34,7 +34,6 @@
 
 /* Cores por status de sugestão. Cor aqui é significado, nunca decoração. */
 .st-pendente { --st: var(--amarelo); }
-.st-analise { --st: var(--azul); }
 .st-implementado { --st: var(--verde); }
 .st-recusado { --st: var(--vermelho); }
 

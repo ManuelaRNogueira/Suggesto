@@ -293,7 +293,7 @@ body {
 }
 .card-faixa-resolvida,
 .card-faixa-aceita { background: var(--verde); }
-.card-faixa-analise   { background: var(--laranja); }
+.card-faixa-pendente  { background: var(--laranja); }
 .card-faixa-recusada  { background: var(--vermelho); }
 
 .sugestao-card.card-status-aceita {
@@ -304,7 +304,7 @@ body {
   border-color: rgba(248, 113, 113, 0.45);
   box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.12), 0 4px 20px rgba(248, 113, 113, 0.08);
 }
-.sugestao-card.card-status-analise {
+.sugestao-card.card-status-pendente {
   border-color: var(--borda);
 }
 
@@ -356,7 +356,7 @@ body {
   border: 1px solid rgba(16,185,129,0.45);
   box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
 }
-.status-analise   { background: rgba(245,158,11,0.12); color: var(--laranja); border: 1px solid rgba(245,158,11,0.25); }
+.status-pendente  { background: rgba(245,158,11,0.12); color: var(--laranja); border: 1px solid rgba(245,158,11,0.25); }
 .status-recusada  {
   background: rgba(248,113,113,0.18);
   color: var(--vermelho);
