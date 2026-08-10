@@ -7,6 +7,13 @@ export function idGerente() {
   return localStorage.getItem("idGerenteEfetivo") || localStorage.getItem("idUsuario");
 }
 
+// Só o administrador principal (dono do estabelecimento) pode gerenciar a
+// equipe e editar os dados do estabelecimento.
+export function souPrincipal() {
+  const meuId = localStorage.getItem("idUsuario");
+  return !!meuId && meuId === idGerente();
+}
+
 function queryGerente(extra = {}) {
   const params = new URLSearchParams();
   const id = idGerente();

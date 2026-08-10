@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import Icone, { IC } from "./Icones";
-import { buscarMetricas, buscarSolicitacoes, iniciais } from "../api/admin";
+import { buscarMetricas, buscarSolicitacoes, iniciais, souPrincipal } from "../api/admin";
 import "../styles/tokens.css";
 import "./AdminShell.css";
 
@@ -10,7 +10,7 @@ const NAV = [
   { para: "/sugestoes", rotulo: "Sugestões", icone: IC.chat, badgeChave: "sugestoes" },
   { para: "/estatisticas", rotulo: "Estatísticas", icone: IC.barras },
   { para: "/estabelecimentos", rotulo: "Estabelecimentos", icone: IC.predios },
-  { para: "/solicitacoes", rotulo: "Solicitações", icone: IC.sino, badgeChave: "solicitacoes" },
+  { para: "/solicitacoes", rotulo: "Solicitações", icone: IC.sino, badgeChave: "solicitacoes", somentePrincipal: true },
   { para: "/recompensas", rotulo: "Minhas recompensas", icone: IC.presente },
 ];
 
@@ -31,9 +31,11 @@ export default function AdminShell() {
     buscarMetricas()
       .then((m) => vivo && setBadges((b) => ({ ...b, sugestoes: m.novasSemana ?? null })))
       .catch(() => vivo && setBadges((b) => ({ ...b, sugestoes: null })));
-    buscarSolicitacoes()
-      .then((lista) => vivo && setBadges((b) => ({ ...b, solicitacoes: lista.length })))
-      .catch(() => vivo && setBadges((b) => ({ ...b, solicitacoes: null })));
+    if (souPrincipal()) {
+      buscarSolicitacoes()
+        .then((lista) => vivo && setBadges((b) => ({ ...b, solicitacoes: lista.length })))
+        .catch(() => vivo && setBadges((b) => ({ ...b, solicitacoes: null })));
+    }
     return () => {
       vivo = false;
     };
@@ -59,7 +61,7 @@ export default function AdminShell() {
 
         <nav className="adm-nav">
           <p className="adm-nav-secao">Menu</p>
-          {NAV.map((item) => (
+          {NAV.filter((item) => !item.somentePrincipal || souPrincipal()).map((item) => (
             <NavLink
               key={item.para}
               to={item.para}
