@@ -534,16 +534,19 @@ if (campoFotoEstabelecimento) {
 
         const arquivo = this.files[0];
         const preview = document.getElementById("previewFotoEstabelecimento");
+        const nomeArquivo = document.getElementById("fotoEstabelecimentoNome");
 
         if (!arquivo) {
             fotoEstabelecimentoSelecionada = null;
             preview.style.display = "none";
+            if (nomeArquivo) nomeArquivo.textContent = "Escolher arquivo (opcional)";
             return;
         }
 
         fotoEstabelecimentoSelecionada = arquivo;
         preview.src = URL.createObjectURL(arquivo);
         preview.style.display = "block";
+        if (nomeArquivo) nomeArquivo.textContent = arquivo.name;
     });
 }
 
