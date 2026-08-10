@@ -81,10 +81,7 @@ public class AdminService {
             if (a.getDataAvaliacao() != null && a.getDataAvaliacao().isAfter(umaSemanaAtras)) {
                 novasSemana++;
             }
-            if (a.getCategoria() != null && a.getCategoria().getNomeCategoria() != null) {
-                String cat = a.getCategoria().getNomeCategoria();
-                porCategoria.merge(cat, 1, Integer::sum);
-            }
+            porCategoria.merge(classificarTipo(a.getTipo()), 1, Integer::sum);
         }
 
         long totalAdmins = idGerente == null
@@ -178,6 +175,19 @@ public class AdminService {
             return estabelecimentoRepository.findAll();
         }
         return estabelecimentoRepository.findByIdGerente(idGerente);
+    }
+
+    private String classificarTipo(String tipo) {
+        if (tipo == null || tipo.isBlank()) {
+            return "Outro";
+        }
+        String t = tipo.trim().toLowerCase(Locale.ROOT);
+        return switch (t) {
+            case "sugestao" -> "Sugestão";
+            case "critica" -> "Crítica";
+            case "elogio" -> "Elogio";
+            default -> tipo.trim();
+        };
     }
 
     private String classificarStatus(String status) {

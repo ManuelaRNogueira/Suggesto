@@ -230,10 +230,10 @@ export default function Estatisticas() {
         <div className="est-col">
           <section className="adm-cartao">
             <div className="adm-cartao-topo">
-              <h2 className="adm-cartao-titulo">Por categoria</h2>
+              <h2 className="adm-cartao-titulo">Por tipo de post</h2>
             </div>
             {categorias.length === 0 ? (
-              <p className="adm-vazio">Sem categorias registradas.</p>
+              <p className="adm-vazio">Sem tipos registrados.</p>
             ) : (
               <>
                 <Rosca dados={categorias} total={totalCat} />
