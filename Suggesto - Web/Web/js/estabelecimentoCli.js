@@ -123,7 +123,6 @@ function preencherHeader() {
   document.getElementById('enderecoCompleto').textContent = est.endereco || 'Endereço não informado';
   document.getElementById('horarioEstab').textContent    = est.horario || 'Horário não informado';
   document.getElementById('telefoneEstab').textContent   = est.telefone || 'Não informado';
-  document.getElementById('modalNomeEstab').textContent  = est.nome;
 
   const itemTelefone = document.getElementById('itemTelefone');
   if (itemTelefone) itemTelefone.style.cursor = est.telefone ? 'pointer' : 'default';
