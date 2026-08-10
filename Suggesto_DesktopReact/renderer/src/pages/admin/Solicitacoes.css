@@ -1,3 +1,9 @@
+.sol-secoes {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
 /* ── Código da equipe ─────────────────────────────────────────────────── */
 
 .sol-nota {

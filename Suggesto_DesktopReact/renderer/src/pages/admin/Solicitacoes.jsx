@@ -82,6 +82,7 @@ export default function Solicitacoes() {
         }
       />
 
+      <div className="sol-secoes">
       <section className="adm-cartao">
         <div className="adm-cartao-topo">
           <h2 className="adm-cartao-titulo">Código da equipe</h2>
@@ -154,6 +155,7 @@ export default function Solicitacoes() {
           </ul>
         )}
       </section>
+      </div>
     </>
   );
 }
