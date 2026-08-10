@@ -401,8 +401,7 @@ function abrirSecao(secao) {
     const rotas = {
         "locais-salvos": "locaisSalvosCli.html",
         "minhas-sugestoes": "sugestoesCli.html",
-        "contribuicao": "#",
-        "historico": "#",
+        "historico": "lojapontosCli.html#historico",
         "notificacoes": "#",
         "privacidade": "#"
     };

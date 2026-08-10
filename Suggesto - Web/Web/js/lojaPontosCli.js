@@ -22,6 +22,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   carregarDadosUsuario();
   carregarRecompensas();
+
+  if (window.location.hash === "#historico") {
+    mostrarAbaPontos("historico");
+  }
 });
 
 function obterIdUsuario() {
@@ -389,6 +393,99 @@ function animarContador(el, de, ate, duracao) {
     if (progresso < 1) requestAnimationFrame(passo);
   }
   requestAnimationFrame(passo);
+}
+
+// ── ABAS: LOJA / HISTÓRICO ──────────────────────────────────────────────
+const PONTOS_SUGESTAO_ACEITA = 500;
+let historicoCarregado = false;
+
+function mostrarAbaPontos(aba) {
+  const ehHistorico = aba === "historico";
+
+  document.getElementById("abaLoja")?.classList.toggle("ativa", !ehHistorico);
+  document.getElementById("abaHistorico")?.classList.toggle("ativa", ehHistorico);
+  document.getElementById("secaoLoja").style.display = ehHistorico ? "none" : "";
+  document.getElementById("secaoHistorico").style.display = ehHistorico ? "" : "none";
+
+  if (ehHistorico && !historicoCarregado) {
+    carregarHistorico();
+  }
+}
+
+async function carregarHistorico() {
+  const idUsuario = obterIdUsuario();
+  const lista = document.getElementById("historicoLista");
+  const vazio = document.getElementById("historicoVazio");
+  if (!idUsuario || !lista) return;
+
+  try {
+    const [resgates, avaliacoes] = await Promise.all([
+      fetch(`${API_BASE}/resgates/usuario/${idUsuario}`).then((r) => (r.ok ? r.json() : [])),
+      fetch(`${API_BASE}/avaliacoes/usuario/${idUsuario}`).then((r) => (r.ok ? r.json() : [])),
+    ]);
+
+    const movimentos = [
+      ...(Array.isArray(resgates) ? resgates : []).map((r) => ({
+        tipo: "resgate",
+        data: r.dataResgate,
+        titulo: r.nomeRecompensa || "Recompensa",
+        sub: r.estabelecimento || "",
+        pontos: -(Number(r.custoPontos) || 0),
+        codigoCupom: r.codigoCupom,
+      })),
+      ...(Array.isArray(avaliacoes) ? avaliacoes : [])
+        .filter((a) => typeof isStatusAprovado === "function" && isStatusAprovado(a.status))
+        .map((a) => ({
+          tipo: "sugestao",
+          data: a.dataAvaliacao,
+          titulo: "Sugestão aprovada",
+          sub: a.estabelecimento?.nome || "",
+          pontos: PONTOS_SUGESTAO_ACEITA,
+        })),
+    ].sort((a, b) => new Date(b.data || 0) - new Date(a.data || 0));
+
+    historicoCarregado = true;
+
+    if (!movimentos.length) {
+      lista.innerHTML = "";
+      vazio?.classList.add("visivel");
+      return;
+    }
+
+    vazio?.classList.remove("visivel");
+    lista.innerHTML = movimentos.map(renderizarItemHistorico).join("");
+  } catch (error) {
+    console.error("Erro ao carregar histórico de pontos:", error);
+    vazio?.classList.add("visivel");
+  }
+}
+
+function renderizarItemHistorico(mov) {
+  const positivo = mov.pontos >= 0;
+  const dataFormatada = formatarDataHistorico(mov.data);
+  const sinal = positivo ? "+" : "";
+
+  return `
+    <li class="historico-item historico-item-${positivo ? "credito" : "debito"}">
+      <div class="historico-icone">
+        <i class="fas ${mov.tipo === "resgate" ? "fa-gift" : "fa-paper-plane"}"></i>
+      </div>
+      <div class="historico-info">
+        <span class="historico-titulo">${mov.titulo}</span>
+        <span class="historico-sub">${[mov.sub, mov.codigoCupom].filter(Boolean).join(" · ") || dataFormatada}</span>
+      </div>
+      <div class="historico-valores">
+        <span class="historico-pontos">${sinal}${formatarPontos(mov.pontos)} pts</span>
+        <span class="historico-data">${dataFormatada}</span>
+      </div>
+    </li>`;
+}
+
+function formatarDataHistorico(iso) {
+  if (!iso) return "";
+  const data = new Date(iso);
+  if (Number.isNaN(data.getTime())) return "";
+  return data.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
 }
 
 function abrirModalSair() {

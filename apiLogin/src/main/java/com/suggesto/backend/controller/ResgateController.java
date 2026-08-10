@@ -16,6 +16,11 @@ public class ResgateController {
     @Autowired
     private ResgateService resgateService;
 
+    @GetMapping("/usuario/{idUsuario}")
+    public ResponseEntity<?> listarPorUsuario(@PathVariable Long idUsuario) {
+        return ResponseEntity.ok(resgateService.listarPorUsuario(idUsuario));
+    }
+
     @PostMapping
     public ResponseEntity<?> resgatar(@RequestBody Map<String, Long> dados) {
         try {

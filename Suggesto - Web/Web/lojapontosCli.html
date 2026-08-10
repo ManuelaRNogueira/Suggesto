@@ -389,25 +389,49 @@
       </div>
     </section>
 
-    <!-- FILTROS DE FAIXAS -->
-    <div class="faixas-wrap">
-      <button class="faixa-btn faixa-btn-ativa" onclick="filtrarFaixa(this, 6000)">Até 6.000 pts</button>
-      <button class="faixa-btn" onclick="filtrarFaixa(this, 18000)">Até 18.000 pts</button>
-      <button class="faixa-btn" onclick="filtrarFaixa(this, 25000)">Até 25.000 pts</button>
-      <button class="faixa-btn" onclick="filtrarFaixa(this, 45000)">Até 45.000 pts</button>
-      <button class="faixa-btn" onclick="filtrarFaixa(this, 999999)">Todos</button>
+    <!-- ABAS: LOJA / HISTÓRICO -->
+    <div class="pontos-abas">
+      <button class="pontos-aba ativa" id="abaLoja" onclick="mostrarAbaPontos('loja')">Loja</button>
+      <button class="pontos-aba" id="abaHistorico" onclick="mostrarAbaPontos('historico')">Histórico de pontos</button>
     </div>
 
-    <!-- ÁREA DE RECOMPENSAS (renderizada via JS) -->
-    <div class="mercado-area" id="mercadoArea"></div>
+    <!-- SEÇÃO: LOJA -->
+    <div id="secaoLoja">
 
-    <!-- ESTADO VAZIO -->
-    <div class="mercado-vazio" id="mercadoVazio">
-      <div class="vazio-icone">
-        <i class="fas fa-search"></i>
+      <!-- FILTROS DE FAIXAS -->
+      <div class="faixas-wrap">
+        <button class="faixa-btn faixa-btn-ativa" onclick="filtrarFaixa(this, 6000)">Até 6.000 pts</button>
+        <button class="faixa-btn" onclick="filtrarFaixa(this, 18000)">Até 18.000 pts</button>
+        <button class="faixa-btn" onclick="filtrarFaixa(this, 25000)">Até 25.000 pts</button>
+        <button class="faixa-btn" onclick="filtrarFaixa(this, 45000)">Até 45.000 pts</button>
+        <button class="faixa-btn" onclick="filtrarFaixa(this, 999999)">Todos</button>
       </div>
-      <p class="vazio-titulo">Nenhuma recompensa encontrada</p>
-      <p class="vazio-sub">Tente outro termo ou limpe o filtro</p>
+
+      <!-- ÁREA DE RECOMPENSAS (renderizada via JS) -->
+      <div class="mercado-area" id="mercadoArea"></div>
+
+      <!-- ESTADO VAZIO -->
+      <div class="mercado-vazio" id="mercadoVazio">
+        <div class="vazio-icone">
+          <i class="fas fa-search"></i>
+        </div>
+        <p class="vazio-titulo">Nenhuma recompensa encontrada</p>
+        <p class="vazio-sub">Tente outro termo ou limpe o filtro</p>
+      </div>
+
+    </div>
+
+    <!-- SEÇÃO: HISTÓRICO DE PONTOS -->
+    <div id="secaoHistorico" style="display:none">
+      <ul class="historico-lista" id="historicoLista"></ul>
+
+      <div class="mercado-vazio" id="historicoVazio">
+        <div class="vazio-icone">
+          <i class="fas fa-receipt"></i>
+        </div>
+        <p class="vazio-titulo">Nenhuma movimentação ainda</p>
+        <p class="vazio-sub">Suas sugestões aprovadas e resgates aparecem aqui.</p>
+      </div>
     </div>
 
   </main>
@@ -478,6 +502,7 @@
   </div>
 
   <script src="js/pontosNiveis.js"></script>
+  <script src="js/avaliacoesUtils.js"></script>
   <script src="js/lojaPontosCli.js"></script>
 </body>
 </html>
