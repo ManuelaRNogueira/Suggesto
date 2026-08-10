@@ -8,6 +8,8 @@ import com.suggesto.backend.repository.AvaliacaoRepository;
 import com.suggesto.backend.repository.EstabelecimentoRepository;
 import com.suggesto.backend.repository.SolicitacaoEquipeRepository;
 import com.suggesto.backend.repository.UsuarioRepository;
+import com.suggesto.backend.util.DocumentoValidator;
+import com.suggesto.backend.util.TextoUtil;
 import com.suggesto.backend.util.UploadStorage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -74,10 +76,18 @@ public class EstabelecimentoController {
             @RequestPart(value = "foto", required = false) MultipartFile arquivo) {
 
         try {
+            if (!DocumentoValidator.isCnpjValido(novoEstabelecimento.getCnpj())) {
+                return ResponseEntity.badRequest().body("CNPJ inválido.");
+            }
+            if (repository.existsByCnpj(novoEstabelecimento.getCnpj())) {
+                return ResponseEntity.badRequest().body("Este CNPJ já está cadastrado.");
+            }
+
             if (novoEstabelecimento.getAtivo() == null) {
                 novoEstabelecimento.setAtivo(1);
             }
 
+            novoEstabelecimento.setCidade(TextoUtil.capitalizarNomeProprio(novoEstabelecimento.getCidade()));
             novoEstabelecimento.setCodigoAcesso(gerarCodigoAcessoUnico());
 
             if (arquivo != null && !arquivo.isEmpty()) {
@@ -95,8 +105,13 @@ public class EstabelecimentoController {
 
             // Vincula o criador (dono/gerente) como membro do estabelecimento também,
             // para usar a mesma lógica de quem entra depois via código de acesso.
+            // Uma conta já existente vinculada como responsável (fluxo "já tenho
+            // conta") vira Administrador na hora, já que é ela que vai gerenciar o painel.
             usuarioRepository.findById(salvo.getIdGerente()).ifPresent(dono -> {
                 dono.setEstabelecimento(salvo);
+                if (dono.getTipoUsuario() != TipoUsuario.Administrador) {
+                    dono.setTipoUsuario(TipoUsuario.Administrador);
+                }
                 usuarioRepository.save(dono);
             });
 
@@ -337,13 +352,20 @@ public class EstabelecimentoController {
                 return ResponseEntity.status(403).body("Apenas o administrador principal pode editar este estabelecimento.");
             }
 
+            if (!DocumentoValidator.isCnpjValido(dadosAtualizados.getCnpj())) {
+                return ResponseEntity.badRequest().body("CNPJ inválido.");
+            }
+            if (repository.existsByCnpjAndIdEstabelecimentoNot(dadosAtualizados.getCnpj(), id)) {
+                return ResponseEntity.badRequest().body("Este CNPJ já está cadastrado.");
+            }
+
             estab.setNome(dadosAtualizados.getNome());
             estab.setCnpj(dadosAtualizados.getCnpj());
             estab.setCategoria(dadosAtualizados.getCategoria());
             estab.setTelefone(dadosAtualizados.getTelefone());
             estab.setCep(dadosAtualizados.getCep());
             estab.setEstado(dadosAtualizados.getEstado());
-            estab.setCidade(dadosAtualizados.getCidade());
+            estab.setCidade(TextoUtil.capitalizarNomeProprio(dadosAtualizados.getCidade()));
             estab.setBairro(dadosAtualizados.getBairro());
             estab.setRua(dadosAtualizados.getRua());
             estab.setNumero(dadosAtualizados.getNumero());

@@ -1,6 +1,7 @@
 package com.suggesto.backend.controller;
 
 import com.suggesto.backend.model.Usuario;
+import com.suggesto.backend.util.TextoUtil;
 import com.suggesto.backend.util.UploadStorage;
 import com.suggesto.backend.repository.AvaliacaoRepository;
 import com.suggesto.backend.repository.LocalSalvoRepository;
@@ -93,7 +94,7 @@ public class UsuarioController {
                 usuario.setTelefone(telefone.isBlank() ? null : telefone.trim());
             }
             if (cidade != null) {
-                usuario.setCidade(cidade.isBlank() ? null : cidade.trim());
+                usuario.setCidade(cidade.isBlank() ? null : TextoUtil.capitalizarNomeProprio(cidade));
             }
 
             if (arquivoFoto != null && !arquivoFoto.isEmpty()) {
