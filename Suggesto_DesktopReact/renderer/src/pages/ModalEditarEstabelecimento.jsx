@@ -45,6 +45,9 @@ export default function ModalEditarEstabelecimento({ estab, fecharModal, aoSalva
 
   const [admins, setAdmins] = useState([]);
   const [removendoId, setRemovendoId] = useState(null);
+  const [confirmandoRemocaoId, setConfirmandoRemocaoId] = useState(null);
+  const [codigoRemocao, setCodigoRemocao] = useState("");
+  const [codigoConfirmacao, setCodigoConfirmacao] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState(null);
 
@@ -139,7 +142,9 @@ export default function ModalEditarEstabelecimento({ estab, fecharModal, aoSalva
     if (arquivo) formData.append("foto", arquivo);
 
     try {
-      const r = await fetch(`${API_BASE}/estabelecimentos/${estab.idEstabelecimento}?idSolicitante=${meuId}`, {
+      const url = `${API_BASE}/estabelecimentos/${estab.idEstabelecimento}`
+        + `?idSolicitante=${meuId}&codigoConfirmacao=${encodeURIComponent(codigoConfirmacao.trim())}`;
+      const r = await fetch(url, {
         method: "PUT",
         body: formData,
       });
@@ -156,16 +161,25 @@ export default function ModalEditarEstabelecimento({ estab, fecharModal, aoSalva
     }
   };
 
-  const removerAdmin = async (idUsuario) => {
-    if (!window.confirm("Remover este administrador da equipe?")) return;
+  const pedirConfirmacaoRemocao = (idUsuario) => {
+    setConfirmandoRemocaoId(idUsuario);
+    setCodigoRemocao("");
+  };
+
+  const cancelarRemocao = () => {
+    setConfirmandoRemocaoId(null);
+    setCodigoRemocao("");
+  };
+
+  const confirmarRemocao = async (idUsuario) => {
     setRemovendoId(idUsuario);
     try {
-      const r = await fetch(
-        `${API_BASE}/estabelecimentos/${estab.idEstabelecimento}/administradores/${idUsuario}?idSolicitante=${meuId}`,
-        { method: "DELETE" }
-      );
+      const url = `${API_BASE}/estabelecimentos/${estab.idEstabelecimento}/administradores/${idUsuario}`
+        + `?idSolicitante=${meuId}&codigoConfirmacao=${encodeURIComponent(codigoRemocao.trim())}`;
+      const r = await fetch(url, { method: "DELETE" });
       if (r.ok) {
         setAdmins((prev) => prev.filter((a) => a.id !== idUsuario));
+        cancelarRemocao();
       } else {
         const dados = await r.json().catch(() => null);
         alert(dados?.message || "Erro ao remover administrador.");
@@ -304,21 +318,66 @@ export default function ModalEditarEstabelecimento({ estab, fecharModal, aoSalva
                       </span>
                       <span className="edit-admin-email">{a.email}</span>
                     </span>
-                    {!a.principal && (
-                      <button
-                        type="button"
-                        className="edit-admin-remover"
-                        title="Remover da equipe"
-                        onClick={() => removerAdmin(a.id)}
-                        disabled={removendoId === a.id}
-                      >
-                        {removendoId === a.id ? "…" : <Icone d={IC.x} size={13} />}
-                      </button>
+                    {!a.principal && confirmandoRemocaoId === a.id ? (
+                      <span className="edit-admin-confirmacao">
+                        <input
+                          type="text"
+                          className="form-input edit-admin-codigo"
+                          placeholder="Código da equipe"
+                          value={codigoRemocao}
+                          onChange={(e) => setCodigoRemocao(e.target.value)}
+                          autoFocus
+                        />
+                        <button
+                          type="button"
+                          className="edit-admin-remover"
+                          title="Confirmar remoção"
+                          onClick={() => confirmarRemocao(a.id)}
+                          disabled={removendoId === a.id || !codigoRemocao.trim()}
+                        >
+                          {removendoId === a.id ? "…" : <Icone d={IC.check} size={13} />}
+                        </button>
+                        <button
+                          type="button"
+                          className="edit-admin-cancelar"
+                          title="Cancelar"
+                          onClick={cancelarRemocao}
+                          disabled={removendoId === a.id}
+                        >
+                          <Icone d={IC.x} size={13} />
+                        </button>
+                      </span>
+                    ) : (
+                      !a.principal && (
+                        <button
+                          type="button"
+                          className="edit-admin-remover"
+                          title="Remover da equipe"
+                          onClick={() => pedirConfirmacaoRemocao(a.id)}
+                        >
+                          <Icone d={IC.x} size={13} />
+                        </button>
+                      )
                     )}
                   </li>
                 ))}
               </ul>
             )}
+          </Campo>
+
+          <div className="modal-divider" />
+
+          <Campo label="Código da equipe (confirmação)" required>
+            <input
+              className="form-input"
+              placeholder="SGT-XXXXXX"
+              value={codigoConfirmacao}
+              onChange={(e) => setCodigoConfirmacao(e.target.value)}
+              required
+            />
+            <p className="edit-codigo-nota">
+              Confirme o código do estabelecimento para salvar as alterações.
+            </p>
           </Campo>
 
           {erro && <div className="edit-erro">{erro}</div>}

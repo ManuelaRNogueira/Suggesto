@@ -83,6 +83,43 @@
   cursor: not-allowed;
 }
 
+.edit-admin-confirmacao {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.edit-admin-codigo {
+  width: 140px;
+  padding: 6px 10px;
+  font-size: .78rem;
+}
+
+.edit-admin-cancelar {
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid rgba(255, 255, 255, .1);
+  color: #8888aa;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.edit-admin-cancelar:hover:not(:disabled) {
+  background: rgba(255, 255, 255, .08);
+  color: #e2e2f0;
+}
+
+.edit-codigo-nota {
+  font-size: .72rem;
+  color: #5a5a78;
+  margin: 6px 0 0;
+}
+
 .edit-erro {
   background: rgba(248, 113, 113, .1);
   border: 1px solid rgba(248, 113, 113, .3);

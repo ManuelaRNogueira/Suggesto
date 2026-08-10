@@ -341,7 +341,8 @@ public class EstabelecimentoController {
             @PathVariable Long id,
             @RequestPart("estabelecimento") Estabelecimento dadosAtualizados,
             @RequestPart(value = "foto", required = false) MultipartFile arquivo,
-            @RequestParam("idSolicitante") Long idSolicitante) {
+            @RequestParam("idSolicitante") Long idSolicitante,
+            @RequestParam("codigoConfirmacao") String codigoConfirmacao) {
         try {
             Estabelecimento estab = repository.findById(id).orElse(null);
             if (estab == null) {
@@ -350,6 +351,11 @@ public class EstabelecimentoController {
 
             if (estab.getIdGerente() != idSolicitante) {
                 return ResponseEntity.status(403).body("Apenas o administrador principal pode editar este estabelecimento.");
+            }
+
+            if (estab.getCodigoAcesso() == null
+                    || !estab.getCodigoAcesso().equalsIgnoreCase(codigoConfirmacao == null ? "" : codigoConfirmacao.trim())) {
+                return ResponseEntity.status(403).body("Código da equipe incorreto.");
             }
 
             if (!DocumentoValidator.isCnpjValido(dadosAtualizados.getCnpj())) {
@@ -393,7 +399,8 @@ public class EstabelecimentoController {
     public ResponseEntity<?> removerAdministrador(
             @PathVariable Long id,
             @PathVariable Long idUsuario,
-            @RequestParam("idSolicitante") Long idSolicitante) {
+            @RequestParam("idSolicitante") Long idSolicitante,
+            @RequestParam("codigoConfirmacao") String codigoConfirmacao) {
         try {
             Estabelecimento estab = repository.findById(id).orElse(null);
             if (estab == null) {
@@ -404,6 +411,14 @@ public class EstabelecimentoController {
                 return ResponseEntity.status(403).body(Map.of(
                         "success", false,
                         "message", "Apenas o administrador principal pode gerenciar a equipe."
+                ));
+            }
+
+            if (estab.getCodigoAcesso() == null
+                    || !estab.getCodigoAcesso().equalsIgnoreCase(codigoConfirmacao == null ? "" : codigoConfirmacao.trim())) {
+                return ResponseEntity.status(403).body(Map.of(
+                        "success", false,
+                        "message", "Código da equipe incorreto."
                 ));
             }
 
