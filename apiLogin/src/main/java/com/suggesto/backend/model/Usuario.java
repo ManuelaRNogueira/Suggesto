@@ -17,6 +17,9 @@ public class Usuario {
     @Column(name = "Nome_Usuario")
     private String nome;
 
+    @Column(name = "Username", unique = true, length = 30)
+    private String username;
+
     @Column(name = "Email")
     private String email;
 
@@ -68,6 +71,14 @@ public class Usuario {
 
     public void setNome(String nome) {
         this.nome = nome;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getSenha() {

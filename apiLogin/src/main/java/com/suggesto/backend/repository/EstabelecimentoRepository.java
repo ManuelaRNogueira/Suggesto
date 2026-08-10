@@ -23,5 +23,9 @@ public interface EstabelecimentoRepository extends JpaRepository<Estabelecimento
 
     boolean existsByCodigoAcesso(String codigoAcesso);
 
+    boolean existsByCnpj(String cnpj);
+
+    boolean existsByCnpjAndIdEstabelecimentoNot(String cnpj, long idEstabelecimento);
+
     boolean existsByIdGerenteAndAtivo(long idGerente, Integer ativo);
 }

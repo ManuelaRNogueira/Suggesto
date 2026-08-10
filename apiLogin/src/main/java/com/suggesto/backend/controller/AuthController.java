@@ -5,6 +5,8 @@ import com.suggesto.backend.model.TipoUsuario;
 import com.suggesto.backend.model.Usuario;
 import com.suggesto.backend.repository.PlanoRepository;
 import com.suggesto.backend.repository.UsuarioRepository;
+import com.suggesto.backend.util.DocumentoValidator;
+import com.suggesto.backend.util.TextoUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +31,8 @@ public class AuthController {
 
     // DDD (11-99) + celular (9 dígitos, iniciando em 9) ou fixo (8 dígitos, iniciando em 2-5)
     private static final Pattern TELEFONE_PATTERN = Pattern.compile("^[1-9][1-9](?:9\\d{8}|[2-5]\\d{7})$");
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[\\w.%+-]+@[\\w.-]+\\.[A-Za-z]{2,}$");
+    private static final Pattern USERNAME_PATTERN = Pattern.compile("^[a-zA-Z0-9._]{3,30}$");
 
     private boolean isTelefoneValido(String telefone) {
         String digitos = telefone.replaceAll("\\D", "");
@@ -63,6 +67,13 @@ public class AuthController {
                 ));
             }
 
+            if (!EMAIL_PATTERN.matcher(email.trim()).matches()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "Digite um e-mail válido."
+                ));
+            }
+
             if (repository.findByEmail(email).isPresent()) {
                 return ResponseEntity.badRequest().body(Map.of(
                         "success", false,
@@ -70,10 +81,32 @@ public class AuthController {
                 ));
             }
 
+            Object usernameObj = dados.get("username");
+            String username = usernameObj != null ? usernameObj.toString().trim() : "";
+            if (username.isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "Nome de usuário é obrigatório."
+                ));
+            }
+            if (!USERNAME_PATTERN.matcher(username).matches()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "Nome de usuário deve ter de 3 a 30 caracteres e usar apenas letras, números, pontos ou underscores."
+                ));
+            }
+            if (repository.existsByUsername(username)) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "Este nome de usuário já está em uso."
+                ));
+            }
+
             TipoUsuario tipoUsuario = TipoUsuario.valueOf(tipoStr);
 
             Usuario novoUsuario = new Usuario();
             novoUsuario.setNome(nome.trim());
+            novoUsuario.setUsername(username);
             novoUsuario.setEmail(email.trim());
             novoUsuario.setSenha(passwordEncoder.encode(senha.trim()));
             novoUsuario.setTipoUsuario(tipoUsuario);
@@ -86,15 +119,37 @@ public class AuthController {
                             "message", "Telefone inválido. Informe um número de telefone brasileiro válido, com DDD."
                     ));
                 }
-                novoUsuario.setTelefone(telefone.trim());
+                String telefoneNormalizado = telefone.trim();
+                if (repository.existsByTelefone(telefoneNormalizado)) {
+                    return ResponseEntity.badRequest().body(Map.of(
+                            "success", false,
+                            "message", "Este telefone já está cadastrado."
+                    ));
+                }
+                novoUsuario.setTelefone(telefoneNormalizado);
             }
             if (dados.get("cidade") != null) {
-                novoUsuario.setCidade(((String) dados.get("cidade")).trim());
+                novoUsuario.setCidade(TextoUtil.capitalizarNomeProprio((String) dados.get("cidade")));
             }
 
             if (tipoUsuario == TipoUsuario.Administrador) {
                 if (dados.get("cpf") != null) {
-                    novoUsuario.setCpf(((String) dados.get("cpf")).trim());
+                    String cpf = ((String) dados.get("cpf")).trim();
+                    if (!cpf.isBlank()) {
+                        if (!DocumentoValidator.isCpfValido(cpf)) {
+                            return ResponseEntity.badRequest().body(Map.of(
+                                    "success", false,
+                                    "message", "CPF inválido."
+                            ));
+                        }
+                        if (repository.existsByCpf(cpf)) {
+                            return ResponseEntity.badRequest().body(Map.of(
+                                    "success", false,
+                                    "message", "Este CPF já está cadastrado."
+                            ));
+                        }
+                        novoUsuario.setCpf(cpf);
+                    }
                 }
                 if (dados.get("cargo") != null) {
                     novoUsuario.setCargo((String) dados.get("cargo"));

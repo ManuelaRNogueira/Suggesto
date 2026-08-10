@@ -14,6 +14,12 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     Optional<Usuario> findByEmail(String email);
 
+    boolean existsByUsername(String username);
+
+    boolean existsByCpf(String cpf);
+
+    boolean existsByTelefone(String telefone);
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Usuario u SET u.pontos = u.pontos + :valor WHERE u.id = :id")
     int creditarPontos(@Param("id") Long id, @Param("valor") int valor);
