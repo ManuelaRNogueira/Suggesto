@@ -1,23 +1,32 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import Icone, { IC } from "./Icones";
-import { buscarMetricas, buscarSolicitacoes, iniciais, souPrincipal } from "../api/admin";
+import {
+  buscarMeuPlano,
+  buscarMetricas,
+  buscarSolicitacoes,
+  iniciais,
+  souPrincipal,
+} from "../api/admin";
 import "../styles/tokens.css";
 import "./AdminShell.css";
 
+// `recurso` liga o item ao que o plano do administrador libera (ver planos.html).
 const NAV = [
   { para: "/", rotulo: "Início", icone: IC.inicio, fim: true },
   { para: "/sugestoes", rotulo: "Sugestões", icone: IC.chat, badgeChave: "sugestoes" },
-  { para: "/estatisticas", rotulo: "Estatísticas", icone: IC.barras },
+  { para: "/estatisticas", rotulo: "Estatísticas", icone: IC.barras, recurso: "permiteRelatorios" },
   { para: "/estabelecimentos", rotulo: "Estabelecimentos", icone: IC.predios },
-  { para: "/solicitacoes", rotulo: "Solicitações", icone: IC.sino, badgeChave: "solicitacoes", somentePrincipal: true },
-  { para: "/recompensas", rotulo: "Minhas recompensas", icone: IC.presente },
+  { para: "/solicitacoes", rotulo: "Solicitações", icone: IC.sino, badgeChave: "solicitacoes", somentePrincipal: true, equipe: true },
+  { para: "/recompensas", rotulo: "Minhas recompensas", icone: IC.presente, recurso: "permiteRecompensas" },
 ];
 
 export default function AdminShell() {
   const [badges, setBadges] = useState({});
   const [usuario, setUsuario] = useState({ nome: "", email: "" });
   const [confirmandoSaida, setConfirmandoSaida] = useState(false);
+  // Enquanto o plano não chega, nada é escondido — evita a sidebar "piscar".
+  const [plano, setPlano] = useState(null);
 
   useEffect(() => {
     setUsuario({
@@ -36,6 +45,9 @@ export default function AdminShell() {
         .then((lista) => vivo && setBadges((b) => ({ ...b, solicitacoes: lista.length })))
         .catch(() => vivo && setBadges((b) => ({ ...b, solicitacoes: null })));
     }
+    buscarMeuPlano()
+      .then((p) => vivo && setPlano(p))
+      .catch(() => {});
     return () => {
       vivo = false;
     };
@@ -61,7 +73,14 @@ export default function AdminShell() {
 
         <nav className="adm-nav">
           <p className="adm-nav-secao">Menu</p>
-          {NAV.filter((item) => !item.somentePrincipal || souPrincipal()).map((item) => (
+          {NAV.filter((item) => {
+            if (item.somentePrincipal && !souPrincipal()) return false;
+            if (!plano) return true;
+            if (item.recurso && plano[item.recurso] === false) return false;
+            // Plano que só permite o admin principal não tem equipe para gerenciar.
+            if (item.equipe && plano.limiteAdmins === 1) return false;
+            return true;
+          }).map((item) => (
             <NavLink
               key={item.para}
               to={item.para}

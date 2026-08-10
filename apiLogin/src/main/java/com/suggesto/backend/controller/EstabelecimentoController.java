@@ -43,6 +43,9 @@ public class EstabelecimentoController {
     @Autowired
     private SolicitacaoEquipeRepository solicitacaoRepository;
 
+    @Autowired
+    private com.suggesto.backend.service.PlanoService planoService;
+
     private static final String ALFABETO_CODIGO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final SecureRandom RANDOM = new SecureRandom();
 
@@ -85,6 +88,8 @@ public class EstabelecimentoController {
                 return ResponseEntity.badRequest().body("Este CNPJ já está cadastrado.");
             }
 
+            planoService.validarNovoEstabelecimento(novoEstabelecimento.getIdGerente());
+
             if (novoEstabelecimento.getAtivo() == null) {
                 novoEstabelecimento.setAtivo(1);
             }
@@ -119,6 +124,9 @@ public class EstabelecimentoController {
 
             return ResponseEntity.ok(salvo);
 
+        } catch (IllegalStateException e) {
+            // Limite do plano atingido — a mensagem já é escrita para o usuário.
+            return ResponseEntity.status(403).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Erro ao salvar estabelecimento: " + e.getMessage());
         }
@@ -274,6 +282,7 @@ public class EstabelecimentoController {
             }
 
             if (aceitar) {
+                planoService.validarNovoAdmin(idGerente);
                 Usuario usuario = solicitacao.getUsuario();
                 usuario.setEstabelecimento(solicitacao.getEstabelecimento());
                 usuarioRepository.save(usuario);
@@ -286,6 +295,12 @@ public class EstabelecimentoController {
                     "message", aceitar ? "Solicitação aceita." : "Solicitação recusada."
             ));
 
+        } catch (IllegalStateException e) {
+            // Limite de administradores do plano atingido.
+            return ResponseEntity.status(403).body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
+            ));
         } catch (NumberFormatException e) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,

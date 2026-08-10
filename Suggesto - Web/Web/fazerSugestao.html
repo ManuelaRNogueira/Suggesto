@@ -638,12 +638,17 @@ async function enviar() {
       method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify(payload),
     });
-    if (!r.ok) { const erroTexto = await r.text(); throw new Error('Erro no servidor: ' + erroTexto); }
+    if (!r.ok) {
+      // O backend devolve {"erro": "..."} — inclusive quando o estabelecimento
+      // atingiu o limite de feedbacks do mês no plano dele.
+      const dados = await r.json().catch(() => null);
+      throw new Error(dados?.erro || 'Não foi possível enviar seu feedback.');
+    }
     mostrarSucesso();
   } catch (err) {
     btn.disabled = false; document.getElementById('spinner').style.display = 'none';
     document.getElementById('enviar-ico').style.display = 'block'; document.getElementById('enviar-txt').textContent = 'Tentar novamente';
-    alert('Erro ao salvar no banco. Verifique se o Java está rodando!');
+    alert(err.message || 'Erro ao enviar. Verifique se a API está rodando.');
   }
 }
 

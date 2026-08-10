@@ -184,39 +184,16 @@ public class AuthController {
         }
     }
 
+    // Os três planos oficiais (Básico/Pro/Empresarial) são criados e mantidos pelo
+    // PlanoSeeder, que é a fonte da verdade dos limites descritos em planos.html.
+    // Aqui só cai um nome fora dessa lista.
     private Plano obterOuCriarPlano(String nomePlano) {
         return planoRepository.findByNome(nomePlano).orElseGet(() -> {
             Plano plano = new Plano();
             plano.setNome(nomePlano);
-
-            switch (nomePlano) {
-                case "Básico" -> {
-                    plano.setDescricao("Para pequenos negócios que estão começando.");
-                    plano.setPreco(49.0);
-                    plano.setLimiteEstabelecimentos(1);
-                }
-                case "Pro" -> {
-                    plano.setDescricao("Para negócios em crescimento.");
-                    plano.setPreco(119.0);
-                    plano.setLimiteEstabelecimentos(3);
-                }
-                case "Empresarial" -> {
-                    plano.setDescricao("Para redes com múltiplas unidades.");
-                    plano.setPreco(299.0);
-                    plano.setLimiteEstabelecimentos(999);
-                }
-                case "Premium" -> {
-                    plano.setDescricao("Plano premium com recursos avançados.");
-                    plano.setPreco(199.0);
-                    plano.setLimiteEstabelecimentos(5);
-                }
-                default -> {
-                    plano.setDescricao("Plano personalizado.");
-                    plano.setPreco(0.0);
-                    plano.setLimiteEstabelecimentos(1);
-                }
-            }
-
+            plano.setDescricao("Plano personalizado.");
+            plano.setPreco(0.0);
+            plano.setLimiteEstabelecimentos(1);
             return planoRepository.save(plano);
         });
     }

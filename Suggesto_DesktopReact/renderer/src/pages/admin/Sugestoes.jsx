@@ -4,6 +4,7 @@ import Icone, { IC } from "../../components/Icones";
 import { EstadoCarregando, EstadoErro } from "./Inicio";
 import {
   atualizarStatusSugestao,
+  buscarMeuPlano,
   buscarSugestoes,
   formatarData,
   iniciais,
@@ -28,6 +29,7 @@ export default function Sugestoes() {
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(null);
   const [aviso, setAviso] = useState(null);
+  const [podeExportar, setPodeExportar] = useState(true);
 
   const [busca, setBusca] = useState("");
   const [status, setStatus] = useState("todos");
@@ -41,6 +43,10 @@ export default function Sugestoes() {
       .then((lista) => vivo && setSugestoes(lista || []))
       .catch((e) => vivo && setErro(e.message))
       .finally(() => vivo && setCarregando(false));
+    // Exportação de dados é um recurso de plano (ver planos.html).
+    buscarMeuPlano()
+      .then((p) => vivo && setPodeExportar(p.permiteExportacao !== false))
+      .catch(() => {});
     return () => {
       vivo = false;
     };
@@ -186,15 +192,17 @@ export default function Sugestoes() {
             onChange={(e) => setBusca(e.target.value)}
           />
         </label>
-        <button
-          type="button"
-          className="adm-btn"
-          onClick={exportarCsv}
-          disabled={filtradas.length === 0}
-        >
-          <Icone d={IC.baixar} size={14} />
-          CSV
-        </button>
+        {podeExportar && (
+          <button
+            type="button"
+            className="adm-btn"
+            onClick={exportarCsv}
+            disabled={filtradas.length === 0}
+          >
+            <Icone d={IC.baixar} size={14} />
+            CSV
+          </button>
+        )}
       </Topo>
 
       <div className="sug-filtros">

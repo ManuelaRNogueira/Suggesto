@@ -55,6 +55,12 @@ export function buscarUsuario(id) {
   return fetchJson(`${API_BASE}/usuarios/${id}`);
 }
 
+// Limites do plano do admin logado — usado para esconder o que o plano não inclui.
+export function buscarMeuPlano() {
+  const id = localStorage.getItem("idUsuario");
+  return fetchJson(`${API_BASE}/planos/meu?idUsuario=${id}`);
+}
+
 export function buscarSolicitacoes() {
   return fetchJson(`${API_BASE}/estabelecimentos/solicitacoes${queryGerente()}`);
 }

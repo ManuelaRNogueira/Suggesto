@@ -19,8 +19,24 @@ public class Plano {
     @Column(name = "preco")
     private Double preco;
 
+    // Limites do plano. null = ilimitado (é assim que "Empresarial" fica sem teto).
     @Column(name = "limite_estabelecimentos")
     private Integer limiteEstabelecimentos;
+
+    @Column(name = "limite_feedbacks_mes")
+    private Integer limiteFeedbacksMes;
+
+    @Column(name = "limite_admins")
+    private Integer limiteAdmins;
+
+    @Column(name = "permite_relatorios")
+    private Boolean permiteRelatorios = Boolean.TRUE;
+
+    @Column(name = "permite_exportacao")
+    private Boolean permiteExportacao = Boolean.TRUE;
+
+    @Column(name = "permite_recompensas")
+    private Boolean permiteRecompensas = Boolean.TRUE;
 
     public Long getId() {
         return id;
@@ -60,5 +76,45 @@ public class Plano {
 
     public void setLimiteEstabelecimentos(Integer limiteEstabelecimentos) {
         this.limiteEstabelecimentos = limiteEstabelecimentos;
+    }
+
+    public Integer getLimiteFeedbacksMes() {
+        return limiteFeedbacksMes;
+    }
+
+    public void setLimiteFeedbacksMes(Integer limiteFeedbacksMes) {
+        this.limiteFeedbacksMes = limiteFeedbacksMes;
+    }
+
+    public Integer getLimiteAdmins() {
+        return limiteAdmins;
+    }
+
+    public void setLimiteAdmins(Integer limiteAdmins) {
+        this.limiteAdmins = limiteAdmins;
+    }
+
+    public Boolean getPermiteRelatorios() {
+        return permiteRelatorios == null || permiteRelatorios;
+    }
+
+    public void setPermiteRelatorios(Boolean permiteRelatorios) {
+        this.permiteRelatorios = permiteRelatorios;
+    }
+
+    public Boolean getPermiteExportacao() {
+        return permiteExportacao == null || permiteExportacao;
+    }
+
+    public void setPermiteExportacao(Boolean permiteExportacao) {
+        this.permiteExportacao = permiteExportacao;
+    }
+
+    public Boolean getPermiteRecompensas() {
+        return permiteRecompensas == null || permiteRecompensas;
+    }
+
+    public void setPermiteRecompensas(Boolean permiteRecompensas) {
+        this.permiteRecompensas = permiteRecompensas;
     }
 }

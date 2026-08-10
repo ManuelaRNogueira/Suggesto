@@ -37,6 +37,9 @@ public class AvaliacaoService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    @Autowired
+    private PlanoService planoService;
+
     @Transactional
     public void registrarNovaAvaliacao(AvaliacaoRequestDTO dto) {
         Usuario usuario = usuarioRepository.findById(dto.getIdUsuario())
@@ -47,6 +50,9 @@ public class AvaliacaoService {
 
         Categoria categoria = categoriaRepository.findById(dto.getIdCategoria())
                 .orElseThrow(() -> new RuntimeException("Categoria não encontrada com o ID: " + dto.getIdCategoria()));
+
+        // O plano do estabelecimento pode limitar quantos feedbacks ele recebe por mês.
+        planoService.validarNovoFeedback(est);
 
         Avaliacao avaliacao = new Avaliacao();
         avaliacao.setTipo(dto.getTipo());
