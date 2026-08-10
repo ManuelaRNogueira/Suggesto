@@ -44,6 +44,10 @@ function isTelefoneValido(telefone) {
     return /^[1-9][1-9](?:9\d{8}|[2-5]\d{7})$/.test(digitos);
 }
 
+function isUsernameValido(usuario) {
+    return /^[a-zA-Z0-9._]{3,30}$/.test(usuario.trim());
+}
+
 function validarCampos() {
     limparErros();
 
@@ -63,6 +67,12 @@ function validarCampos() {
         if (!confirmarSenha.value.trim()) confirmarSenha.classList.add('input-erro');
 
         mostrarMensagem("Preencha todos os campos obrigatórios.");
+        return false;
+    }
+
+    if (!isUsernameValido(usuario.value)) {
+        usuario.classList.add('input-erro');
+        mostrarMensagem("Nome de usuário deve ter de 3 a 30 caracteres e usar apenas letras, números, pontos ou underscores.");
         return false;
     }
 
@@ -105,6 +115,7 @@ async function cadastrar() {
 
     const novoUsuario = {
         nome: document.getElementById('usuario').value.trim(),
+        username: document.getElementById('usuario').value.trim(),
         email: document.getElementById('email').value.trim(),
         senha: document.getElementById('senha').value.trim(),
         tipoUsuario: modoEquipe ? "Administrador" : "Cliente",
