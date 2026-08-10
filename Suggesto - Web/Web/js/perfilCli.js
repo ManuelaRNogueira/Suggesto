@@ -93,6 +93,7 @@ async function carregarDadosUsuario() {
         usuarioAtual = await resposta.json();
         preencherPerfil(usuarioAtual);
         await carregarAtividadeRecente(idUsuario);
+        await carregarConquistas(idUsuario);
 
         if (usuarioAtual.nome) {
             localStorage.setItem("nomeUsuario", usuarioAtual.nome);
@@ -100,6 +101,41 @@ async function carregarDadosUsuario() {
     } catch (error) {
         console.error("Erro ao carregar perfil:", error);
         renderizarAtividadeVazia();
+    }
+}
+
+// Conquistas vêm calculadas do backend a partir do que o cliente realmente fez
+// (sugestões, aprovações, locais salvos, resgates e nível).
+async function carregarConquistas(idUsuario) {
+    const grid = document.getElementById("conquistasGrid");
+    const contador = document.getElementById("conquistasContador");
+    if (!grid) return;
+
+    try {
+        const resposta = await fetch(`${API_BASE}/usuarios/${idUsuario}/conquistas`);
+        if (!resposta.ok) throw new Error("Falha ao carregar conquistas.");
+
+        const conquistas = await resposta.json();
+        const desbloqueadas = conquistas.filter((c) => c.desbloqueada).length;
+
+        if (contador) contador.textContent = `${desbloqueadas} de ${conquistas.length}`;
+
+        grid.innerHTML = conquistas
+            .map((c) => {
+                const classe = c.desbloqueada ? "conquista-desbloqueada" : "conquista-bloqueada";
+                const dica = c.desbloqueada
+                    ? c.descricao
+                    : `${c.descricao} (${c.progresso}/${c.meta})`;
+                return `
+                    <div class="conquista-item ${classe}" title="${dica}">
+                        <div class="conquista-icone"><i class="fas ${c.icone}"></i></div>
+                        <span class="conquista-nome">${c.nome}</span>
+                    </div>`;
+            })
+            .join("");
+    } catch (error) {
+        console.error("Erro ao carregar conquistas:", error);
+        grid.innerHTML = `<p class="atividade-vazia">Não foi possível carregar as conquistas.</p>`;
     }
 }
 

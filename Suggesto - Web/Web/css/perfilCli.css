@@ -901,3 +901,17 @@ body {
   .conquistas-grid { grid-template-columns: repeat(3, 1fr); }
   .conteudo-header { flex-wrap: wrap; }
 }
+
+/* Contador de conquistas desbloqueadas no cabeçalho da seção */
+.conquistas-contador {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cor-roxo-claro, #818cf8);
+  background: rgba(129, 140, 248, 0.12);
+  border: 1px solid rgba(129, 140, 248, 0.25);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+/* A conquista bloqueada precisa parecer alcançável, não quebrada */
+.conquista-bloqueada { opacity: 0.45; }

@@ -7,6 +7,7 @@ import com.suggesto.backend.repository.AvaliacaoRepository;
 import com.suggesto.backend.repository.LocalSalvoRepository;
 import com.suggesto.backend.repository.ResgateRepository;
 import com.suggesto.backend.repository.UsuarioRepository;
+import com.suggesto.backend.service.ConquistaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -46,6 +47,9 @@ public class UsuarioController {
     @Autowired
     private ResgateRepository resgateRepository;
 
+    @Autowired
+    private ConquistaService conquistaService;
+
     @GetMapping("/{id}")
     public ResponseEntity<?> buscarPorId(@PathVariable Long id) {
         try {
@@ -64,6 +68,18 @@ public class UsuarioController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "success", false,
                     "message", "Erro ao buscar usuário: " + e.getMessage()
+            ));
+        }
+    }
+
+    @GetMapping("/{id}/conquistas")
+    public ResponseEntity<?> listarConquistas(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(conquistaService.listarPorUsuario(id));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
             ));
         }
     }
