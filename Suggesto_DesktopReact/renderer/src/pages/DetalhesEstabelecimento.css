@@ -54,6 +54,18 @@
 
 .cabecalho-corpo { margin-bottom: 28px; }
 
+.cabecalho-corpo-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.btn-editar-estab {
+  flex-shrink: 0;
+}
+
 .badge-categoria {
   display: inline-block;
   background: rgba(167,139,250,0.15);
@@ -65,20 +77,22 @@
   font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  margin-bottom: 14px;
 }
 
 .titulo-nome {
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: clamp(2.4rem, 5vw, 4rem);
-  font-weight: 800;
-  letter-spacing: -2px;
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
   color: #ffffff;
   margin: 0 0 10px;
-  line-height: 1.05;
+  line-height: 1.15;
 }
 
 .texto-endereco {
+  display: flex;
+  align-items: center;
+  gap: 7px;
   color: #6b6b8a;
   font-size: 0.95rem;
   margin: 0;
@@ -461,8 +475,6 @@
   object-fit: cover;
 }
 
-/* Resto dos estilos (placeholder, btn-editar-foto, etc.) continuam exatamente iguais */
-
 /* Placeholder gigante caso o estabelecimento não tenha foto */
 .foto-estabelecimento-placeholder {
   width: 100%;
@@ -474,47 +486,6 @@
   font-weight: 800;
   color: rgba(167, 139, 250, 0.2);
   background: radial-gradient(circle at center, rgba(167, 139, 250, 0.15) 0%, transparent 70%);
-}
-
-/* Botão de edição atualizado: agora é uma barra moderna na parte inferior */
-.btn-editar-foto {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 100%);
-  border: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 14px;
-  color: #ffffff;
-  font-size: 0.85rem;
-  font-weight: 600;
-  font-family: 'Inter', sans-serif;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  backdrop-filter: blur(4px);
-  transition: all 0.2s ease;
-  opacity: 0; /* Fica escondido por padrão */
-  transform: translateY(10px);
-}
-
-/* O botão sobe com uma transição suave ao passar o mouse na foto */
-.container-foto-estab:hover .btn-editar-foto {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.btn-editar-foto:hover {
-  background: rgba(167, 139, 250, 0.9);
-  color: #080810;
-}
-
-.cabecalho-bloco-foto.processando {
-  opacity: 0.5;
-  pointer-events: none;
 }
 
 /* Responsividade: Se a tela for pequena (celular), vira uma coluna só */
@@ -529,8 +500,7 @@
   .container-foto-estab {
     height: 220px;
   }
-  .btn-editar-foto {
-    opacity: 1;
-    transform: translateY(0);
+  .cabecalho-corpo-topo {
+    flex-wrap: wrap;
   }
 }

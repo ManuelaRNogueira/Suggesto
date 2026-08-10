@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import ModalEditarEstabelecimento from './ModalEditarEstabelecimento';
+import Icone, { IC } from '../components/Icones';
 import './DetalhesEstabelecimento.css';
 
 // ─── CONFIGURAÇÃO DE FILTROS ──────────────────────────────────────────────────
@@ -167,21 +168,34 @@ function DetalhesEstabelecimento() {
           <Link to="/" className="btn-voltar">
             ← Dashboard
           </Link>
-          <Link to={`/estabelecimento/${id}/recompensas`} className="btn-voltar">
-            Minhas Recompensas
-          </Link>
         </div>
 
       <div className="cabecalho-container-flex">
           {/* LADO ESQUERDO: TEXTOS */}
           <div className="cabecalho-corpo">
-            <span className="badge-categoria">GERAL</span>
+            <div className="cabecalho-corpo-topo">
+              <span className="badge-categoria">{dados.categoria || 'Geral'}</span>
+              {souPrincipal && (
+                <button
+                  type="button"
+                  className="adm-btn adm-btn-principal btn-editar-estab"
+                  onClick={() => setEditando(true)}
+                >
+                  <Icone d={IC.lapis} size={13} />
+                  Editar estabelecimento
+                </button>
+              )}
+            </div>
             <h1 className="titulo-nome">{dados.nome}</h1>
-            <p className="texto-endereco">📍 {dados.rua}, {dados.numero} - {dados.bairro}, {dados.cidade} - {dados.estado}</p>
-            
+            <p className="texto-endereco">
+              <Icone d={IC.local} size={14} />
+              {dados.rua}, {dados.numero} - {dados.bairro}, {dados.cidade} - {dados.estado}
+            </p>
+
             {mediaGeral > 0 && (
               <div className="media-geral">
-                ⭐ {mediaGeral} <span className="media-geral-label">/ 5 Média</span>
+                <Icone d={IC.estrela} size={14} />
+                {mediaGeral} <span className="media-geral-label">/ 5 Média</span>
               </div>
             )}
           </div>
@@ -199,16 +213,6 @@ function DetalhesEstabelecimento() {
                 <div className="foto-estabelecimento-placeholder">
                   {dados.nome.charAt(0).toUpperCase()}
                 </div>
-              )}
-
-              {souPrincipal && (
-                <button
-                  className="btn-editar-foto"
-                  title="Editar estabelecimento"
-                  onClick={() => setEditando(true)}
-                >
-                  ✏️ Editar estabelecimento
-                </button>
               )}
             </div>
           </div>
