@@ -24,6 +24,8 @@ export const IC = {
   logo: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5",
   sino: "M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 0 1-3.46 0",
   copiar: "M9 9h11v11H9z M5 15V5a1 1 0 0 1 1-1h10",
+  presente:
+    "M20 12v10H4V12 M2 7h20v5H2z M12 22V7 M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z",
 };
 
 export default function Icone({ d, size = 16, className }) {

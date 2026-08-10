@@ -11,11 +11,13 @@ const NAV = [
   { para: "/estatisticas", rotulo: "Estatísticas", icone: IC.barras },
   { para: "/estabelecimentos", rotulo: "Estabelecimentos", icone: IC.predios },
   { para: "/solicitacoes", rotulo: "Solicitações", icone: IC.sino, badgeChave: "solicitacoes" },
+  { para: "/recompensas", rotulo: "Minhas recompensas", icone: IC.presente },
 ];
 
 export default function AdminShell() {
   const [badges, setBadges] = useState({});
   const [usuario, setUsuario] = useState({ nome: "", email: "" });
+  const [confirmandoSaida, setConfirmandoSaida] = useState(false);
 
   useEffect(() => {
     setUsuario({
@@ -37,8 +39,7 @@ export default function AdminShell() {
     };
   }, []);
 
-  const sair = () => {
-    if (!window.confirm("Encerrar sessão?")) return;
+  const confirmarSair = () => {
     localStorage.clear();
     window.location.reload();
   };
@@ -95,7 +96,7 @@ export default function AdminShell() {
             <button
               type="button"
               className="adm-usuario-sair"
-              onClick={sair}
+              onClick={() => setConfirmandoSaida(true)}
               title="Sair"
             >
               <Icone d={IC.sair} size={13} />
@@ -107,6 +108,47 @@ export default function AdminShell() {
       <main className="adm-conteudo">
         <Outlet />
       </main>
+
+      {confirmandoSaida && (
+        <div
+          className="adm-modal-fundo"
+          onMouseDown={(e) => e.target === e.currentTarget && setConfirmandoSaida(false)}
+        >
+          <div className="adm-modal">
+            <div className="adm-modal-topo">
+              <h2 className="adm-cartao-titulo">Encerrar sessão</h2>
+              <button
+                type="button"
+                className="adm-modal-fechar"
+                onClick={() => setConfirmandoSaida(false)}
+              >
+                <Icone d={IC.x} size={14} />
+              </button>
+            </div>
+            <p className="adm-modal-texto">
+              Tem certeza que deseja sair do painel administrativo?
+            </p>
+            <div className="adm-modal-acoes">
+              <button
+                type="button"
+                className="adm-btn"
+                onClick={() => setConfirmandoSaida(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="adm-btn adm-btn-cor"
+                style={{ "--st": "var(--vermelho)" }}
+                onClick={confirmarSair}
+              >
+                <Icone d={IC.sair} size={13} />
+                Sair
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -207,6 +207,71 @@
   background: rgba(239, 68, 68, 0.1);
 }
 
+/* ── Modal genérico (confirmações do shell) ─────────────────────────────── */
+
+.adm-modal-fundo {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(8, 8, 12, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.adm-modal {
+  width: 100%;
+  max-width: 400px;
+  background: var(--fundo-2);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.adm-modal-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.adm-modal-fechar {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: none;
+  border: 1px solid var(--borda);
+  color: var(--texto-mfraco);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--trans);
+}
+
+.adm-modal-fechar:hover {
+  color: var(--texto);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.adm-modal-texto {
+  font-size: 0.8125rem;
+  color: var(--texto-fraco);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.adm-modal-acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
 /* ── Área de conteúdo ──────────────────────────────────────────────────── */
 
 .adm-conteudo {
