@@ -5,6 +5,7 @@
 let dadosEstabelecimento = {};
 let idUsuarioCriado = null;
 let fotoEstabelecimentoSelecionada = null;
+let modoResponsavel = "nova";
 
 
 // ======================================================
@@ -79,6 +80,11 @@ function irParaEtapa2() {
 
     if (!cnpj) {
         mostrarMensagem("Digite o CNPJ do estabelecimento.");
+        return;
+    }
+
+    if (cnpj.replace(/\D/g, "").length !== 14) {
+        mostrarMensagem("Digite um CNPJ válido.");
         return;
     }
 
@@ -191,10 +197,81 @@ function voltarParaEtapa1() {
 
 
 // ======================================================
+// ALTERNAR ENTRE "CRIAR CONTA" E "JÁ TENHO CONTA"
+// ======================================================
+
+function trocarModoResponsavel(modo) {
+    modoResponsavel = modo;
+    idUsuarioCriado = null; // troca de modo invalida qualquer tentativa anterior
+
+    document.getElementById("modoNovaConta").classList.toggle("ativa", modo === "nova");
+    document.getElementById("modoContaExistente").classList.toggle("ativa", modo === "existente");
+    document.getElementById("camposContaNova").style.display = modo === "nova" ? "" : "none";
+    document.getElementById("camposContaExistente").style.display = modo === "existente" ? "" : "none";
+
+    document.getElementById("botaoCriarEstabelecimento").textContent =
+        modo === "existente" ? "Vincular e criar estabelecimento" : "Criar estabelecimento";
+}
+
+
+// ======================================================
 // CADASTRO FINAL
 // ======================================================
 
 async function cadastrar() {
+    if (modoResponsavel === "existente") {
+        await cadastrarComContaExistente();
+    } else {
+        await cadastrarComContaNova();
+    }
+}
+
+async function cadastrarComContaExistente() {
+    const email = document.getElementById("loginEmail").value.trim();
+    const senha = document.getElementById("loginSenha").value;
+
+    if (!email) {
+        mostrarMensagem("Digite o e-mail da sua conta.");
+        return;
+    }
+
+    if (!senha) {
+        mostrarMensagem("Digite sua senha.");
+        return;
+    }
+
+    const botao = document.getElementById("botaoCriarEstabelecimento");
+    const textoOriginal = botao.innerText;
+    botao.innerText = "Verificando...";
+    botao.disabled = true;
+
+    try {
+        const respostaLogin = await fetch("http://localhost:8080/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, senha })
+        });
+
+        const resultadoLogin = await respostaLogin.json();
+
+        if (!respostaLogin.ok || !resultadoLogin.success) {
+            mostrarMensagem(resultadoLogin.message || "Não foi possível entrar com essa conta.");
+            botao.innerText = textoOriginal;
+            botao.disabled = false;
+            return;
+        }
+
+        idUsuarioCriado = resultadoLogin.idUsuario;
+        await finalizarCadastroEstabelecimento(botao, textoOriginal, resultadoLogin.nome, email);
+    } catch (error) {
+        console.error("Erro:", error);
+        mostrarMensagem("Servidor offline. Verifique se a sua API Java está rodando.");
+        botao.innerText = textoOriginal;
+        botao.disabled = false;
+    }
+}
+
+async function cadastrarComContaNova() {
 
     const nomeCompleto =
         document.getElementById("nomeCompleto").value.trim();
@@ -232,8 +309,18 @@ async function cadastrar() {
         return;
     }
 
+    if (!/^[a-zA-Z0-9._]{3,30}$/.test(usuario)) {
+        mostrarMensagem("Nome de usuário deve ter de 3 a 30 caracteres e usar apenas letras, números, pontos ou underscores.");
+        return;
+    }
+
     if (!cpf) {
         mostrarMensagem("Digite seu CPF.");
+        return;
+    }
+
+    if (cpf.replace(/\D/g, "").length !== 11) {
+        mostrarMensagem("Digite um CPF válido.");
         return;
     }
 
@@ -272,7 +359,7 @@ async function cadastrar() {
     // ENVIA PARA O BACKEND
     // ==================================================
 
-    const botao = document.querySelector("#etapaResponsavel .botao-principal");
+    const botao = document.getElementById("botaoCriarEstabelecimento");
     const textoOriginal = botao.innerText;
 
     botao.innerText = "Processando...";
@@ -287,6 +374,7 @@ async function cadastrar() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     nome: nomeCompleto,
+                    username: usuario,
                     email: email,
                     senha: senha,
                     tipoUsuario: "Administrador",
@@ -308,6 +396,17 @@ async function cadastrar() {
             idUsuarioCriado = resultadoUsuario.idUsuario;
         }
 
+        await finalizarCadastroEstabelecimento(botao, textoOriginal, nomeCompleto, email);
+    } catch (error) {
+        console.error("Erro:", error);
+        mostrarMensagem("Servidor offline. Verifique se a sua API Java está rodando.");
+        botao.innerText = textoOriginal;
+        botao.disabled = false;
+    }
+}
+
+async function finalizarCadastroEstabelecimento(botao, textoOriginal, nomeResponsavel, emailResponsavel) {
+    try {
         // Passo 2 — cria o estabelecimento vinculado ao usuário responsável.
         const formData = new FormData();
         formData.append("estabelecimento", new Blob([JSON.stringify({
@@ -345,6 +444,15 @@ async function cadastrar() {
 
         sessionStorage.removeItem("planoEscolhido");
 
+        // Já temos os dados do responsável recém-criado: loga automaticamente
+        // para poder mandar direto pro painel do estabelecimento, sem passar
+        // pela tela de login de novo.
+        localStorage.setItem("idUsuario", idUsuarioCriado);
+        localStorage.setItem("nomeUsuario", nomeResponsavel);
+        localStorage.setItem("tipoUsuario", "Administrador");
+        localStorage.setItem("emailUsuario", emailResponsavel);
+        localStorage.setItem("idGerenteEfetivo", idUsuarioCriado);
+
         document.getElementById("codigoEstabelecimento").textContent = estabelecimentoSalvo.codigoAcesso;
 
         document.getElementById("etapaResponsavel").style.display = "none";
@@ -368,16 +476,11 @@ async function cadastrar() {
 
 
 // ======================================================
-// IR PARA LOGIN
+// IR PARA O PAINEL DO ESTABELECIMENTO
 // ======================================================
 
-function irParaLogin() {
-
-    // Se você tiver uma página login.html:
-    window.location.href = "login.html";
-
-    // Se estiver usando outro sistema de rotas,
-    // troque a linha acima pela rota correspondente.
+function irParaPainel() {
+    window.location.href = "inicioAdm.html";
 }
 
 
