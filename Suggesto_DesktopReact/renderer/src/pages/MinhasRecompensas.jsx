@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Topo } from "../components/AdminShell";
 import Icone, { IC } from "../components/Icones";
 import { EstadoCarregando, EstadoErro } from "./admin/Inicio";
@@ -19,6 +19,7 @@ function urlFoto(recompensa) {
 }
 
 export default function MinhasRecompensas() {
+  const navegar = useNavigate();
   const { id: idEstabParam } = useParams();
   const [estabelecimentos, setEstabelecimentos] = useState([]);
   const [idEstabelecimento, setIdEstabelecimento] = useState(idEstabParam || "");
@@ -197,6 +198,11 @@ export default function MinhasRecompensas() {
 
   return (
     <>
+      <button type="button" className="adm-btn rec-btn-voltar" onClick={() => navegar(-1)}>
+        <Icone d={IC.seta} size={13} className="rec-icone-voltar" />
+        Voltar
+      </button>
+
       <Topo
         titulo="Minhas recompensas"
         sub={

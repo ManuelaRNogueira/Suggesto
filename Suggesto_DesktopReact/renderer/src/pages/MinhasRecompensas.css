@@ -1,6 +1,14 @@
 /* Esta tela vive dentro do AdminShell, então não define fundo, fonte nem
    altura próprios: tudo vem de tokens.css, como nas demais telas do painel. */
 
+.rec-btn-voltar {
+  margin-bottom: 14px;
+}
+
+.rec-icone-voltar {
+  transform: scaleX(-1);
+}
+
 .rec-seletor {
   width: auto;
   min-width: 190px;
