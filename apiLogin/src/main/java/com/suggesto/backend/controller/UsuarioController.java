@@ -160,6 +160,8 @@ public class UsuarioController {
         resposta.put("email", usuario.getEmail() != null ? usuario.getEmail() : "");
         resposta.put("telefone", usuario.getTelefone() != null ? usuario.getTelefone() : "");
         resposta.put("cidade", usuario.getCidade() != null ? usuario.getCidade() : "");
+        resposta.put("cep", usuario.getCep() != null ? usuario.getCep() : "");
+        resposta.put("estado", usuario.getEstado() != null ? usuario.getEstado() : "");
         resposta.put("fotoUrl", formatarFotoUrl(usuario.getFotoUrl()));
         resposta.put("tipoUsuario", usuario.getTipoUsuario() != null ? usuario.getTipoUsuario().name() : "");
         resposta.put("nomePlano", usuario.getPlano() != null ? usuario.getPlano().getNome() : "");
