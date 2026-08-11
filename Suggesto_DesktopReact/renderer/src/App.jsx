@@ -38,15 +38,15 @@ function App() {
           <Route path="/estabelecimentos" element={<Dashboard />} />
           <Route path="/perfil" element={<Perfil />} />
           <Route path="/solicitacoes" element={<Solicitacoes />} />
+          <Route path="/recompensas" element={<MinhasRecompensas />} />
+          <Route
+            path="/estabelecimento/:id/recompensas"
+            element={<MinhasRecompensas />}
+          />
         </Route>
 
-        {/* Telas de detalhe, com layout próprio */}
+        {/* Tela de detalhe, com layout próprio */}
         <Route path="/estabelecimento/:id" element={<DetalhesEstabelecimento />} />
-        <Route
-          path="/estabelecimento/:id/recompensas"
-          element={<MinhasRecompensas />}
-        />
-        <Route path="/recompensas" element={<MinhasRecompensas />} />
       </Routes>
     </HashRouter>
   );
