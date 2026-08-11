@@ -445,6 +445,7 @@ textarea:focus { border-color: var(--purple-glow); background: rgba(167,139,250,
 
 </div>
 
+<script src="js/config.js"></script>
 <script>
 const estado = { 
     tipo: null, categoria: null, idCategoria: null, 
@@ -518,7 +519,7 @@ function iniciarFormulario(id, nome) {
 
 async function carregarEstabelecimentos() {
     try {
-        const resposta = await fetch("http://localhost:8080/api/estabelecimentos");
+        const resposta = await fetch(`${window.API_BASE}/estabelecimentos`);
         listaEstabelecimentos = await resposta.json();
         renderizarGradeLocais(listaEstabelecimentos);
     } catch (err) {
@@ -634,7 +635,7 @@ async function enviar() {
   };
 
   try {
-    const r = await fetch('http://localhost:8080/api/avaliacoes', {
+    const r = await fetch(`${window.API_BASE}/avaliacoes`, {
       method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify(payload),
     });

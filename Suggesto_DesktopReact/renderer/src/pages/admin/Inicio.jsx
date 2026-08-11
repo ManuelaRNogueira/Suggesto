@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Topo } from "../../components/AdminShell";
 import Icone, { IC } from "../../components/Icones";
 import {
+  API_BASE,
   buscarMetricas,
   formatarData,
   labelStatus,
@@ -243,7 +244,7 @@ export function EstadoErro({ mensagem }) {
   return (
     <div className="adm-erro">
       Não foi possível falar com a API ({mensagem}). Verifique se o backend está
-      rodando em localhost:8080.
+      respondendo em {API_BASE.replace("/api", "")}.
     </div>
   );
 }

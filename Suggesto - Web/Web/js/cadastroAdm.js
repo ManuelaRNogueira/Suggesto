@@ -246,7 +246,7 @@ async function cadastrarComContaExistente() {
     botao.disabled = true;
 
     try {
-        const respostaLogin = await fetch("http://localhost:8080/api/login", {
+        const respostaLogin = await fetch(`${window.API_BASE}/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, senha })
@@ -369,7 +369,7 @@ async function cadastrarComContaNova() {
         // Passo 1 — cria o usuário responsável (só se ainda não foi criado,
         // para permitir tentar de novo sem duplicar a conta caso o passo 2 falhe).
         if (!idUsuarioCriado) {
-            const respostaUsuario = await fetch("http://localhost:8080/api/cadastro", {
+            const respostaUsuario = await fetch(`${window.API_BASE}/cadastro`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -418,7 +418,7 @@ async function finalizarCadastroEstabelecimento(botao, textoOriginal, nomeRespon
             formData.append("foto", fotoEstabelecimentoSelecionada);
         }
 
-        const respostaEstab = await fetch("http://localhost:8080/api/estabelecimentos", {
+        const respostaEstab = await fetch(`${window.API_BASE}/estabelecimentos`, {
             method: "POST",
             body: formData
         });

@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8080/api";
+const API_BASE = window.API_BASE;
 const PLACEHOLDER_ESTABELECIMENTO = "imagens/placeholder-local.png";
 
 function obterIdUsuario() {
@@ -27,7 +27,7 @@ function urlFotoEstabelecimento(fotoPath) {
   if (!nome) return PLACEHOLDER_ESTABELECIMENTO;
   if (nome.startsWith("http://") || nome.startsWith("https://")) return nome;
   const relativo = nome.replace(/^uploads\//, "");
-  return `http://localhost:8080/uploads/${relativo}`;
+  return `${window.API_ORIGIN}/uploads/${relativo}`;
 }
 
 document.addEventListener('DOMContentLoaded', () => {

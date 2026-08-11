@@ -58,7 +58,7 @@ async function carregar() {
     const alvo = document.getElementById("erro");
     alvo.textContent =
       `Não foi possível carregar os dados (${e.message}). ` +
-      "Verifique se a API está rodando em localhost:8080.";
+      `Verifique se a API está respondendo em ${window.API_ORIGIN}.`;
     alvo.hidden = false;
     document.getElementById("resumoSub").textContent = "Sem conexão com a API";
   }
@@ -88,7 +88,7 @@ async function selecionarLocal(id) {
     const alvo = document.getElementById("erro");
     alvo.textContent =
       `Não foi possível carregar os dados (${e.message}). ` +
-      "Verifique se a API está rodando em localhost:8080.";
+      `Verifique se a API está respondendo em ${window.API_ORIGIN}.`;
     alvo.hidden = false;
   }
 }

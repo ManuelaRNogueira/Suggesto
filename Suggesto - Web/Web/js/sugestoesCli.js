@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8080/api/avaliacoes";
+const API_BASE_URL = `${window.API_BASE}/avaliacoes`;
 
 let todasAsSugestoes = [];
 let filtrosAtuais = {

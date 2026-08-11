@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import ModalEditarEstabelecimento from './ModalEditarEstabelecimento';
 import Icone, { IC } from '../components/Icones';
-import { urlFoto } from '../api/admin';
+import { API_BASE, urlFoto } from '../api/admin';
 import './DetalhesEstabelecimento.css';
 
 // ─── CONFIGURAÇÃO DE FILTROS ──────────────────────────────────────────────────
@@ -56,13 +56,13 @@ function DetalhesEstabelecimento() {
   const buscarDados = async () => {
     try {
       // 1. Busca os dados do estabelecimento
-      const resEstab = await fetch(`http://localhost:8080/api/estabelecimentos/${id}`);
+      const resEstab = await fetch(`${API_BASE}/estabelecimentos/${id}`);
       if (resEstab.ok) {
           setEstab(await resEstab.json());
       }
 
       // 2. Busca as avaliações reais do banco
-      const resAvaliacoes = await fetch(`http://localhost:8080/api/avaliacoes/estabelecimento/${id}`);
+      const resAvaliacoes = await fetch(`${API_BASE}/avaliacoes/estabelecimento/${id}`);
       if (resAvaliacoes.ok) {
           const avaliacoesDoBanco = await resAvaliacoes.json();
           
@@ -114,7 +114,7 @@ function DetalhesEstabelecimento() {
 
   const atualizarStatus = async (idAvaliacao, status) => {
     try {
-      const r = await fetch(`http://localhost:8080/api/avaliacoes/${idAvaliacao}/status`, {
+      const r = await fetch(`${API_BASE}/avaliacoes/${idAvaliacao}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
@@ -147,7 +147,7 @@ function DetalhesEstabelecimento() {
   const enviarResposta = async (idAvaliacao) => {
     setEnviandoResposta(true);
     try {
-      const r = await fetch(`http://localhost:8080/api/avaliacoes/${idAvaliacao}/resposta`, {
+      const r = await fetch(`${API_BASE}/avaliacoes/${idAvaliacao}/resposta`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idAdmin: meuId, resposta: textoResposta }),

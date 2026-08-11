@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { API_BASE } from "../api/admin";
 import './ModalEstabelecimento.css'; // Importando o CSS separado
 
 // ─── ÍCONE INLINE ─────────────────────────────────────────────────────────────
@@ -204,7 +205,7 @@ export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
     if (arquivo) formData.append("foto", arquivo);
 
     try {
-      const r = await fetch("http://localhost:8080/api/estabelecimentos", { method: "POST", body: formData });
+      const r = await fetch(`${API_BASE}/estabelecimentos`, { method: "POST", body: formData });
       if (r.ok) {
         aoSalvar(await r.json());
         fecharModal();

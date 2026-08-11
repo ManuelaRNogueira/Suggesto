@@ -55,7 +55,7 @@ async function entrarSuggesto() {
     };
 
     try {
-        const resposta = await fetch("http://localhost:8080/api/login", {
+        const resposta = await fetch(`${window.API_BASE}/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(dadosLogin)

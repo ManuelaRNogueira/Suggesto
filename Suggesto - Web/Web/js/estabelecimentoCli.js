@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8080/api";
+const API_BASE = window.API_BASE;
 
 let est = null;        // dados reais do estabelecimento carregado da API
 let avaliacoes = [];    // avaliações reais do estabelecimento
@@ -32,7 +32,7 @@ function obterIdEstabelecimento() {
 function urlFotoEstabelecimento(fotoPath) {
   if (!fotoPath) return '';
   if (/^https?:\/\//i.test(fotoPath)) return fotoPath;
-  return `http://localhost:8080/uploads/${fotoPath}`;
+  return `${window.API_ORIGIN}/uploads/${fotoPath}`;
 }
 
 function montarEndereco(dados) {

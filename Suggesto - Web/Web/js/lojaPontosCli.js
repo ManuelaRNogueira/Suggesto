@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8080/api";
+const API_BASE = window.API_BASE;
 const PLACEHOLDER_ESTABELECIMENTO = "imagens/placeholder-local.png";
 
 let saldoAtual = 0;

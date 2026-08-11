@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8080/api";
+const API_BASE = window.API_BASE;
 let usuarioAtual = null;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -444,10 +444,10 @@ function resolverUrlFoto(fotoUrl) {
     }
 
     if (fotoUrl.startsWith("/uploads/")) {
-        return `http://localhost:8080${fotoUrl}`;
+        return `${window.API_ORIGIN}${fotoUrl}`;
     }
 
-    return `http://localhost:8080/uploads/${fotoUrl}`;
+    return `${window.API_ORIGIN}/uploads/${fotoUrl}`;
 }
 
 async function salvarEdicao() {

@@ -124,7 +124,7 @@ async function cadastrar() {
     };
 
     try {
-        const resposta = await fetch("http://localhost:8080/api/cadastro", {
+        const resposta = await fetch(`${window.API_BASE}/cadastro`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(novoUsuario)

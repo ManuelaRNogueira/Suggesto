@@ -39,7 +39,7 @@ async function entrarNaEquipe() {
     botao.disabled = true;
 
     try {
-        const resposta = await fetch('http://localhost:8080/api/estabelecimentos/entrar', {
+        const resposta = await fetch(`${window.API_BASE}/estabelecimentos/entrar`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ usuarioId: idUsuario, codigo })

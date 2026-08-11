@@ -1,7 +1,7 @@
 // Acesso à API administrativa usado pelo resumo web (somente leitura).
 // A gestão completa — triagem, estatísticas, equipe — vive no app desktop.
 
-const ADM_API_BASE = "http://localhost:8080/api";
+const ADM_API_BASE = window.API_BASE;
 
 function admIdGerente() {
   return localStorage.getItem("idGerenteEfetivo") || localStorage.getItem("idUsuario");

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_BASE } from "../api/admin";
 import "./Login.css"
 //recebemos a prop aoLogar do app.jsx
 export default function Login({ aoLogar }) {
@@ -37,7 +38,7 @@ export default function Login({ aoLogar }) {
 
   const handleLogin = async () => {
     try {
-      const resposta = await fetch("http://localhost:8080/api/login/admin", {
+      const resposta = await fetch(`${API_BASE}/login/admin`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), senha: senha }),
