@@ -23,6 +23,11 @@ public class Recompensa {
     @JoinColumn(name = "id_estabelecimento", nullable = false)
     private Estabelecimento estabelecimento;
 
+    // Foto própria da recompensa. Quando fica nula, o cliente cai na foto do
+    // estabelecimento (ver lojapontosCli.js).
+    @Column(name = "foto_path")
+    private String fotoPath;
+
     public Long getId() {
         return id;
     }
@@ -61,5 +66,27 @@ public class Recompensa {
 
     public void setEstabelecimento(Estabelecimento estabelecimento) {
         this.estabelecimento = estabelecimento;
+    }
+
+    public String getFotoPath() {
+        return fotoPath;
+    }
+
+    // Guarda sempre só o nome do arquivo, igual ao Estabelecimento: o cliente
+    // monta a URL prefixando /uploads/.
+    public void setFotoPath(String fotoPath) {
+        if (fotoPath == null || fotoPath.isBlank()) {
+            this.fotoPath = fotoPath;
+            return;
+        }
+
+        String limpo = fotoPath.replace('\\', '/').trim();
+        int idx = limpo.lastIndexOf("/uploads/");
+        if (idx >= 0) {
+            limpo = limpo.substring(idx + "/uploads/".length());
+        } else if (limpo.startsWith("uploads/")) {
+            limpo = limpo.substring("uploads/".length());
+        }
+        this.fotoPath = limpo;
     }
 }

@@ -1,137 +1,193 @@
-.pagina-recompensas {
-  min-height: 100vh;
-  padding: 32px 40px 48px;
-  background: #0e0e16;
-  color: #f0f0f8;
-  font-family: "Inter", system-ui, sans-serif;
+/* Esta tela vive dentro do AdminShell, então não define fundo, fonte nem
+   altura próprios: tudo vem de tokens.css, como nas demais telas do painel. */
+
+.rec-seletor {
+  width: auto;
+  min-width: 190px;
 }
 
-.recomp-header {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 32px;
-}
-
-.recomp-header h1 {
-  font-family: "Inter", system-ui, sans-serif;
-  font-size: 28px;
-  margin: 0 0 4px;
-}
-
-.recomp-header p {
-  margin: 0;
-  color: rgba(240, 240, 248, 0.55);
-  font-size: 14px;
-}
-
-.btn-voltar {
-  color: #a78bfa;
-  text-decoration: none;
-  font-size: 14px;
-  width: fit-content;
-}
-
-.recomp-layout {
+.rec-grade {
   display: grid;
-  grid-template-columns: 360px 1fr;
-  gap: 24px;
+  grid-template-columns: 340px 1fr;
+  gap: 18px;
   align-items: start;
 }
 
-@media (max-width: 900px) {
-  .recomp-layout {
-    grid-template-columns: 1fr;
-  }
-}
+/* ── Formulário ────────────────────────────────────────────────────────── */
 
-.recomp-form-card,
-.recomp-lista-card {
-  background: #13131f;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 16px;
-  padding: 24px;
-}
-
-.recomp-form-card h2,
-.recomp-lista-card h2 {
-  font-family: "Inter", system-ui, sans-serif;
-  font-size: 18px;
-  margin: 0 0 20px;
-}
-
-.recomp-form {
+.rec-form {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-.recomp-label {
+.rec-textarea {
+  resize: vertical;
+  min-height: 74px;
+  line-height: 1.55;
+}
+
+.rec-btn-enviar {
+  justify-content: center;
+  margin-top: 2px;
+}
+
+/* Seletor de foto: o próprio bloco é o label do input escondido. */
+.rec-foto-escolher {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--fundo-3);
+  border: 1px dashed var(--borda);
+  border-radius: var(--raio-sm);
+  cursor: pointer;
+  transition: var(--trans);
+}
+
+.rec-foto-escolher:hover {
+  border-color: var(--borda-roxa);
+  background: var(--fundo-2);
+}
+
+.rec-foto-previa {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--raio-sm);
+  overflow: hidden;
+  background: var(--roxo-bg);
+  color: var(--roxo-claro);
+}
+
+.rec-foto-previa img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rec-foto-texto {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: 12px;
-  color: rgba(240, 240, 248, 0.55);
+  gap: 2px;
+  min-width: 0;
 }
 
-.recomp-label input,
-.recomp-label textarea,
-.recomp-label select {
-  background: #1a1a2e;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  padding: 10px 12px;
-  color: #f0f0f8;
-  font-size: 14px;
+.rec-foto-texto strong {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--texto);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.btn-salvar {
-  margin-top: 8px;
-  background: #7c3aed;
-  border: none;
-  border-radius: 10px;
-  padding: 12px 16px;
-  color: #fff;
-  font-weight: 600;
-  cursor: pointer;
+.rec-foto-texto small {
+  font-size: 0.6875rem;
+  color: var(--texto-mfraco);
 }
 
-.btn-salvar:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+/* ── Lista de recompensas ──────────────────────────────────────────────── */
+
+.rec-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-.recomp-muted {
-  color: rgba(240, 240, 248, 0.45);
-  font-size: 14px;
+.rec-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-top: 1px solid var(--borda);
 }
 
-.recomp-tabela {
+.rec-item:first-child {
+  border-top: none;
+}
+
+.rec-item-foto {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--raio-sm);
+  overflow: hidden;
+  background: var(--fundo-3);
+  border: 1px solid var(--borda);
+  color: var(--texto-mfraco);
+}
+
+.rec-item-foto img {
   width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
+  height: 100%;
+  object-fit: cover;
 }
 
-.recomp-tabela th,
-.recomp-tabela td {
-  text-align: left;
-  padding: 12px 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+.rec-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.recomp-tabela th {
-  color: rgba(240, 240, 248, 0.45);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+.rec-item-nome {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.btn-excluir {
-  background: rgba(248, 113, 113, 0.12);
-  border: 1px solid rgba(248, 113, 113, 0.3);
-  color: #f87171;
-  border-radius: 8px;
-  padding: 6px 12px;
-  cursor: pointer;
-  font-size: 12px;
+.rec-item-desc {
+  font-size: 0.6875rem;
+  color: var(--texto-mfraco);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rec-item-heranca {
+  font-size: 0.625rem;
+  color: var(--texto-mfraco);
+  font-style: italic;
+}
+
+.rec-item-custo {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--roxo-claro);
+  flex-shrink: 0;
+}
+
+.rec-item-custo small {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--texto-mfraco);
+}
+
+.rec-item-acoes {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1180px) {
+  .rec-grade { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+  .rec-item { flex-wrap: wrap; }
+  .rec-item-info { flex-basis: 100%; order: 3; }
 }

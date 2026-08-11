@@ -218,7 +218,8 @@ function criarCardRecompensa(rec) {
   const nome = rec.nome || "Recompensa";
   const desc = rec.descricao || "";
   const estabNome = rec.estabelecimento?.nome || "Parceiro";
-  const fotoUrl = urlFotoEstabelecimento(rec.estabelecimento?.fotoPath);
+  // Foto própria da recompensa quando o admin definiu uma; senão, a do estabelecimento.
+  const fotoUrl = urlFotoEstabelecimento(rec.fotoPath || rec.estabelecimento?.fotoPath);
   const bloqueado = custo > saldoAtual;
 
   const card = document.createElement("div");

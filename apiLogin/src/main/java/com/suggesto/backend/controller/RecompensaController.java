@@ -2,13 +2,20 @@ package com.suggesto.backend.controller;
 
 import com.suggesto.backend.model.Estabelecimento;
 import com.suggesto.backend.model.Recompensa;
+import com.suggesto.backend.model.Usuario;
 import com.suggesto.backend.repository.EstabelecimentoRepository;
 import com.suggesto.backend.repository.RecompensaRepository;
+import com.suggesto.backend.repository.UsuarioRepository;
+import com.suggesto.backend.util.UploadStorage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +29,9 @@ public class RecompensaController {
 
     @Autowired
     private EstabelecimentoRepository estabelecimentoRepository;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
     @GetMapping
     public ResponseEntity<List<Recompensa>> listarTodas() {
@@ -70,6 +80,69 @@ public class RecompensaController {
                     "success", false,
                     "message", "Erro ao cadastrar recompensa: " + e.getMessage()
             ));
+        }
+    }
+
+    // Foto própria da recompensa. Mesmo esquema do /api/estabelecimentos/{id}/foto:
+    // o arquivo vai para a pasta uploads e o banco guarda só o nome dele.
+    @PostMapping("/{id}/foto")
+    public ResponseEntity<?> uploadFoto(
+            @PathVariable("id") Long id,
+            // required=false para o arquivo ausente virar um 400 nosso, e não um
+            // 500 vindo da resolução de argumentos do Spring.
+            @RequestParam(value = "foto", required = false) MultipartFile arquivo,
+            @RequestParam(value = "idSolicitante", required = false) Long idSolicitante) {
+        try {
+            if (arquivo == null || arquivo.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false, "message", "Envie um arquivo de imagem."));
+            }
+            if (idSolicitante == null) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false, "message", "idSolicitante é obrigatório."));
+            }
+
+            Recompensa recompensa = recompensaRepository.findById(id).orElse(null);
+            if (recompensa == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                        "success", false, "message", "Recompensa não encontrada."));
+            }
+
+            Estabelecimento dono = recompensa.getEstabelecimento();
+            if (dono == null) {
+                throw new IllegalArgumentException("Recompensa sem estabelecimento vinculado.");
+            }
+
+            // Mesma regra de quem pode agir sobre o estabelecimento usada em
+            // AvaliacaoService.responder: o gerente ou alguém da equipe dele.
+            Usuario solicitante = usuarioRepository.findById(idSolicitante)
+                    .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
+
+            boolean ehGerente = dono.getIdGerente() == idSolicitante;
+            boolean ehDaEquipe = solicitante.getEstabelecimento() != null
+                    && solicitante.getEstabelecimento().getIdEstabelecimento() == dono.getIdEstabelecimento();
+
+            if (!ehGerente && !ehDaEquipe) {
+                return ResponseEntity.status(403).body(Map.of(
+                        "success", false,
+                        "message", "Você não faz parte da equipe deste estabelecimento."));
+            }
+
+            UploadStorage.garantirDiretorio();
+            String nomeLimpo = UploadStorage.normalizarNomeArquivo(arquivo.getOriginalFilename());
+            String nomeArquivo = "recompensa_" + id + "_" + System.currentTimeMillis() + "_" + nomeLimpo;
+
+            Path caminho = UploadStorage.resolverArquivo(nomeArquivo);
+            Files.copy(arquivo.getInputStream(), caminho, StandardCopyOption.REPLACE_EXISTING);
+
+            recompensa.setFotoPath(nomeArquivo);
+            return ResponseEntity.ok(recompensaRepository.save(recompensa));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "success", false, "message", "Erro ao salvar a foto: " + e.getMessage()));
         }
     }
 
