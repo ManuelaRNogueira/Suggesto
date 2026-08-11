@@ -26,12 +26,12 @@
 .rec-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 .rec-textarea {
   resize: vertical;
-  min-height: 74px;
+  min-height: 84px;
   line-height: 1.55;
 }
 
@@ -56,6 +56,13 @@
 .rec-foto-escolher:hover {
   border-color: var(--borda-roxa);
   background: var(--fundo-2);
+}
+
+.rec-foto-escolher:focus-within {
+  outline: none;
+  border-color: var(--borda-roxa);
+  background: var(--fundo-2);
+  box-shadow: 0 0 0 3px var(--roxo-bg);
 }
 
 .rec-foto-previa {
@@ -156,7 +163,7 @@
 
 .rec-item-desc {
   font-size: 0.6875rem;
-  color: var(--texto-mfraco);
+  color: var(--texto-fraco);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -187,7 +194,7 @@
 .rec-item-acoes {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 10px;
   flex-shrink: 0;
 }
 
