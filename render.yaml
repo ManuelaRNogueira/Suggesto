@@ -1,0 +1,27 @@
+# Blueprint do Render: descreve a API e o site em um lugar só.
+# As variáveis com "sync: false" são pedidas na criação do blueprint e ficam
+# guardadas no painel do Render — nunca no repositório.
+services:
+  - name: suggesto-api
+    type: web
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./apiLogin/Dockerfile
+    dockerContext: ./apiLogin
+    healthCheckPath: /api/ping
+    envVars:
+      - key: DB_PASSWORD
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+
+  - name: suggesto-site
+    type: web
+    runtime: static
+    plan: free
+    staticPublishPath: "./Suggesto - Web/Web"
