@@ -24,6 +24,7 @@ public class AvaliacaoService {
     private static final Set<String> STATUS_ACEITOS = Set.of(
             "aceita", "aceito", "resolvida", "resolvido", "implementado", "implementada"
     );
+    private static final Set<String> STATUS_RECUSADOS = Set.of("recusada", "recusado");
 
     @Autowired
     private AvaliacaoRepository avaliacaoRepository;
@@ -118,6 +119,42 @@ public class AvaliacaoService {
         avaliacao.setRespondidoPor(admin.getNome());
 
         return avaliacaoRepository.save(avaliacao);
+    }
+
+    // O cliente só apaga a própria sugestão enquanto ela está pendente. Depois de
+    // aprovada ela já creditou pontos, e depois de recusada/respondida apagaria
+    // junto o que o estabelecimento escreveu.
+    @Transactional
+    public void excluirDoUsuario(Long idAvaliacao, Long idUsuario) {
+        if (idUsuario == null) {
+            throw new IllegalArgumentException("Informe o usuário dono da sugestão.");
+        }
+
+        Avaliacao avaliacao = avaliacaoRepository.findById(idAvaliacao)
+                .orElseThrow(() -> new IllegalArgumentException("Sugestão não encontrada."));
+
+        Usuario autor = avaliacao.getUsuario();
+        if (autor == null || autor.getId() == null || !autor.getId().equals(idUsuario)) {
+            throw new SecurityException("Você só pode excluir as suas próprias sugestões.");
+        }
+
+        if (!isStatusPendente(avaliacao.getStatus())) {
+            throw new IllegalStateException(
+                    "O estabelecimento já respondeu esta sugestão, então ela não pode mais ser excluída.");
+        }
+
+        avaliacaoRepository.delete(avaliacao);
+    }
+
+    private boolean isStatusPendente(String status) {
+        return !isStatusAceito(status) && !isStatusRecusado(status);
+    }
+
+    private boolean isStatusRecusado(String status) {
+        if (status == null || status.isBlank()) {
+            return false;
+        }
+        return STATUS_RECUSADOS.contains(status.trim().toLowerCase(Locale.ROOT));
     }
 
     private String normalizarStatus(String status) {

@@ -107,6 +107,27 @@ public class AvaliacaoController {
         }
     }
 
+    // Exclusão feita pelo próprio cliente na tela "Minhas Sugestões".
+    // O idUsuario vai na query porque é ele que autoriza a operação.
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> excluir(
+            @PathVariable("id") Long id,
+            @RequestParam("idUsuario") Long idUsuario) {
+        try {
+            avaliacaoService.excluirDoUsuario(id, idUsuario);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Sugestão excluída."));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(Map.of("success", false, "message", e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(409).body(Map.of("success", false, "message", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(404).body(Map.of("success", false, "message", e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+
     @PatchMapping("/{id}/status")
     public ResponseEntity<?> atualizarStatus(
             @PathVariable("id") Long id,

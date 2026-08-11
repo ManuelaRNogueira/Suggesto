@@ -575,6 +575,29 @@ body {
   box-shadow: 0 8px 32px rgba(0,0,0,0.4);
 }
 .toast.visivel { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.erro { border-color: rgba(248, 113, 113, 0.3); color: var(--vermelho); }
+
+/* ===== EXCLUIR SUGESTÃO ===== */
+/* O botão só é renderizado nas pendentes (ver sugestoesCli.js). */
+.card-excluir {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; flex-shrink: 0;
+  background: transparent; border: 1px solid var(--borda);
+  border-radius: 8px; color: var(--texto-mfraco);
+  font-size: 12px; cursor: pointer; transition: var(--trans);
+}
+.card-excluir:hover {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.35);
+  color: var(--vermelho);
+}
+
+/* Prévia do que será apagado, dentro do modal de confirmação */
+.excluir-previa {
+  font-size: 13px; line-height: 1.6; color: var(--texto-fraco);
+  background: var(--fundo-3); border: 1px solid var(--borda);
+  border-radius: 10px; padding: 12px 14px; margin-top: 4px;
+}
 
 /* ===== RESPONSIVIDADE ===== */
 @media (max-width: 1200px) {

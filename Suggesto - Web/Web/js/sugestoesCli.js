@@ -219,6 +219,11 @@ function renderizarLista(sugestoes) {
                             <span class="card-status ${classeStatusTexto}">
                                 <i class="fas ${icone}"></i> ${textoStatus}
                             </span>
+                            ${statusChave === "pendente" ? `
+                            <button class="card-excluir" title="Excluir sugestão"
+                                    onclick="pedirExclusao(${sugestao.idAvaliacao})">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>` : ""}
                         </div>
                     </div>
 
@@ -269,14 +274,84 @@ function atualizarResumo(sugestoes) {
   document.getElementById("totalPendentes").innerText = pendentes;
 }
 
-function abrirModal(idModal) {
-  document.getElementById(idModal).style.display = "flex";
-}
-function fecharModal(idModal) {
-  document.getElementById(idModal).style.display = "none";
-}
 function abrirSugestao() {
   window.location.href = "./fazerSugestao.html";
+}
+
+// ===== EXCLUIR SUGESTÃO =====
+// Só aparece nas pendentes: depois de aprovada a sugestão já creditou pontos, e
+// depois de respondida apagaria junto o texto do estabelecimento. O backend
+// aplica a mesma regra, então o botão escondido não é a única barreira.
+let idSugestaoParaExcluir = null;
+
+function pedirExclusao(idAvaliacao) {
+  const sugestao = todasAsSugestoes.find((s) => s.idAvaliacao === idAvaliacao);
+  if (!sugestao) return;
+
+  idSugestaoParaExcluir = idAvaliacao;
+
+  const previa = document.getElementById("excluirPrevia");
+  if (previa) {
+    const loja = sugestao.estabelecimento
+      ? sugestao.estabelecimento.nome
+      : "Estabelecimento";
+    previa.textContent = `“${sugestao.comentario || "Sem descrição"}” — ${loja}`;
+  }
+
+  document.getElementById("modalExcluir").classList.add("aberto");
+}
+
+async function confirmarExclusao() {
+  if (idSugestaoParaExcluir === null) return;
+
+  const idUsuario = localStorage.getItem("idUsuario");
+  if (!idUsuario) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  const botao = document.getElementById("btnConfirmarExclusao");
+  if (botao) botao.disabled = true;
+
+  try {
+    const resposta = await fetch(
+      `${API_BASE_URL}/${idSugestaoParaExcluir}?idUsuario=${idUsuario}`,
+      { method: "DELETE" },
+    );
+
+    const corpo = await resposta.json().catch(() => ({}));
+
+    if (!resposta.ok) {
+      throw new Error(corpo.message || "Não foi possível excluir a sugestão.");
+    }
+
+    fecharModal("modalExcluir");
+    mostrarToast("Sugestão excluída.");
+    await carregarSugestoesDoUsuario();
+  } catch (erro) {
+    console.error("Erro ao excluir sugestão:", erro);
+    fecharModal("modalExcluir");
+    mostrarToast(erro.message, "erro");
+  } finally {
+    idSugestaoParaExcluir = null;
+    if (botao) botao.disabled = false;
+  }
+}
+
+function mostrarToast(mensagem, tipo = "sucesso") {
+  const toast = document.getElementById("toast");
+  const texto = document.getElementById("toastMsg");
+  if (!toast || !texto) return;
+
+  texto.textContent = mensagem;
+  toast.classList.toggle("erro", tipo === "erro");
+  toast.classList.add("visivel");
+
+  clearTimeout(mostrarToast.temporizador);
+  mostrarToast.temporizador = setTimeout(
+    () => toast.classList.remove("visivel"),
+    3200,
+  );
 }
 
 function carregarDadosUsuario() {

@@ -679,6 +679,41 @@
       </div>
     </div>
 
+    <!-- MODAL EXCLUIR SUGESTÃO -->
+    <div class="modal-fundo" id="modalExcluir">
+      <div class="modal">
+        <div class="modal-topo">
+          <h3 class="modal-titulo">Excluir sugestão</h3>
+          <button class="modal-fechar" onclick="fecharModal('modalExcluir')">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <p class="modal-sub">
+          Esta sugestão será apagada definitivamente e o estabelecimento deixará
+          de vê-la. Não dá para desfazer.
+        </p>
+        <p class="excluir-previa" id="excluirPrevia">—</p>
+
+        <div style="display: flex; gap: 12px; margin-top: 24px">
+          <button
+            class="botao-modal"
+            style="background: transparent; border: 1px solid rgba(255, 255, 255, 0.1); color: #e8e6ff;"
+            onclick="fecharModal('modalExcluir')"
+          >
+            Cancelar
+          </button>
+          <button
+            class="botao-modal"
+            id="btnConfirmarExclusao"
+            style="background: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3);"
+            onclick="confirmarExclusao()"
+          >
+            <i class="fas fa-trash-alt"></i> Excluir
+          </button>
+        </div>
+      </div>
+    </div>
+
     <script src="js/avaliacoesUtils.js"></script>
     <script src="js/sugestoesCli.js"></script>
   </body>
