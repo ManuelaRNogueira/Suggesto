@@ -54,19 +54,33 @@ function validarCampos() {
     const usuario = document.getElementById('usuario');
     const email = document.getElementById('email');
     const telefone = document.getElementById('telefone');
+    const cep = document.getElementById('cep');
     const cidade = document.getElementById('cidade');
     const senha = document.getElementById('senha');
     const confirmarSenha = document.getElementById('confirmarSenha');
 
-    if (!usuario.value.trim() || !email.value.trim() || !telefone.value.trim() || !cidade.value.trim() || !senha.value.trim() || !confirmarSenha.value.trim()) {
+    if (!usuario.value.trim() || !email.value.trim() || !telefone.value.trim() || !cep.value.trim() || !senha.value.trim() || !confirmarSenha.value.trim()) {
         if (!usuario.value.trim()) usuario.classList.add('input-erro');
         if (!email.value.trim()) email.classList.add('input-erro');
         if (!telefone.value.trim()) telefone.classList.add('input-erro');
-        if (!cidade.value.trim()) cidade.classList.add('input-erro');
+        if (!cep.value.trim()) cep.classList.add('input-erro');
         if (!senha.value.trim()) senha.classList.add('input-erro');
         if (!confirmarSenha.value.trim()) confirmarSenha.classList.add('input-erro');
 
         mostrarMensagem("Preencha todos os campos obrigatórios.");
+        return false;
+    }
+
+    if (cep.value.replace(/\D/g, '').length !== 8) {
+        cep.classList.add('input-erro');
+        mostrarMensagem("Digite um CEP válido, com 8 dígitos.");
+        return false;
+    }
+
+    // Cidade vazia com CEP completo significa que a consulta não achou o endereço.
+    if (!cidade.value.trim()) {
+        cep.classList.add('input-erro');
+        mostrarMensagem("Não encontramos esse CEP. Confira o número digitado.");
         return false;
     }
 
@@ -120,7 +134,9 @@ async function cadastrar() {
         senha: document.getElementById('senha').value.trim(),
         tipoUsuario: modoEquipe ? "Administrador" : "Cliente",
         telefone: document.getElementById('telefone').value.trim(),
-        cidade: document.getElementById('cidade').value.trim()
+        cep: document.getElementById('cep').value.trim(),
+        cidade: document.getElementById('cidade').value.trim(),
+        estado: document.getElementById('estado').value.trim()
     };
 
     try {
@@ -151,6 +167,59 @@ async function cadastrar() {
         botao.disabled = false;
     }
 }
+
+// ======================================================
+// CEP -> CIDADE E ESTADO
+// ======================================================
+// A cidade do cliente precisa vir da mesma fonte que a do estabelecimento
+// (ViaCEP), senão a recomendação por proximidade compara grafias diferentes
+// e não encontra nada.
+
+const campoCep = document.getElementById("cep");
+
+if (campoCep) {
+
+    campoCep.addEventListener("input", async function () {
+
+        const digitos = this.value.replace(/\D/g, "").substring(0, 8);
+
+        this.value = digitos.length > 5
+            ? digitos.substring(0, 5) + "-" + digitos.substring(5)
+            : digitos;
+
+        const campoCidade = document.getElementById("cidade");
+        const campoEstado = document.getElementById("estado");
+
+        // Enquanto o CEP está incompleto, cidade e estado ficam em branco — é o
+        // que a validação usa para saber que o endereço ainda não foi resolvido.
+        if (digitos.length < 8) {
+            campoCidade.value = "";
+            campoEstado.value = "";
+            return;
+        }
+
+        try {
+            const resposta = await fetch(`https://viacep.com.br/ws/${digitos}/json/`);
+            const dados = await resposta.json();
+
+            if (dados.erro) {
+                campoCidade.value = "";
+                campoEstado.value = "";
+                mostrarMensagem("CEP não encontrado. Confira o número digitado.");
+                return;
+            }
+
+            campoCidade.value = dados.localidade || "";
+            campoEstado.value = dados.uf || "";
+        } catch (error) {
+            console.error("Erro ao buscar CEP:", error);
+            campoCidade.value = "";
+            campoEstado.value = "";
+            mostrarMensagem("Não foi possível consultar o CEP agora. Tente de novo.");
+        }
+    });
+}
+
 
 const telefone = document.getElementById("telefone");
 

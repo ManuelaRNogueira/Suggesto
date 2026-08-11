@@ -3,6 +3,8 @@ package com.suggesto.backend.util;
 import java.text.Normalizer;
 import java.util.Locale;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 // Normaliza texto livre digitado pelo usuário (hoje: cidade) para ficar
 // consistente entre cadastros — mesmo sem forçar um <select> com todas as
@@ -11,6 +13,14 @@ import java.util.Set;
 public final class TextoUtil {
 
     private static final Set<String> CONECTIVOS = Set.of("de", "da", "do", "das", "dos", "e");
+
+    private static final Set<String> UFS = Set.of(
+            "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA",
+            "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO");
+
+    // Cidade seguida do estado, com ou sem separador: "Limeira - SP", "Limeira/SP",
+    // "Limeira, SP" ou "Limeira SP".
+    private static final Pattern SUFIXO_UF = Pattern.compile("^(.+?)\\s*(?:[-/,]\\s*|\\s)([A-Za-z]{2})$");
 
     private TextoUtil() {
     }
@@ -29,6 +39,32 @@ public final class TextoUtil {
         String semAcento = Normalizer.normalize(texto.trim(), Normalizer.Form.NFD)
                 .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
         return semAcento.replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
+    }
+
+    // Rede de segurança: o cadastro preenche a cidade pelo CEP, mas os dois
+    // formulários deixam digitar à mão quando o CEP não é encontrado. Nesse caso
+    // é comum vir a UF junto ("Limeira - SP"), o que quebrava a comparação por
+    // igualdade e escondia a seção "Perto de você".
+    private static String semUf(String cidade) {
+        if (cidade == null) {
+            return null;
+        }
+        String limpo = cidade.trim().replaceAll("\\s+", " ");
+        Matcher m = SUFIXO_UF.matcher(limpo);
+        if (m.matches() && UFS.contains(m.group(2).toUpperCase(Locale.ROOT))) {
+            return m.group(1).trim();
+        }
+        return limpo;
+    }
+
+    // Forma canônica de gravar cidade: sem UF grudada e com capitalização de nome próprio.
+    public static String normalizarCidade(String cidade) {
+        return capitalizarNomeProprio(semUf(cidade));
+    }
+
+    // Compara cidades ignorando acento, caixa, espaços extras e a UF digitada junto.
+    public static boolean mesmaCidade(String a, String b) {
+        return mesmoTexto(semUf(a), semUf(b));
     }
 
     public static String capitalizarNomeProprio(String texto) {

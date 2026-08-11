@@ -111,7 +111,7 @@ public class UsuarioController {
                 usuario.setTelefone(telefone.isBlank() ? null : telefone.trim());
             }
             if (cidade != null) {
-                usuario.setCidade(cidade.isBlank() ? null : TextoUtil.capitalizarNomeProprio(cidade));
+                usuario.setCidade(cidade.isBlank() ? null : TextoUtil.normalizarCidade(cidade));
             }
 
             if (arquivoFoto != null && !arquivoFoto.isEmpty()) {

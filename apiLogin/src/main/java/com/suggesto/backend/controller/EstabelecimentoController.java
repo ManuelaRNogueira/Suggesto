@@ -95,7 +95,7 @@ public class EstabelecimentoController {
                 novoEstabelecimento.setAtivo(1);
             }
 
-            novoEstabelecimento.setCidade(TextoUtil.capitalizarNomeProprio(novoEstabelecimento.getCidade()));
+            novoEstabelecimento.setCidade(TextoUtil.normalizarCidade(novoEstabelecimento.getCidade()));
             novoEstabelecimento.setCodigoAcesso(gerarCodigoAcessoUnico());
 
             if (arquivo != null && !arquivo.isEmpty()) {
@@ -385,7 +385,7 @@ public class EstabelecimentoController {
             estab.setTelefone(dadosAtualizados.getTelefone());
             estab.setCep(dadosAtualizados.getCep());
             estab.setEstado(dadosAtualizados.getEstado());
-            estab.setCidade(TextoUtil.capitalizarNomeProprio(dadosAtualizados.getCidade()));
+            estab.setCidade(TextoUtil.normalizarCidade(dadosAtualizados.getCidade()));
             estab.setBairro(dadosAtualizados.getBairro());
             estab.setRua(dadosAtualizados.getRua());
             estab.setNumero(dadosAtualizados.getNumero());
@@ -490,19 +490,25 @@ public class EstabelecimentoController {
 
     // Recomendação simples por proximidade: estabelecimentos ativos na mesma cidade
     // do cliente, dos mais bem avaliados para os menos. Sem geolocalização.
+    // Devolve junto a cidade do cliente para a tela distinguir "ainda não preencheu
+    // o endereço" de "não há estabelecimentos cadastrados na cidade dele".
     @GetMapping("/recomendados")
-    public ResponseEntity<List<Estabelecimento>> recomendados(@RequestParam("idUsuario") Long idUsuario) {
+    public ResponseEntity<Map<String, Object>> recomendados(@RequestParam("idUsuario") Long idUsuario) {
         try {
             String cidade = usuarioRepository.findById(idUsuario)
                     .map(Usuario::getCidade)
                     .orElse(null);
 
+            Map<String, Object> resposta = new HashMap<>();
+            resposta.put("cidade", cidade);
+
             if (cidade == null || cidade.isBlank()) {
-                return ResponseEntity.ok(List.of());
+                resposta.put("estabelecimentos", List.of());
+                return ResponseEntity.ok(resposta);
             }
 
             List<Estabelecimento> daCidade = repository.buscarTodosAtivos().stream()
-                    .filter(e -> TextoUtil.mesmoTexto(cidade, e.getCidade()))
+                    .filter(e -> TextoUtil.mesmaCidade(cidade, e.getCidade()))
                     .collect(Collectors.toList());
 
             aplicarMediasDeAvaliacao(daCidade);
@@ -510,7 +516,8 @@ public class EstabelecimentoController {
                     (Estabelecimento e) -> e.getMediaAvaliacoes() == null ? 0d : e.getMediaAvaliacoes()
             ).reversed());
 
-            return ResponseEntity.ok(daCidade);
+            resposta.put("estabelecimentos", daCidade);
+            return ResponseEntity.ok(resposta);
         } catch (Exception e) {
             return ResponseEntity.status(500).build();
         }

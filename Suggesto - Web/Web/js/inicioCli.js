@@ -149,10 +149,12 @@ async function carregarDestaques() {
 }
 
 // Recomendação por proximidade: estabelecimentos da mesma cidade do cliente.
-// A seção só existe se o cliente tem cidade cadastrada e há locais por lá.
+// Quando não há nada para mostrar, a seção continua visível com uma explicação —
+// sumir sem aviso passava a impressão de que a funcionalidade estava quebrada.
 async function carregarRecomendados() {
   const secao = document.getElementById("recomendadosSecao");
   const grade = document.getElementById("recomendadosGrade");
+  const vazio = document.getElementById("recomendadosVazio");
   const idUsuario = obterIdUsuario();
   if (!secao || !grade || !idUsuario) return;
 
@@ -162,14 +164,31 @@ async function carregarRecomendados() {
     );
     if (!resposta.ok) return;
 
-    const estabelecimentos = await resposta.json();
-    if (!Array.isArray(estabelecimentos) || estabelecimentos.length === 0) return;
+    const dados = await resposta.json();
+    const estabelecimentos = Array.isArray(dados.estabelecimentos)
+      ? dados.estabelecimentos
+      : [];
+    const cidade = dados.cidade;
 
-    const cidade = estabelecimentos[0].cidade;
     const rotuloCidade = document.getElementById("recomendadosCidade");
-    if (rotuloCidade && cidade) rotuloCidade.textContent = cidade;
+    if (rotuloCidade) rotuloCidade.textContent = cidade || "";
 
     grade.innerHTML = "";
+
+    if (estabelecimentos.length === 0) {
+      if (vazio) {
+        // Sem cidade é conta antiga, criada antes do endereço virar obrigatório.
+        vazio.querySelector("p").textContent = cidade
+          ? "Nenhum local cadastrado na sua cidade ainda"
+          : "Preencha seu endereço no perfil para recomendarmos os melhores locais da sua região";
+        vazio.classList.add("visivel");
+      }
+      secao.style.display = "";
+      return;
+    }
+
+    if (vazio) vazio.classList.remove("visivel");
+
     estabelecimentos
       .slice(0, 6)
       .forEach((estab) => grade.appendChild(criarCardEstabelecimento(estab)));

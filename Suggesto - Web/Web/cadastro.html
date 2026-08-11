@@ -115,6 +115,26 @@
 
 
           <div class="campo-grupo">
+            <label for="cep">
+              CEP
+            </label>
+
+            <input
+              type="text"
+              id="cep"
+              placeholder="00000-000"
+              maxlength="9"
+            >
+          </div>
+
+        </div>
+
+
+        <!-- Cidade e estado saem do CEP, iguais aos do cadastro de estabelecimento,
+             para a recomendação por proximidade casar as duas pontas. -->
+        <div class="ladoalado">
+
+          <div class="campo-grupo">
             <label for="cidade">
               Cidade
             </label>
@@ -122,7 +142,23 @@
             <input
               type="text"
               id="cidade"
-              placeholder="Ex.: Campinas"
+              placeholder="Preenchido pelo CEP"
+              readonly
+            >
+          </div>
+
+
+          <div class="campo-grupo">
+            <label for="estado">
+              Estado
+            </label>
+
+            <input
+              type="text"
+              id="estado"
+              placeholder="UF"
+              maxlength="2"
+              readonly
             >
           </div>
 

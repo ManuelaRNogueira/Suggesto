@@ -129,7 +129,13 @@ public class AuthController {
                 novoUsuario.setTelefone(telefoneNormalizado);
             }
             if (dados.get("cidade") != null) {
-                novoUsuario.setCidade(TextoUtil.capitalizarNomeProprio((String) dados.get("cidade")));
+                novoUsuario.setCidade(TextoUtil.normalizarCidade((String) dados.get("cidade")));
+            }
+            if (dados.get("cep") != null) {
+                novoUsuario.setCep(((String) dados.get("cep")).trim());
+            }
+            if (dados.get("estado") != null) {
+                novoUsuario.setEstado(((String) dados.get("estado")).trim().toUpperCase());
             }
 
             if (tipoUsuario == TipoUsuario.Administrador) {

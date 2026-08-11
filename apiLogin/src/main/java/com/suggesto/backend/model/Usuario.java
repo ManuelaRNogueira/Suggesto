@@ -44,6 +44,14 @@ public class Usuario {
     @Column(name = "Cidade")
     private String cidade;
 
+    // Cidade e estado do cliente vêm do CEP (mesma fonte usada no cadastro do
+    // estabelecimento), para a busca por proximidade casar as duas pontas.
+    @Column(name = "CEP", length = 9)
+    private String cep;
+
+    @Column(name = "Estado", length = 2)
+    private String estado;
+
     @Column(name = "Foto_Url")
     private String fotoUrl;
 
@@ -132,6 +140,22 @@ public class Usuario {
 
     public String getCidade() {
         return cidade;
+    }
+
+    public String getCep() {
+        return cep;
+    }
+
+    public void setCep(String cep) {
+        this.cep = cep;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
     }
 
     public void setCidade(String cidade) {
