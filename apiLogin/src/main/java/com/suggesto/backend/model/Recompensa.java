@@ -81,6 +81,10 @@ public class Recompensa {
         }
 
         String limpo = fotoPath.replace('\\', '/').trim();
+        if ((limpo.startsWith("http://") || limpo.startsWith("https://")) && !limpo.contains("/uploads/")) {
+            this.fotoPath = limpo;
+            return;
+        }
         int idx = limpo.lastIndexOf("/uploads/");
         if (idx >= 0) {
             limpo = limpo.substring(idx + "/uploads/".length());

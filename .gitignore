@@ -27,5 +27,5 @@ Thumbs.db
 # Build do renderer (Vite)
 dist/
 
-# Uploads de usuário (gerados em runtime, não versionados)
+# Uploads de usuário (fallback local; fotos de verdade agora ficam no Cloudinary)
 uploads/

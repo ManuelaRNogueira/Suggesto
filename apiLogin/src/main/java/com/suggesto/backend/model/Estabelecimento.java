@@ -77,6 +77,9 @@ public class Estabelecimento {
             return fotoPath;
         }
         String limpo = fotoPath.replace('\\', '/').trim();
+        if ((limpo.startsWith("http://") || limpo.startsWith("https://")) && !limpo.contains("/uploads/")) {
+            return limpo;
+        }
         if (limpo.contains(":/") || limpo.startsWith("/")) {
             int idx = limpo.lastIndexOf("/uploads/");
             if (idx >= 0) {
@@ -97,6 +100,10 @@ public class Estabelecimento {
             return;
         }
         String limpo = fotoPath.replace('\\', '/').trim();
+        if ((limpo.startsWith("http://") || limpo.startsWith("https://")) && !limpo.contains("/uploads/")) {
+            this.fotoPath = limpo;
+            return;
+        }
         if (limpo.contains(":/")) {
             int idx = limpo.lastIndexOf("/uploads/");
             if (idx >= 0) {

@@ -7,6 +7,7 @@ import com.suggesto.backend.repository.AvaliacaoRepository;
 import com.suggesto.backend.repository.LocalSalvoRepository;
 import com.suggesto.backend.repository.ResgateRepository;
 import com.suggesto.backend.repository.UsuarioRepository;
+import com.suggesto.backend.service.CloudinaryService;
 import com.suggesto.backend.service.ConquistaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,9 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -49,6 +47,9 @@ public class UsuarioController {
 
     @Autowired
     private ConquistaService conquistaService;
+
+    @Autowired
+    private CloudinaryService cloudinaryService;
 
     @GetMapping("/{id}")
     public ResponseEntity<?> buscarPorId(@PathVariable Long id) {
@@ -149,10 +150,7 @@ public class UsuarioController {
                 .replaceAll("[^a-zA-Z0-9._-]", "_");
 
         String nomeArquivo = "usuario_" + usuarioId + "_" + System.currentTimeMillis() + "_" + nomeSeguro;
-        Path caminho = UploadStorage.resolverArquivo(nomeArquivo);
-        Files.copy(arquivo.getInputStream(), caminho, StandardCopyOption.REPLACE_EXISTING);
-
-        return UploadStorage.normalizarNomeArquivo(nomeArquivo);
+        return cloudinaryService.upload(arquivo, "usuarios", nomeArquivo);
     }
 
     private Map<String, Object> montarRespostaUsuario(Usuario usuario) {

@@ -8,6 +8,7 @@ import com.suggesto.backend.repository.AvaliacaoRepository;
 import com.suggesto.backend.repository.EstabelecimentoRepository;
 import com.suggesto.backend.repository.SolicitacaoEquipeRepository;
 import com.suggesto.backend.repository.UsuarioRepository;
+import com.suggesto.backend.service.CloudinaryService;
 import com.suggesto.backend.util.DocumentoValidator;
 import com.suggesto.backend.util.TextoUtil;
 import com.suggesto.backend.util.UploadStorage;
@@ -16,9 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.security.SecureRandom;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -45,6 +43,9 @@ public class EstabelecimentoController {
 
     @Autowired
     private com.suggesto.backend.service.PlanoService planoService;
+
+    @Autowired
+    private CloudinaryService cloudinaryService;
 
     private static final String ALFABETO_CODIGO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -102,10 +103,8 @@ public class EstabelecimentoController {
                 String nomeLimpo = UploadStorage.normalizarNomeArquivo(arquivo.getOriginalFilename());
                 String nomeArquivo = System.currentTimeMillis() + "_" + nomeLimpo;
 
-                Path caminho = UploadStorage.resolverArquivo(nomeArquivo);
-                Files.copy(arquivo.getInputStream(), caminho, StandardCopyOption.REPLACE_EXISTING);
-
-                novoEstabelecimento.setFotoPath(nomeArquivo);
+                String fotoUrl = cloudinaryService.upload(arquivo, "estabelecimentos", nomeArquivo);
+                novoEstabelecimento.setFotoPath(fotoUrl);
             }
 
             Estabelecimento salvo = repository.save(novoEstabelecimento);
@@ -341,13 +340,11 @@ public class EstabelecimentoController {
             String nomeLimpo = UploadStorage.normalizarNomeArquivo(arquivo.getOriginalFilename());
             String nomeArquivo = "estabelecimento_" + id + "_" + nomeLimpo;
 
-            Path caminho = UploadStorage.resolverArquivo(nomeArquivo);
-            Files.copy(arquivo.getInputStream(), caminho, StandardCopyOption.REPLACE_EXISTING);
-
-            estab.setFotoPath(nomeArquivo);
+            String fotoUrl = cloudinaryService.upload(arquivo, "estabelecimentos", nomeArquivo);
+            estab.setFotoPath(fotoUrl);
             repository.save(estab);
 
-            return ResponseEntity.ok("Foto salva com sucesso!" + nomeArquivo);
+            return ResponseEntity.ok("Foto salva com sucesso!" + fotoUrl);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Erro ao salvar estabelecimento: " + e.getMessage());
         }
@@ -400,10 +397,8 @@ public class EstabelecimentoController {
                 String nomeLimpo = UploadStorage.normalizarNomeArquivo(arquivo.getOriginalFilename());
                 String nomeArquivo = "estabelecimento_" + id + "_" + System.currentTimeMillis() + "_" + nomeLimpo;
 
-                Path caminho = UploadStorage.resolverArquivo(nomeArquivo);
-                Files.copy(arquivo.getInputStream(), caminho, StandardCopyOption.REPLACE_EXISTING);
-
-                estab.setFotoPath(nomeArquivo);
+                String fotoUrl = cloudinaryService.upload(arquivo, "estabelecimentos", nomeArquivo);
+                estab.setFotoPath(fotoUrl);
             }
 
             Estabelecimento salvo = repository.save(estab);

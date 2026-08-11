@@ -6,6 +6,7 @@ import com.suggesto.backend.model.Usuario;
 import com.suggesto.backend.repository.EstabelecimentoRepository;
 import com.suggesto.backend.repository.RecompensaRepository;
 import com.suggesto.backend.repository.UsuarioRepository;
+import com.suggesto.backend.service.CloudinaryService;
 import com.suggesto.backend.util.UploadStorage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,9 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
 
@@ -32,6 +30,9 @@ public class RecompensaController {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private CloudinaryService cloudinaryService;
 
     @GetMapping
     public ResponseEntity<List<Recompensa>> listarTodas() {
@@ -128,14 +129,11 @@ public class RecompensaController {
                         "message", "Você não faz parte da equipe deste estabelecimento."));
             }
 
-            UploadStorage.garantirDiretorio();
             String nomeLimpo = UploadStorage.normalizarNomeArquivo(arquivo.getOriginalFilename());
             String nomeArquivo = "recompensa_" + id + "_" + System.currentTimeMillis() + "_" + nomeLimpo;
 
-            Path caminho = UploadStorage.resolverArquivo(nomeArquivo);
-            Files.copy(arquivo.getInputStream(), caminho, StandardCopyOption.REPLACE_EXISTING);
-
-            recompensa.setFotoPath(nomeArquivo);
+            String fotoUrl = cloudinaryService.upload(arquivo, "recompensas", nomeArquivo);
+            recompensa.setFotoPath(fotoUrl);
             return ResponseEntity.ok(recompensaRepository.save(recompensa));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
