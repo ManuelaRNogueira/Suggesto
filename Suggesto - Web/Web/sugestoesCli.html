@@ -621,99 +621,13 @@
         <p class="vazio-sub">Tente outros filtros ou faça uma nova sugestão</p>
         <button
           class="btn-nova-sugestao"
-          onclick="abrirModal('modalSugestao')"
+          onclick="abrirSugestao()"
           style="margin-top: 8px"
         >
           <i class="fas fa-plus"></i> Nova sugestão
         </button>
       </div>
     </main>
-
-    <!-- MODAL DE SUGESTÃO -->
-    <div class="modal-fundo" id="modalSugestao">
-      <div class="modal">
-        <div class="modal-topo">
-          <h3 class="modal-titulo">Nova sugestão</h3>
-          <button class="modal-fechar" onclick="fecharModal('modalSugestao')">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        <p class="modal-sub">
-          Compartilhe sua experiência com o estabelecimento
-        </p>
-
-        <div class="campo-grupo">
-          <label class="campo-label">Estabelecimento</label>
-          <select class="campo-input" id="selectEstabelecimento">
-            <option value="">Selecione...</option>
-            <option>Big Jack Hamburgueria</option>
-            <option>PanoBianco Academia</option>
-            <option>Café do Centro</option>
-            <option>Cantina Italiana</option>
-            <option>Hospital Mário Gatti</option>
-            <option>Restaurante Dona Maria Bistrô</option>
-            <option>SkiFit Academia</option>
-            <option>Café da Praça</option>
-          </select>
-        </div>
-
-        <div class="campo-grupo">
-          <label class="campo-label">Categoria</label>
-          <select class="campo-input" id="selectCategoria">
-            <option value="atendimento">Atendimento</option>
-            <option value="estrutura">Estrutura</option>
-            <option value="servico">Serviço</option>
-            <option value="preco">Preço</option>
-            <option value="outro">Outro</option>
-          </select>
-        </div>
-
-        <div class="campo-grupo">
-          <label class="campo-label">Avaliação</label>
-          <div class="estrelas-input" id="estrelasInput">
-            <i
-              class="far fa-star estrela-btn"
-              data-nota="1"
-              onclick="definirNota(1)"
-            ></i>
-            <i
-              class="far fa-star estrela-btn"
-              data-nota="2"
-              onclick="definirNota(2)"
-            ></i>
-            <i
-              class="far fa-star estrela-btn"
-              data-nota="3"
-              onclick="definirNota(3)"
-            ></i>
-            <i
-              class="far fa-star estrela-btn"
-              data-nota="4"
-              onclick="definirNota(4)"
-            ></i>
-            <i
-              class="far fa-star estrela-btn"
-              data-nota="5"
-              onclick="definirNota(5)"
-            ></i>
-          </div>
-        </div>
-
-        <div class="campo-grupo">
-          <label class="campo-label">Sua sugestão</label>
-          <textarea
-            class="campo-input campo-textarea"
-            id="textareaSugestao"
-            placeholder="Descreva sua experiência com detalhes..."
-          ></textarea>
-        </div>
-
-        <button class="botao-modal" onclick="enviarSugestao()">
-          <i class="fas fa-paper-plane"></i>
-          Enviar sugestão
-        </button>
-      </div>
-    </div>
 
     <!-- MODAL DE DETALHES -->
     <div class="modal-fundo" id="modalDetalhes">
