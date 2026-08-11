@@ -18,6 +18,7 @@ const CORES_CAT = ["#6366f1", "#818cf8", "#60a5fa", "#22c55e", "#eab308", "#f59e
 
 export default function Estatisticas() {
   const [meses, setMeses] = useState(6);
+  const [visao, setVisao] = useState("tipo");
   const [metricas, setMetricas] = useState(null);
   const [sugestoes, setSugestoes] = useState([]);
   const [erro, setErro] = useState(null);
@@ -70,7 +71,9 @@ export default function Estatisticas() {
     };
   }, [metricas, sugestoes, porMes]);
 
-  const categorias = useMemo(() => {
+  // O backend chama esse mapa de "porCategoria", mas ele agrupa por tipo de post
+  // (Sugestão / Crítica / Elogio) — ver AdminService.classificarTipo.
+  const porTipo = useMemo(() => {
     const mapa = metricas?.porCategoria || {};
     const total = Object.values(mapa).reduce((a, b) => a + b, 0);
     return Object.entries(mapa)
@@ -82,6 +85,24 @@ export default function Estatisticas() {
         cor: CORES_CAT[i % CORES_CAT.length],
       }));
   }, [metricas]);
+
+  // Áreas do feedback (Atendimento, Higiene, Ambiente...), contadas a partir da
+  // própria lista de sugestões, que já traz a categoria de cada uma.
+  const porArea = useMemo(() => {
+    const mapa = {};
+    sugestoes.forEach((s) => {
+      const nome = s.categoria || "Sem categoria";
+      mapa[nome] = (mapa[nome] || 0) + 1;
+    });
+    const total = sugestoes.length;
+    return Object.entries(mapa)
+      .sort((a, b) => b[1] - a[1])
+      .map(([nome, qtd]) => ({
+        nome,
+        qtd,
+        pct: total ? (qtd / total) * 100 : 0,
+      }));
+  }, [sugestoes]);
 
   const melhorAvaliadas = useMemo(
     () =>
@@ -100,7 +121,7 @@ export default function Estatisticas() {
   if (!metricas || !resumo) return <EstadoCarregando />;
 
   const maiorMes = Math.max(1, ...porMes.map((m) => m.total || 0));
-  const totalCat = categorias.reduce((a, c) => a + c.qtd, 0);
+  const totalTipo = porTipo.reduce((a, c) => a + c.qtd, 0);
 
   return (
     <>
@@ -230,28 +251,51 @@ export default function Estatisticas() {
         <div className="est-col">
           <section className="adm-cartao">
             <div className="adm-cartao-topo">
-              <h2 className="adm-cartao-titulo">Por tipo de post</h2>
+              <h2 className="adm-cartao-titulo">Distribuição</h2>
+              <div className="est-periodos">
+                <button
+                  type="button"
+                  className={`est-periodo${visao === "tipo" ? " ativo" : ""}`}
+                  onClick={() => setVisao("tipo")}
+                >
+                  Tipo
+                </button>
+                <button
+                  type="button"
+                  className={`est-periodo${visao === "area" ? " ativo" : ""}`}
+                  onClick={() => setVisao("area")}
+                >
+                  Categoria
+                </button>
+              </div>
             </div>
-            {categorias.length === 0 ? (
-              <p className="adm-vazio">Sem tipos registrados.</p>
+
+            {visao === "tipo" ? (
+              porTipo.length === 0 ? (
+                <p className="adm-vazio">Sem tipos registrados.</p>
+              ) : (
+                <>
+                  <Rosca dados={porTipo} total={totalTipo} />
+                  <ul className="est-legenda">
+                    {porTipo.map((c) => (
+                      <li key={c.nome}>
+                        <span
+                          className="est-legenda-cor"
+                          style={{ background: c.cor }}
+                        />
+                        <span className="est-legenda-nome">{c.nome}</span>
+                        <span className="est-legenda-pct adm-num">
+                          {c.pct.toFixed(0)}%
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )
+            ) : porArea.length === 0 ? (
+              <p className="adm-vazio">Nenhuma sugestão com categoria ainda.</p>
             ) : (
-              <>
-                <Rosca dados={categorias} total={totalCat} />
-                <ul className="est-legenda">
-                  {categorias.map((c) => (
-                    <li key={c.nome}>
-                      <span
-                        className="est-legenda-cor"
-                        style={{ background: c.cor }}
-                      />
-                      <span className="est-legenda-nome">{c.nome}</span>
-                      <span className="est-legenda-pct adm-num">
-                        {c.pct.toFixed(0)}%
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </>
+              <Areas dados={porArea} />
             )}
           </section>
 
@@ -341,6 +385,36 @@ function Acumulado({ dados }) {
         ))}
       </div>
     </>
+  );
+}
+
+// Ranking das áreas do feedback. Barra horizontal em vez de rosca porque aqui são
+// até 8 categorias com nomes longos ("Qualidade do produto"), volume em que a rosca
+// fica ilegível. Série única: a escala é sobre o maior valor e a cor é só a da marca,
+// já que quem carrega a identidade de cada linha é o próprio rótulo.
+function Areas({ dados }) {
+  const maior = Math.max(1, ...dados.map((d) => d.qtd));
+
+  return (
+    <ul className="est-areas">
+      {dados.map((d) => (
+        <li key={d.nome}>
+          <div className="est-area-topo">
+            <span className="est-area-nome">{d.nome}</span>
+            <span className="est-area-qtd adm-num">{d.qtd}</span>
+          </div>
+          <div
+            className="est-area-track"
+            title={`${d.nome}: ${d.qtd} (${d.pct.toFixed(1)}%)`}
+          >
+            <span
+              className="est-area-fill"
+              style={{ width: `${(d.qtd / maior) * 100}%` }}
+            />
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }
 

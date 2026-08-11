@@ -9,6 +9,14 @@ const CATEGORIAS_OFICIAIS = [
   { slug: "outro", label: "Outro" },
 ];
 
+// Tipo do feedback (o que o cliente escolhe no passo 1 de fazerSugestao.html).
+// Não confundir com a categoria da avaliação, que é a área (Atendimento, Higiene...).
+const TIPOS_FEEDBACK = [
+  { slug: "sugestao", label: "Sugestão" },
+  { slug: "critica", label: "Crítica" },
+  { slug: "elogio", label: "Elogio" },
+];
+
 function normalizarTexto(valor) {
   return (valor || "")
     .toLowerCase()
@@ -58,6 +66,17 @@ function slugCategoriaEstabelecimento(categoria) {
 function rotuloCategoriaAvaliacao(sugestao) {
   if (sugestao?.categoria?.nomeCategoria) return sugestao.categoria.nomeCategoria;
   return "Geral";
+}
+
+function chaveTipo(tipo) {
+  const texto = normalizarTexto(tipo).replace(/\s+/g, "");
+  const encontrado = TIPOS_FEEDBACK.find((t) => texto === t.slug);
+  return encontrado ? encontrado.slug : "sugestao";
+}
+
+function rotuloTipo(tipo) {
+  const chave = chaveTipo(tipo);
+  return TIPOS_FEEDBACK.find((t) => t.slug === chave).label;
 }
 
 function classeTagCategoria(nomeCategoria) {

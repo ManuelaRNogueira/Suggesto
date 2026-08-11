@@ -185,16 +185,17 @@ async function carregarAvaliacoes(id) {
   renderizarSugestoes();
 }
 
+// Os filtros são por tipo de feedback (Sugestão / Crítica / Elogio), na ordem
+// fixa de TIPOS_FEEDBACK, mostrando só os tipos que este local já recebeu.
 function popularFiltros() {
   const barra = document.getElementById('filtrosCategoria');
   if (!barra) return;
 
-  const categorias = [...new Set(
-    avaliacoes.map(a => a.categoria && a.categoria.nomeCategoria).filter(Boolean)
-  )];
+  const presentes = new Set(avaliacoes.map(a => chaveTipo(a.tipo)));
+  const tipos = TIPOS_FEEDBACK.filter(t => presentes.has(t.slug));
 
   barra.innerHTML = '<button class="filtro ativo" onclick="filtrar(this, \'todas\')">Todas</button>' +
-    categorias.map(c => `<button class="filtro" onclick="filtrar(this, '${c.replace(/'/g, "\\'")}')">${escapeHtml(c)}</button>`).join('');
+    tipos.map(t => `<button class="filtro" onclick="filtrar(this, '${t.slug}')">${escapeHtml(t.label)}</button>`).join('');
 
   filtroAtivo = 'todas';
 }
@@ -249,7 +250,7 @@ function renderizarSugestoes() {
 
   const filtradas = filtroAtivo === 'todas'
     ? avaliacoes
-    : avaliacoes.filter(a => (a.categoria && a.categoria.nomeCategoria) === filtroAtivo);
+    : avaliacoes.filter(a => chaveTipo(a.tipo) === filtroAtivo);
 
   if (filtradas.length === 0) {
     lista.innerHTML = '';
@@ -273,6 +274,8 @@ function renderizarCardSugestao(a) {
     `<i class="fas fa-star${i < nota ? '' : ' vazia'}"></i>`).join('');
   const categoriaNome = (a.categoria && a.categoria.nomeCategoria) || 'Geral';
   const dataFormatada = formatarData(a.dataAvaliacao);
+  const tipoChave = chaveTipo(a.tipo);
+  const tipoLabel = rotuloTipo(a.tipo);
 
   const statusChave = typeof chaveStatus === 'function' ? chaveStatus(a.status) : 'pendente';
   const statusLabel = typeof rotuloStatus === 'function' ? rotuloStatus(a.status) : (a.status || '');
@@ -287,7 +290,10 @@ function renderizarCardSugestao(a) {
             <span class="sug-data">${dataFormatada}</span>
           </div>
         </div>
-        <span class="sug-categoria">${escapeHtml(categoriaNome)}</span>
+        <div class="sug-tags">
+          <span class="sug-tipo sug-tipo-${tipoChave}">${escapeHtml(tipoLabel)}</span>
+          <span class="sug-categoria">${escapeHtml(categoriaNome)}</span>
+        </div>
       </div>
 
       <div class="sug-estrelas">${estrelasHtml}</div>
@@ -325,10 +331,10 @@ function obterIniciais(nome) {
 
 
 // ── FILTRAR SUGESTÕES ─────────────────────────────────────────────────
-function filtrar(botao, categoria) {
+function filtrar(botao, tipo) {
   document.querySelectorAll('.filtro').forEach(b => b.classList.remove('ativo'));
   botao.classList.add('ativo');
-  filtroAtivo = categoria;
+  filtroAtivo = tipo;
   renderizarSugestoes();
 }
 

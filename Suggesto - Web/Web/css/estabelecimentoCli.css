@@ -323,10 +323,21 @@ body {
 .sug-nome { font-size: 13px; font-weight: 600; color: var(--texto); }
 .sug-data { font-size: 11px; color: var(--texto-mfraco); }
 
+.sug-tags { display: flex; align-items: center; justify-content: flex-end; gap: 6px; flex-wrap: wrap; }
+
+/* Tipo do feedback — mesmas cores usadas em fazerSugestao.html */
+.sug-tipo {
+  border: 1px solid transparent; border-radius: 999px; padding: 3px 10px;
+  font-size: 11px; font-weight: 600; white-space: nowrap;
+}
+.sug-tipo-sugestao { background: var(--roxo-bg); border-color: var(--roxo-borda); color: var(--roxo-claro); }
+.sug-tipo-critica { background: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.35); color: #f87171; }
+.sug-tipo-elogio { background: rgba(74, 222, 128, 0.1); border-color: rgba(74, 222, 128, 0.35); color: #4ade80; }
+
 .sug-categoria {
-  background: var(--roxo-bg); border: 1px solid var(--roxo-borda);
+  background: var(--fundo3); border: 1px solid var(--borda);
   border-radius: 999px; padding: 3px 10px;
-  font-size: 11px; font-weight: 600; color: var(--roxo-claro);
+  font-size: 11px; font-weight: 600; color: var(--texto-fraco);
   white-space: nowrap;
 }
 
