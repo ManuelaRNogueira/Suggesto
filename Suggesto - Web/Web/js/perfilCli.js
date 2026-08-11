@@ -104,6 +104,50 @@ async function carregarDadosUsuario() {
     }
 }
 
+// Complementa o que a API devolve (descrição, meta e progresso) com a unidade da
+// contagem e uma dica de onde progredir. O requisito em si continua vindo do
+// backend — aqui não se repete nenhum número, só orientação de navegação.
+const FAMILIAS_CONQUISTA = {
+    envio: {
+        sing: "sugestão", plur: "sugestões",
+        dica: "Vale qualquer sugestão enviada, em qualquer estabelecimento."
+    },
+    aprovada: {
+        sing: "aprovação", plur: "aprovações",
+        dica: "Conta quando o estabelecimento marca a sua sugestão como aprovada."
+    },
+    salvo: {
+        sing: "local", plur: "locais",
+        dica: "Salve estabelecimentos pelo botão de favorito na página deles. Eles ficam em Locais Salvos."
+    },
+    resgate: {
+        sing: "recompensa", plur: "recompensas",
+        dica: "Troque seus pontos por recompensas na página Pontos."
+    },
+    ponto: {
+        sing: "ponto", plur: "pontos",
+        dica: "Você acumula pontos enviando sugestões e tendo elas aprovadas."
+    }
+};
+
+const FAMILIA_POR_CONQUISTA = {
+    "pioneiro": "envio",
+    "em-chamas": "envio",
+    "veterano": "envio",
+    "vencedor": "aprovada",
+    "influente": "aprovada",
+    "explorador": "salvo",
+    "colecionador": "salvo",
+    "primeiro-resgate": "resgate",
+    "comprador": "resgate",
+    "bronze": "ponto",
+    "prata": "ponto",
+    "ouro": "ponto",
+    "platina": "ponto"
+};
+
+let conquistasCarregadas = [];
+
 // Conquistas vêm calculadas do backend a partir do que o cliente realmente fez
 // (sugestões, aprovações, locais salvos, resgates e nível).
 async function carregarConquistas(idUsuario) {
@@ -116,6 +160,7 @@ async function carregarConquistas(idUsuario) {
         if (!resposta.ok) throw new Error("Falha ao carregar conquistas.");
 
         const conquistas = await resposta.json();
+        conquistasCarregadas = conquistas;
         const desbloqueadas = conquistas.filter((c) => c.desbloqueada).length;
 
         if (contador) contador.textContent = `${desbloqueadas} de ${conquistas.length}`;
@@ -127,7 +172,7 @@ async function carregarConquistas(idUsuario) {
                     ? c.descricao
                     : `${c.descricao} (${c.progresso}/${c.meta})`;
                 return `
-                    <div class="conquista-item ${classe}" title="${dica}">
+                    <div class="conquista-item ${classe}" title="${dica}" onclick="abrirConquista('${c.id}')">
                         <div class="conquista-icone"><i class="fas ${c.icone}"></i></div>
                         <span class="conquista-nome">${c.nome}</span>
                     </div>`;
@@ -137,6 +182,56 @@ async function carregarConquistas(idUsuario) {
         console.error("Erro ao carregar conquistas:", error);
         grid.innerHTML = `<p class="atividade-vazia">Não foi possível carregar as conquistas.</p>`;
     }
+}
+
+function abrirConquista(id) {
+    const c = conquistasCarregadas.find((item) => item.id === id);
+    if (!c) return;
+
+    const familia = FAMILIAS_CONQUISTA[FAMILIA_POR_CONQUISTA[c.id]] || FAMILIAS_CONQUISTA.envio;
+    const meta = Number(c.meta) || 0;
+    const progresso = Number(c.progresso) || 0;
+    const faltam = Math.max(0, meta - progresso);
+
+    document.getElementById("conquistaTitulo").textContent = c.nome;
+    document.getElementById("conquistaDescricao").textContent = c.descricao;
+    document.getElementById("conquistaDica").textContent = familia.dica;
+    document.getElementById("conquistaIcone").innerHTML = `<i class="fas ${c.icone}"></i>`;
+
+    // As cores do ícone vêm das mesmas regras da grade, então o estado precisa
+    // estar num ancestral dele.
+    document.getElementById("conquistaDetalhe").className =
+        "conquista-detalhe " + (c.desbloqueada ? "conquista-desbloqueada" : "conquista-bloqueada");
+
+    const selo = document.getElementById("conquistaSelo");
+    selo.textContent = c.desbloqueada ? "Desbloqueada" : "Bloqueada";
+    selo.className = "conquista-selo " + (c.desbloqueada ? "conquista-selo-ok" : "conquista-selo-bloq");
+
+    // Barra só faz sentido em conquista de acúmulo. Nas de passo único (meta 1)
+    // e no Bronze (meta 0) ela não diria nada além do selo.
+    const bloco = document.getElementById("conquistaProgresso");
+    const faltamTexto = document.getElementById("conquistaFaltam");
+
+    if (meta > 1) {
+        const pct = Math.min(100, Math.round((progresso / meta) * 100));
+        document.getElementById("conquistaContagem").textContent = `${progresso} de ${meta}`;
+        document.getElementById("conquistaPercentual").textContent = `${pct}%`;
+        document.getElementById("conquistaBarra").style.width = `${pct}%`;
+
+        if (c.desbloqueada) {
+            faltamTexto.style.display = "none";
+        } else {
+            faltamTexto.textContent = faltam === 1
+                ? `Falta 1 ${familia.sing}`
+                : `Faltam ${faltam} ${familia.plur}`;
+            faltamTexto.style.display = "";
+        }
+        bloco.style.display = "";
+    } else {
+        bloco.style.display = "none";
+    }
+
+    document.getElementById("modalConquista").classList.add("aberto");
 }
 
 function preencherPerfil(usuario) {

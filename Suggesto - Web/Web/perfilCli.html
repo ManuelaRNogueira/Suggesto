@@ -630,6 +630,34 @@
     </div>
   </div>
 
+  <!-- MODAL DETALHE DA CONQUISTA -->
+  <div class="modal-fundo" id="modalConquista">
+    <div class="modal modal-pequeno">
+      <div class="modal-topo">
+        <h3 class="modal-titulo" id="conquistaTitulo">—</h3>
+        <button class="modal-fechar" onclick="fecharModal('modalConquista')"><i class="fas fa-times"></i></button>
+      </div>
+
+      <div class="conquista-detalhe" id="conquistaDetalhe">
+        <div class="conquista-icone" id="conquistaIcone"><i class="fas fa-trophy"></i></div>
+        <span class="conquista-selo" id="conquistaSelo">—</span>
+      </div>
+
+      <p class="modal-sub" id="conquistaDescricao">—</p>
+
+      <div id="conquistaProgresso">
+        <div class="nivel-progresso-labels">
+          <span id="conquistaContagem">—</span>
+          <span id="conquistaPercentual">—</span>
+        </div>
+        <div class="nivel-barra"><div class="nivel-barra-fill" id="conquistaBarra"></div></div>
+        <p class="nivel-faltam" id="conquistaFaltam">—</p>
+      </div>
+
+      <p class="conquista-dica" id="conquistaDica">—</p>
+    </div>
+  </div>
+
   <!-- TOAST -->
   <div class="toast" id="toast">
     <i class="fas fa-check-circle"></i>

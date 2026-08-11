@@ -717,6 +717,43 @@ body {
 }
 .conquista-desbloqueada .conquista-nome { color: var(--cor-texto-fraco); }
 
+/* Detalhe da conquista (modal aberto ao clicar num item da grade) */
+.conquista-detalhe {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.conquista-detalhe .conquista-icone {
+  width: 56px;
+  height: 56px;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.conquista-selo {
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 4px 11px;
+}
+.conquista-selo-ok {
+  color: var(--cor-roxo-claro);
+  background: rgba(129, 140, 248, 0.12);
+  border: 1px solid rgba(129, 140, 248, 0.25);
+}
+.conquista-selo-bloq {
+  color: var(--cor-texto-muito-fraco);
+  background: var(--cor-fundo-3);
+  border: 1px solid var(--cor-borda);
+}
+.conquista-dica {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--cor-texto-muito-fraco);
+  border-top: 1px solid var(--cor-borda);
+  padding-top: 14px;
+  margin: 0;
+}
+
 /* ===== MODAL ===== */
 .modal-fundo {
   display: none;
