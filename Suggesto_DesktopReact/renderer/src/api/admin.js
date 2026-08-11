@@ -3,6 +3,16 @@
 
 export const API_BASE = "http://localhost:8080/api";
 
+// A foto vem como URL completa quando foi para o Cloudinary, ou só como nome do
+// arquivo quando caiu no fallback de disco local. Aceita os dois formatos.
+export function urlFoto(fotoPath) {
+  const nome = fotoPath ? String(fotoPath).trim() : "";
+  if (!nome) return null;
+  if (/^https?:\/\//i.test(nome)) return nome;
+  const limpo = nome.replace(/^\/?uploads\//, "");
+  return `${API_BASE.replace("/api", "")}/uploads/${limpo}`;
+}
+
 export function idGerente() {
   return localStorage.getItem("idGerenteEfetivo") || localStorage.getItem("idUsuario");
 }

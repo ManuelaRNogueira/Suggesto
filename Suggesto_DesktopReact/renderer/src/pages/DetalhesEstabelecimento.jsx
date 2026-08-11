@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import ModalEditarEstabelecimento from './ModalEditarEstabelecimento';
 import Icone, { IC } from '../components/Icones';
+import { urlFoto } from '../api/admin';
 import './DetalhesEstabelecimento.css';
 
 // ─── CONFIGURAÇÃO DE FILTROS ──────────────────────────────────────────────────
@@ -253,7 +254,7 @@ function DetalhesEstabelecimento() {
             <div className="container-foto-estab">
               {dados.fotoPath ? (
                 <img
-                  src={`http://localhost:8080/uploads/${dados.fotoPath}`}
+                  src={urlFoto(dados.fotoPath)}
                   alt={dados.nome}
                   className="foto-estabelecimento"
                 />

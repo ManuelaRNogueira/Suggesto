@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import ModalEstabelecimento from "./ModalEstabelecimento";
 import { Topo } from "../components/AdminShell";
 import Icone, { IC } from "../components/Icones";
-import { API_BASE, idGerente } from "../api/admin";
+import { API_BASE, idGerente, urlFoto } from "../api/admin";
 import "./Dashboard.css";
 
 export default function Dashboard() {
@@ -117,9 +117,7 @@ const CORES_ACENTO = ["#6366f1", "#818cf8", "#60a5fa", "#22c55e", "#f59e0b", "#e
 function CardEstab({ estab, idx, deletando, onDeletar }) {
   const cor = CORES_ACENTO[idx % CORES_ACENTO.length];
 
-  const imagemURL = estab.fotoPath
-    ? `http://localhost:8080/uploads/${estab.fotoPath}`
-    : null;
+  const imagemURL = urlFoto(estab.fotoPath);
 
   return (
     <article className="card-estab">

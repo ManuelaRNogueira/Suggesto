@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import './ModalEstabelecimento.css';
 import './ModalEditarEstabelecimento.css';
 import Icone, { IC } from "../components/Icones";
-import { API_BASE, buscarUsuarios } from "../api/admin";
+import { API_BASE, buscarUsuarios, urlFoto } from "../api/admin";
 
 const CATEGORIAS = [
   "Restaurante", "Bar", "Lanchonete", "Pizzaria",
@@ -38,9 +38,7 @@ export default function ModalEditarEstabelecimento({ estab, fecharModal, aoSalva
   });
 
   const [arquivo, setArquivo] = useState(null);
-  const [preview, setPreview] = useState(
-    estab.fotoPath ? `${API_BASE.replace(/\/api$/, "")}/uploads/${estab.fotoPath}` : null
-  );
+  const [preview, setPreview] = useState(urlFoto(estab.fotoPath));
   const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef();
 
