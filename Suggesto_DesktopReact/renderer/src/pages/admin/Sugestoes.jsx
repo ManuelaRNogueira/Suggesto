@@ -9,6 +9,7 @@ import {
   formatarData,
   iniciais,
   labelStatus,
+  responderSugestao,
   STATUS,
   tituloSugestao,
 } from "../../api/admin";
@@ -30,6 +31,11 @@ export default function Sugestoes() {
   const [salvando, setSalvando] = useState(null);
   const [aviso, setAviso] = useState(null);
   const [podeExportar, setPodeExportar] = useState(true);
+
+  const [respondendoId, setRespondendoId] = useState(null);
+  const [textoResposta, setTextoResposta] = useState("");
+  const [enviandoResposta, setEnviandoResposta] = useState(null);
+  const meuId = localStorage.getItem("idUsuario");
 
   const [busca, setBusca] = useState("");
   const [status, setStatus] = useState("todos");
@@ -132,6 +138,45 @@ export default function Sugestoes() {
       setAviso({ tipo: "erro", texto: `Não foi possível atualizar: ${e.message}` });
     } finally {
       setSalvando(null);
+    }
+  };
+
+  const abrirResposta = (sugestao) => {
+    setRespondendoId(sugestao.id);
+    setTextoResposta(sugestao.resposta || "");
+  };
+
+  const cancelarResposta = () => {
+    setRespondendoId(null);
+    setTextoResposta("");
+  };
+
+  const enviarResposta = async (sugestao) => {
+    setEnviandoResposta(sugestao.id);
+    try {
+      const dados = await responderSugestao(sugestao.id, {
+        idAdmin: meuId,
+        resposta: textoResposta,
+      });
+      const salva = dados.avaliacao;
+      setSugestoes((prev) =>
+        prev.map((s) =>
+          s.id === sugestao.id
+            ? {
+                ...s,
+                resposta: salva.resposta,
+                respondidoPor: salva.respondidoPor,
+                dataResposta: salva.dataResposta,
+              }
+            : s,
+        ),
+      );
+      setAviso({ tipo: "ok", texto: "Resposta enviada." });
+      cancelarResposta();
+    } catch (e) {
+      setAviso({ tipo: "erro", texto: `Não foi possível enviar a resposta: ${e.message}` });
+    } finally {
+      setEnviandoResposta(null);
     }
   };
 
@@ -249,6 +294,13 @@ export default function Sugestoes() {
                   sugestao={s}
                   salvando={salvando === s.id}
                   onMudar={mudarStatus}
+                  respondendo={respondendoId === s.id}
+                  textoResposta={textoResposta}
+                  enviandoResposta={enviandoResposta === s.id}
+                  onAbrirResposta={abrirResposta}
+                  onCancelarResposta={cancelarResposta}
+                  onTextoRespostaChange={setTextoResposta}
+                  onEnviarResposta={enviarResposta}
                 />
               ))}
             </ul>
@@ -333,7 +385,18 @@ function Chip({ id, ativo, onClick, rotulo, qtd }) {
   );
 }
 
-function Cartao({ sugestao, salvando, onMudar }) {
+function Cartao({
+  sugestao,
+  salvando,
+  onMudar,
+  respondendo,
+  textoResposta,
+  enviandoResposta,
+  onAbrirResposta,
+  onCancelarResposta,
+  onTextoRespostaChange,
+  onEnviarResposta,
+}) {
   const acoes = ACOES[sugestao.statusUi] || [];
 
   return (
@@ -372,8 +435,71 @@ function Cartao({ sugestao, salvando, onMudar }) {
         )}
       </div>
 
-      {acoes.length > 0 && (
+      {sugestao.resposta && !respondendo && (
+        <div className="sug-resposta">
+          <div className="sug-resposta-topo">
+            <span className="sug-resposta-rotulo">Sua resposta</span>
+            <button
+              type="button"
+              className="sug-resposta-editar"
+              onClick={() => onAbrirResposta(sugestao)}
+            >
+              Editar
+            </button>
+          </div>
+          <p className="sug-resposta-texto">{sugestao.resposta}</p>
+          {sugestao.respondidoPor && (
+            <span className="sug-resposta-autor">
+              por {sugestao.respondidoPor}
+              {sugestao.dataResposta && ` · ${formatarData(sugestao.dataResposta)}`}
+            </span>
+          )}
+        </div>
+      )}
+
+      {respondendo && (
+        <div className="sug-resposta-form">
+          <textarea
+            className="sug-resposta-campo"
+            placeholder="Escreva a resposta que o cliente vai ver…"
+            value={textoResposta}
+            onChange={(e) => onTextoRespostaChange(e.target.value)}
+            rows={3}
+            autoFocus
+          />
+          <div className="sug-resposta-acoes">
+            <button
+              type="button"
+              className="adm-btn"
+              onClick={onCancelarResposta}
+              disabled={enviandoResposta}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="adm-btn adm-btn-principal"
+              onClick={() => onEnviarResposta(sugestao)}
+              disabled={enviandoResposta || !textoResposta.trim()}
+            >
+              {enviandoResposta ? "Enviando…" : "Enviar resposta"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {(acoes.length > 0 || (!sugestao.resposta && !respondendo)) && (
         <div className="sug-card-acoes">
+          {!sugestao.resposta && !respondendo && (
+            <button
+              type="button"
+              className="adm-btn"
+              onClick={() => onAbrirResposta(sugestao)}
+            >
+              <Icone d={IC.chat} size={13} />
+              Responder
+            </button>
+          )}
           {acoes.map((destino) => (
             <button
               key={destino}

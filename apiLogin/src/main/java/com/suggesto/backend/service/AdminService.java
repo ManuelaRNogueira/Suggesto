@@ -235,6 +235,8 @@ public class AdminService {
         item.put("nivelAutorNome", NivelUtil.nomeNivel(pontosAutor));
         item.put("prioridade", NivelUtil.prioridade(pontosAutor));
         item.put("resposta", a.getResposta());
+        item.put("respondidoPor", a.getRespondidoPor());
+        item.put("dataResposta", a.getDataResposta());
         item.put("estabelecimento", a.getEstabelecimento() != null ? a.getEstabelecimento().getNome() : null);
         item.put("estabelecimentoId", a.getEstabelecimento() != null ? a.getEstabelecimento().getIdEstabelecimento() : null);
         return item;

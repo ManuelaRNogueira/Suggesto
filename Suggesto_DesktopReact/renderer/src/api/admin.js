@@ -89,6 +89,14 @@ export function atualizarStatusSugestao(id, status) {
   });
 }
 
+export function responderSugestao(id, { idAdmin, resposta }) {
+  return fetchJson(`${API_BASE}/avaliacoes/${id}/resposta`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idAdmin, resposta }),
+  });
+}
+
 // PUT /api/usuarios/{id} aceita apenas nome, telefone, cidade e foto.
 export function atualizarPerfil(id, { nome, telefone, cidade }) {
   const corpo = new FormData();
