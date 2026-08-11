@@ -15,13 +15,10 @@ import MinhasRecompensas from "./pages/MinhasRecompensas";
 
 import "./App.css";
 
-// Continua logado após um reload enquanto a sessão estiver no localStorage
-const sessaoAtiva = () =>
-  Boolean(localStorage.getItem("idUsuario")) &&
-  localStorage.getItem("tipoUsuario") === "Administrador";
-
 function App() {
-  const [isLogado, setIsLogado] = useState(sessaoAtiva);
+  // Sempre exige login ao abrir o app; o Electron mantém o localStorage
+  // entre execuções, então não dá pra confiar nele pra manter a sessão.
+  const [isLogado, setIsLogado] = useState(false);
 
   if (!isLogado) {
     return <Login aoLogar={() => setIsLogado(true)} />;
