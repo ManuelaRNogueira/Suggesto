@@ -1,9 +1,9 @@
 // Camada de acesso à API administrativa.
 // Porte do js/admApi.js do projeto web para o desktop.
 
-// Em desenvolvimento cada pessoa roda o backend na própria máquina. Ao hospedar,
-// define-se VITE_API_BASE no build para apontar para o servidor, sem tocar no código.
-export const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8080/api";
+// Por padrão aponta para o backend hospedado no Render. Para rodar contra o
+// backend local, defina VITE_API_BASE=http://localhost:8080/api antes do build/dev.
+export const API_BASE = import.meta.env.VITE_API_BASE || "https://suggesto-api.onrender.com/api";
 
 // A foto vem como URL completa quando foi para o Cloudinary, ou só como nome do
 // arquivo quando caiu no fallback de disco local. Aceita os dois formatos.
