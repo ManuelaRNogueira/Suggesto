@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import ModalEditarEstabelecimento from './ModalEditarEstabelecimento';
 import Icone, { IC } from '../components/Icones';
 import { API_BASE, urlFoto } from '../api/admin';
+import { useAviso } from '../components/Aviso';
 import './DetalhesEstabelecimento.css';
 
 // ─── CONFIGURAÇÃO DE FILTROS ──────────────────────────────────────────────────
@@ -38,6 +39,7 @@ function formatarData(dataStr) {
 
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────────
 function DetalhesEstabelecimento() {
+  const avisar = useAviso();
   const { id } = useParams();
   const [estab, setEstab]               = useState(null);
   const [mediaGeral, setMediaGeral]     = useState(0);
@@ -130,7 +132,7 @@ function DetalhesEstabelecimento() {
       );
     } catch (e) {
       console.error(e);
-      alert(e.message || 'Não foi possível atualizar a sugestão.');
+      avisar(e.message || 'Não foi possível atualizar a sugestão.');
     }
   };
 
@@ -170,7 +172,7 @@ function DetalhesEstabelecimento() {
       );
       cancelarResposta();
     } catch (e) {
-      alert(e.message || 'Não foi possível enviar a resposta.');
+      avisar(e.message || 'Não foi possível enviar a resposta.');
     } finally {
       setEnviandoResposta(false);
     }

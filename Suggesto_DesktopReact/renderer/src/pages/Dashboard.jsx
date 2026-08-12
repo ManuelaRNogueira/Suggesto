@@ -4,9 +4,11 @@ import ModalEstabelecimento from "./ModalEstabelecimento";
 import { Topo } from "../components/AdminShell";
 import Icone, { IC } from "../components/Icones";
 import { API_BASE, idGerente, urlFoto } from "../api/admin";
+import { useAviso } from "../components/Aviso";
 import "./Dashboard.css";
 
 export default function Dashboard() {
+  const avisar = useAviso();
   const [estabelecimentos, setEstab] = useState([]);
   const [modalAberto, setModal] = useState(false);
   const [deletando, setDeletando] = useState(null);
@@ -47,10 +49,10 @@ export default function Dashboard() {
       if (r.ok) {
         setEstab((prev) => prev.filter((e) => e.idEstabelecimento !== id));
       } else {
-        alert("Erro ao excluir.");
+        avisar("Erro ao excluir.");
       }
     } catch {
-      alert("Erro de comunicação.");
+      avisar("Erro de comunicação.");
     } finally {
       setDeletando(null);
     }

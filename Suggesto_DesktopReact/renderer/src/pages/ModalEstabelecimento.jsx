@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import { API_BASE } from "../api/admin";
+import { useAviso } from "../components/Aviso";
 import './ModalEstabelecimento.css'; // Importando o CSS separado
 
 // ─── ÍCONE INLINE ─────────────────────────────────────────────────────────────
@@ -65,6 +66,7 @@ const validarTelefone = (telefone) => {
 
 /* ─── COMPONENTE PRINCIPAL ───────────────────────────────────────────────────── */
 export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
+  const avisar = useAviso();
   const [nome,      setNome]      = useState("");
   const [cnpj,      setCnpj]      = useState("");
   const [categoria, setCategoria] = useState("");
@@ -123,7 +125,7 @@ export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
           }));
           setTimeout(() => document.getElementById("input-numero")?.focus(), 50);
         } else {
-          alert("CEP não encontrado. Por favor, digite o endereço manualmente.");
+          avisar("CEP não encontrado. Por favor, digite o endereço manualmente.");
         }
       } catch (error) {
         console.error("Erro ao buscar CEP:", error);
@@ -176,7 +178,7 @@ export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
 
     const idGerente = localStorage.getItem("idUsuario");
     if (!idGerente) { 
-      alert("Erro: ID do gerente não encontrado."); 
+      avisar("Erro: ID do gerente não encontrado."); 
       setSalvando(false); 
       return; 
     }
@@ -210,10 +212,10 @@ export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
         aoSalvar(await r.json());
         fecharModal();
       } else {
-        alert("Erro ao guardar: " + await r.text());
+        avisar(await r.text());
       }
     } catch {
-      alert("Erro de comunicação com o servidor.");
+      avisar("Erro de comunicação com o servidor.");
     } finally {
       setSalvando(false);
     }

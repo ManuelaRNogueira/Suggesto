@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { HashRouter, Routes, Route } from "react-router-dom";
 
 import Login from "./pages/Login";
+import { AvisoProvider } from "./components/Aviso";
 import AdminShell from "./components/AdminShell";
 import Inicio from "./pages/admin/Inicio";
 import Sugestoes from "./pages/admin/Sugestoes";
@@ -21,31 +22,37 @@ function App() {
   const [isLogado, setIsLogado] = useState(false);
 
   if (!isLogado) {
-    return <Login aoLogar={() => setIsLogado(true)} />;
+    return (
+      <AvisoProvider>
+        <Login aoLogar={() => setIsLogado(true)} />
+      </AvisoProvider>
+    );
   }
 
   return (
-    <HashRouter>
-      <Routes>
-        {/* Painel administrativo: sidebar e cabeçalho compartilhados */}
-        <Route element={<AdminShell />}>
-          <Route path="/" element={<Inicio />} />
-          <Route path="/sugestoes" element={<Sugestoes />} />
-          <Route path="/estatisticas" element={<Estatisticas />} />
-          <Route path="/estabelecimentos" element={<Dashboard />} />
-          <Route path="/perfil" element={<Perfil />} />
-          <Route path="/solicitacoes" element={<Solicitacoes />} />
-          <Route path="/recompensas" element={<MinhasRecompensas />} />
-          <Route
-            path="/estabelecimento/:id/recompensas"
-            element={<MinhasRecompensas />}
-          />
-        </Route>
+    <AvisoProvider>
+      <HashRouter>
+        <Routes>
+          {/* Painel administrativo: sidebar e cabeçalho compartilhados */}
+          <Route element={<AdminShell />}>
+            <Route path="/" element={<Inicio />} />
+            <Route path="/sugestoes" element={<Sugestoes />} />
+            <Route path="/estatisticas" element={<Estatisticas />} />
+            <Route path="/estabelecimentos" element={<Dashboard />} />
+            <Route path="/perfil" element={<Perfil />} />
+            <Route path="/solicitacoes" element={<Solicitacoes />} />
+            <Route path="/recompensas" element={<MinhasRecompensas />} />
+            <Route
+              path="/estabelecimento/:id/recompensas"
+              element={<MinhasRecompensas />}
+            />
+          </Route>
 
-        {/* Tela de detalhe, com layout próprio */}
-        <Route path="/estabelecimento/:id" element={<DetalhesEstabelecimento />} />
-      </Routes>
-    </HashRouter>
+          {/* Tela de detalhe, com layout próprio */}
+          <Route path="/estabelecimento/:id" element={<DetalhesEstabelecimento />} />
+        </Routes>
+      </HashRouter>
+    </AvisoProvider>
   );
 }
 

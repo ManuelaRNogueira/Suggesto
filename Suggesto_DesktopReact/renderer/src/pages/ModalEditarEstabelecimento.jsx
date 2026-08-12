@@ -3,6 +3,7 @@ import './ModalEstabelecimento.css';
 import './ModalEditarEstabelecimento.css';
 import Icone, { IC } from "../components/Icones";
 import { API_BASE, buscarUsuarios, urlFoto } from "../api/admin";
+import { useAviso } from "../components/Aviso";
 
 const CATEGORIAS = [
   "Restaurante", "Bar", "Lanchonete", "Pizzaria",
@@ -18,6 +19,7 @@ function extrairHorarios(horarioTexto) {
 }
 
 export default function ModalEditarEstabelecimento({ estab, fecharModal, aoSalvar }) {
+  const avisar = useAviso();
   const horariosIniciais = extrairHorarios(estab.horarioFuncionamento);
 
   const [nome, setNome] = useState(estab.nome || "");
@@ -181,10 +183,10 @@ export default function ModalEditarEstabelecimento({ estab, fecharModal, aoSalva
         cancelarRemocao();
       } else {
         const dados = await r.json().catch(() => null);
-        alert(dados?.message || "Erro ao remover administrador.");
+        avisar(dados?.message || "Erro ao remover administrador.");
       }
     } catch {
-      alert("Erro de comunicação com o servidor.");
+      avisar("Erro de comunicação com o servidor.");
     } finally {
       setRemovendoId(null);
     }

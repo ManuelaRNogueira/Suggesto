@@ -218,6 +218,26 @@ function trocarModoResponsavel(modo) {
 // CADASTRO FINAL
 // ======================================================
 
+// Consulta o limite de administradores do plano escolhido. Na dúvida (API fora do
+// ar, plano não encontrado) devolve true e mantém o código visível, que era o
+// comportamento anterior.
+async function planoPermiteEquipe(nomePlano) {
+    if (!nomePlano) return true;
+
+    try {
+        const resposta = await fetch(`${window.API_BASE}/planos`);
+        if (!resposta.ok) return true;
+
+        const planos = await resposta.json();
+        const plano = planos.find((p) => p.nome === nomePlano);
+        return !plano || plano.limiteAdmins !== 1;
+    } catch (error) {
+        console.error("Erro ao consultar o plano:", error);
+        return true;
+    }
+}
+
+
 async function cadastrar() {
     if (modoResponsavel === "existente") {
         await cadastrarComContaExistente();
@@ -454,6 +474,14 @@ async function finalizarCadastroEstabelecimento(botao, textoOriginal, nomeRespon
         localStorage.setItem("idGerenteEfetivo", idUsuarioCriado);
 
         document.getElementById("codigoEstabelecimento").textContent = estabelecimentoSalvo.codigoAcesso;
+
+        // O código só serve para convidar gente para a equipe. Em plano de um
+        // administrador só, mostrá-lo prometia algo que o sistema recusa depois
+        // (o backend barra a entrada pelo limite do plano).
+        const blocoCodigo = document.querySelector(".codigo-box");
+        if (blocoCodigo && !(await planoPermiteEquipe(planoEscolhido))) {
+            blocoCodigo.style.display = "none";
+        }
 
         document.getElementById("etapaResponsavel").style.display = "none";
         document.getElementById("cadastroSucesso").style.display = "block";

@@ -11,9 +11,11 @@ import {
   iniciais,
   recusarSolicitacao,
 } from "../../api/admin";
+import { useAviso } from "../../components/Aviso";
 import "./Solicitacoes.css";
 
 export default function Solicitacoes() {
+  const avisar = useAviso();
   const [estabelecimentos, setEstabelecimentos] = useState([]);
   const [solicitacoes, setSolicitacoes] = useState([]);
   const [carregando, setCarregando] = useState(true);
@@ -62,7 +64,7 @@ export default function Solicitacoes() {
       }
       setSolicitacoes((prev) => prev.filter((s) => s.id !== id));
     } catch (e) {
-      alert(e.message || "Erro ao responder a solicitação.");
+      avisar(e.message || "Erro ao responder a solicitação.");
     } finally {
       setRespondendo(null);
     }
