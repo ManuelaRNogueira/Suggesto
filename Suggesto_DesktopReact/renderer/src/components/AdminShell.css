@@ -133,6 +133,39 @@
   padding: 1px 7px;
 }
 
+/* Item que o plano atual não libera: continua na lista, só fica opaco e com selo. */
+.adm-nav-item-trancado {
+  width: 100%;
+  background: none;
+  border: none;
+  font-family: var(--fonte);
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.adm-nav-item-trancado:hover {
+  opacity: 1;
+  color: var(--texto);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.adm-nav-selo {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--laranja);
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 999px;
+  padding: 2px 6px;
+  flex-shrink: 0;
+}
+
 .adm-lateral-rodape {
   padding: 10px;
   border-top: 1px solid var(--borda);

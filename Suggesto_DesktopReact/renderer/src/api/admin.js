@@ -73,6 +73,22 @@ export function buscarMeuPlano() {
   return fetchJson(`${API_BASE}/planos/meu?idUsuario=${id}`);
 }
 
+// Catálogo completo (Básico/Pro/Empresarial), pra tela de troca de plano.
+export function listarPlanos() {
+  return fetchJson(`${API_BASE}/planos`);
+}
+
+// Só o administrador principal pode trocar; o backend recusa quem não é dono
+// e bloqueia a troca se o que já existe não couber no plano novo.
+export function trocarPlano(nomePlano) {
+  const id = localStorage.getItem("idUsuario");
+  return fetchJson(`${API_BASE}/planos/meu`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idUsuario: id, plano: nomePlano }),
+  });
+}
+
 export function buscarSolicitacoes() {
   return fetchJson(`${API_BASE}/estabelecimentos/solicitacoes${queryGerente()}`);
 }

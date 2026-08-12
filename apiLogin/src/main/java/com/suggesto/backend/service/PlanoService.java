@@ -5,6 +5,7 @@ import com.suggesto.backend.model.Plano;
 import com.suggesto.backend.model.Usuario;
 import com.suggesto.backend.repository.AvaliacaoRepository;
 import com.suggesto.backend.repository.EstabelecimentoRepository;
+import com.suggesto.backend.repository.PlanoRepository;
 import com.suggesto.backend.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,9 @@ public class PlanoService {
 
     @Autowired
     private AvaliacaoRepository avaliacaoRepository;
+
+    @Autowired
+    private PlanoRepository planoRepository;
 
     // Limites efetivos de um usuário administrador. Membro de equipe herda os
     // limites do dono do estabelecimento, não os da própria conta.
@@ -104,6 +108,59 @@ public class PlanoService {
                             + (limite == 1 ? "apenas o administrador principal." : limite + " administradores na equipe.")
                             + " Faça upgrade para adicionar mais.");
         }
+    }
+
+    // Troca o plano do administrador principal. Só ele pode trocar — membro de
+    // equipe segue os limites do dono, mas não decide o plano. Rebaixar para um
+    // plano que não cabe no que já existe (mais estabelecimentos/admins do que o
+    // novo limite permite) é bloqueado em vez de deixar o excesso "congelado".
+    public Plano trocarPlano(Long idUsuario, String nomePlano) {
+        if (idUsuario == null) {
+            throw new IllegalArgumentException("idUsuario é obrigatório.");
+        }
+        if (nomePlano == null || nomePlano.isBlank()) {
+            throw new IllegalArgumentException("Escolha um plano.");
+        }
+
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
+
+        Long idDono = usuario.getEstabelecimento() != null
+                ? usuario.getEstabelecimento().getIdGerente()
+                : usuario.getId();
+        if (!idDono.equals(usuario.getId())) {
+            throw new IllegalStateException("Apenas o administrador principal pode trocar o plano.");
+        }
+
+        Plano novoPlano = planoRepository.findByNome(nomePlano.trim())
+                .orElseThrow(() -> new IllegalArgumentException("Plano não encontrado."));
+
+        Integer limiteEstab = novoPlano.getLimiteEstabelecimentos();
+        if (limiteEstab != null) {
+            long atuais = estabelecimentoRepository.buscarPorGerenteAtivos(idUsuario).size();
+            if (atuais > limiteEstab) {
+                throw new IllegalStateException(
+                        "O plano " + novoPlano.getNome() + " permite " + limiteEstab
+                                + (limiteEstab == 1 ? " estabelecimento" : " estabelecimentos")
+                                + ", mas você tem " + atuais + ". Remova "
+                                + (atuais - limiteEstab) + " antes de trocar.");
+            }
+        }
+
+        Integer limiteAdmins = novoPlano.getLimiteAdmins();
+        if (limiteAdmins != null) {
+            long atuais = usuarioRepository.countByEstabelecimento_IdGerente(idUsuario);
+            if (atuais > limiteAdmins) {
+                throw new IllegalStateException(
+                        "O plano " + novoPlano.getNome() + " permite "
+                                + (limiteAdmins == 1 ? "apenas o administrador principal" : limiteAdmins + " administradores na equipe")
+                                + ", e sua equipe tem " + atuais + ". Remova membros antes de trocar.");
+            }
+        }
+
+        usuario.setPlano(novoPlano);
+        usuarioRepository.save(usuario);
+        return novoPlano;
     }
 
     // Resumo que o front usa para esconder o que o plano não inclui.

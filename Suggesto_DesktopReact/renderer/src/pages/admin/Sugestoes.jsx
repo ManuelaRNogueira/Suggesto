@@ -237,17 +237,20 @@ export default function Sugestoes() {
             onChange={(e) => setBusca(e.target.value)}
           />
         </label>
-        {podeExportar && (
-          <button
-            type="button"
-            className="adm-btn"
-            onClick={exportarCsv}
-            disabled={filtradas.length === 0}
-          >
-            <Icone d={IC.baixar} size={14} />
-            CSV
-          </button>
-        )}
+        <button
+          type="button"
+          className="adm-btn"
+          onClick={() =>
+            podeExportar
+              ? exportarCsv()
+              : setAviso({ tipo: "erro", texto: "Exportar em CSV está disponível no plano Pro." })
+          }
+          disabled={podeExportar && filtradas.length === 0}
+          title={podeExportar ? undefined : "Disponível no plano Pro"}
+        >
+          <Icone d={podeExportar ? IC.baixar : IC.cadeado} size={14} />
+          CSV
+        </button>
       </Topo>
 
       <div className="sug-filtros">

@@ -9,6 +9,7 @@ import Inicio from "./pages/admin/Inicio";
 import Sugestoes from "./pages/admin/Sugestoes";
 import Estatisticas from "./pages/admin/Estatisticas";
 import Perfil from "./pages/admin/Perfil";
+import Plano from "./pages/admin/Plano";
 import Solicitacoes from "./pages/admin/Solicitacoes";
 import Dashboard from "./pages/Dashboard";
 import DetalhesEstabelecimento from "./pages/DetalhesEstabelecimento";
@@ -40,6 +41,7 @@ function App() {
             <Route path="/estatisticas" element={<Estatisticas />} />
             <Route path="/estabelecimentos" element={<Dashboard />} />
             <Route path="/perfil" element={<Perfil />} />
+            <Route path="/plano" element={<Plano />} />
             <Route path="/solicitacoes" element={<Solicitacoes />} />
             <Route path="/recompensas" element={<MinhasRecompensas />} />
             <Route

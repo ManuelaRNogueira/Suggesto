@@ -12,6 +12,7 @@ import "../styles/tokens.css";
 import "./AdminShell.css";
 
 // `recurso` liga o item ao que o plano do administrador libera (ver planos.html).
+// Item bloqueado pelo plano não some — fica visível com o selo "Pro" (ver bloqueadoPorPlano).
 const NAV = [
   { para: "/", rotulo: "Início", icone: IC.inicio, fim: true },
   { para: "/sugestoes", rotulo: "Sugestões", icone: IC.chat, badgeChave: "sugestoes" },
@@ -21,12 +22,23 @@ const NAV = [
   { para: "/recompensas", rotulo: "Minhas recompensas", icone: IC.presente, recurso: "permiteRecompensas" },
 ];
 
+// Único plano pago que já libera tudo — é o que vale mostrar como "próximo passo".
+const PLANO_SUGERIDO = "Pro";
+
+function bloqueadoPorPlano(item, plano) {
+  if (!plano) return false;
+  if (item.recurso && plano[item.recurso] === false) return true;
+  if (item.equipe && plano.limiteAdmins === 1) return true;
+  return false;
+}
+
 export default function AdminShell() {
   const [badges, setBadges] = useState({});
   const [usuario, setUsuario] = useState({ nome: "", email: "" });
   const [confirmandoSaida, setConfirmandoSaida] = useState(false);
   // Enquanto o plano não chega, nada é escondido — evita a sidebar "piscar".
   const [plano, setPlano] = useState(null);
+  const [avisoPlano, setAvisoPlano] = useState(null);
 
   useEffect(() => {
     setUsuario({
@@ -73,29 +85,42 @@ export default function AdminShell() {
 
         <nav className="adm-nav">
           <p className="adm-nav-secao">Menu</p>
-          {NAV.filter((item) => {
-            if (item.somentePrincipal && !souPrincipal()) return false;
-            if (!plano) return true;
-            if (item.recurso && plano[item.recurso] === false) return false;
-            // Plano que só permite o admin principal não tem equipe para gerenciar.
-            if (item.equipe && plano.limiteAdmins === 1) return false;
-            return true;
-          }).map((item) => (
-            <NavLink
-              key={item.para}
-              to={item.para}
-              end={item.fim}
-              className={({ isActive }) =>
-                `adm-nav-item${isActive ? " ativo" : ""}`
-              }
-            >
-              <Icone d={item.icone} size={17} className="adm-nav-icone" />
-              {item.rotulo}
-              {item.badgeChave && badges[item.badgeChave] > 0 && (
-                <span className="adm-nav-badge adm-num">{badges[item.badgeChave]}</span>
-              )}
-            </NavLink>
-          ))}
+          {NAV.filter((item) => !item.somentePrincipal || souPrincipal()).map((item) => {
+            const trancado = bloqueadoPorPlano(item, plano);
+            if (trancado) {
+              return (
+                <button
+                  key={item.para}
+                  type="button"
+                  className="adm-nav-item adm-nav-item-trancado"
+                  onClick={() => setAvisoPlano(item.rotulo)}
+                >
+                  <Icone d={item.icone} size={17} className="adm-nav-icone" />
+                  {item.rotulo}
+                  <span className="adm-nav-selo">
+                    <Icone d={IC.cadeado} size={10} />
+                    {PLANO_SUGERIDO}
+                  </span>
+                </button>
+              );
+            }
+            return (
+              <NavLink
+                key={item.para}
+                to={item.para}
+                end={item.fim}
+                className={({ isActive }) =>
+                  `adm-nav-item${isActive ? " ativo" : ""}`
+                }
+              >
+                <Icone d={item.icone} size={17} className="adm-nav-icone" />
+                {item.rotulo}
+                {item.badgeChave && badges[item.badgeChave] > 0 && (
+                  <span className="adm-nav-badge adm-num">{badges[item.badgeChave]}</span>
+                )}
+              </NavLink>
+            );
+          })}
 
           <p className="adm-nav-secao">Conta</p>
           <NavLink
@@ -105,6 +130,16 @@ export default function AdminShell() {
             <Icone d={IC.usuarios} size={17} className="adm-nav-icone" />
             Perfil e equipe
           </NavLink>
+          {souPrincipal() && (
+            <NavLink
+              to="/plano"
+              className={({ isActive }) => `adm-nav-item${isActive ? " ativo" : ""}`}
+            >
+              <Icone d={IC.estrela} size={17} className="adm-nav-icone" />
+              Plano
+              {plano?.nome && <span className="adm-nav-badge">{plano.nome}</span>}
+            </NavLink>
+          )}
         </nav>
 
         <div className="adm-lateral-rodape">
@@ -166,6 +201,42 @@ export default function AdminShell() {
                 <Icone d={IC.sair} size={13} />
                 Sair
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {avisoPlano && (
+        <div
+          className="adm-modal-fundo"
+          onMouseDown={(e) => e.target === e.currentTarget && setAvisoPlano(null)}
+        >
+          <div className="adm-modal">
+            <div className="adm-modal-topo">
+              <h2 className="adm-cartao-titulo">Disponível no {PLANO_SUGERIDO}</h2>
+              <button
+                type="button"
+                className="adm-modal-fechar"
+                onClick={() => setAvisoPlano(null)}
+              >
+                <Icone d={IC.x} size={14} />
+              </button>
+            </div>
+            <p className="adm-modal-texto">
+              "{avisoPlano}" não está incluído no seu plano atual. Faça upgrade
+              para o {PLANO_SUGERIDO} para liberar essa função.
+            </p>
+            <div className="adm-modal-acoes">
+              <button type="button" className="adm-btn" onClick={() => setAvisoPlano(null)}>
+                Fechar
+              </button>
+              <NavLink
+                to="/plano"
+                className="adm-btn adm-btn-principal"
+                onClick={() => setAvisoPlano(null)}
+              >
+                Ver planos
+              </NavLink>
             </div>
           </div>
         </div>

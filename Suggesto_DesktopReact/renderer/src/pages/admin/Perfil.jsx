@@ -136,6 +136,9 @@ export default function Perfil() {
               <Atalho para="/sugestoes" icone={IC.chat} titulo="Sugestões" sub="Triar e responder" />
               <Atalho para="/estatisticas" icone={IC.barras} titulo="Estatísticas" sub="Volume e categorias" />
               <Atalho para="/estabelecimentos" icone={IC.predios} titulo="Estabelecimentos" sub="Cadastrar e editar" />
+              {souPrincipal && (
+                <Atalho para="/plano" icone={IC.estrela} titulo="Plano" sub="Ver e trocar o plano" />
+              )}
             </div>
           </section>
         </div>
