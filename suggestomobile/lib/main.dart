@@ -5,6 +5,7 @@ import 'package:suggestomobile/infoLocal.dart';
 import 'package:suggestomobile/inicialcli.dart';
 //import 'package:suggestomobile/inicialcli.dart';
 import 'package:suggestomobile/inicio.dart';
+import 'package:suggestomobile/inicioAdm.dart';
 import 'package:suggestomobile/locaisSalvos.dart';
 import 'package:suggestomobile/login.dart';
 import 'package:suggestomobile/lojaPontos.dart';
@@ -39,6 +40,7 @@ class MyApp extends StatelessWidget {
         '/cadastro': (context) => Cadastro(),
         '/inicio': (context) => Inicio(),
         '/home_cliente': (context) => HomePage(),
+        '/inicioAdm': (context) => InicioAdm(),
         '/perfil': (context) => PerfilCliPage(),
         '/sugerir': (context) => SugerirPage(),
         '/locais_salvos': (context) => LocaisSalvosPage(),

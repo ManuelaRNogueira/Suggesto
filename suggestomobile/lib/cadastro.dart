@@ -1,5 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'cores.dart';
+import 'mascaras.dart';
 import 'listaUsuarios.dart';
 
 class Cadastro extends StatefulWidget {
@@ -10,498 +12,483 @@ class Cadastro extends StatefulWidget {
 }
 
 class _CadastroState extends State<Cadastro> {
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController senhaController = TextEditingController();
-  final TextEditingController confirmarSenhaController = TextEditingController();
-
+  final _formKey = GlobalKey<FormState>();
 
   String tipoUsuario = 'cliente';
-  bool termosAceitos = false;
-  bool notificacoes = false;
+
+  // Campos comuns às duas contas.
+  final usuarioController = TextEditingController();
+  final emailController = TextEditingController();
+  final telefoneController = TextEditingController();
+  final senhaController = TextEditingController();
+  final confirmarSenhaController = TextEditingController();
+
+  // Só cliente (ver Suggesto - Web/Web/cadastro.html).
+  final cepController = TextEditingController();
+  final cidadeController = TextEditingController();
+  final estadoController = TextEditingController();
+
+  // Só administrador (ver Suggesto - Web/Web/cadastroAdm.html, etapa "Responsável").
+  final nomeController = TextEditingController();
+  final cpfController = TextEditingController();
+
   bool senhaVisivel = false;
   bool confirmarSenhaVisivel = false;
-  String mensagemErro = "";
+  String? erroGeral;
+
+  @override
+  void dispose() {
+    usuarioController.dispose();
+    emailController.dispose();
+    telefoneController.dispose();
+    senhaController.dispose();
+    confirmarSenhaController.dispose();
+    cepController.dispose();
+    cidadeController.dispose();
+    estadoController.dispose();
+    nomeController.dispose();
+    cpfController.dispose();
+    super.dispose();
+  }
 
   void criar() {
-    String email = emailController.text.trim();
-    String senha = senhaController.text.trim();
-    String confirmar = confirmarSenhaController.text.trim();
+    setState(() => erroGeral = null);
+    if (!_formKey.currentState!.validate()) return;
 
-    if (email.isEmpty || senha.isEmpty || confirmar.isEmpty) {
-      setState(() => mensagemErro = "Preencha todos os campos.");
+    final email = emailController.text.trim();
+    if (usuariosCadastrados.any((u) => u['email'] == email)) {
+      setState(() => erroGeral = "Este e-mail já está cadastrado.");
       return;
     }
 
-    if (senha.length < 8) {
-      setState(() => mensagemErro = "A senha deve ter no mínimo 8 caracteres.");
-      return;
-    }
-
-    if (senha != confirmar) {
-      setState(() => mensagemErro = "As senhas não coincidem.");
-      return;
-    }
-
-    if (!termosAceitos) {
-      setState(() => mensagemErro = "Você deve aceitar os termos de uso.");
-      return;
-    }
-
-    // Verifica se email já existe
-    for (var u in usuariosCadastrados) {
-      if (u['email'] == email) {
-        setState(() => mensagemErro = "Este email já está cadastrado.");
-        return;
-      }
-    }
-
-    // Salva no vetor global
-    usuariosCadastrados.add({
+    final novoUsuario = <String, dynamic>{
       'email': email,
-      'senha': senha,
+      'senha': senhaController.text.trim(),
+      'telefone': telefoneController.text.trim(),
       'tipo': tipoUsuario,
-      'notificacoes': notificacoes,
-      'termosAceitos': termosAceitos,
-    });
-    
-    print("===========================================");
-    print("Email: $email");
-    print("Senha: $senha");
-    print("Tipo de usuário: $tipoUsuario");
-    print("Notificações: $notificacoes");
-    print("Termos: $termosAceitos");
-    print("===========================================");
+    };
 
+    if (tipoUsuario == 'cliente') {
+      novoUsuario.addAll({
+        'nome': usuarioController.text.trim(),
+        'username': usuarioController.text.trim(),
+        'cep': cepController.text.trim(),
+        'cidade': cidadeController.text.trim(),
+        'estado': estadoController.text.trim(),
+      });
+    } else {
+      novoUsuario.addAll({
+        'nome': nomeController.text.trim(),
+        'username': usuarioController.text.trim(),
+        'cpf': cpfController.text.trim(),
+      });
+    }
 
-    setState(() => mensagemErro = "");
+    usuariosCadastrados.add(novoUsuario);
 
-  // MENSAGEM DE SUCESSO
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Conta criada com sucesso!", style: TextStyle(fontFamily: "Poppins"),),
-        backgroundColor: Color(0xFF2D5A27),
+      const SnackBar(
+        content: Text("Conta criada com sucesso!", style: TextStyle(fontFamily: "Poppins")),
+        backgroundColor: Cores.verdeFundo,
       ),
     );
 
-    Navigator.pushNamed(context, '/home_cliente');
+    Navigator.pushNamed(context, tipoUsuario == 'administrador' ? '/inicioAdm' : '/home_cliente');
   }
 
   @override
   Widget build(BuildContext context) {
-  return Scaffold(
-    backgroundColor: const Color.fromRGBO(18, 6, 30, 1),
-    body: Stack(
-      children: [
-
-        Center(
+    return Scaffold(
+      backgroundColor: Cores.fundo,
+      body: SafeArea(
+        child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 100,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-
-                // TITULO
-                const Text(
-                  "Criar conta",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 32,
-                    fontFamily: "PoppinsBold",
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                const SizedBox(height: 30),
-
-                //EMAIL
-                SizedBox(
-                  width: 400,
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Email:",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontFamily: "Poppins",
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                SizedBox(
-                  width: 400,
-                  child: TextField(
-                    controller: emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    style: const TextStyle(
-                      color: Color.fromARGB(220, 255, 255, 255),
-                    ),
-                    decoration: InputDecoration(
-                      hintText: "Digite um email válido",
-                      hintStyle: const TextStyle(
-                        color: Color.fromARGB(120, 255, 255, 255),
-                        fontSize: 13,
-                        fontFamily: "Poppins",
-                      ),
-                      fillColor: const Color.fromARGB(123, 88, 8, 129),
-                      filled: true,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(
-                          color: Color(0xFF7B2FBE),
-                          width: 1.5,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                //SENHA
-                SizedBox(
-                  width: 400,
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Senha:",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontFamily: "Poppins",
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                SizedBox(
-                  width: 400,
-                  child: TextField(
-                    controller: senhaController,
-                    obscureText: !senhaVisivel,
-                    style: const TextStyle(
-                      color: Color.fromARGB(220, 255, 255, 255),
-                    ),
-                    decoration: InputDecoration(
-                      hintText: "Mínimo 8 caracteres",
-                      hintStyle: const TextStyle(
-                        color: Color.fromARGB(120, 255, 255, 255),
-                        fontSize: 13,
-                        fontFamily: "Poppins",
-                      ),
-                      fillColor: const Color.fromARGB(123, 88, 8, 129),
-                      filled: true,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(
-                          color: Color(0xFF7B2FBE),
-                          width: 1.5,
-                        ),
-                      ),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          senhaVisivel
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                          color: const Color.fromARGB(160, 255, 255, 255),
-                          size: 20,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            senhaVisivel = !senhaVisivel;
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                // CONFIRMAR SENHA
-                SizedBox(
-                  width: 400,
-                  child: TextField(
-                    controller: confirmarSenhaController,
-                    obscureText: !confirmarSenhaVisivel,
-                    style: const TextStyle(
-                      color: Color.fromARGB(220, 255, 255, 255),
-                    ),
-                    decoration: InputDecoration(
-                      hintText: "Repita a senha",
-                      hintStyle: const TextStyle(
-                        color: Color.fromARGB(120, 255, 255, 255),
-                        fontSize: 13,
-                        fontFamily: "Poppins",
-                      ),
-                      fillColor: const Color.fromARGB(123, 88, 8, 129),
-                      filled: true,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(
-                          color: Color(0xFF7B2FBE),
-                          width: 1.5,
-                        ),
-                      ),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          confirmarSenhaVisivel
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                          color: const Color.fromARGB(160, 255, 255, 255),
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            confirmarSenhaVisivel =
-                                !confirmarSenhaVisivel;
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // TIPO DE USUARIO
-                SizedBox(
-                  width: 400,
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Quero me cadastrar como:",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        fontFamily: "Poppins",
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                Container(
-                  width: 400,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color.fromARGB(123, 88, 8, 129),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Expanded(
-                        child: Column(
-                          children: [
-                            RadioListTile<String>(
-                              title: const Text(
-                                "Cliente",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontFamily: "Poppins",
-                                ),
-                              ),
-                              value: 'cliente',
-                              groupValue: tipoUsuario,
-                              activeColor: Color(0xFF9B59D0),
-                              onChanged: (value) {
-                                setState(() {
-                                  tipoUsuario = value!;
-                                });
-                              },
-                            ),
-                            RadioListTile<String>(
-                              title: const Text(
-                                "Administrador",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontFamily: "Poppins",
-                                ),
-                              ),
-                              value: 'administrador',
-                              groupValue: tipoUsuario,
-                              activeColor: Color(0xFF9B59D0),
-                              onChanged: (value) {
-                                setState(() {
-                                  tipoUsuario = value!;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
+                      Image.asset("assets/images/balaologo.png", width: 42, fit: BoxFit.contain),
+                      const SizedBox(width: 8),
+                      Image.asset("assets/images/escritalogo.png", height: 28, fit: BoxFit.contain),
                     ],
                   ),
-                ),
 
-                const SizedBox(height: 16),
+                  const SizedBox(height: 28),
 
-                // SWITCH
-                SizedBox(
-                  width: 400,
-                  child: Row(
-                    mainAxisAlignment:
-                        MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        "Receber notificações",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontFamily: "Poppins",
-                        ),
-                      ),
-                      Switch(
-                        value: notificacoes,
-                        activeColor: const Color(0xFF9B59D0),
-                        onChanged: (value) {
-                          setState(() {
-                            notificacoes = value;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-
-                // CHECKBOX
-                SizedBox(
-                  width: 400,
-                  child: Row(
-                    children: [
-                      Checkbox(
-                        value: termosAceitos,
-                        activeColor: const Color(0xFF9B59D0),
-                        onChanged: (value) {
-                          setState(() {
-                            termosAceitos = value!;
-                          });
-                        },
-                      ),
-                      const Expanded(
-                        child: Text(
-                          "Aceito os termos de uso",
+                  Container(
+                    width: double.infinity,
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Cores.cartao,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Cores.borda),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Criar conta",
                           style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 13,
-                            fontFamily: "Poppins",
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontFamily: "PoppinsBold",
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          "Preencha os dados para começar",
+                          style: TextStyle(color: Colors.white54, fontSize: 13, fontFamily: "Poppins"),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        _seletorPapel(),
+
+                        const SizedBox(height: 20),
+
+                        if (tipoUsuario == 'administrador') ...[
+                          _rotulo("Nome completo"),
+                          const SizedBox(height: 8),
+                          _campo(controller: nomeController, hint: "Seu nome completo", validador: _obrigatorio),
+                          const SizedBox(height: 16),
+                        ],
+
+                        _rotulo("Nome de usuário"),
+                        const SizedBox(height: 8),
+                        _campo(
+                          controller: usuarioController,
+                          hint: "Ex.: joao.silva",
+                          validador: _usuarioValidador,
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        _rotulo("E-mail"),
+                        const SizedBox(height: 8),
+                        _campo(
+                          controller: emailController,
+                          hint: "seuemail@exemplo.com",
+                          teclado: TextInputType.emailAddress,
+                          validador: _emailValidador,
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        if (tipoUsuario == 'administrador') ...[
+                          _rotulo("CPF"),
+                          const SizedBox(height: 8),
+                          _campo(
+                            controller: cpfController,
+                            hint: "000.000.000-00",
+                            teclado: TextInputType.number,
+                            formatadores: [CpfFormatter()],
+                            validador: _cpfValidador,
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+
+                        _rotulo("Telefone"),
+                        const SizedBox(height: 8),
+                        _campo(
+                          controller: telefoneController,
+                          hint: "(00) 00000-0000",
+                          teclado: TextInputType.phone,
+                          formatadores: [TelefoneFormatter()],
+                          validador: _telefoneValidador,
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        if (tipoUsuario == 'cliente') ...[
+                          _rotulo("CEP"),
+                          const SizedBox(height: 8),
+                          _campo(
+                            controller: cepController,
+                            hint: "00000-000",
+                            teclado: TextInputType.number,
+                            formatadores: [CepFormatter()],
+                            validador: _cepValidador,
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _rotulo("Cidade"),
+                                    const SizedBox(height: 8),
+                                    _campo(controller: cidadeController, hint: "Sua cidade", validador: _obrigatorio),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _rotulo("Estado"),
+                                    const SizedBox(height: 8),
+                                    _campo(
+                                      controller: estadoController,
+                                      hint: "UF",
+                                      maxLength: 2,
+                                      capitalizar: true,
+                                      validador: _estadoValidador,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 16),
+                        ],
+
+                        _rotulo("Senha"),
+                        const SizedBox(height: 8),
+                        _campo(
+                          controller: senhaController,
+                          hint: "Mínimo 6 caracteres",
+                          oculto: !senhaVisivel,
+                          sufixo: IconButton(
+                            icon: Icon(
+                              senhaVisivel ? Icons.visibility : Icons.visibility_off,
+                              color: Colors.white54,
+                              size: 20,
+                            ),
+                            onPressed: () => setState(() => senhaVisivel = !senhaVisivel),
+                          ),
+                          validador: _senhaValidador,
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        _rotulo("Confirmar senha"),
+                        const SizedBox(height: 8),
+                        _campo(
+                          controller: confirmarSenhaController,
+                          hint: "Repita sua senha",
+                          oculto: !confirmarSenhaVisivel,
+                          sufixo: IconButton(
+                            icon: Icon(
+                              confirmarSenhaVisivel ? Icons.visibility : Icons.visibility_off,
+                              color: Colors.white54,
+                              size: 20,
+                            ),
+                            onPressed: () => setState(() => confirmarSenhaVisivel = !confirmarSenhaVisivel),
+                          ),
+                          validador: (v) => v != senhaController.text ? "As senhas não coincidem." : null,
+                        ),
+
+                        if (erroGeral != null) ...[
+                          const SizedBox(height: 14),
+                          Text(
+                            erroGeral!,
+                            style: const TextStyle(color: Colors.redAccent, fontSize: 13, fontFamily: "Poppins"),
+                          ),
+                        ],
+
+                        const SizedBox(height: 24),
+
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: criar,
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              backgroundColor: Cores.roxoBotao,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: const Text(
+                              "Criar conta",
+                              style: TextStyle(color: Colors.white, fontFamily: "PoppinsBold", fontSize: 15),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: const Text.rich(
+                      TextSpan(
+                        text: "Já tem uma conta? ",
+                        style: TextStyle(color: Colors.white54, fontSize: 13, fontFamily: "Poppins"),
+                        children: [
+                          TextSpan(
+                            text: "Entrar",
+                            style: TextStyle(
+                              color: Cores.roxo,
+                              fontFamily: "PoppinsSemi",
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
-                if (mensagemErro.isNotEmpty)
-                  Text(
-                    mensagemErro,
-                    style: const TextStyle(
-                      color: Colors.redAccent,
                     ),
                   ),
-
-                const SizedBox(height: 20),
-
-                // BOTAO
-                ElevatedButton(
-                  onPressed: criar,
-                  style: ElevatedButton.styleFrom(
-                    fixedSize: const Size(120, 42),
-                    backgroundColor: const Color(0xFF6B21A8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text(
-                    "Criar",
-                    style: TextStyle(
-                      color: Color.fromARGB(220, 239, 224, 238),
-                      fontFamily: "PoppinsBold",
-                      fontSize: 15,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: const Text(
-                    "Já tem uma conta? Entrar",
-                    style: TextStyle(
-                      color: Color(0xFF9B59D0),
-                      fontSize: 13,
-                      decoration: TextDecoration.underline,
-                      decorationColor: Color(0xFF9B59D0),
-                      fontFamily: "Poppins",
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
+      ),
+    );
+  }
 
-        // LOGO
-        Positioned(
-          top: 35,
-          left: 0,
-          right: 0,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                "assets/images/balaologo.png",
-                width: 50,
-                fit: BoxFit.contain,
-              ),
-              const SizedBox(width: 8),
-              Image.asset(
-                "assets/images/escritalogo.png",
-                height: 35,
-                fit: BoxFit.contain,
-              ),
-            ],
+  Widget _seletorPapel() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(color: Cores.campo, borderRadius: BorderRadius.circular(12)),
+      child: Row(
+        children: [
+          Expanded(child: _botaoPapel("Cliente", 'cliente')),
+          Expanded(child: _botaoPapel("Administrador", 'administrador')),
+        ],
+      ),
+    );
+  }
+
+  Widget _botaoPapel(String rotulo, String valor) {
+    final ativo = tipoUsuario == valor;
+    return GestureDetector(
+      onTap: () => setState(() => tipoUsuario = valor),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: ativo ? Cores.roxo : Colors.transparent,
+          borderRadius: BorderRadius.circular(9),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          rotulo,
+          style: TextStyle(
+            color: ativo ? Colors.white : Colors.white60,
+            fontSize: 13,
+            fontFamily: ativo ? "PoppinsSemi" : "Poppins",
+            fontWeight: ativo ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
-      ],
-    ),
-  );
-}}
+      ),
+    );
+  }
+
+  Widget _rotulo(String texto) {
+    return Text(texto, style: const TextStyle(color: Colors.white70, fontSize: 13, fontFamily: "Poppins"));
+  }
+
+  Widget _campo({
+    required TextEditingController controller,
+    required String hint,
+    String? Function(String?)? validador,
+    TextInputType? teclado,
+    bool oculto = false,
+    Widget? sufixo,
+    List<TextInputFormatter>? formatadores,
+    int? maxLength,
+    bool capitalizar = false,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: teclado,
+      obscureText: oculto,
+      inputFormatters: formatadores,
+      maxLength: maxLength,
+      textCapitalization: capitalizar ? TextCapitalization.characters : TextCapitalization.none,
+      validator: validador,
+      style: const TextStyle(color: Colors.white, fontFamily: "Poppins"),
+      decoration: InputDecoration(
+        counterText: "",
+        hintText: hint,
+        hintStyle: const TextStyle(color: Colors.white38, fontSize: 13, fontFamily: "Poppins"),
+        filled: true,
+        fillColor: Cores.campo,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        suffixIcon: sufixo,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Cores.campoFoco, width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1),
+        ),
+        errorStyle: const TextStyle(color: Colors.redAccent, fontSize: 11, fontFamily: "Poppins"),
+      ),
+    );
+  }
+
+  // ── Validações — mesmas regras usadas no formulário web (ver cadastro.js
+  //    e AuthController.java no backend) ───────────────────────────────────
+
+  String? _obrigatorio(String? v) => (v == null || v.trim().isEmpty) ? "Campo obrigatório." : null;
+
+  String? _usuarioValidador(String? v) {
+    final valor = v?.trim() ?? "";
+    if (valor.isEmpty) return "Informe um nome de usuário.";
+    if (!RegExp(r'^[a-zA-Z0-9._]{3,30}$').hasMatch(valor)) {
+      return "Use de 3 a 30 letras, números, pontos ou underscores.";
+    }
+    return null;
+  }
+
+  String? _emailValidador(String? v) {
+    final valor = v?.trim() ?? "";
+    if (valor.isEmpty) return "Informe seu e-mail.";
+    if (!valor.contains("@") || !valor.contains(".")) return "Digite um e-mail válido.";
+    return null;
+  }
+
+  String? _telefoneValidador(String? v) {
+    final digitos = (v ?? "").replaceAll(RegExp(r'\D'), '');
+    if (digitos.isEmpty) return "Informe seu telefone.";
+    if (!RegExp(r'^[1-9][1-9](?:9\d{8}|[2-5]\d{7})$').hasMatch(digitos)) {
+      return "Telefone inválido. Inclua o DDD.";
+    }
+    return null;
+  }
+
+  String? _cepValidador(String? v) {
+    final digitos = (v ?? "").replaceAll(RegExp(r'\D'), '');
+    if (digitos.isEmpty) return "Informe o CEP.";
+    if (digitos.length != 8) return "CEP inválido.";
+    return null;
+  }
+
+  String? _estadoValidador(String? v) {
+    final valor = v?.trim() ?? "";
+    if (valor.length != 2) return "UF deve ter 2 letras.";
+    return null;
+  }
+
+  String? _cpfValidador(String? v) {
+    final digitos = (v ?? "").replaceAll(RegExp(r'\D'), '');
+    if (digitos.isEmpty) return "Informe o CPF.";
+    if (digitos.length != 11) return "CPF inválido.";
+    return null;
+  }
+
+  String? _senhaValidador(String? v) {
+    final valor = v ?? "";
+    if (valor.isEmpty) return "Crie uma senha.";
+    if (valor.length < 6) return "Mínimo de 6 caracteres.";
+    return null;
+  }
+}
