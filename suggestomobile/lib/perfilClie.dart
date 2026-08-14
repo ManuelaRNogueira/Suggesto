@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'listaUsuarios.dart';
 
 class PerfilCliPage extends StatefulWidget {
   const PerfilCliPage({super.key});

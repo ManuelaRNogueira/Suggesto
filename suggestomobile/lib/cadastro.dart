@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'cores.dart';
 import 'mascaras.dart';
-import 'listaUsuarios.dart';
+import 'api.dart';
+import 'login.dart';
 
-// Cadastro de cliente (ver Suggesto - Web/Web/cadastro.html). Contas de
-// administrador não são criadas por aqui: no site, virar administrador
-// significa escolher um plano e cadastrar um estabelecimento primeiro — um
-// admin só usa o mobile pra entrar numa conta que já existe (ver login.dart).
+// Cadastro (ver Suggesto - Web/Web/cadastro.html). Os campos são os mesmos
+// pra Cliente e pra quem está entrando numa equipe (modoEquipe) — só o
+// "tipoUsuario" enviado pra API muda; quem cria um estabelecimento de
+// verdade (plano + dados do local) continua fazendo isso pelo site.
 class Cadastro extends StatefulWidget {
-  const Cadastro({super.key});
+  final bool modoEquipe;
+
+  const Cadastro({super.key, this.modoEquipe = false});
 
   @override
   State<Cadastro> createState() => _CadastroState();
@@ -29,6 +32,7 @@ class _CadastroState extends State<Cadastro> {
 
   bool senhaVisivel = false;
   bool confirmarSenhaVisivel = false;
+  bool criando = false;
   String? erroGeral;
 
   @override
@@ -44,36 +48,44 @@ class _CadastroState extends State<Cadastro> {
     super.dispose();
   }
 
-  void criar() {
+  Future<void> criar() async {
     setState(() => erroGeral = null);
     if (!_formKey.currentState!.validate()) return;
 
-    final email = emailController.text.trim();
-    if (usuariosCadastrados.any((u) => u['email'] == email)) {
-      setState(() => erroGeral = "Este e-mail já está cadastrado.");
-      return;
+    setState(() => criando = true);
+    try {
+      await cadastrar(
+        nome: usuarioController.text.trim(),
+        username: usuarioController.text.trim(),
+        email: emailController.text.trim(),
+        senha: senhaController.text.trim(),
+        tipoUsuario: widget.modoEquipe ? 'Administrador' : 'Cliente',
+        telefone: telefoneController.text.trim(),
+        cep: cepController.text.trim(),
+        cidade: cidadeController.text.trim(),
+        estado: estadoController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Conta criada com sucesso!", style: TextStyle(fontFamily: "Poppins")),
+          backgroundColor: Cores.verdeFundo,
+        ),
+      );
+
+      // O site não loga direto depois do cadastro — manda pra tela de login
+      // (aqui, carregando o modo equipe adiante, se for o caso).
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => Login(modoEquipe: widget.modoEquipe)),
+      );
+    } on ApiException catch (e) {
+      setState(() => erroGeral = e.mensagem);
+    } finally {
+      if (mounted) setState(() => criando = false);
     }
-
-    usuariosCadastrados.add({
-      'nome': usuarioController.text.trim(),
-      'username': usuarioController.text.trim(),
-      'email': email,
-      'senha': senhaController.text.trim(),
-      'telefone': telefoneController.text.trim(),
-      'cep': cepController.text.trim(),
-      'cidade': cidadeController.text.trim(),
-      'estado': estadoController.text.trim(),
-      'tipo': 'cliente',
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Conta criada com sucesso!", style: TextStyle(fontFamily: "Poppins")),
-        backgroundColor: Cores.verdeFundo,
-      ),
-    );
-
-    Navigator.pushNamed(context, '/home_cliente');
   }
 
   @override
@@ -112,9 +124,9 @@ class _CadastroState extends State<Cadastro> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          "Criar conta",
-                          style: TextStyle(
+                        Text(
+                          widget.modoEquipe ? "Criar conta de administrador" : "Criar conta",
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 24,
                             fontFamily: "PoppinsBold",
@@ -122,10 +134,25 @@ class _CadastroState extends State<Cadastro> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
-                          "Cadastre-se para enviar sugestões e acompanhar respostas dos seus estabelecimentos favoritos",
-                          style: TextStyle(color: Colors.white54, fontSize: 13, fontFamily: "Poppins"),
+                        Text(
+                          widget.modoEquipe
+                              ? "Depois de criar sua conta, você vai entrar com o código do estabelecimento."
+                              : "Cadastre-se para enviar sugestões e acompanhar respostas dos seus estabelecimentos favoritos",
+                          style: const TextStyle(color: Colors.white54, fontSize: 13, fontFamily: "Poppins"),
                         ),
+
+                        if (widget.modoEquipe) ...[
+                          const SizedBox(height: 14),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(color: Cores.tag, borderRadius: BorderRadius.circular(10)),
+                            child: const Text(
+                              "Você está criando uma conta de administrador para entrar em uma equipe existente.",
+                              style: TextStyle(color: Colors.white70, fontSize: 12, fontFamily: "Poppins"),
+                            ),
+                          ),
+                        ],
 
                         const SizedBox(height: 20),
 
@@ -259,16 +286,22 @@ class _CadastroState extends State<Cadastro> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: criar,
+                            onPressed: criando ? null : criar,
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               backgroundColor: Cores.roxoBotao,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
-                            child: const Text(
-                              "Criar conta",
-                              style: TextStyle(color: Colors.white, fontFamily: "PoppinsBold", fontSize: 15),
-                            ),
+                            child: criando
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                  )
+                                : const Text(
+                                    "Criar conta",
+                                    style: TextStyle(color: Colors.white, fontFamily: "PoppinsBold", fontSize: 15),
+                                  ),
                           ),
                         ),
                       ],

@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'cores.dart';
-import 'listaUsuarios.dart';
+import 'api.dart';
+import 'cadastro.dart';
+import 'entrarEquipe.dart';
+import 'entrarCodigo.dart';
 
+// Login — mesmos dois campos do site (ver Suggesto - Web/Web/login.html),
+// agora batendo contra a API de verdade (POST /api/login).
 class Login extends StatefulWidget {
-  const Login({super.key});
+  // Quando true, replica o "?equipe=1" do site: só aceita conta Administrador
+  // e, ao logar, manda pra tela de código de acesso em vez do painel normal.
+  final bool modoEquipe;
+
+  const Login({super.key, this.modoEquipe = false});
 
   @override
   State<Login> createState() => _LoginState();
@@ -16,30 +24,48 @@ class _LoginState extends State<Login> {
   final senhaController = TextEditingController();
 
   bool senhaVisivel = false;
+  bool entrando = false;
   String? erroGeral;
 
-  void entrar() {
+  Future<void> entrar() async {
     setState(() => erroGeral = null);
     if (!_formKey.currentState!.validate()) return;
 
-    final email = emailController.text.trim();
-    final senha = senhaController.text.trim();
+    setState(() => entrando = true);
+    try {
+      final resultado = await login(
+        email: emailController.text.trim(),
+        senha: senhaController.text.trim(),
+      );
 
-    Map<String, dynamic>? usuario;
-    for (final u in usuariosCadastrados) {
-      if (u['email'] == email && u['senha'] == senha) {
-        usuario = u;
-        break;
+      final tipoUsuario = resultado['tipoUsuario'] as String?;
+
+      if (widget.modoEquipe && tipoUsuario != 'Administrador') {
+        setState(() => erroGeral = "Você precisa de uma conta de administrador para entrar em uma equipe.");
+        return;
       }
-    }
 
-    if (usuario == null) {
-      setState(() => erroGeral = "E-mail ou senha incorretos.");
-      return;
-    }
+      if (!mounted) return;
 
-    final destino = usuario['tipo'] == 'administrador' ? '/inicioAdm' : '/home_cliente';
-    Navigator.pushNamed(context, destino);
+      if (widget.modoEquipe) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => EntrarCodigo(
+              usuarioId: resultado['idUsuario'] as int,
+              nomeUsuario: resultado['nome'] as String? ?? '',
+            ),
+          ),
+        );
+        return;
+      }
+
+      Navigator.pushNamed(context, tipoUsuario == 'Administrador' ? '/inicioAdm' : '/home_cliente');
+    } on ApiException catch (e) {
+      setState(() => erroGeral = e.mensagem);
+    } finally {
+      if (mounted) setState(() => entrando = false);
+    }
   }
 
   @override
@@ -88,10 +114,28 @@ class _LoginState extends State<Login> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
-                          "Acesse sua conta para continuar",
-                          style: TextStyle(color: Colors.white54, fontSize: 13, fontFamily: "Poppins"),
+                        Text(
+                          widget.modoEquipe
+                              ? "Entre com a conta de administrador para continuar"
+                              : "Acesse sua conta para continuar",
+                          style: const TextStyle(color: Colors.white54, fontSize: 13, fontFamily: "Poppins"),
                         ),
+
+                        if (widget.modoEquipe) ...[
+                          const SizedBox(height: 14),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: Cores.tag,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Text(
+                              "Você está entrando pra depois usar o código de acesso de uma equipe existente.",
+                              style: TextStyle(color: Colors.white70, fontSize: 12, fontFamily: "Poppins"),
+                            ),
+                          ),
+                        ],
 
                         const SizedBox(height: 24),
 
@@ -143,16 +187,22 @@ class _LoginState extends State<Login> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: entrar,
+                            onPressed: entrando ? null : entrar,
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               backgroundColor: Cores.roxoBotao,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
-                            child: const Text(
-                              "Entrar",
-                              style: TextStyle(color: Colors.white, fontFamily: "PoppinsBold", fontSize: 15),
-                            ),
+                            child: entrando
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                  )
+                                : const Text(
+                                    "Entrar",
+                                    style: TextStyle(color: Colors.white, fontFamily: "PoppinsBold", fontSize: 15),
+                                  ),
                           ),
                         ),
                       ],
@@ -162,15 +212,18 @@ class _LoginState extends State<Login> {
                   const SizedBox(height: 20),
 
                   GestureDetector(
-                    onTap: () => Navigator.pushNamed(context, '/cadastro'),
-                    child: const Text.rich(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => Cadastro(modoEquipe: widget.modoEquipe)),
+                    ),
+                    child: Text.rich(
                       TextSpan(
                         text: "Não tem conta? ",
-                        style: TextStyle(color: Colors.white54, fontSize: 13, fontFamily: "Poppins"),
+                        style: const TextStyle(color: Colors.white54, fontSize: 13, fontFamily: "Poppins"),
                         children: [
                           TextSpan(
                             text: "Cadastre-se",
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Cores.roxo,
                               fontFamily: "PoppinsSemi",
                               fontWeight: FontWeight.w600,
@@ -180,6 +233,20 @@ class _LoginState extends State<Login> {
                       ),
                     ),
                   ),
+
+                  if (!widget.modoEquipe) ...[
+                    const SizedBox(height: 12),
+                    GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const EntrarEquipe()),
+                      ),
+                      child: const Text(
+                        "Já faz parte de uma equipe? Entrar com código",
+                        style: TextStyle(color: Colors.white38, fontSize: 12, fontFamily: "Poppins"),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -200,13 +267,11 @@ class _LoginState extends State<Login> {
     TextInputType? teclado,
     bool oculto = false,
     Widget? sufixo,
-    List<TextInputFormatter>? formatadores,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: teclado,
       obscureText: oculto,
-      inputFormatters: formatadores,
       validator: validador,
       style: const TextStyle(color: Colors.white, fontFamily: "Poppins"),
       decoration: InputDecoration(
