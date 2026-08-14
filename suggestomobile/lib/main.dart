@@ -14,6 +14,7 @@ import 'package:suggestomobile/perfilClie.dart';
 import 'package:suggestomobile/sobrenos.dart';
 import 'package:suggestomobile/sugerir.dart';
 import 'package:suggestomobile/suggesto.dart';
+import 'package:suggestomobile/sugestoesAdm.dart';
 
 void main() {
   runApp(const MyApp());
@@ -41,6 +42,7 @@ class MyApp extends StatelessWidget {
         '/inicio': (context) => Inicio(),
         '/home_cliente': (context) => HomePage(),
         '/inicioAdm': (context) => InicioAdm(),
+        '/sugestoesAdm': (context) => SugestoesAdm(),
         '/perfil': (context) => PerfilCliPage(),
         '/sugerir': (context) => SugerirPage(),
         '/locais_salvos': (context) => LocaisSalvosPage(),

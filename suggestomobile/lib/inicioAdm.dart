@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'cores.dart';
+import 'statusSugestao.dart';
+import 'detalhesSugestaoAdm.dart';
 
 // Início do painel administrativo no mobile. Ainda não está ligado à API —
 // os números abaixo são só pra dar forma à tela (ver PlanoController/AdminController
@@ -25,24 +27,42 @@ class _InicioAdmState extends State<InicioAdm> {
     _ItemStatus('Recusados', 6, Icons.cancel, Cores.vermelho),
   ];
 
-  final List<Map<String, String>> sugestoesRecentes = const [
+  final List<Map<String, dynamic>> sugestoesRecentes = [
     {
       'titulo': 'Melhorar a iluminação do pátio',
+      'descricao':
+          'A iluminação do pátio principal está muito fraca, principalmente durante o período noturno. '
+              'Seria importante melhorar para garantir mais segurança e conforto para os alunos que ficam no período da noite.',
       'categoria': 'Estrutura',
       'status': 'pendente',
+      'prioridade': 'alta',
       'tempo': 'há 2h',
+      'autor': 'Manuela Nogueira',
+      'data': '05/11/2024 | 14:30',
     },
     {
       'titulo': 'Adicionar mais opções vegetarianas',
+      'descricao':
+          'O cardápio do refeitório tem poucas opções sem carne. Ter mais alternativas vegetarianas ajudaria '
+              'bastante quem segue esse tipo de dieta.',
       'categoria': 'Produtos e Serviços',
       'status': 'analise',
+      'prioridade': 'media',
       'tempo': 'há 5h',
+      'autor': 'Rafael Gonçalves',
+      'data': '05/11/2024 | 09:10',
     },
     {
       'titulo': 'Melhorar atendimento da secretaria',
+      'descricao':
+          'O atendimento na secretaria costuma demorar bastante nos horários de pico. Um sistema de senhas '
+              'ajudaria a organizar a fila.',
       'categoria': 'Atendimento',
       'status': 'implementado',
+      'prioridade': 'media',
       'tempo': 'há 1d',
+      'autor': 'Diogo Bernasconi',
+      'data': '04/11/2024 | 11:45',
     },
   ];
 
@@ -256,89 +276,69 @@ class _InicioAdmState extends State<InicioAdm> {
     );
   }
 
-  Widget _cartaoSugestao(Map<String, String> s) {
-    final estilo = _estiloStatus(s['status']!);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Cores.cartao,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Cores.borda),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: estilo.corFundo,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  estilo.rotulo,
-                  style: TextStyle(
-                    color: estilo.corTexto,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
+  Widget _cartaoSugestao(Map<String, dynamic> s) {
+    return GestureDetector(
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => DetalhesSugestaoAdm(sugestao: s)),
+        );
+        setState(() {});
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Cores.cartao,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Cores.borda),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                pillStatus(s['status']),
+                Text(
+                  s['tempo'],
+                  style: const TextStyle(
+                    color: Colors.white38,
+                    fontSize: 11,
                     fontFamily: 'Poppins',
                   ),
                 ),
-              ),
-              Text(
-                s['tempo']!,
-                style: const TextStyle(
-                  color: Colors.white38,
-                  fontSize: 11,
-                  fontFamily: 'Poppins',
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            s['titulo']!,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontFamily: 'PoppinsSemi',
-              fontWeight: FontWeight.w600,
+              ],
             ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            'Categoria: ${s['categoria']}',
-            style: const TextStyle(
-              color: Colors.white54,
-              fontSize: 12,
-              fontFamily: 'Poppins',
+            const SizedBox(height: 8),
+            Text(
+              s['titulo'],
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontFamily: 'PoppinsSemi',
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 3),
+            Text(
+              'Categoria: ${s['categoria']}',
+              style: const TextStyle(
+                color: Colors.white54,
+                fontSize: 12,
+                fontFamily: 'Poppins',
+              ),
+            ),
+          ],
+        ),
       ),
     );
-  }
-
-  _EstiloStatus _estiloStatus(String statusChave) {
-    switch (statusChave) {
-      case 'pendente':
-        return _EstiloStatus('Pendente', Cores.amarelo.withOpacity(0.16), Cores.amarelo);
-      case 'analise':
-        return _EstiloStatus('Em análise', Cores.azul.withOpacity(0.16), Cores.azul);
-      case 'implementado':
-        return _EstiloStatus('Implementado', Cores.verdeFundo, Cores.verde);
-      default:
-        return _EstiloStatus('Recusado', Cores.vermelho.withOpacity(0.16), Cores.vermelho);
-    }
   }
 
   Widget _buildBarraNavegacao() {
     final abas = [
       _Aba('Início', Icons.home_filled, '/inicioAdm'),
-      _Aba('Sugestões', Icons.forum, null),
+      _Aba('Sugestões', Icons.forum, '/sugestoesAdm'),
       _Aba('Estatísticas', Icons.bar_chart, null),
       _Aba('Perfil', Icons.person, null),
     ];
@@ -379,6 +379,7 @@ class _InicioAdmState extends State<InicioAdm> {
           );
           return;
         }
+        if (aba.rota != '/inicioAdm') Navigator.pushNamed(context, aba.rota!);
       },
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -418,13 +419,6 @@ class _ItemStatus {
   final IconData icone;
   final Color cor;
   _ItemStatus(this.rotulo, this.quantidade, this.icone, this.cor);
-}
-
-class _EstiloStatus {
-  final String rotulo;
-  final Color corFundo;
-  final Color corTexto;
-  _EstiloStatus(this.rotulo, this.corFundo, this.corTexto);
 }
 
 class _Aba {
