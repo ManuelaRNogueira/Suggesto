@@ -4,6 +4,10 @@ import 'cores.dart';
 import 'mascaras.dart';
 import 'listaUsuarios.dart';
 
+// Cadastro de cliente (ver Suggesto - Web/Web/cadastro.html). Contas de
+// administrador não são criadas por aqui: no site, virar administrador
+// significa escolher um plano e cadastrar um estabelecimento primeiro — um
+// admin só usa o mobile pra entrar numa conta que já existe (ver login.dart).
 class Cadastro extends StatefulWidget {
   const Cadastro({super.key});
 
@@ -14,23 +18,14 @@ class Cadastro extends StatefulWidget {
 class _CadastroState extends State<Cadastro> {
   final _formKey = GlobalKey<FormState>();
 
-  String tipoUsuario = 'cliente';
-
-  // Campos comuns às duas contas.
   final usuarioController = TextEditingController();
   final emailController = TextEditingController();
   final telefoneController = TextEditingController();
-  final senhaController = TextEditingController();
-  final confirmarSenhaController = TextEditingController();
-
-  // Só cliente (ver Suggesto - Web/Web/cadastro.html).
   final cepController = TextEditingController();
   final cidadeController = TextEditingController();
   final estadoController = TextEditingController();
-
-  // Só administrador (ver Suggesto - Web/Web/cadastroAdm.html, etapa "Responsável").
-  final nomeController = TextEditingController();
-  final cpfController = TextEditingController();
+  final senhaController = TextEditingController();
+  final confirmarSenhaController = TextEditingController();
 
   bool senhaVisivel = false;
   bool confirmarSenhaVisivel = false;
@@ -41,13 +36,11 @@ class _CadastroState extends State<Cadastro> {
     usuarioController.dispose();
     emailController.dispose();
     telefoneController.dispose();
-    senhaController.dispose();
-    confirmarSenhaController.dispose();
     cepController.dispose();
     cidadeController.dispose();
     estadoController.dispose();
-    nomeController.dispose();
-    cpfController.dispose();
+    senhaController.dispose();
+    confirmarSenhaController.dispose();
     super.dispose();
   }
 
@@ -61,30 +54,17 @@ class _CadastroState extends State<Cadastro> {
       return;
     }
 
-    final novoUsuario = <String, dynamic>{
+    usuariosCadastrados.add({
+      'nome': usuarioController.text.trim(),
+      'username': usuarioController.text.trim(),
       'email': email,
       'senha': senhaController.text.trim(),
       'telefone': telefoneController.text.trim(),
-      'tipo': tipoUsuario,
-    };
-
-    if (tipoUsuario == 'cliente') {
-      novoUsuario.addAll({
-        'nome': usuarioController.text.trim(),
-        'username': usuarioController.text.trim(),
-        'cep': cepController.text.trim(),
-        'cidade': cidadeController.text.trim(),
-        'estado': estadoController.text.trim(),
-      });
-    } else {
-      novoUsuario.addAll({
-        'nome': nomeController.text.trim(),
-        'username': usuarioController.text.trim(),
-        'cpf': cpfController.text.trim(),
-      });
-    }
-
-    usuariosCadastrados.add(novoUsuario);
+      'cep': cepController.text.trim(),
+      'cidade': cidadeController.text.trim(),
+      'estado': estadoController.text.trim(),
+      'tipo': 'cliente',
+    });
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -93,7 +73,7 @@ class _CadastroState extends State<Cadastro> {
       ),
     );
 
-    Navigator.pushNamed(context, tipoUsuario == 'administrador' ? '/inicioAdm' : '/home_cliente');
+    Navigator.pushNamed(context, '/home_cliente');
   }
 
   @override
@@ -143,22 +123,11 @@ class _CadastroState extends State<Cadastro> {
                         ),
                         const SizedBox(height: 4),
                         const Text(
-                          "Preencha os dados para começar",
+                          "Cadastre-se para enviar sugestões e acompanhar respostas dos seus estabelecimentos favoritos",
                           style: TextStyle(color: Colors.white54, fontSize: 13, fontFamily: "Poppins"),
                         ),
 
                         const SizedBox(height: 20),
-
-                        _seletorPapel(),
-
-                        const SizedBox(height: 20),
-
-                        if (tipoUsuario == 'administrador') ...[
-                          _rotulo("Nome completo"),
-                          const SizedBox(height: 8),
-                          _campo(controller: nomeController, hint: "Seu nome completo", validador: _obrigatorio),
-                          const SizedBox(height: 16),
-                        ],
 
                         _rotulo("Nome de usuário"),
                         const SizedBox(height: 8),
@@ -181,19 +150,6 @@ class _CadastroState extends State<Cadastro> {
 
                         const SizedBox(height: 16),
 
-                        if (tipoUsuario == 'administrador') ...[
-                          _rotulo("CPF"),
-                          const SizedBox(height: 8),
-                          _campo(
-                            controller: cpfController,
-                            hint: "000.000.000-00",
-                            teclado: TextInputType.number,
-                            formatadores: [CpfFormatter()],
-                            validador: _cpfValidador,
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-
                         _rotulo("Telefone"),
                         const SizedBox(height: 8),
                         _campo(
@@ -206,55 +162,53 @@ class _CadastroState extends State<Cadastro> {
 
                         const SizedBox(height: 16),
 
-                        if (tipoUsuario == 'cliente') ...[
-                          _rotulo("CEP"),
-                          const SizedBox(height: 8),
-                          _campo(
-                            controller: cepController,
-                            hint: "00000-000",
-                            teclado: TextInputType.number,
-                            formatadores: [CepFormatter()],
-                            validador: _cepValidador,
-                          ),
+                        _rotulo("CEP"),
+                        const SizedBox(height: 8),
+                        _campo(
+                          controller: cepController,
+                          hint: "00000-000",
+                          teclado: TextInputType.number,
+                          formatadores: [CepFormatter()],
+                          validador: _cepValidador,
+                        ),
 
-                          const SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                flex: 2,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _rotulo("Cidade"),
-                                    const SizedBox(height: 8),
-                                    _campo(controller: cidadeController, hint: "Sua cidade", validador: _obrigatorio),
-                                  ],
-                                ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _rotulo("Cidade"),
+                                  const SizedBox(height: 8),
+                                  _campo(controller: cidadeController, hint: "Sua cidade", validador: _obrigatorio),
+                                ],
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _rotulo("Estado"),
-                                    const SizedBox(height: 8),
-                                    _campo(
-                                      controller: estadoController,
-                                      hint: "UF",
-                                      maxLength: 2,
-                                      capitalizar: true,
-                                      validador: _estadoValidador,
-                                    ),
-                                  ],
-                                ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _rotulo("Estado"),
+                                  const SizedBox(height: 8),
+                                  _campo(
+                                    controller: estadoController,
+                                    hint: "UF",
+                                    maxLength: 2,
+                                    capitalizar: true,
+                                    validador: _estadoValidador,
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
+                        ),
 
-                          const SizedBox(height: 16),
-                        ],
+                        const SizedBox(height: 16),
 
                         _rotulo("Senha"),
                         const SizedBox(height: 8),
@@ -351,44 +305,6 @@ class _CadastroState extends State<Cadastro> {
     );
   }
 
-  Widget _seletorPapel() {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(color: Cores.campo, borderRadius: BorderRadius.circular(12)),
-      child: Row(
-        children: [
-          Expanded(child: _botaoPapel("Cliente", 'cliente')),
-          Expanded(child: _botaoPapel("Administrador", 'administrador')),
-        ],
-      ),
-    );
-  }
-
-  Widget _botaoPapel(String rotulo, String valor) {
-    final ativo = tipoUsuario == valor;
-    return GestureDetector(
-      onTap: () => setState(() => tipoUsuario = valor),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: ativo ? Cores.roxo : Colors.transparent,
-          borderRadius: BorderRadius.circular(9),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          rotulo,
-          style: TextStyle(
-            color: ativo ? Colors.white : Colors.white60,
-            fontSize: 13,
-            fontFamily: ativo ? "PoppinsSemi" : "Poppins",
-            fontWeight: ativo ? FontWeight.w600 : FontWeight.normal,
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _rotulo(String texto) {
     return Text(texto, style: const TextStyle(color: Colors.white70, fontSize: 13, fontFamily: "Poppins"));
   }
@@ -475,13 +391,6 @@ class _CadastroState extends State<Cadastro> {
   String? _estadoValidador(String? v) {
     final valor = v?.trim() ?? "";
     if (valor.length != 2) return "UF deve ter 2 letras.";
-    return null;
-  }
-
-  String? _cpfValidador(String? v) {
-    final digitos = (v ?? "").replaceAll(RegExp(r'\D'), '');
-    if (digitos.isEmpty) return "Informe o CPF.";
-    if (digitos.length != 11) return "CPF inválido.";
     return null;
   }
 
