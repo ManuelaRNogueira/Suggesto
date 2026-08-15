@@ -3,6 +3,8 @@ import 'cores.dart';
 
 // Nomes e cores de cada status de sugestão, num só lugar — usado na tela
 // inicial do admin, na lista de sugestões e nos detalhes.
+// Só existem 3 status de verdade no backend (ver AvaliacaoController/
+// "statusUi": pendente | implementado | recusado) — nada de "em análise".
 class EstiloStatus {
   final String rotulo;
   final Color cor;
@@ -12,7 +14,6 @@ class EstiloStatus {
 
 const Map<String, EstiloStatus> _estilos = {
   'pendente': EstiloStatus('Pendente', Cores.amarelo, Color(0x29FFB800)),
-  'analise': EstiloStatus('Em análise', Cores.azul, Color(0x2960A5FA)),
   'implementado': EstiloStatus('Implementado', Cores.verde, Cores.verdeFundo),
   'recusado': EstiloStatus('Recusado', Color(0xFFFF5252), Color(0x29FF5252)),
 };
@@ -22,10 +23,6 @@ EstiloStatus estiloDoStatus(String chave) => _estilos[chave] ?? _estilos['penden
 // Texto maior, usado no selo de destaque da tela de detalhes.
 String descricaoDoStatus(String chave) {
   switch (chave) {
-    case 'pendente':
-      return 'Pendente de análise';
-    case 'analise':
-      return 'Em análise';
     case 'implementado':
       return 'Implementada';
     case 'recusado':

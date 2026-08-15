@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'cores.dart';
 import 'statusSugestao.dart';
+import 'formatacao.dart';
+import 'sessao.dart';
+import 'api.dart';
 import 'detalhesSugestaoAdm.dart';
 
-// Início do painel administrativo no mobile. Ainda não está ligado à API —
-// os números abaixo são só pra dar forma à tela (ver PlanoController/AdminController
-// no backend pra quando isso for integrado de verdade).
+// Início do painel administrativo — busca em GET /api/admin/metricas e
+// GET /api/admin/estabelecimentos (ver AdminController no backend).
 class InicioAdm extends StatefulWidget {
   const InicioAdm({super.key});
 
@@ -16,79 +18,100 @@ class InicioAdm extends StatefulWidget {
 class _InicioAdmState extends State<InicioAdm> {
   int paginaAtual = 0;
 
-  final String nomeEstabelecimento = "Cotil - Colégio Técnico";
-  final int novasSugestoes = 24;
-  final double engajamento = 18;
+  bool carregando = true;
+  String? erro;
 
-  final List<_ItemStatus> status = [
-    _ItemStatus('Pendentes', 15, Icons.schedule, Cores.amarelo),
-    _ItemStatus('Em análise', 9, Icons.search, Cores.azul),
-    _ItemStatus('Implementados', 42, Icons.check_circle, Cores.verde),
-    _ItemStatus('Recusados', 6, Icons.cancel, Cores.vermelho),
-  ];
+  Map<String, dynamic>? metricas;
+  String nomeEstabelecimento = 'Painel administrativo';
+  List<Map<String, dynamic>> sugestoesRecentes = [];
 
-  final List<Map<String, dynamic>> sugestoesRecentes = [
-    {
-      'titulo': 'Melhorar a iluminação do pátio',
-      'descricao':
-          'A iluminação do pátio principal está muito fraca, principalmente durante o período noturno. '
-              'Seria importante melhorar para garantir mais segurança e conforto para os alunos que ficam no período da noite.',
-      'categoria': 'Estrutura',
-      'status': 'pendente',
-      'prioridade': 'alta',
-      'tempo': 'há 2h',
-      'autor': 'Manuela Nogueira',
-      'data': '05/11/2024 | 14:30',
-    },
-    {
-      'titulo': 'Adicionar mais opções vegetarianas',
-      'descricao':
-          'O cardápio do refeitório tem poucas opções sem carne. Ter mais alternativas vegetarianas ajudaria '
-              'bastante quem segue esse tipo de dieta.',
-      'categoria': 'Produtos e Serviços',
-      'status': 'analise',
-      'prioridade': 'media',
-      'tempo': 'há 5h',
-      'autor': 'Rafael Gonçalves',
-      'data': '05/11/2024 | 09:10',
-    },
-    {
-      'titulo': 'Melhorar atendimento da secretaria',
-      'descricao':
-          'O atendimento na secretaria costuma demorar bastante nos horários de pico. Um sistema de senhas '
-              'ajudaria a organizar a fila.',
-      'categoria': 'Atendimento',
-      'status': 'implementado',
-      'prioridade': 'media',
-      'tempo': 'há 1d',
-      'autor': 'Diogo Bernasconi',
-      'data': '04/11/2024 | 11:45',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _carregar();
+  }
+
+  Future<void> _carregar() async {
+    setState(() {
+      carregando = true;
+      erro = null;
+    });
+    try {
+      final idGerente = Sessao.idGerenteEfetivo;
+      final resultados = await Future.wait([
+        buscarMetricasAdmin(idGerente: idGerente),
+        buscarEstabelecimentosAdmin(idGerente: idGerente),
+      ]);
+      final m = resultados[0] as Map<String, dynamic>;
+      final estabs = resultados[1] as List<dynamic>;
+
+      setState(() {
+        metricas = m;
+        sugestoesRecentes = ((m['sugestoesRecentes'] as List<dynamic>?) ?? []).cast<Map<String, dynamic>>();
+        if (estabs.length == 1) {
+          nomeEstabelecimento = estabs.first['nome']?.toString() ?? 'Painel administrativo';
+        } else if (estabs.length > 1) {
+          nomeEstabelecimento = '${estabs.length} estabelecimentos';
+        } else {
+          nomeEstabelecimento = 'Nenhum estabelecimento cadastrado';
+        }
+      });
+    } on ApiException catch (e) {
+      setState(() => erro = e.mensagem);
+    } finally {
+      if (mounted) setState(() => carregando = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Cores.fundo,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+      body: SafeArea(child: _corpo()),
+      bottomNavigationBar: _buildBarraNavegacao(),
+    );
+  }
+
+  Widget _corpo() {
+    if (carregando) {
+      return const Center(child: CircularProgressIndicator(color: Cores.roxo));
+    }
+    if (erro != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              _buildCabecalho(),
-              const SizedBox(height: 20),
-              _buildCartoesResumo(),
-              const SizedBox(height: 24),
-              _buildStatusSugestoes(),
-              const SizedBox(height: 24),
-              _buildSugestoesRecentes(),
+              Text(erro!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent, fontSize: 13, fontFamily: 'Poppins')),
+              const SizedBox(height: 12),
+              TextButton(onPressed: _carregar, child: const Text('Tentar de novo', style: TextStyle(color: Cores.roxo, fontFamily: 'Poppins'))),
             ],
           ),
         ),
+      );
+    }
+
+    final m = metricas!;
+    return RefreshIndicator(
+      color: Cores.roxo,
+      onRefresh: _carregar,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildCabecalho(),
+            const SizedBox(height: 20),
+            _buildCartoesResumo(m),
+            const SizedBox(height: 24),
+            _buildStatusSugestoes(m),
+            const SizedBox(height: 24),
+            _buildSugestoesRecentes(),
+          ],
+        ),
       ),
-      bottomNavigationBar: _buildBarraNavegacao(),
     );
   }
 
@@ -129,35 +152,25 @@ class _InicioAdmState extends State<InicioAdm> {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Cores.borda),
           ),
-          child: const Stack(
-            alignment: Alignment.center,
-            children: [
-              Icon(Icons.notifications_none, color: Colors.white70, size: 22),
-              Positioned(
-                top: 10,
-                right: 11,
-                child: _PontoNotificacao(),
-              ),
-            ],
-          ),
+          child: const Icon(Icons.notifications_none, color: Colors.white70, size: 22),
         ),
       ],
     );
   }
 
-  Widget _buildCartoesResumo() {
+  Widget _buildCartoesResumo(Map<String, dynamic> m) {
+    final total = (m['totalSugestoes'] as num?)?.toInt() ?? 0;
+    final implementados = (m['implementados'] as num?)?.toInt() ?? 0;
+    final aproveitamento = total > 0 ? ((implementados / total) * 100).round() : 0;
+
     return Row(
       children: [
         Expanded(
-          child: _cartaoResumo('$novasSugestoes', 'Novas Sugestões', Colors.white),
+          child: _cartaoResumo('${(m['novasSemana'] as num?)?.toInt() ?? 0}', 'Novas na semana', Colors.white),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _cartaoResumo(
-            '+${engajamento.toStringAsFixed(0)}%',
-            'Engajamento',
-            Cores.verde,
-          ),
+          child: _cartaoResumo('$aproveitamento%', 'Aproveitamento', Cores.verde),
         ),
       ],
     );
@@ -197,7 +210,13 @@ class _InicioAdmState extends State<InicioAdm> {
     );
   }
 
-  Widget _buildStatusSugestoes() {
+  Widget _buildStatusSugestoes(Map<String, dynamic> m) {
+    final itens = [
+      _ItemStatus('Pendentes', (m['pendentes'] as num?)?.toInt() ?? 0, Icons.schedule, Cores.amarelo),
+      _ItemStatus('Implementados', (m['implementados'] as num?)?.toInt() ?? 0, Icons.check_circle, Cores.verde),
+      _ItemStatus('Recusados', (m['recusados'] as num?)?.toInt() ?? 0, Icons.cancel, Cores.vermelho),
+    ];
+
     return Container(
       decoration: BoxDecoration(
         color: Cores.cartao,
@@ -219,7 +238,7 @@ class _InicioAdmState extends State<InicioAdm> {
               ),
             ),
           ),
-          for (final item in status) _linhaStatus(item),
+          for (final item in itens) _linhaStatus(item),
           const SizedBox(height: 6),
         ],
       ),
@@ -271,7 +290,16 @@ class _InicioAdmState extends State<InicioAdm> {
           ),
         ),
         const SizedBox(height: 12),
-        for (final s in sugestoesRecentes) _cartaoSugestao(s),
+        if (sugestoesRecentes.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Text(
+              'Nenhuma sugestão ainda.',
+              style: TextStyle(color: Colors.white38, fontSize: 13, fontFamily: 'Poppins'),
+            ),
+          )
+        else
+          for (final s in sugestoesRecentes) _cartaoSugestao(s),
       ],
     );
   }
@@ -299,9 +327,9 @@ class _InicioAdmState extends State<InicioAdm> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                pillStatus(s['status']),
+                pillStatus((s['statusUi'] as String?) ?? 'pendente'),
                 Text(
-                  s['tempo'],
+                  formatarData(s['dataAvaliacao'] as String?),
                   style: const TextStyle(
                     color: Colors.white38,
                     fontSize: 11,
@@ -312,7 +340,7 @@ class _InicioAdmState extends State<InicioAdm> {
             ),
             const SizedBox(height: 8),
             Text(
-              s['titulo'],
+              tituloSugestao(s['comentario'] as String?),
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 14,
@@ -322,7 +350,7 @@ class _InicioAdmState extends State<InicioAdm> {
             ),
             const SizedBox(height: 3),
             Text(
-              'Categoria: ${s['categoria']}',
+              'Categoria: ${s['categoria'] ?? 'Sem categoria'}',
               style: const TextStyle(
                 color: Colors.white54,
                 fontSize: 12,
@@ -396,19 +424,6 @@ class _InicioAdmState extends State<InicioAdm> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _PontoNotificacao extends StatelessWidget {
-  const _PontoNotificacao();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 7,
-      height: 7,
-      decoration: const BoxDecoration(color: Cores.roxo, shape: BoxShape.circle),
     );
   }
 }

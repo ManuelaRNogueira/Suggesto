@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'listaSugestoes.dart';
+import 'api.dart';
+import 'sessao.dart';
 
 class SugerirPage extends StatefulWidget {
   final Map<String, dynamic>? local;
@@ -46,57 +47,69 @@ class _SugerirPageState extends State<SugerirPage> {
       notaSelecionada > 0 &&
       !enviado;
 
-  void _enviar() {
+  Future<void> _enviar() async {
     if (!podeEnviar) return;
+
+    final idEstabelecimento = (widget.local?['idEstabelecimento'] as num?)?.toInt();
+    if (idEstabelecimento == null || Sessao.idUsuario == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Não foi possível identificar o estabelecimento.', style: TextStyle(fontFamily: 'Poppins')),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
     setState(() => enviado = true);
 
-    final local = widget.local ??
-        {
-          'nome': 'BigJack',
-          'imagem': 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=800&q=80',
-        };
+    // Categorias são fixas e vêm nessa ordem exata do backend (1..8).
+    final idCategoria = categorias.indexOf(categoriaSelecionada!) + 1;
 
-    listaSugestoes.lista.insert(0, {
-      "local": local['nome'] ?? 'Local',
-      "imagem": local['imagem'] ?? '',
-      "categoria": categoriaSelecionada!,
-      "texto": texto.text.trim(),
-      "status": "Em análise",
-      "tempo": "agora mesmo",
-      "nota": notaSelecionada.toString(),
-    });
+    try {
+      await criarAvaliacao(
+        idUsuario: Sessao.idUsuario!,
+        idEstabelecimento: idEstabelecimento,
+        idCategoria: idCategoria,
+        nota: notaSelecionada,
+        comentario: texto.text.trim(),
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: Color(0xFF2D5A27),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        content: Row(
-          children: [
-            Icon(Icons.check_circle, color: Color(0xFF4CAF50)),
-            SizedBox(width: 10),
-            Text(
-              'Sugestão enviada com sucesso!',
-              style: TextStyle(color: Colors.white, fontFamily: 'Poppins'),
-            ),
-          ],
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Color(0xFF2D5A27),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Color(0xFF4CAF50)),
+              SizedBox(width: 10),
+              Text(
+                'Sugestão enviada com sucesso!',
+                style: TextStyle(color: Colors.white, fontFamily: 'Poppins'),
+              ),
+            ],
+          ),
+          duration: Duration(seconds: 2),
         ),
-        duration: Duration(seconds: 2),
-      ),
-    );
+      );
 
-    Future.delayed(Duration(milliseconds: 2200), () {
-      if (mounted) Navigator.of(context).pop();
-    });
+      Future.delayed(Duration(milliseconds: 1400), () {
+        if (mounted) Navigator.of(context).pop();
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => enviado = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.mensagem, style: TextStyle(fontFamily: 'Poppins')), backgroundColor: Colors.redAccent),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final local = widget.local ??
-        {
-          'nome': 'BigJack',
-          'imagem': 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=800&q=80',
-        };
+    final local = widget.local ?? {'nome': 'Local'};
 
     return Scaffold(
       backgroundColor: Color(0xFF12061E),
@@ -171,6 +184,7 @@ class _SugerirPageState extends State<SugerirPage> {
 
   // INFORMACOES DO LOCAL
   Widget LocalInfo(Map<String, dynamic> local) {
+    final fotoUrl = urlFotoEstabelecimento(local['fotoPath'] as String?);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
@@ -182,9 +196,9 @@ class _SugerirPageState extends State<SugerirPage> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: local['imagem'] != null
+            child: fotoUrl != null
                 ? Image.network(
-                    local['imagem'],
+                    fotoUrl,
                     width: 52,
                     height: 52,
                     fit: BoxFit.cover,
@@ -195,7 +209,7 @@ class _SugerirPageState extends State<SugerirPage> {
           SizedBox(width: 14),
           Expanded(
             child: Text(
-              local['nome'] ?? 'Local',
+              (local['nome'] as String?) ?? 'Local',
               style: TextStyle(color: Colors.white, fontSize: 18, fontFamily: 'PoppinsSemiBold'),
             ),
           ),

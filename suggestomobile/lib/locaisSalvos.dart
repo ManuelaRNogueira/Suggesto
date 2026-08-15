@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'infoLocal.dart';
+import 'api.dart';
+import 'sessao.dart';
 
 class LocaisSalvosPage extends StatefulWidget {
   const LocaisSalvosPage({super.key});
@@ -9,103 +11,43 @@ class LocaisSalvosPage extends StatefulWidget {
 }
 
 class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
-  final List<Map<String, dynamic>> locais = [
-    {
-      'nome': 'Big Jack Hamburgueria',
-      'bairro': 'Bairro Castelo, Campinas',
-      'categoria': 'Restaurantes',
-      'nota': 4.8,
-      'tags': ['Hambúrguer', 'Delivery'],
-      'salvoHa': 'Salvo há 2 dias',
-      'imagem': 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=800&q=80',
-      'salvo': true,
-      'lat': -22.88981704589304,
-      'lng': -47.07628634133093,
-      'endereco': 'R. Oliveira Cardoso, 376 - Jardim Chapadão, Campinas - SP, 13070-148',
-      'horario': '11h - 23h',
-      'telefone': '(19) 3212-3025',
-    },
-    {
-      'nome': 'Café do Centro',
-      'bairro': 'Rua das Flores, Campinas',
-      'categoria': 'Cafés',
-      'nota': 4.7,
-      'tags': ['Especialidade', 'Wi-fi'],
-      'salvoHa': 'Salvo há 1 semana',
-      'imagem': 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&q=80',
-      'salvo': true,
-      'lat': -22.902932790424725,
-      'lng': -47.059543363884586,
-      'endereco': 'Rua Barão de Jaguara, 1302 - Centro, Campinas - SP, 13015-002',
-      'horario': '7h - 20h',
-      'telefone': '(19) 3231-4079',
-    },
-    {
-      'nome': 'Panobianco Academia',
-      'bairro': 'Centro, Campinas',
-      'categoria': 'Academias',
-      'nota': 4.5,
-      'tags': ['Musculação', '24h'],
-      'salvoHa': 'Salvo há 2 semanas',
-      'imagem': 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80',
-      'salvo': true,
-      'lat': -22.905673074198525,
-      'lng': -47.05910106144178,
-      'endereco': 'Av Francisco Glicério 964 Sobre loja - Centro, Campinas - SP, 13012-100',
-      'horario': '6h - 22h',
-      'telefone': '(19) 99202-4114',
-    },
-    {
-      'nome': 'Cantina Italiana',
-      'bairro': 'Vila Nova, Campinas',
-      'categoria': 'Restaurantes',
-      'nota': 4.9,
-      'tags': ['Italiana', 'Família'],
-      'salvoHa': 'Salvo há 3 dias',
-      'imagem': 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=80',
-      'salvo': true,
-      'lat': -22.893581437970333,
-      'lng': -47.05247901520925,
-      'endereco': 'Av. Cel. Silva Telles, 514 - Cambuí, Campinas - SP, 13024-001',
-      'horario': '11h - 23h',
-      'telefone': '(19) 3252-0845',
-    },
-    {
-      'nome': 'Brew Specialty Coffee',
-      'bairro': 'Cambuí, Campinas',
-      'categoria': 'Cafés',
-      'nota': 4.6,
-      'tags': ['Artesanal', 'Pet friendly'],
-      'salvoHa': 'Salvo há 5 dias',
-      'imagem': 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80',
-      'salvo': true,
-      'lat': -22.887983566179436,
-      'lng': -47.04989764423815,
-      'endereco': 'R. dos Alecrins, 659 - Cambuí, Campinas - SP, 13024-411',
-      'horario': '9h - 18h',
-      'telefone': '(19) 97148-2323',
-    },
-    {
-      'nome': 'SmartFit Campinas',
-      'bairro': 'Shopping Dom Pedro, Campinas',
-      'categoria': 'Academias',
-      'nota': 4.3,
-      'tags': ['Musculação', 'Cardio'],
-      'salvoHa': 'Salvo há 1 mês',
-      'imagem': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80',
-      'salvo': true,
-      'lat': -21.15080135904626,
-      'lng': -47.82537453276064,
-      'endereco': 'Shopping Mall Dom Pedro I - Av. Dom Pedro I, 1550 - Ipiranga, Ribeirão Preto - SP, 14055-620',
-      'horario': '24h',
-      'telefone': 'Sem número informado',
-    },
-  ];
+  bool carregando = true;
+  String? erro;
+  List<Map<String, dynamic>> locais = [];
 
-  double get mediaAvaliacao {
-    if (locais.isEmpty) return 0;
-    final soma = locais.fold<double>(0, (sum, l) => sum + (l['nota'] as double));
-    return double.parse((soma / locais.length).toStringAsFixed(1));
+  @override
+  void initState() {
+    super.initState();
+    _carregar();
+  }
+
+  Future<void> _carregar() async {
+    setState(() {
+      carregando = true;
+      erro = null;
+    });
+    try {
+      final lista = await buscarLocaisSalvos(Sessao.idUsuario!);
+      setState(() => locais = lista.cast<Map<String, dynamic>>());
+    } on ApiException catch (e) {
+      setState(() => erro = e.mensagem);
+    } finally {
+      if (mounted) setState(() => carregando = false);
+    }
+  }
+
+  Future<void> _removerSalvo(int index) async {
+    final idEstabelecimento = (locais[index]['idEstabelecimento'] as num?)?.toInt();
+    if (idEstabelecimento == null || Sessao.idUsuario == null) return;
+    try {
+      await removerLocalSalvo(usuarioId: Sessao.idUsuario!, estabelecimentoId: idEstabelecimento);
+      setState(() => locais.removeAt(index));
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.mensagem, style: const TextStyle(fontFamily: 'Poppins')), backgroundColor: Colors.redAccent),
+      );
+    }
   }
 
   @override
@@ -115,29 +57,59 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
       body: Column(
         children: [
           _buildHeader(context),
-          Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 20),
-                  const SizedBox(height: 24),
-                  _buildSectionTitle(),
-                  const SizedBox(height: 16),
-                  _buildLocaisGrid(),
-                  const SizedBox(height: 24),
-                ],
-              ),
-            ),
-          ),
+          Expanded(child: _corpo()),
         ],
       ),
     );
   }
 
-
-
+  Widget _corpo() {
+    if (carregando) {
+      return const Center(child: CircularProgressIndicator(color: Color(0xFF9B59D0)));
+    }
+    if (erro != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(erro!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent, fontSize: 13, fontFamily: 'Poppins')),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: _carregar,
+                child: const Text('Tentar de novo', style: TextStyle(color: Color(0xFF9B59D0), fontFamily: 'Poppins')),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    return RefreshIndicator(
+      color: const Color(0xFF9B59D0),
+      onRefresh: _carregar,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            const SizedBox(height: 24),
+            _buildSectionTitle(),
+            const SizedBox(height: 16),
+            if (locais.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                child: Text('Você ainda não salvou nenhum local.', style: TextStyle(color: Colors.white54, fontFamily: 'Poppins')),
+              )
+            else
+              _buildLocaisGrid(),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
 
   // ─── Header ────────────────────────────────────────────────────────
   Widget _buildHeader(BuildContext context) {
@@ -224,45 +196,6 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
     );
   }
 
-  Widget _buildStatCard({
-    required IconData icon,
-    required Color iconColor,
-    required String value,
-    required String label,
-  }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-        decoration: BoxDecoration(
-          color: const Color(0xFF2A1A4A),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF4A2A7A), width: 1),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: iconColor, size: 20),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                fontFamily: "Poppins",
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   // ─── Título da seção ───────────────────────────────────────────────
   Widget _buildSectionTitle() {
     return Padding(
@@ -278,7 +211,7 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
               fontWeight: FontWeight.bold,
               fontFamily: "PoppinsSemi",
             ),
-          ), 
+          ),
         ],
       ),
     );
@@ -298,14 +231,18 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
           childAspectRatio: 0.72,
         ),
         itemCount: locais.length,
-        itemBuilder: (context, index) => _buildLocalCard(locais[index]),
+        itemBuilder: (context, index) => _buildLocalCard(locais[index], index),
       ),
     );
   }
 
   // ─── Card do local ─────────────────────────────────────────────────
-  Widget _buildLocalCard(Map<String, dynamic> local) {
-    final tags = local['tags'] as List<String>;
+  Widget _buildLocalCard(Map<String, dynamic> local, int index) {
+    final fotoUrl = urlFotoEstabelecimento(local['fotoPath'] as String?);
+    final cidade = (local['cidade'] as String?) ?? '';
+    final bairro = (local['bairro'] as String?) ?? '';
+    final localizacao = [bairro, cidade].where((s) => s.isNotEmpty).join(', ');
+    final nota = (local['mediaAvaliacoes'] as num?)?.toStringAsFixed(1) ?? '—';
 
     return GestureDetector(
       onTap: () {
@@ -336,7 +273,13 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
               child: Stack(
                 children: [
                   Positioned.fill(
-                    child: Image.network(local['imagem'], fit: BoxFit.cover),
+                    child: fotoUrl != null
+                        ? Image.network(
+                            fotoUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => _placeholderImagem(),
+                          )
+                        : _placeholderImagem(),
                   ),
                   Positioned.fill(
                     child: DecoratedBox(
@@ -362,7 +305,7 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        local['categoria'].toString().toUpperCase(),
+                        ((local['categoria'] as String?) ?? '—').toUpperCase(),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 9,
@@ -376,9 +319,7 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
                     top: 6,
                     right: 6,
                     child: GestureDetector(
-                      onTap: () => setState(() {
-                        local['salvo'] = !(local['salvo'] as bool);
-                      }),
+                      onTap: () => _removerSalvo(index),
                       child: Container(
                         width: 30,
                         height: 30,
@@ -403,7 +344,7 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      local['nome'],
+                      (local['nome'] as String?) ?? 'Sem nome',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -420,7 +361,7 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
                         const SizedBox(width: 2),
                         Expanded(
                           child: Text(
-                            local['bairro'],
+                            localizacao,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -431,24 +372,6 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
                           ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 4,
-                      runSpacing: 4,
-                      children: tags.take(2).map((tag) {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF2A1A4A),
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: Text(
-                            tag,
-                            style: const TextStyle(color: Colors.white60, fontSize: 9, fontFamily: "Poppins"),
-                          ),
-                        );
-                      }).toList(),
                     ),
                     const Spacer(),
                     Row(
@@ -464,7 +387,7 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
                               const Icon(Icons.star, color: Color(0xFF4CAF50), size: 11),
                               const SizedBox(width: 2),
                               Text(
-                                local['nota'].toString(),
+                                nota,
                                 style: const TextStyle(
                                   color: Color(0xFF4CAF50),
                                   fontSize: 10,
@@ -478,14 +401,6 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
                         const Spacer(),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      local['salvoHa'],
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.3),
-                        fontSize: 9,
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -493,6 +408,13 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _placeholderImagem() {
+    return Container(
+      color: const Color(0xFF2A1A4A),
+      child: const Icon(Icons.storefront, color: Colors.white38, size: 36),
     );
   }
 }

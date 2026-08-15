@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:suggestomobile/buscarEstabelecimento.dart';
 import 'infoLocal.dart';
-import 'models/local.dart';
+import 'api.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -11,98 +11,105 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _currentIndex = 0;
+  bool carregando = true;
+  String? erro;
+  List<Map<String, dynamic>> locais = [];
 
-  // 1. Atualizar a lista locais para usar assets temporários
-  final List<Map<String, dynamic>> locais = [
-    {
-      'nome': 'Big Jack Hamburgueria',
-      'bairro': 'Bairro Castelo, Campinas',
-      'categoria': 'Restaurante',
-      'nota': 4.5,
-      'imagem': 'assets/images/bigjack.jpg',
-      'lat': -22.88981704589304,
-      'lng': -47.07628634133093,
-      'endereco': 'R. Oliveira Cardoso, 376 - Jardim Chapadão, Campinas - SP, 13070-148',
-      'horario': '11h - 23h',
-      'telefone': '(19) 3212-3025',
-    },
-    {
-      'nome': 'PanoBianco Academia',
-      'bairro': 'Centro, Campinas',
-      'categoria': 'Academia',
-      'nota': 4.8,
-      'imagem': 'assets/images/panobianco.png', // ASSET TEMPORÁRIO
-      'lat': -22.905673074198525,
-      'lng': -47.05910106144178,
-      'endereco': 'Av Francisco Glicério 964 Sobre loja - Centro, Campinas - SP, 13012-100',
-      'horario': '6h - 22h',
-      'telefone': '(19) 99202-4114',
-    },
-    {
-      'nome': 'Café do Centro',
-      'bairro': 'Centro, Campinas',
-      'categoria': 'Café',
-      'nota': 4.2,
-      'imagem': 'assets/images/cafeteria.jpg', 
-      'lat': -22.902932790424725,
-      'lng': -47.059543363884586,
-      'endereco': 'Rua Barão de Jaguara, 1302 - Centro, Campinas - SP, 13015-002',
-      'horario': '7h - 20h',
-      'telefone': '(19) 3231-4079',
-    },
-    {
-      'nome': 'COTIL',
-      'bairro': 'Jardim Nova Italia, Limeira',
-      'categoria': 'Escola',
-      'nota': 4.7,
-      'imagem': 'assets/images/cotil.jpg', 
-      'lat': -22.562159,
-      'lng': -47.4262152,
-      'endereco': 'R. Paschoal Marmo, 1888 - Jardim Nova Italia, Limeira - SP, 13484-431',
-      'horario': '7h - 22h',
-      'telefone': '(19)2113-3303',
-    },
+  @override
+  void initState() {
+    super.initState();
+    _carregar();
+  }
 
-  ];
+  Future<void> _carregar() async {
+    setState(() {
+      carregando = true;
+      erro = null;
+    });
+    try {
+      final lista = await buscarEstabelecimentos();
+      setState(() => locais = lista.cast<Map<String, dynamic>>());
+    } on ApiException catch (e) {
+      setState(() => erro = e.mensagem);
+    } finally {
+      if (mounted) setState(() => carregando = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF12061E),
       // ── Agora a tela inteira é rolável ─────────────────────────────
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: EdgeInsets.zero, 
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Header agora rola junto com o restante ──────────────────
-            _buildHeader(),
+      body: RefreshIndicator(
+        color: const Color(0xFF9B59D0),
+        onRefresh: _carregar,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+          padding: EdgeInsets.zero,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Header agora rola junto com o restante ──────────────────
+              _buildHeader(),
 
-            /*const SizedBox(height: 16),
+              /*const SizedBox(height: 16),
 
-            // Botão "Solicitar algo"
-            _buildSolicitarAlgo(),*/
+              // Botão "Solicitar algo"
+              _buildSolicitarAlgo(),*/
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            // Título + filtro
-            _buildDescubraHeader(),
+              // Título + filtro
+              _buildDescubraHeader(),
 
-            const SizedBox(height: 12),
+              const SizedBox(height: 12),
 
-            // Lista de locais
-            ...locais.map((local) => _buildLocalCard(local)),
+              // Lista de locais
+              _buildCorpoLista(),
 
-            const SizedBox(height: 20),
-          ],
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
 
       // ── Bottom Navigation Bar ─────────────────────────────────────
       bottomNavigationBar: barraNavegacao(),
     );
+  }
+
+  Widget _buildCorpoLista() {
+    if (carregando) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 40),
+        child: Center(child: CircularProgressIndicator(color: Color(0xFF9B59D0))),
+      );
+    }
+    if (erro != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+        child: Column(
+          children: [
+            Text(erro!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent, fontSize: 13, fontFamily: 'Poppins')),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: _carregar,
+              child: const Text('Tentar de novo', style: TextStyle(color: Color(0xFF9B59D0), fontFamily: 'Poppins')),
+            ),
+          ],
+        ),
+      );
+    }
+    if (locais.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 30),
+        child: Center(
+          child: Text('Nenhum estabelecimento encontrado.', style: TextStyle(color: Colors.white54, fontFamily: 'Poppins')),
+        ),
+      );
+    }
+    return Column(children: locais.map((local) => _buildLocalCard(local)).toList());
   }
 
   // ─────────────────────────────────────────────────────────────────
@@ -318,11 +325,23 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _placeholderImagem() {
+    return Container(
+      color: const Color(0xFF2A1A4A),
+      child: const Icon(Icons.storefront, color: Colors.white38, size: 40),
+    );
+  }
+
   // ─────────────────────────────────────────────────────────────────
   Widget _buildLocalCard(Map<String, dynamic> local) {
+    final fotoUrl = urlFotoEstabelecimento(local['fotoPath'] as String?);
+    final cidade = (local['cidade'] as String?) ?? '';
+    final bairro = (local['bairro'] as String?) ?? '';
+    final localizacao = [bairro, cidade].where((s) => s.isNotEmpty).join(', ');
+    final nota = (local['mediaAvaliacoes'] as num?)?.toStringAsFixed(1) ?? '—';
+
     return GestureDetector(
       onTap: () {
-        print("CLICOU NO CARD");
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -353,10 +372,13 @@ class _HomePageState extends State<HomePage> {
                 SizedBox(
                   height: 160,
                   width: double.infinity,
-                  child: Image.asset( // 2. Mudar de Image.network para Image.asset
-                    local['imagem'], 
-                    fit: BoxFit.cover,
-                  ),
+                  child: fotoUrl != null
+                      ? Image.network(
+                          fotoUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => _placeholderImagem(),
+                        )
+                      : _placeholderImagem(),
                 ),
                 Positioned.fill(
                   child: DecoratedBox(
@@ -387,7 +409,7 @@ class _HomePageState extends State<HomePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          local['nome'],
+                          (local['nome'] as String?) ?? 'Sem nome',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 15,
@@ -396,7 +418,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          '| ${local['bairro']}',
+                          '| $localizacao',
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.55),
                             fontSize: 12,
@@ -420,7 +442,7 @@ class _HomePageState extends State<HomePage> {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          local['categoria'],
+                          (local['categoria'] as String?) ?? '—',
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 11,
@@ -443,7 +465,7 @@ class _HomePageState extends State<HomePage> {
                                     color: Color(0xFF4CAF50), size: 12),
                                 const SizedBox(width: 2),
                                 Text(
-                                  local['nota'].toString(),
+                                  nota,
                                   style: const TextStyle(
                                     color: Color(0xFF4CAF50),
                                     fontSize: 11,

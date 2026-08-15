@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'cores.dart';
 import 'api.dart';
+import 'sessao.dart';
 import 'cadastro.dart';
 import 'entrarEquipe.dart';
 import 'entrarCodigo.dart';
@@ -39,6 +40,7 @@ class _LoginState extends State<Login> {
       );
 
       final tipoUsuario = resultado['tipoUsuario'] as String?;
+      final idUsuario = (resultado['idUsuario'] as num).toInt();
 
       if (widget.modoEquipe && tipoUsuario != 'Administrador') {
         setState(() => erroGeral = "Você precisa de uma conta de administrador para entrar em uma equipe.");
@@ -52,13 +54,21 @@ class _LoginState extends State<Login> {
           context,
           MaterialPageRoute(
             builder: (_) => EntrarCodigo(
-              usuarioId: resultado['idUsuario'] as int,
+              usuarioId: idUsuario,
               nomeUsuario: resultado['nome'] as String? ?? '',
             ),
           ),
         );
         return;
       }
+
+      Sessao.definir(
+        idUsuarioLogado: idUsuario,
+        nomeLogado: resultado['nome'] as String? ?? '',
+        emailLogado: emailController.text.trim(),
+        tipoUsuarioLogado: tipoUsuario ?? 'Cliente',
+        idGerenteEfetivoLogado: (resultado['idGerenteEfetivo'] as num?)?.toInt(),
+      );
 
       Navigator.pushNamed(context, tipoUsuario == 'Administrador' ? '/inicioAdm' : '/home_cliente');
     } on ApiException catch (e) {

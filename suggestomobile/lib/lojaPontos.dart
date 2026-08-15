@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'api.dart';
+import 'sessao.dart';
 
 class LojasPontosPage extends StatefulWidget {
   const LojasPontosPage({super.key});
@@ -8,10 +10,12 @@ class LojasPontosPage extends StatefulWidget {
 }
 
 class _LojasPontosPageState extends State<LojasPontosPage> {
-  int _currentIndex = 2;
   int _faixaSelecionada = 0;
 
-  final int _meusPontos = 20652;
+  bool carregando = true;
+  String? erro;
+  List<Map<String, dynamic>> _recompensas = [];
+  int _meusPontos = 0;
 
   final List<String> _faixas = [
     'Até 6.000 pts',
@@ -20,89 +24,110 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
     'Até 45.000 pts',
   ];
 
-  final List<Map<String, dynamic>> _recompensas = [
-    {
-      'faixa': 0,
-      'titulo': 'Café 200ml',
-      'parceiro': 'Starbucks',
-      'imagem': 'assets/images/starbucks.png',
-      'cor': const Color(0xFF00704A),
-      'pontosTag': '4.000 pts',
-    },
-    {
-      'faixa': 0,
-      'titulo': '10% OFF',
-      'parceiro': 'Coco Bambu',
-      'imagem': 'assets/images/cocobambu.png',
-      'cor': const Color(0xFF8B1A1A),
-      'pontosTag': '5.000 pts',
-    },
-    {
-      'faixa': 0,
-      'titulo': 'McColosso',
-      'parceiro': 'McDonald\'s',
-      'imagem': 'assets/images/mcColosso.png',
-      'cor': const Color(0xFFDA291C),
-      'pontosTag': '4.000 pts',
-    },
-    {
-      'faixa': 2,
-      'titulo': 'McFritas',
-      'parceiro': 'McDonald\'s',
-      'imagem': 'assets/images/mcFritas.png',
-      'cor': const Color(0xFFDA291C),
-      'pontosTag': '20.000 pts',
-    },
-    {
-      'faixa': 2,
-      'titulo': 'R\$20 OFF',
-      'parceiro': 'Zara',
-      'imagem': 'assets/images/zara.jpg',
-      'cor': const Color(0xFF222222),
-      'pontosTag': '25.000 pts',
-    },
-    {
-      'faixa': 2,
-      'titulo': '10% OFF',
-      'parceiro': 'Carrefour',
-      'imagem': 'assets/images/carrefour.png',
-      'cor': const Color(0xFF004A97),
-      'pontosTag': '25.000 pts',
-    },
-    {
-      'faixa': 3,
-      'titulo': '50% OFF',
-      'parceiro': 'PokeMania',
-      'imagem': 'assets/images/manapoke.jpg',
-      'cor': const Color(0xFF1A3A2A),
-      'pontosTag': '30.000 pts',
-    },
-    {
-      'faixa': 3,
-      'titulo': '60% OFF',
-      'parceiro': 'Youcom',
-      'imagem': 'assets/images/youcom.png',
-      'cor': const Color(0xFF111111),
-      'pontosTag': '45.000 pts',
-    },
-    {
-      'faixa': 3,
-      'titulo': 'Cupom',
-      'parceiro': 'BurgerKing',
-      'imagem': 'assets/images/bk.jpg',
-      'cor': const Color(0xFF502314),
-      'pontosTag': '45.000 pts',
-    },
-  ];
-
   final List<Map<String, dynamic>> _grupos = [
     {'label': 'Até 6.000 pts', 'faixaIndex': 0},
     {'label': 'Até 25.000 pts', 'faixaIndex': 2},
     {'label': 'Até 45.000 pts', 'faixaIndex': 3},
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _carregar();
+  }
+
+  Future<void> _carregar() async {
+    setState(() {
+      carregando = true;
+      erro = null;
+    });
+    try {
+      final resultados = await Future.wait([
+        buscarRecompensas(),
+        buscarUsuario(Sessao.idUsuario!),
+      ]);
+      final recompensas = resultados[0] as List<dynamic>;
+      final usuario = resultados[1] as Map<String, dynamic>;
+      setState(() {
+        _recompensas = recompensas.cast<Map<String, dynamic>>();
+        _meusPontos = (usuario['pontos'] as num?)?.toInt() ?? 0;
+      });
+    } on ApiException catch (e) {
+      setState(() => erro = e.mensagem);
+    } finally {
+      if (mounted) setState(() => carregando = false);
+    }
+  }
+
+  // As "faixas" são só uma forma de agrupar as recompensas na tela por
+  // faixa de custo em pontos — o backend não tem esse conceito, então
+  // calculamos aqui a partir de custoPontos.
+  int _faixaDoCusto(int custoPontos) {
+    if (custoPontos <= 6000) return 0;
+    if (custoPontos <= 18000) return 1;
+    if (custoPontos <= 25000) return 2;
+    return 3;
+  }
+
   List<Map<String, dynamic>> _recompensasDaFaixa(int faixaIndex) {
-    return _recompensas.where((r) => r['faixa'] == faixaIndex).toList();
+    return _recompensas.where((r) {
+      final custo = (r['custoPontos'] as num?)?.toInt() ?? 0;
+      return _faixaDoCusto(custo) == faixaIndex;
+    }).toList();
+  }
+
+  Future<void> _resgatarRecompensa(Map<String, dynamic> recompensa) async {
+    final id = (recompensa['id'] as num?)?.toInt();
+    if (id == null || Sessao.idUsuario == null) return;
+
+    try {
+      final resultado = await resgatar(usuarioId: Sessao.idUsuario!, recompensaId: id);
+      if (!mounted) return;
+      setState(() {
+        _meusPontos = (resultado['novoSaldo'] as num?)?.toInt() ?? _meusPontos;
+      });
+      final codigo = resultado['codigoCupom']?.toString() ?? '';
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          backgroundColor: const Color(0xFF1E0E32),
+          title: const Text('Resgate confirmado!', style: TextStyle(color: Colors.white, fontFamily: 'PoppinsBold')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Use o código abaixo no estabelecimento:', style: TextStyle(color: Colors.white70, fontFamily: 'Poppins')),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF9B59D0).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFF9B59D0).withOpacity(0.4)),
+                ),
+                child: Text(
+                  codigo,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Color(0xFF9B59D0), fontSize: 16, fontFamily: 'PoppinsBold'),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Fechar', style: TextStyle(color: Colors.white70, fontFamily: 'Poppins')),
+            ),
+          ],
+        ),
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.mensagem, style: const TextStyle(fontFamily: 'Poppins')), backgroundColor: Colors.redAccent),
+      );
+    }
   }
 
   @override
@@ -113,29 +138,62 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeader(),
-          Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 24),
-                  _buildPontosDestaque(),
-                  const SizedBox(height: 24),
-                  _buildFaixasTabs(),
-                  const SizedBox(height: 24),
-                  ..._grupos.map((grupo) => _buildGrupoRecompensas(
-                        grupo['label'] as String,
-                        grupo['faixaIndex'] as int,
-                      )),
-                  const SizedBox(height: 24),
-                ],
-              ),
-            ),
-          ),
+          Expanded(child: _corpo()),
         ],
       ),
       bottomNavigationBar: barraNavegacao(),
+    );
+  }
+
+  Widget _corpo() {
+    if (carregando) {
+      return const Center(child: CircularProgressIndicator(color: Color(0xFF9B59D0)));
+    }
+    if (erro != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(erro!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent, fontSize: 13, fontFamily: 'Poppins')),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: _carregar,
+                child: const Text('Tentar de novo', style: TextStyle(color: Color(0xFF9B59D0), fontFamily: 'Poppins')),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    return RefreshIndicator(
+      color: const Color(0xFF9B59D0),
+      onRefresh: _carregar,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 24),
+            _buildPontosDestaque(),
+            const SizedBox(height: 24),
+            _buildFaixasTabs(),
+            const SizedBox(height: 24),
+            if (_recompensas.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                child: Text('Nenhuma recompensa disponível no momento.', style: TextStyle(color: Colors.white54, fontFamily: 'Poppins')),
+              )
+            else
+              ..._grupos.map((grupo) => _buildGrupoRecompensas(
+                    grupo['label'] as String,
+                    grupo['faixaIndex'] as int,
+                  )),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
     );
   }
 
@@ -322,6 +380,13 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
   }
 
   Widget _buildRecompensaCard(Map<String, dynamic> recompensa) {
+    final estabelecimento = recompensa['estabelecimento'] as Map<String, dynamic>?;
+    final fotoPath = (recompensa['fotoPath'] as String?) ?? (estabelecimento?['fotoPath'] as String?);
+    final fotoUrl = urlFotoEstabelecimento(fotoPath);
+    final custo = (recompensa['custoPontos'] as num?)?.toInt() ?? 0;
+    final titulo = (recompensa['nome'] as String?) ?? 'Recompensa';
+    final parceiro = (estabelecimento?['nome'] as String?) ?? '';
+
     return GestureDetector(
       onTap: () => _mostrarDetalhes(recompensa),
       child: SizedBox(
@@ -332,47 +397,62 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
             Container(
               height: 110,
               width: 110,
+              clipBehavior: Clip.hardEdge,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                image: DecorationImage(
-                  image: AssetImage(recompensa['imagem']),
-                  fit: BoxFit.cover,
-                ),
+                color: const Color(0xFF2A1A4A),
               ),
-              child: Align(
-                alignment: Alignment.topLeft,
-                child: Container(
-                  margin: const EdgeInsets.only(top: 6, left: 6),
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.65),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.generating_tokens,
-                        color: Colors.white,
-                        size: 9,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (fotoUrl != null)
+                    Image.network(
+                      fotoUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Center(
+                        child: Icon(Icons.card_giftcard, color: Colors.white38, size: 36),
                       ),
-                      const SizedBox(width: 3),
-                      Text(
-                        recompensa['pontosTag'],
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 8,
-                          fontFamily: 'PoppinsSemi',
-                        ),
+                    )
+                  else
+                    const Center(
+                      child: Icon(Icons.card_giftcard, color: Colors.white38, size: 36),
+                    ),
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 6, left: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.65),
+                        borderRadius: BorderRadius.circular(4),
                       ),
-                    ],
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.generating_tokens,
+                            color: Colors.white,
+                            size: 9,
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            '${_formatarPontos(custo)} pts',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontFamily: 'PoppinsSemi',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              '${recompensa['titulo']} - ${recompensa['parceiro']}',
+              parceiro.isNotEmpty ? '$titulo - $parceiro' : titulo,
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 10,
@@ -388,6 +468,12 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
   }
 
   void _mostrarDetalhes(Map<String, dynamic> recompensa) {
+    final estabelecimento = recompensa['estabelecimento'] as Map<String, dynamic>?;
+    final fotoPath = (recompensa['fotoPath'] as String?) ?? (estabelecimento?['fotoPath'] as String?);
+    final fotoUrl = urlFotoEstabelecimento(fotoPath);
+    final titulo = (recompensa['nome'] as String?) ?? 'Recompensa';
+    final parceiro = (estabelecimento?['nome'] as String?) ?? '—';
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -415,17 +501,25 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
               child: SizedBox(
                 height: 160,
                 width: double.infinity,
-                child: Image.asset(
-                  recompensa['imagem'],
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    color: recompensa['cor'] as Color,
-                    child: const Center(
-                      child: Icon(Icons.card_giftcard,
-                          color: Colors.white38, size: 48),
-                    ),
-                  ),
-                ),
+                child: fotoUrl != null
+                    ? Image.network(
+                        fotoUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: const Color(0xFF2A1A4A),
+                          child: const Center(
+                            child: Icon(Icons.card_giftcard,
+                                color: Colors.white38, size: 48),
+                          ),
+                        ),
+                      )
+                    : Container(
+                        color: const Color(0xFF2A1A4A),
+                        child: const Center(
+                          child: Icon(Icons.card_giftcard,
+                              color: Colors.white38, size: 48),
+                        ),
+                      ),
               ),
             ),
             const SizedBox(height: 16),
@@ -436,7 +530,7 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        recompensa['titulo'],
+                        titulo,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 20,
@@ -445,7 +539,7 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        recompensa['parceiro'],
+                        parceiro,
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.5),
                           fontSize: 14,
@@ -479,7 +573,10 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  Navigator.pop(context);
+                  _resgatarRecompensa(recompensa);
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF9B59D0),
                   foregroundColor: Colors.white,

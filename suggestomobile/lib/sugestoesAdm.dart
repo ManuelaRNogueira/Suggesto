@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'cores.dart';
 import 'statusSugestao.dart';
+import 'formatacao.dart';
+import 'sessao.dart';
+import 'api.dart';
 import 'detalhesSugestaoAdm.dart';
 
 // Lista de sugestões do painel admin — versão mobile da tela equivalente do
 // desktop (Suggesto_DesktopReact/renderer/src/pages/admin/Sugestoes.jsx).
-// Ainda usa dados de exemplo, o app não está ligado à API.
+// Busca em GET /api/admin/sugestoes.
 class SugestoesAdm extends StatefulWidget {
   const SugestoesAdm({super.key});
 
@@ -18,105 +21,44 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
   String filtro = 'todos';
   String busca = '';
 
-  final List<Map<String, dynamic>> sugestoes = [
-    {
-      'titulo': 'Melhorar a iluminação do pátio',
-      'descricao':
-          'A iluminação do pátio principal está muito fraca, principalmente durante o período noturno. '
-              'Seria importante melhorar para garantir mais segurança e conforto para os alunos que ficam no período da noite.',
-      'categoria': 'Estrutura',
-      'status': 'pendente',
-      'prioridade': 'alta',
-      'tempo': 'há 2h',
-      'autor': 'Manuela Nogueira',
-      'data': '05/11/2024 | 14:30',
-    },
-    {
-      'titulo': 'Adicionar mais opções vegetarianas',
-      'descricao':
-          'O cardápio do refeitório tem poucas opções sem carne. Ter mais alternativas vegetarianas ajudaria '
-              'bastante quem segue esse tipo de dieta.',
-      'categoria': 'Produtos e Serviços',
-      'status': 'analise',
-      'prioridade': 'media',
-      'tempo': 'há 5h',
-      'autor': 'Rafael Gonçalves',
-      'data': '05/11/2024 | 09:10',
-    },
-    {
-      'titulo': 'Melhorar atendimento da secretaria',
-      'descricao':
-          'O atendimento na secretaria costuma demorar bastante nos horários de pico. Um sistema de senhas '
-              'ajudaria a organizar a fila.',
-      'categoria': 'Atendimento',
-      'status': 'implementado',
-      'prioridade': 'media',
-      'tempo': 'há 1d',
-      'autor': 'Diogo Bernasconi',
-      'data': '04/11/2024 | 11:45',
-    },
-    {
-      'titulo': 'Criar mais espaços silenciosos para estudos',
-      'descricao':
-          'Falta um espaço reservado pra quem precisa estudar em silêncio antes das provas. A biblioteca já '
-              'fica cheia rápido.',
-      'categoria': 'Estrutura',
-      'status': 'pendente',
-      'prioridade': 'alta',
-      'tempo': 'há 3h',
-      'autor': 'Ana Paula',
-      'data': '05/11/2024 | 08:20',
-    },
-    {
-      'titulo': 'Ampliar horário da biblioteca',
-      'descricao':
-          'A biblioteca fecha muito cedo pra quem fica até mais tarde na escola. Ampliar o horário ajudaria '
-              'bastante na época de provas.',
-      'categoria': 'Organização',
-      'status': 'recusado',
-      'prioridade': 'baixa',
-      'tempo': 'há 2d',
-      'autor': 'Gui Meirelles',
-      'data': '03/11/2024 | 16:00',
-    },
-    {
-      'titulo': 'Instalar mais bebedouros nos corredores',
-      'descricao':
-          'Tem poucos bebedouros e nos horários de intervalo sempre forma fila. Instalar mais alguns nos '
-              'corredores resolveria.',
-      'categoria': 'Estrutura',
-      'status': 'implementado',
-      'prioridade': 'media',
-      'tempo': 'há 3d',
-      'autor': 'João Emerick',
-      'data': '02/11/2024 | 10:05',
-    },
-    {
-      'titulo': 'Melhorar a limpeza dos banheiros',
-      'descricao':
-          'Os banheiros do bloco B costumam ficar sem papel e sem sabonete no fim do dia. Seria bom reforçar '
-              'a limpeza nesse horário.',
-      'categoria': 'Higiene',
-      'status': 'analise',
-      'prioridade': 'alta',
-      'tempo': 'há 3d',
-      'autor': 'Carol Terazan',
-      'data': '02/11/2024 | 07:40',
-    },
-  ];
+  bool carregando = true;
+  String? erro;
+  List<Map<String, dynamic>> sugestoes = [];
 
   final List<_Filtro> filtros = const [
     _Filtro('Todos', 'todos'),
     _Filtro('Pendentes', 'pendente'),
-    _Filtro('Em Análise', 'analise'),
-    _Filtro('Implementados', 'implementado'),
+    _Filtro('Implementadas', 'implementado'),
+    _Filtro('Recusadas', 'recusado'),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _carregar();
+  }
+
+  Future<void> _carregar() async {
+    setState(() {
+      carregando = true;
+      erro = null;
+    });
+    try {
+      final lista = await buscarSugestoesAdmin(idGerente: Sessao.idGerenteEfetivo);
+      setState(() => sugestoes = lista.cast<Map<String, dynamic>>());
+    } on ApiException catch (e) {
+      setState(() => erro = e.mensagem);
+    } finally {
+      if (mounted) setState(() => carregando = false);
+    }
+  }
 
   List<Map<String, dynamic>> get sugestoesFiltradas {
     return sugestoes.where((s) {
-      if (filtro != 'todos' && s['status'] != filtro) return false;
-      if (busca.isNotEmpty && !s['titulo'].toString().toLowerCase().contains(busca.toLowerCase())) {
-        return false;
+      if (filtro != 'todos' && s['statusUi'] != filtro) return false;
+      if (busca.isNotEmpty) {
+        final titulo = tituloSugestao(s['comentario'] as String?).toLowerCase();
+        if (!titulo.contains(busca.toLowerCase())) return false;
       }
       return true;
     }).toList();
@@ -163,25 +105,50 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
               ),
             ),
             const SizedBox(height: 12),
-            Expanded(
-              child: lista.isEmpty
-                  ? const Center(
-                      child: Text(
-                        'Nenhuma sugestão encontrada.',
-                        style: TextStyle(color: Colors.white54, fontSize: 13, fontFamily: 'Poppins'),
-                      ),
-                    )
-                  : ListView.builder(
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                      itemCount: lista.length,
-                      itemBuilder: (context, i) => _cartaoSugestao(lista[i]),
-                    ),
-            ),
+            Expanded(child: _corpo(lista)),
           ],
         ),
       ),
       bottomNavigationBar: _buildBarraNavegacao(),
+    );
+  }
+
+  Widget _corpo(List<Map<String, dynamic>> lista) {
+    if (carregando) {
+      return const Center(child: CircularProgressIndicator(color: Cores.roxo));
+    }
+    if (erro != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(erro!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent, fontSize: 13, fontFamily: 'Poppins')),
+              const SizedBox(height: 12),
+              TextButton(onPressed: _carregar, child: const Text('Tentar de novo', style: TextStyle(color: Cores.roxo, fontFamily: 'Poppins'))),
+            ],
+          ),
+        ),
+      );
+    }
+    if (lista.isEmpty) {
+      return const Center(
+        child: Text(
+          'Nenhuma sugestão encontrada.',
+          style: TextStyle(color: Colors.white54, fontSize: 13, fontFamily: 'Poppins'),
+        ),
+      );
+    }
+    return RefreshIndicator(
+      color: Cores.roxo,
+      onRefresh: _carregar,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+        itemCount: lista.length,
+        itemBuilder: (context, i) => _cartaoSugestao(lista[i]),
+      ),
     );
   }
 
@@ -257,16 +224,16 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                pillStatus(s['status']),
+                pillStatus((s['statusUi'] as String?) ?? 'pendente'),
                 Text(
-                  s['tempo'],
+                  formatarData(s['dataAvaliacao'] as String?),
                   style: const TextStyle(color: Colors.white38, fontSize: 11, fontFamily: 'Poppins'),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             Text(
-              s['titulo'],
+              tituloSugestao(s['comentario'] as String?),
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 14,
@@ -275,22 +242,15 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
               ),
             ),
             const SizedBox(height: 3),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Categoria: ${s['categoria']}',
-                    style: const TextStyle(color: Colors.white54, fontSize: 12, fontFamily: 'Poppins'),
-                  ),
-                ),
-                if (s['prioridade'] == 'alta') _pillPrioridade(),
-              ],
+            Text(
+              'Categoria: ${s['categoria'] ?? 'Sem categoria'}',
+              style: const TextStyle(color: Colors.white54, fontSize: 12, fontFamily: 'Poppins'),
             ),
             const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerRight,
               child: Text(
-                s['autor'],
+                (s['autor'] as String?) ?? 'Anônimo',
                 style: const TextStyle(color: Colors.white24, fontSize: 10, fontFamily: 'Poppins'),
               ),
             ),
@@ -363,18 +323,6 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
       ),
     );
   }
-}
-
-Widget _pillPrioridade() {
-  return Container(
-    margin: const EdgeInsets.only(left: 8),
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-    decoration: BoxDecoration(color: const Color(0x29FF5252), borderRadius: BorderRadius.circular(6)),
-    child: const Text(
-      'Alta prioridade',
-      style: TextStyle(color: Color(0xFFFF5252), fontSize: 9, fontWeight: FontWeight.w600, fontFamily: 'Poppins'),
-    ),
-  );
 }
 
 class _Filtro {

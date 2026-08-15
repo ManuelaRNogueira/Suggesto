@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'listaSugestoes.dart';
+import 'api.dart';
+import 'sessao.dart';
+import 'formatacao.dart';
+import 'statusSugestao.dart';
 
 class MinhasSugestoes extends StatefulWidget {
   const MinhasSugestoes({super.key});
@@ -9,9 +12,46 @@ class MinhasSugestoes extends StatefulWidget {
 }
 
 class _MinhasSugestoesState extends State<MinhasSugestoes> {
-  List<Map<String, String>> get sugestoes => listaSugestoes.lista;
+  bool carregando = true;
+  String? erro;
+  List<Map<String, dynamic>> sugestoes = [];
 
-  void removerSugestao(int index) async {
+  @override
+  void initState() {
+    super.initState();
+    _carregar();
+  }
+
+  Future<void> _carregar() async {
+    setState(() {
+      carregando = true;
+      erro = null;
+    });
+    try {
+      final lista = await buscarAvaliacoesUsuario(Sessao.idUsuario!);
+      setState(() => sugestoes = lista.cast<Map<String, dynamic>>());
+    } on ApiException catch (e) {
+      setState(() => erro = e.mensagem);
+    } finally {
+      if (mounted) setState(() => carregando = false);
+    }
+  }
+
+  // Status vem cru do banco (aceita/aprovado/resolvida/recusada/...) —
+  // normaliza pra uma das 3 chaves que statusSugestao.dart entende.
+  String _normalizarStatus(String? bruto) {
+    final chave = (bruto ?? '').trim().toLowerCase();
+    const aceitos = {
+      'aceita', 'aceito', 'aprovada', 'aprovado',
+      'resolvida', 'resolvido', 'implementado', 'implementada',
+    };
+    const recusados = {'recusada', 'recusado'};
+    if (aceitos.contains(chave)) return 'implementado';
+    if (recusados.contains(chave)) return 'recusado';
+    return 'pendente';
+  }
+
+  Future<void> removerSugestao(int index) async {
     bool? remover = await showDialog(
       context: context,
       builder: (context) {
@@ -33,24 +73,33 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
       },
     );
 
-    if (remover == true) {
+    if (remover != true) return;
+
+    final id = (sugestoes[index]['idAvaliacao'] as num?)?.toInt();
+    if (id == null || Sessao.idUsuario == null) return;
+
+    try {
+      await excluirAvaliacao(id, Sessao.idUsuario!);
       setState(() => sugestoes.removeAt(index));
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.mensagem), backgroundColor: Colors.redAccent),
+      );
     }
   }
 
   // WIDGET DO CARD
   Widget sugestao({
     required String local,
-    required String imagem,
+    required String? imagem,
     required String categoria,
     required String texto,
-    required String status,
+    required String chaveStatus,
     required String tempo,
-    required String nota,
+    required int nota,
     required int index,
   }) {
-    final notaInt = int.tryParse(nota) ?? 0;
-
     return Container(
       width: 450,
       padding: EdgeInsets.all(16),
@@ -64,7 +113,7 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
           // FOTO
           ClipRRect(
             borderRadius: BorderRadius.circular(15),
-            child: imagem.isNotEmpty
+            child: imagem != null && imagem.isNotEmpty
                 ? Image.network(
                     imagem,
                     width: 95,
@@ -128,15 +177,7 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
                           icon: Icon(Icons.delete_outline, color: Colors.redAccent, size: 22),
                         ),
                         SizedBox(height: 8),
-                        Text(
-                          status,
-                          style: TextStyle(
-                            color: status == "Resolvida" ? Colors.green : Colors.orange,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: "Poppins",
-                          ),
-                        ),
+                        pillStatus(chaveStatus),
                       ],
                     ),
                   ],
@@ -148,8 +189,8 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
                 Row(
                   children: List.generate(5, (i) {
                     return Icon(
-                      i < notaInt ? Icons.star : Icons.star_border,
-                      color: i < notaInt ? Color(0xFFFFB800) : Colors.white24,
+                      i < nota ? Icons.star : Icons.star_border,
+                      color: i < nota ? Color(0xFFFFB800) : Colors.white24,
                       size: 16,
                     );
                   }),
@@ -251,41 +292,84 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
     );
   }
 
+  Widget _corpo() {
+    if (carregando) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 60),
+        child: Center(child: CircularProgressIndicator(color: Color(0xFF9B59D0))),
+      );
+    }
+    if (erro != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+        child: Column(
+          children: [
+            Text(erro!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent, fontSize: 13, fontFamily: 'Poppins')),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: _carregar,
+              child: const Text('Tentar de novo', style: TextStyle(color: Color(0xFF9B59D0), fontFamily: 'Poppins')),
+            ),
+          ],
+        ),
+      );
+    }
+    if (sugestoes.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 40),
+        child: Center(
+          child: Text('Você ainda não fez nenhuma sugestão.', style: TextStyle(color: Colors.white54, fontFamily: 'Poppins')),
+        ),
+      );
+    }
+    return Column(
+      children: List.generate(sugestoes.length, (index) {
+        final s = sugestoes[index];
+        final estabelecimento = s['estabelecimento'] as Map<String, dynamic>?;
+        final categoria = s['categoria'] as Map<String, dynamic>?;
+        return Padding(
+          padding: EdgeInsets.only(bottom: 30),
+          child: sugestao(
+            index: index,
+            local: (estabelecimento?['nome'] as String?) ?? 'Estabelecimento',
+            imagem: urlFotoEstabelecimento(estabelecimento?['fotoPath'] as String?),
+            categoria: (categoria?['nomeCategoria'] as String?) ?? 'Sem categoria',
+            texto: (s['comentario'] as String?) ?? '',
+            chaveStatus: _normalizarStatus(s['status'] as String?),
+            tempo: formatarData(s['dataAvaliacao'] as String?),
+            nota: (s['nota'] as num?)?.toInt() ?? 0,
+          ),
+        );
+      }),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFF12061E),
-      body: SingleChildScrollView(
-        child: Center(
-          child: Column(
-            children: [
-              SizedBox(height: 30),
+      body: RefreshIndicator(
+        color: const Color(0xFF9B59D0),
+        onRefresh: _carregar,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+          child: Center(
+            child: Column(
+              children: [
+                SizedBox(height: 30),
 
-              Text(
-                "Minhas Sugestões",
-                style: TextStyle(color: Colors.white, fontSize: 30, fontFamily: "PoppinsSemi"),
-              ),
+                Text(
+                  "Minhas Sugestões",
+                  style: TextStyle(color: Colors.white, fontSize: 30, fontFamily: "PoppinsSemi"),
+                ),
 
-              SizedBox(height: 40),
+                SizedBox(height: 40),
 
-              ...List.generate(sugestoes.length, (index) {
-                return Padding(
-                  padding: EdgeInsets.only(bottom: 30),
-                  child: sugestao(
-                    index: index,
-                    local: sugestoes[index]["local"]!,
-                    imagem: sugestoes[index]["imagem"]!,
-                    categoria: sugestoes[index]["categoria"]!,
-                    texto: sugestoes[index]["texto"]!,
-                    status: sugestoes[index]["status"]!,
-                    tempo: sugestoes[index]["tempo"]!,
-                    nota: sugestoes[index]["nota"] ?? "0",
-                  ),
-                );
-              }),
+                _corpo(),
 
-              SizedBox(height: 50),
-            ],
+                SizedBox(height: 50),
+              ],
+            ),
           ),
         ),
       ),

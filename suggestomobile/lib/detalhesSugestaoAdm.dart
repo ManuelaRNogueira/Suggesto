@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'cores.dart';
 import 'statusSugestao.dart';
+import 'formatacao.dart';
+import 'api.dart';
 
 // Detalhe de uma sugestão, com os botões pra trocar o status — versão mobile
 // da mesma ação que existe na tela de Sugestões do desktop
 // (Suggesto_DesktopReact/renderer/src/pages/admin/Sugestoes.jsx, atualizarStatusSugestao).
-// `sugestao` é o mesmo Map da lista (passado por referência): mudar o status
-// aqui já reflete na lista quando voltar, sem precisar de um estado global.
+// `sugestao` é o mesmo Map recebido de GET /api/admin/sugestoes (ou do bloco
+// "sugestoesRecentes" de GET /api/admin/metricas) — mesma forma nos dois casos.
 class DetalhesSugestaoAdm extends StatefulWidget {
   final Map<String, dynamic> sugestao;
 
@@ -18,18 +20,36 @@ class DetalhesSugestaoAdm extends StatefulWidget {
 
 class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
   int paginaAtual = 1;
+  bool trocandoStatus = false;
+  String? erro;
 
-  static const _statusDisponiveis = ['analise', 'recusado', 'implementado', 'pendente'];
+  static const _statusDisponiveis = ['pendente', 'implementado', 'recusado'];
 
-  void _mudarStatus(String novoStatus) {
-    setState(() => widget.sugestao['status'] = novoStatus);
+  Future<void> _mudarStatus(String novoStatus) async {
+    setState(() {
+      trocandoStatus = true;
+      erro = null;
+    });
+    try {
+      final id = (widget.sugestao['id'] as num).toInt();
+      await atualizarStatusAvaliacao(id, novoStatus);
+      setState(() {
+        widget.sugestao['statusUi'] = novoStatus;
+        widget.sugestao['status'] = novoStatus;
+      });
+    } on ApiException catch (e) {
+      setState(() => erro = e.mensagem);
+    } finally {
+      if (mounted) setState(() => trocandoStatus = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final s = widget.sugestao;
-    final statusAtual = s['status'] as String;
+    final statusAtual = (s['statusUi'] as String?) ?? 'pendente';
     final outrosStatus = _statusDisponiveis.where((st) => st != statusAtual).toList();
+    final nota = (s['nota'] as num?)?.toInt();
 
     return Scaffold(
       backgroundColor: Cores.fundo,
@@ -65,9 +85,16 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
                   children: [
                     _seloStatus(statusAtual),
                     const SizedBox(height: 20),
-                    _cartaoDetalhe(s),
+                    _cartaoDetalhe(s, nota),
                     const SizedBox(height: 24),
-                    _botoesStatus(outrosStatus),
+                    if (erro != null) ...[
+                      Text(erro!, style: const TextStyle(color: Colors.redAccent, fontSize: 13, fontFamily: 'Poppins')),
+                      const SizedBox(height: 14),
+                    ],
+                    if (trocandoStatus)
+                      const CircularProgressIndicator(color: Cores.roxo)
+                    else
+                      _botoesStatus(outrosStatus),
                   ],
                 ),
               ),
@@ -98,7 +125,7 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
     );
   }
 
-  Widget _cartaoDetalhe(Map<String, dynamic> s) {
+  Widget _cartaoDetalhe(Map<String, dynamic> s, int? nota) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -110,48 +137,60 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  s['titulo'],
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontFamily: 'PoppinsSemi',
-                    fontWeight: FontWeight.w600,
-                  ),
+          Text(
+            tituloSugestao(s['comentario'] as String?),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontFamily: 'PoppinsSemi',
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          if (nota != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: List.generate(
+                5,
+                (i) => Icon(
+                  i < nota ? Icons.star : Icons.star_border,
+                  color: i < nota ? Cores.amarelo : Colors.white24,
+                  size: 15,
                 ),
               ),
-              if (s['prioridade'] == 'alta') ...[
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(color: const Color(0x29FF5252), borderRadius: BorderRadius.circular(6)),
-                  child: const Text(
-                    'Alta prioridade',
-                    style: TextStyle(
-                      color: Color(0xFFFF5252),
-                      fontSize: 9,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'Poppins',
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
+            ),
+          ],
           const SizedBox(height: 12),
           Text(
-            s['descricao'],
+            (s['comentario'] as String?)?.trim().isNotEmpty == true ? s['comentario'] : 'Sem descrição.',
             style: const TextStyle(color: Colors.white70, fontSize: 13, fontFamily: 'Poppins', height: 1.5),
           ),
           const SizedBox(height: 14),
           Text(
-            'Categoria: ${s['categoria']}',
+            'Categoria: ${s['categoria'] ?? 'Sem categoria'}',
             style: const TextStyle(color: Colors.white54, fontSize: 12, fontFamily: 'Poppins'),
           ),
+          if (s['resposta'] != null && (s['resposta'] as String).trim().isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: Cores.tag, borderRadius: BorderRadius.circular(10)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Resposta enviada',
+                    style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600, fontFamily: 'Poppins'),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    s['resposta'] as String,
+                    style: const TextStyle(color: Colors.white, fontSize: 12, fontFamily: 'Poppins'),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           const Divider(color: Cores.borda, height: 1),
           const SizedBox(height: 14),
@@ -161,19 +200,19 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
                 radius: 14,
                 backgroundColor: Cores.tag,
                 child: Text(
-                  _iniciais(s['autor']),
+                  _iniciais((s['autor'] as String?) ?? '?'),
                   style: const TextStyle(color: Colors.white, fontSize: 11, fontFamily: 'PoppinsSemi'),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  s['autor'],
+                  (s['autor'] as String?) ?? 'Anônimo',
                   style: const TextStyle(color: Colors.white70, fontSize: 12, fontFamily: 'Poppins'),
                 ),
               ),
               Text(
-                s['data'],
+                formatarDataHora(s['dataAvaliacao'] as String?),
                 style: const TextStyle(color: Colors.white38, fontSize: 11, fontFamily: 'Poppins'),
               ),
             ],
@@ -185,7 +224,7 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
 
   String _iniciais(String nome) {
     final partes = nome.trim().split(RegExp(r'\s+'));
-    if (partes.isEmpty) return '?';
+    if (partes.isEmpty || partes.first.isEmpty) return '?';
     final primeiras = partes.take(2).map((p) => p.isNotEmpty ? p[0].toUpperCase() : '');
     return primeiras.join();
   }
@@ -219,8 +258,6 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
 
   IconData _iconeStatus(String status) {
     switch (status) {
-      case 'analise':
-        return Icons.search;
       case 'implementado':
         return Icons.check_circle_outline;
       case 'recusado':

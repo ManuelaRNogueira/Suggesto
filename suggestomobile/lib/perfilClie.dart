@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'api.dart';
+import 'sessao.dart';
 
 class PerfilCliPage extends StatefulWidget {
   const PerfilCliPage({super.key});
@@ -8,13 +10,9 @@ class PerfilCliPage extends StatefulWidget {
 }
 
 class _PerfilCliPageState extends State<PerfilCliPage> {
-
-  // Dados do usuário logado (mock)
-  final String _nome = 'Manuela';
-  final String _email = 'manuela@gmail.com';
-  final String _nivel = 'Ouro';
-  final String _fotoUrl =
-      'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=200&q=80';
+  bool carregando = true;
+  String? erro;
+  Map<String, dynamic>? usuario;
 
   final List<Map<String, dynamic>> _menuItems = [
     {'icon': Icons.bookmark_outlined, 'label': 'Locais Salvos', 'route': '/locais_salvos'},
@@ -25,34 +23,82 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _carregar();
+  }
+
+  Future<void> _carregar() async {
+    setState(() {
+      carregando = true;
+      erro = null;
+    });
+    try {
+      final dados = await buscarUsuario(Sessao.idUsuario!);
+      setState(() => usuario = dados);
+    } on ApiException catch (e) {
+      setState(() => erro = e.mensagem);
+    } finally {
+      if (mounted) setState(() => carregando = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF12061E),
       body: Column(
         children: [
           _buildTopBar(),
-          Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 12),
-                  _buildPerfilHeader(),
-                  SizedBox(height: 32),
-                  _buildMenuList(),
-                  /*SizedBox(height: 32),
-                  _buildBuscaUsuarios(),*/
-                  SizedBox(height: 32),
-                  _buildSairButton(),
-                  SizedBox(height: 32),
-                ],
-              ),
-            ),
-          ),
+          Expanded(child: _corpo()),
         ],
       ),
       bottomNavigationBar: barraNavegacao(),
+    );
+  }
+
+  Widget _corpo() {
+    if (carregando) {
+      return const Center(child: CircularProgressIndicator(color: Color(0xFF9B59D0)));
+    }
+    if (erro != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(erro!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent, fontSize: 13, fontFamily: 'Poppins')),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: _carregar,
+                child: const Text('Tentar de novo', style: TextStyle(color: Color(0xFF9B59D0), fontFamily: 'Poppins')),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    return RefreshIndicator(
+      color: const Color(0xFF9B59D0),
+      onRefresh: _carregar,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: 12),
+            _buildPerfilHeader(),
+            SizedBox(height: 32),
+            _buildMenuList(),
+            /*SizedBox(height: 32),
+            _buildBuscaUsuarios(),*/
+            SizedBox(height: 32),
+            _buildSairButton(),
+            SizedBox(height: 32),
+          ],
+        ),
+      ),
     );
   }
 
@@ -110,28 +156,37 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
               ],
             ),
             child: ClipOval(
-              child: Image.asset(
-                  'assets/images/manuela.jpg',
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  color: Color(0xFF2A1A4A),
-                  child: Icon(Icons.person, color: Colors.white38, size: 40),
-                ),
-              ),
+              child: () {
+                final fotoUrl = urlFotoUsuario(usuario?['fotoUrl'] as String?);
+                if (fotoUrl == null) {
+                  return Container(
+                    color: Color(0xFF2A1A4A),
+                    child: Icon(Icons.person, color: Colors.white38, size: 40),
+                  );
+                }
+                return Image.network(
+                  fotoUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    color: Color(0xFF2A1A4A),
+                    child: Icon(Icons.person, color: Colors.white38, size: 40),
+                  ),
+                );
+              }(),
             ),
           ),
           SizedBox(width: 18),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(_nome, style: TextStyle(
+              Text((usuario?['nome'] as String?) ?? '—', style: TextStyle(
                 color: const Color.fromARGB(207, 255, 255, 255),
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'PoppinsBold',
               )),
               SizedBox(height: 2),
-              Text(_email, style: TextStyle(
+              Text((usuario?['email'] as String?) ?? '', style: TextStyle(
                 color: Colors.white.withOpacity(0.45),
                 fontSize: 13,
                 fontFamily: 'Poppins',
@@ -147,7 +202,7 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(_nivel, style: TextStyle(
+                    Text((usuario?['nivelNome'] as String?) ?? 'Bronze', style: TextStyle(
                       color: const Color.fromARGB(208, 255, 255, 255),
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -229,6 +284,7 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
       padding: EdgeInsets.symmetric(horizontal: 20),
       child: GestureDetector(
         onTap: () {
+          Sessao.sair();
           Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
         },
         child: Container(

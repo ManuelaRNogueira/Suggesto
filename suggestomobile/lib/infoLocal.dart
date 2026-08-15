@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'api.dart';
+import 'sessao.dart';
+import 'sugerir.dart';
 
 class InfoLocalPage extends StatefulWidget {
   final Map<String, dynamic> local;
@@ -19,11 +22,15 @@ class _InfoLocalPageState extends State<InfoLocalPage>
 
   bool _isFavorito = false;
 
-  late LatLng _localCoords;
+  // O backend não tem latitude/longitude cadastrada pra nenhum
+  // estabelecimento — sem esse campo, mostramos só o endereço em texto
+  // no lugar do mapa (ver _buildMap).
+  LatLng? _localCoords;
 
+  int? _idEstabelecimento;
   late String _nome;
   late String _bairro;
-  late String _imagem;
+  late String? _imagem;
   late String _endereco;
   late String _horario;
   late String _telefone;
@@ -36,20 +43,42 @@ class _InfoLocalPageState extends State<InfoLocalPage>
 
     final local = widget.local;
 
-    _nome = local['nome'] ?? 'Local';
-    _bairro = local['bairro'] ?? 'Campinas, SP';
-    _imagem = local['imagem'] ?? '';
-    _endereco = local['endereco'] ?? 'Endereço não informado';
-    _horario = local['horario'] ?? 'Horário não informado';
-    _telefone = local['telefone'] ?? 'Telefone não informado';
-    _descricao = local['descricao'] ??
-        'Um dos estabelecimentos mais bem avaliados da região.';
-    _tags =
-        (local['tags'] as List<String>?) ?? ['Wi-Fi', 'Estacionamento'];
+    _idEstabelecimento = (local['idEstabelecimento'] as num?)?.toInt();
+    _nome = (local['nome'] as String?) ?? 'Local';
+    final cidade = (local['cidade'] as String?) ?? '';
+    final bairroLocal = (local['bairro'] as String?) ?? '';
+    _bairro = [bairroLocal, cidade].where((s) => s.isNotEmpty).join(', ');
+    if (_bairro.isEmpty) _bairro = 'Campinas, SP';
+    _imagem = urlFotoEstabelecimento(local['fotoPath'] as String?);
 
-    final lat = (local['lat'] ?? -22.9000).toDouble();
-    final lng = (local['lng'] ?? -47.0600).toDouble();
-    _localCoords = LatLng(lat, lng);
+    final rua = (local['rua'] as String?) ?? '';
+    final numero = (local['numero'] as String?) ?? '';
+    final partesEndereco = <String>[
+      if (rua.isNotEmpty) numero.isNotEmpty ? '$rua, $numero' : rua,
+      if (bairroLocal.isNotEmpty) bairroLocal,
+      if (cidade.isNotEmpty) cidade,
+      if ((local['estado'] as String?)?.isNotEmpty == true) local['estado'] as String,
+    ];
+    _endereco = partesEndereco.isNotEmpty ? partesEndereco.join(' - ') : 'Endereço não informado';
+
+    _horario = (local['horarioFuncionamento'] as String?)?.isNotEmpty == true
+        ? local['horarioFuncionamento'] as String
+        : 'Horário não informado';
+    _telefone = (local['telefone'] as String?)?.isNotEmpty == true
+        ? local['telefone'] as String
+        : 'Telefone não informado';
+    _descricao = (local['sobre'] as String?)?.isNotEmpty == true
+        ? local['sobre'] as String
+        : 'Um dos estabelecimentos mais bem avaliados da região.';
+    _tags = (local['tags'] as List<String>?) ?? ['Wi-Fi', 'Estacionamento'];
+
+    // Sem lat/lng vindo do backend — _localCoords fica null e o mapa vira
+    // um bloco só com o endereço em texto (ver _buildMap).
+    final lat = local['lat'];
+    final lng = local['lng'];
+    if (lat != null && lng != null) {
+      _localCoords = LatLng((lat as num).toDouble(), (lng as num).toDouble());
+    }
 
     _animController = AnimationController(
       vsync: this,
@@ -65,6 +94,40 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     ).animate(_fadeAnim);
 
     _animController.forward();
+
+    _verificarFavorito();
+  }
+
+  // Confere se esse local já está nos salvos do usuário, só pra deixar o
+  // ícone certo ao abrir a tela — falha silenciosa, não é essencial.
+  Future<void> _verificarFavorito() async {
+    if (_idEstabelecimento == null || Sessao.idUsuario == null) return;
+    try {
+      final salvos = await buscarLocaisSalvos(Sessao.idUsuario!);
+      final salvo = salvos.any((e) => (e['idEstabelecimento'] as num?)?.toInt() == _idEstabelecimento);
+      if (mounted) setState(() => _isFavorito = salvo);
+    } catch (_) {
+      // Ignora — o botão de favorito ainda funciona, só começa desmarcado.
+    }
+  }
+
+  Future<void> _alternarFavorito() async {
+    if (_idEstabelecimento == null || Sessao.idUsuario == null) return;
+    final novoValor = !_isFavorito;
+    setState(() => _isFavorito = novoValor);
+    try {
+      if (novoValor) {
+        await salvarLocal(usuarioId: Sessao.idUsuario!, estabelecimentoId: _idEstabelecimento!);
+      } else {
+        await removerLocalSalvo(usuarioId: Sessao.idUsuario!, estabelecimentoId: _idEstabelecimento!);
+      }
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _isFavorito = !novoValor);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.mensagem), backgroundColor: Colors.redAccent),
+      );
+    }
   }
 
   @override
@@ -117,9 +180,36 @@ class _InfoLocalPageState extends State<InfoLocalPage>
   }
 
   Widget _buildMap() {
+  final coords = _localCoords;
+  // Sem lat/lng (o backend não guarda isso pra nenhum estabelecimento) —
+  // mostra só o endereço no lugar do mapa, em vez de inventar coordenadas.
+  if (coords == null) {
+    return Container(
+      height: MediaQuery.of(context).size.height,
+      color: const Color(0xFF1A0A2E),
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 40),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.location_on, color: Color(0xFF9B59D0), size: 48),
+              const SizedBox(height: 12),
+              Text(
+                _endereco,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white54, fontFamily: "Poppins"),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   final adjustedCenter = LatLng(
-    _localCoords.latitude - 0.0055,
-    _localCoords.longitude,
+    coords.latitude - 0.0055,
+    coords.longitude,
   );
 
   return SizedBox(
@@ -138,7 +228,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
         MarkerLayer(
           markers: [
             Marker(
-              point: _localCoords,
+              point: coords,
               width: 60,
               height: 60,
               child: const Icon(
@@ -200,9 +290,10 @@ class _InfoLocalPageState extends State<InfoLocalPage>
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: _imagem.isNotEmpty
-                ? Image.network(_imagem,
-                    width: 60, height: 60, fit: BoxFit.cover)
+            child: _imagem != null
+                ? Image.network(_imagem!,
+                    width: 60, height: 60, fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => _logoPlaceholder())
                 : _logoPlaceholder(),
           ),
           const SizedBox(width: 14),
@@ -222,8 +313,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
             ),
           ),
           IconButton(
-            onPressed: () =>
-                setState(() => _isFavorito = !_isFavorito),
+            onPressed: _alternarFavorito,
             icon: Icon(
               _isFavorito ? Icons.bookmark : Icons.bookmark_border,
               color: const Color(0xFF9B59D0),
@@ -295,7 +385,10 @@ class _InfoLocalPageState extends State<InfoLocalPage>
           ),
         ),
         onPressed: () {
-          Navigator.pushNamed(context, '/sugerir');
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => SugerirPage(local: widget.local)),
+          );
         },
         child: const Text(
           "Fazer Sugestão",
