@@ -287,6 +287,30 @@ Future<Map<String, dynamic>> resgatar({required int usuarioId, required int reco
   return _mapa('POST', '/resgates', corpo: {'usuarioId': usuarioId, 'recompensaId': recompensaId});
 }
 
+// ── CEP (ViaCEP) ─────────────────────────────────────────────────────────
+// Serviço externo, não é a API do Suggesto — usado só pra autocompletar
+// cidade/estado no cadastro (mesma chamada que "Suggesto - Web/Web/js/cadastro.js").
+
+Future<Map<String, dynamic>> buscarCep(String cep) async {
+  final digitos = cep.replaceAll(RegExp(r'\D'), '');
+  http.Response resposta;
+  try {
+    resposta = await http
+        .get(Uri.parse('https://viacep.com.br/ws/$digitos/json/'))
+        .timeout(const Duration(seconds: 10));
+  } catch (_) {
+    throw ApiException('Não foi possível consultar o CEP agora.');
+  }
+  if (resposta.statusCode < 200 || resposta.statusCode >= 300) {
+    throw ApiException('Não foi possível consultar o CEP agora.');
+  }
+  final dados = jsonDecode(resposta.body);
+  if (dados is! Map<String, dynamic> || dados['erro'] == true) {
+    throw ApiException('CEP não encontrado.');
+  }
+  return dados;
+}
+
 // ── Fotos ─────────────────────────────────────────────────────────────────
 
 // Estabelecimento.fotoPath / Recompensa.fotoPath vêm como nome de arquivo cru

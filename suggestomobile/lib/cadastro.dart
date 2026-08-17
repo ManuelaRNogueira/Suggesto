@@ -29,14 +29,25 @@ class _CadastroState extends State<Cadastro> {
   final estadoController = TextEditingController();
   final senhaController = TextEditingController();
   final confirmarSenhaController = TextEditingController();
+  final senhaFocusNode = FocusNode();
 
   bool senhaVisivel = false;
   bool confirmarSenhaVisivel = false;
   bool criando = false;
+  bool buscandoCep = false;
+  String? erroCep;
+  String? _ultimoCepConsultado;
   String? erroGeral;
 
   @override
+  void initState() {
+    super.initState();
+    cepController.addListener(_aoAlterarCep);
+  }
+
+  @override
   void dispose() {
+    cepController.removeListener(_aoAlterarCep);
     usuarioController.dispose();
     emailController.dispose();
     telefoneController.dispose();
@@ -45,7 +56,38 @@ class _CadastroState extends State<Cadastro> {
     estadoController.dispose();
     senhaController.dispose();
     confirmarSenhaController.dispose();
+    senhaFocusNode.dispose();
     super.dispose();
+  }
+
+  Future<void> _aoAlterarCep() async {
+    final digitos = cepController.text.replaceAll(RegExp(r'\D'), '');
+    if (digitos.length < 8) {
+      _ultimoCepConsultado = null;
+      if (erroCep != null) setState(() => erroCep = null);
+      return;
+    }
+    if (digitos == _ultimoCepConsultado) return;
+    _ultimoCepConsultado = digitos;
+
+    setState(() {
+      buscandoCep = true;
+      erroCep = null;
+    });
+    try {
+      final dados = await buscarCep(digitos);
+      if (!mounted) return;
+      setState(() {
+        cidadeController.text = (dados['localidade'] as String?) ?? '';
+        estadoController.text = (dados['uf'] as String?) ?? '';
+      });
+      senhaFocusNode.requestFocus();
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => erroCep = e.mensagem);
+    } finally {
+      if (mounted) setState(() => buscandoCep = false);
+    }
   }
 
   Future<void> criar() async {
@@ -197,6 +239,17 @@ class _CadastroState extends State<Cadastro> {
                           teclado: TextInputType.number,
                           formatadores: [CepFormatter()],
                           validador: _cepValidador,
+                          erroExterno: erroCep,
+                          sufixo: buscandoCep
+                              ? const Padding(
+                                  padding: EdgeInsets.all(14),
+                                  child: SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: Cores.roxo),
+                                  ),
+                                )
+                              : null,
                         ),
 
                         const SizedBox(height: 16),
@@ -241,6 +294,7 @@ class _CadastroState extends State<Cadastro> {
                         const SizedBox(height: 8),
                         _campo(
                           controller: senhaController,
+                          focusNode: senhaFocusNode,
                           hint: "Mínimo 6 caracteres",
                           oculto: !senhaVisivel,
                           sufixo: IconButton(
@@ -352,9 +406,12 @@ class _CadastroState extends State<Cadastro> {
     List<TextInputFormatter>? formatadores,
     int? maxLength,
     bool capitalizar = false,
+    FocusNode? focusNode,
+    String? erroExterno,
   }) {
     return TextFormField(
       controller: controller,
+      focusNode: focusNode,
       keyboardType: teclado,
       obscureText: oculto,
       inputFormatters: formatadores,
@@ -370,6 +427,7 @@ class _CadastroState extends State<Cadastro> {
         fillColor: Cores.campo,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         suffixIcon: sufixo,
+        errorText: erroExterno,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
