@@ -81,7 +81,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
       _localCoords = LatLng((lat as num).toDouble(), (lng as num).toDouble());
       _carregandoMapa = false;
     } else {
-      _geocodificarEndereco();
+      _geocodificarEndereco(rua: rua, numero: numero, cidade: cidade, estado: (local['estado'] as String?) ?? '');
     }
 
     _animController = AnimationController(
@@ -134,8 +134,13 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     }
   }
 
-  Future<void> _geocodificarEndereco() async {
-    final coords = await buscarCoordenadasEndereco(_endereco);
+  Future<void> _geocodificarEndereco({
+    required String rua,
+    required String numero,
+    required String cidade,
+    required String estado,
+  }) async {
+    final coords = await buscarCoordenadasEndereco(rua: rua, numero: numero, cidade: cidade, estado: estado);
     if (!mounted) return;
     setState(() {
       if (coords != null) {

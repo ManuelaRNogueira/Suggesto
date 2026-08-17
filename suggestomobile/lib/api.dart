@@ -317,10 +317,35 @@ Future<Map<String, dynamic>> buscarCep(String cep) async {
 // Falha (endereço não encontrado, sem internet, etc.) retorna null em vez de
 // lançar exceção: geocodificação é "melhor esforço", a tela cai pro texto do
 // endereço se isso não funcionar.
+//
+// O bairro cadastrado no banco nem sempre bate com o nome que o OSM usa pra
+// aquele trecho — incluir na busca faz a Nominatim não achar nada mesmo com
+// rua/cidade corretos. Por isso não entra na consulta: tenta rua+número
+// primeiro, e se não achar, tenta só rua (às vezes o número não está
+// mapeado, mas a rua está).
+Future<Map<String, double>?> buscarCoordenadasEndereco({
+  required String rua,
+  String? numero,
+  required String cidade,
+  required String estado,
+}) async {
+  if (rua.isEmpty || cidade.isEmpty) return null;
 
-Future<Map<String, double>?> buscarCoordenadasEndereco(String endereco) async {
+  final tentativas = <String>[
+    if (numero != null && numero.isNotEmpty) '$rua, $numero, $cidade, $estado',
+    '$rua, $cidade, $estado',
+  ];
+
+  for (final consulta in tentativas) {
+    final coords = await _consultarNominatim(consulta);
+    if (coords != null) return coords;
+  }
+  return null;
+}
+
+Future<Map<String, double>?> _consultarNominatim(String consulta) async {
   final uri = Uri.https('nominatim.openstreetmap.org', '/search', {
-    'q': endereco,
+    'q': consulta,
     'format': 'json',
     'limit': '1',
     'countrycodes': 'br',
