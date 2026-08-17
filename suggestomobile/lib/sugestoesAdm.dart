@@ -264,8 +264,7 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
     final abas = [
       _Aba('Início', Icons.home_filled, '/inicioAdm'),
       _Aba('Sugestões', Icons.forum, '/sugestoesAdm'),
-      _Aba('Estatísticas', Icons.bar_chart, null),
-      _Aba('Perfil', Icons.person, null),
+      _Aba('Perfil', Icons.person, '/perfilAdm'),
     ];
 
     return Container(
