@@ -311,6 +311,40 @@ Future<Map<String, dynamic>> buscarCep(String cep) async {
   return dados;
 }
 
+// ── Geocodificação (Nominatim / OpenStreetMap) ──────────────────────────
+// Sem API paga: Estabelecimento não guarda lat/lng (ver infoLocal.dart), então
+// convertemos o endereço em coordenadas via Nominatim — gratuito, sem chave.
+// Falha (endereço não encontrado, sem internet, etc.) retorna null em vez de
+// lançar exceção: geocodificação é "melhor esforço", a tela cai pro texto do
+// endereço se isso não funcionar.
+
+Future<Map<String, double>?> buscarCoordenadasEndereco(String endereco) async {
+  final uri = Uri.https('nominatim.openstreetmap.org', '/search', {
+    'q': endereco,
+    'format': 'json',
+    'limit': '1',
+    'countrycodes': 'br',
+  });
+  http.Response resposta;
+  try {
+    resposta = await http
+        .get(uri, headers: {'User-Agent': 'SuggestoApp/1.0 (suggesto.app)'})
+        .timeout(const Duration(seconds: 10));
+  } catch (_) {
+    return null;
+  }
+  if (resposta.statusCode < 200 || resposta.statusCode >= 300) return null;
+
+  final decodificado = jsonDecode(resposta.body);
+  if (decodificado is! List || decodificado.isEmpty) return null;
+
+  final item = decodificado.first;
+  final lat = double.tryParse(item['lat']?.toString() ?? '');
+  final lng = double.tryParse(item['lon']?.toString() ?? '');
+  if (lat == null || lng == null) return null;
+  return {'lat': lat, 'lng': lng};
+}
+
 // ── Fotos ─────────────────────────────────────────────────────────────────
 
 // Estabelecimento.fotoPath / Recompensa.fotoPath vêm como nome de arquivo cru

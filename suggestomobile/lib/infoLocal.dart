@@ -23,9 +23,10 @@ class _InfoLocalPageState extends State<InfoLocalPage>
   bool _isFavorito = false;
 
   // O backend não tem latitude/longitude cadastrada pra nenhum
-  // estabelecimento — sem esse campo, mostramos só o endereço em texto
-  // no lugar do mapa (ver _buildMap).
+  // estabelecimento — usamos direto se um dia existir, senão geocodificamos
+  // o endereço via Nominatim (ver _geocodificarEndereco / _buildMap).
   LatLng? _localCoords;
+  bool _carregandoMapa = true;
 
   int? _idEstabelecimento;
   late String _nome;
@@ -72,12 +73,15 @@ class _InfoLocalPageState extends State<InfoLocalPage>
         : 'Um dos estabelecimentos mais bem avaliados da região.';
     _tags = (local['tags'] as List<String>?) ?? ['Wi-Fi', 'Estacionamento'];
 
-    // Sem lat/lng vindo do backend — _localCoords fica null e o mapa vira
-    // um bloco só com o endereço em texto (ver _buildMap).
+    // Se o estabelecimento já vier com lat/lng do backend, usa direto;
+    // senão geocodifica o endereço via Nominatim (ver _geocodificarEndereco).
     final lat = local['lat'];
     final lng = local['lng'];
     if (lat != null && lng != null) {
       _localCoords = LatLng((lat as num).toDouble(), (lng as num).toDouble());
+      _carregandoMapa = false;
+    } else {
+      _geocodificarEndereco();
     }
 
     _animController = AnimationController(
@@ -130,6 +134,17 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     }
   }
 
+  Future<void> _geocodificarEndereco() async {
+    final coords = await buscarCoordenadasEndereco(_endereco);
+    if (!mounted) return;
+    setState(() {
+      if (coords != null) {
+        _localCoords = LatLng(coords['lat']!, coords['lng']!);
+      }
+      _carregandoMapa = false;
+    });
+  }
+
   @override
   void dispose() {
     _animController.dispose();
@@ -180,9 +195,21 @@ class _InfoLocalPageState extends State<InfoLocalPage>
   }
 
   Widget _buildMap() {
+  // Enquanto o endereço ainda está sendo geocodificado (Nominatim) — mesmo
+  // skeleton simples usado no resto do app pra estados de carregamento.
+  if (_carregandoMapa) {
+    return Container(
+      height: MediaQuery.of(context).size.height,
+      color: const Color(0xFF1A0A2E),
+      child: const Center(
+        child: CircularProgressIndicator(color: Color(0xFF9B59D0)),
+      ),
+    );
+  }
+
   final coords = _localCoords;
-  // Sem lat/lng (o backend não guarda isso pra nenhum estabelecimento) —
-  // mostra só o endereço no lugar do mapa, em vez de inventar coordenadas.
+  // Geocodificação falhou (endereço não encontrado, sem internet, etc.) —
+  // mostra só o endereço no lugar do mapa, em vez de travar a tela.
   if (coords == null) {
     return Container(
       height: MediaQuery.of(context).size.height,
@@ -221,9 +248,9 @@ class _InfoLocalPageState extends State<InfoLocalPage>
       ),
       children: [
         TileLayer(
-          urlTemplate:
-              "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png",
-          userAgentPackageName: 'com.example.app',
+          // Tile padrão do OpenStreetMap — gratuito, sem chave de API.
+          urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+          userAgentPackageName: 'com.suggesto.app',
         ),
         MarkerLayer(
           markers: [
