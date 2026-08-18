@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'cores.dart';
 import 'sessao.dart';
 import 'api.dart';
+import 'formatacao.dart';
 
 // Perfil do administrador/estabelecimento — endereço, contato, sobre e
 // métricas vêm de GET /api/estabelecimentos/{id} (nota/avaliações incluídas
@@ -22,6 +24,11 @@ class _PerfilAdmState extends State<PerfilAdm> {
 
   Map<String, dynamic>? estabelecimento;
   int melhorias = 0;
+
+  String? codigoEquipe;
+  List<Map<String, dynamic>> solicitacoes = [];
+  bool codigoCopiado = false;
+  final Set<int> _solicitacoesProcessando = {};
 
   @override
   void initState() {
@@ -46,14 +53,57 @@ class _PerfilAdmState extends State<PerfilAdm> {
         buscarEstabelecimento(idEstabelecimento),
         buscarMetricasAdmin(idGerente: idGerente),
       ]);
+
+      List<Map<String, dynamic>> pendentes = [];
+      if (Sessao.ehPrincipal && idGerente != null) {
+        // Só o admin principal gerencia a equipe — o backend também confere
+        // isso em aceitar/recusar, então evita a chamada extra pros demais.
+        pendentes = (await buscarSolicitacoesAdmin(idGerente: idGerente)).cast<Map<String, dynamic>>();
+      }
+
       setState(() {
         estabelecimento = resultados[0] as Map<String, dynamic>;
         melhorias = ((resultados[1] as Map<String, dynamic>)['implementados'] as num?)?.toInt() ?? 0;
+        codigoEquipe = estabs.first['codigoAcesso'] as String?;
+        solicitacoes = pendentes;
       });
     } on ApiException catch (e) {
       setState(() => erro = e.mensagem);
     } finally {
       if (mounted) setState(() => carregando = false);
+    }
+  }
+
+  Future<void> _copiarCodigo() async {
+    final codigo = codigoEquipe;
+    if (codigo == null) return;
+    await Clipboard.setData(ClipboardData(text: codigo));
+    if (!mounted) return;
+    setState(() => codigoCopiado = true);
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) setState(() => codigoCopiado = false);
+    });
+  }
+
+  Future<void> _responderSolicitacao(int id, bool aceitar) async {
+    final idGerente = Sessao.idGerenteEfetivo;
+    if (idGerente == null) return;
+    setState(() => _solicitacoesProcessando.add(id));
+    try {
+      if (aceitar) {
+        await aceitarSolicitacao(id, idGerente: idGerente);
+      } else {
+        await recusarSolicitacao(id, idGerente: idGerente);
+      }
+      if (!mounted) return;
+      setState(() => solicitacoes.removeWhere((s) => (s['id'] as num).toInt() == id));
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.mensagem, style: const TextStyle(fontFamily: 'Poppins')), backgroundColor: Colors.redAccent),
+      );
+    } finally {
+      if (mounted) setState(() => _solicitacoesProcessando.remove(id));
     }
   }
 
@@ -105,6 +155,12 @@ class _PerfilAdmState extends State<PerfilAdm> {
             _buildCardSobre(e),
             const SizedBox(height: 16),
             _buildCardMetricas(),
+            if (Sessao.ehPrincipal) ...[
+              const SizedBox(height: 16),
+              _buildCardCodigoEquipe(),
+              const SizedBox(height: 16),
+              _buildCardSolicitacoes(),
+            ],
           ],
         ),
       ),
@@ -320,6 +376,143 @@ class _PerfilAdmState extends State<PerfilAdm> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildCardCodigoEquipe() {
+    final codigo = codigoEquipe;
+    return _card(
+      titulo: 'Código da equipe',
+      filhos: [
+        Text(
+          'Compartilhe com quem vai administrar esse estabelecimento junto com você.',
+          style: const TextStyle(color: Colors.white54, fontSize: 12, fontFamily: 'Poppins', height: 1.4),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Cores.campo,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  codigo ?? '—',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontFamily: 'PoppinsSemi',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: codigo == null ? null : _copiarCodigo,
+              child: Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: codigoCopiado ? Cores.verdeFundo : Cores.roxoBotao,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  codigoCopiado ? Icons.check : Icons.copy,
+                  color: codigoCopiado ? Cores.verde : Colors.white,
+                  size: 20,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCardSolicitacoes() {
+    return _card(
+      titulo: 'Solicitações de entrada',
+      filhos: [
+        if (solicitacoes.isEmpty)
+          const Text(
+            'Nenhuma solicitação pendente.',
+            style: TextStyle(color: Colors.white38, fontSize: 13, fontFamily: 'Poppins'),
+          )
+        else
+          for (final s in solicitacoes) _linhaSolicitacao(s),
+      ],
+    );
+  }
+
+  Widget _linhaSolicitacao(Map<String, dynamic> s) {
+    final id = (s['id'] as num).toInt();
+    final processando = _solicitacoesProcessando.contains(id);
+    final nome = (s['nomeUsuario'] as String?) ?? 'Usuário';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Cores.campo,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            nome,
+            style: const TextStyle(color: Colors.white, fontSize: 14, fontFamily: 'PoppinsSemi', fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            (s['emailUsuario'] as String?) ?? '',
+            style: const TextStyle(color: Colors.white54, fontSize: 12, fontFamily: 'Poppins'),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            formatarData(s['dataSolicitacao'] as String?),
+            style: const TextStyle(color: Colors.white38, fontSize: 11, fontFamily: 'Poppins'),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: processando ? null : () => _responderSolicitacao(id, false),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    side: const BorderSide(color: Colors.redAccent),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: const Text('Recusar', style: TextStyle(color: Colors.redAccent, fontFamily: 'PoppinsSemi', fontSize: 12)),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: processando ? null : () => _responderSolicitacao(id, true),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    backgroundColor: Cores.verdeFundo,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: processando
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Cores.verde),
+                        )
+                      : const Text('Aceitar', style: TextStyle(color: Cores.verde, fontFamily: 'PoppinsSemi', fontSize: 12)),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

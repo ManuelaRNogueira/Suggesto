@@ -132,6 +132,24 @@ Future<Map<String, dynamic>> entrarNaEquipe({required int usuarioId, required St
   return _mapa('POST', '/estabelecimentos/entrar', corpo: {'usuarioId': usuarioId, 'codigo': codigo});
 }
 
+// GET /api/estabelecimentos/solicitacoes?idGerente= — pedidos de entrada
+// pendentes pros estabelecimentos desse gerente (só o principal deveria
+// chamar isso — o backend confere o mesmo em aceitar/recusar).
+Future<List<dynamic>> buscarSolicitacoesAdmin({required int idGerente}) {
+  return _lista('GET', '/estabelecimentos/solicitacoes?idGerente=$idGerente');
+}
+
+// POST /api/estabelecimentos/solicitacoes/{id}/aceitar — vincula o usuário
+// ao estabelecimento e apaga a solicitação. 403 se idGerente não for dono.
+Future<Map<String, dynamic>> aceitarSolicitacao(int id, {required int idGerente}) {
+  return _mapa('POST', '/estabelecimentos/solicitacoes/$id/aceitar', corpo: {'idGerente': idGerente});
+}
+
+// POST /api/estabelecimentos/solicitacoes/{id}/recusar — só apaga a solicitação.
+Future<Map<String, dynamic>> recusarSolicitacao(int id, {required int idGerente}) {
+  return _mapa('POST', '/estabelecimentos/solicitacoes/$id/recusar', corpo: {'idGerente': idGerente});
+}
+
 // ── Painel do administrador ─────────────────────────────────────────────
 
 // GET /api/admin/metricas — números pra tela Início e Estatísticas do admin.

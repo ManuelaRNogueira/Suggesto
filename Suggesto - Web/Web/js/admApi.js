@@ -7,6 +7,12 @@ function admIdGerente() {
   return localStorage.getItem("idGerenteEfetivo") || localStorage.getItem("idUsuario");
 }
 
+// Mesma derivação do desktop (admin.js: souPrincipal()) — não é um campo,
+// é "esse usuário é o dono do estabelecimento que ele está vendo".
+function admSouPrincipal() {
+  return localStorage.getItem("idUsuario") === admIdGerente();
+}
+
 function admVerificarSessao() {
   if (localStorage.getItem("tipoUsuario") !== "Administrador") {
     window.location.href = "login.html";
@@ -20,6 +26,20 @@ async function admFetchJson(url) {
   if (!resposta.ok) {
     const erro = await resposta.text().catch(() => "");
     throw new Error(erro || `Erro ${resposta.status}`);
+  }
+  if (resposta.status === 204) return null;
+  return resposta.json();
+}
+
+async function admPostJson(url, corpo) {
+  const resposta = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(corpo ?? {}),
+  });
+  if (!resposta.ok) {
+    const erro = await resposta.json().catch(() => null);
+    throw new Error(erro?.message || `Erro ${resposta.status}`);
   }
   if (resposta.status === 204) return null;
   return resposta.json();
@@ -55,6 +75,20 @@ async function admBuscarEstabelecimentos() {
 
 async function admBuscarUsuario(id) {
   return admFetchJson(`${ADM_API_BASE}/usuarios/${id}`);
+}
+
+// ── Gestão de equipe (mesmos endpoints do Solicitacoes.jsx no desktop) ─────
+
+async function admBuscarSolicitacoes() {
+  return admFetchJson(`${ADM_API_BASE}/estabelecimentos/solicitacoes${admQueryGerente()}`);
+}
+
+async function admAceitarSolicitacao(id) {
+  return admPostJson(`${ADM_API_BASE}/estabelecimentos/solicitacoes/${id}/aceitar`, { idGerente: admIdGerente() });
+}
+
+async function admRecusarSolicitacao(id) {
+  return admPostJson(`${ADM_API_BASE}/estabelecimentos/solicitacoes/${id}/recusar`, { idGerente: admIdGerente() });
 }
 
 function admIniciais(nome) {

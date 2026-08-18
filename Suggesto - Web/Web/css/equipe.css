@@ -1,0 +1,59 @@
+/* Gestão de equipe — herda a casca (sidebar/conteudo) de inicioAdm.css e os
+   componentes (card, btn-acao, tabela-adm, toast) de admBase.css. Aqui só o
+   que é específico desta página. */
+
+.equipe-aviso {
+  padding: 16px 18px;
+  border: 1px solid var(--cor-borda);
+  border-left: 3px solid var(--cor-roxo);
+  background: var(--cor-fundo-2);
+  border-radius: var(--radius);
+  color: var(--cor-texto-fraco);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.equipe-codigo-desc {
+  font-size: 0.8125rem;
+  color: var(--cor-texto-fraco);
+  margin-bottom: 14px;
+}
+
+.equipe-codigo-linha {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+#btnCopiarCodigo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.equipe-codigo-valor {
+  font-family: 'Inter', monospace;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--cor-texto);
+  background: var(--cor-fundo-3);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+}
+
+.equipe-tabela-wrap {
+  overflow-x: auto;
+}
+
+.equipe-acoes {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.equipe-usuario-email {
+  color: var(--cor-texto-fraco);
+}
