@@ -11,10 +11,13 @@ String tituloSugestao(String? comentario) {
   return limpo.length > 90 ? '${limpo.substring(0, 90)}…' : limpo;
 }
 
-// "2026-08-14T10:00:00" -> "há 2h" / "há 3d" / "14/08/2026".
+// "2026-08-14T10:00:00Z" -> "há 2h" / "há 3d" / "14/08/2026".
+// O backend manda esses horários em UTC ("Z" no final, ver JacksonConfig no
+// backend) — sem o .toLocal(), DateTime.now().difference(...) compara o
+// relógio local com um instante UTC e mostra a hora errada.
 String formatarData(String? iso) {
   if (iso == null || iso.isEmpty) return '—';
-  final data = DateTime.tryParse(iso);
+  final data = DateTime.tryParse(iso)?.toLocal();
   if (data == null) return '—';
   final horas = DateTime.now().difference(data).inHours;
   if (horas < 1) return 'agora';
@@ -24,9 +27,9 @@ String formatarData(String? iso) {
   return '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}';
 }
 
-// "2026-08-14T10:00:00" -> "14/08/2026 | 10:00", usado na tela de detalhes.
+// "2026-08-14T10:00:00Z" -> "14/08/2026 | 10:00", usado na tela de detalhes.
 String formatarDataHora(String? iso) {
-  final data = iso == null ? null : DateTime.tryParse(iso);
+  final data = iso == null ? null : DateTime.tryParse(iso)?.toLocal();
   if (data == null) return '—';
   final dd = data.day.toString().padLeft(2, '0');
   final mm = data.month.toString().padLeft(2, '0');
