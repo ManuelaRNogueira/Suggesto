@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'cores.dart';
 import 'formatacao.dart';
 import 'statusSugestao.dart';
 import 'api.dart';
 import 'sessao.dart';
 import 'sugerir.dart';
+import 'mapaLocal.dart';
 
 class InfoLocalPage extends StatefulWidget {
   final Map<String, dynamic> local;
@@ -25,21 +25,21 @@ class _InfoLocalPageState extends State<InfoLocalPage>
 
   bool _isFavorito = false;
 
-  // O backend não tem latitude/longitude cadastrada pra nenhum
-  // estabelecimento — usamos direto se um dia existir, senão geocodificamos
-  // o endereço via Nominatim (ver _geocodificarEndereco / _buildMap).
-  LatLng? _localCoords;
-  bool _carregandoMapa = true;
-
   int? _idEstabelecimento;
   late String _nome;
   late String _bairro;
   late String _categoria;
   late String? _imagem;
+  late String _rua;
+  late String _numero;
+  late String _cidade;
+  late String _estado;
   late String _endereco;
   late String _horario;
   late String _telefone;
   late String? _sobre;
+  double? _lat;
+  double? _lng;
 
   int _abaAtual = 0; // 0 = Sugestões, 1 = Sobre
 
@@ -61,13 +61,15 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     if (_bairro.isEmpty) _bairro = 'Campinas, SP';
     _imagem = urlFotoEstabelecimento(local['fotoPath'] as String?);
 
-    final rua = (local['rua'] as String?) ?? '';
-    final numero = (local['numero'] as String?) ?? '';
+    _rua = (local['rua'] as String?) ?? '';
+    _numero = (local['numero'] as String?) ?? '';
+    _cidade = cidade;
+    _estado = (local['estado'] as String?) ?? '';
     final partesEndereco = <String>[
-      if (rua.isNotEmpty) numero.isNotEmpty ? '$rua, $numero' : rua,
+      if (_rua.isNotEmpty) _numero.isNotEmpty ? '$_rua, $_numero' : _rua,
       if (bairroLocal.isNotEmpty) bairroLocal,
       if (cidade.isNotEmpty) cidade,
-      if ((local['estado'] as String?)?.isNotEmpty == true) local['estado'] as String,
+      if (_estado.isNotEmpty) _estado,
     ];
     _endereco = partesEndereco.isNotEmpty ? partesEndereco.join(' - ') : 'Endereço não informado';
 
@@ -82,16 +84,13 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     final sobreBruto = (local['sobre'] as String?)?.trim();
     _sobre = (sobreBruto == null || sobreBruto.isEmpty) ? null : sobreBruto;
 
-    // Se o estabelecimento já vier com lat/lng do backend, usa direto;
-    // senão geocodifica o endereço via Nominatim (ver _geocodificarEndereco).
+    // Sem mapa embutido na tela de detalhes — lat/lng só é usado se o
+    // usuário pedir pra ver o mapa (ver mapaLocal.dart), então só guardamos
+    // aqui, sem geocodificar nada de cara.
     final lat = local['lat'];
     final lng = local['lng'];
-    if (lat != null && lng != null) {
-      _localCoords = LatLng((lat as num).toDouble(), (lng as num).toDouble());
-      _carregandoMapa = false;
-    } else {
-      _geocodificarEndereco(rua: rua, numero: numero, cidade: cidade, estado: (local['estado'] as String?) ?? '');
-    }
+    _lat = lat == null ? null : (lat as num).toDouble();
+    _lng = lng == null ? null : (lng as num).toDouble();
 
     _animController = AnimationController(
       vsync: this,
@@ -144,22 +143,6 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     }
   }
 
-  Future<void> _geocodificarEndereco({
-    required String rua,
-    required String numero,
-    required String cidade,
-    required String estado,
-  }) async {
-    final coords = await buscarCoordenadasEndereco(rua: rua, numero: numero, cidade: cidade, estado: estado);
-    if (!mounted) return;
-    setState(() {
-      if (coords != null) {
-        _localCoords = LatLng(coords['lat']!, coords['lng']!);
-      }
-      _carregandoMapa = false;
-    });
-  }
-
   // GET /api/avaliacoes/estabelecimento/{id} — mesmas avaliações que
   // alimentam a aba "Sugestões" da tela equivalente na Web
   // (estabelecimentoCli.js / renderizarSugestoes).
@@ -191,151 +174,47 @@ class _InfoLocalPageState extends State<InfoLocalPage>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Cores.fundo,
-      body: Stack(
-        children: [
-          _buildMap(),
-
-          // painel por cima
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: FadeTransition(
-              opacity: _fadeAnim,
-              child: SlideTransition(
-                position: _slideAnim,
-                child: _buildInfoPanel(),
-              ),
-            ),
-          ),
-
-          // botão voltar
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Cores.cartao.withOpacity(0.9),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.arrow_back, color: Colors.white),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMap() {
-    // Enquanto o endereço ainda está sendo geocodificado (Nominatim) — mesmo
-    // skeleton simples usado no resto do app pra estados de carregamento.
-    if (_carregandoMapa) {
-      return Container(
-        height: MediaQuery.of(context).size.height,
-        color: Cores.cartao,
-        child: const Center(
-          child: CircularProgressIndicator(color: Cores.roxo),
-        ),
-      );
-    }
-
-    final coords = _localCoords;
-    // Geocodificação falhou (endereço não encontrado, sem internet, etc.) —
-    // mostra só o endereço no lugar do mapa, em vez de travar a tela.
-    if (coords == null) {
-      return Container(
-        height: MediaQuery.of(context).size.height,
-        color: Cores.cartao,
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40),
+      body: SafeArea(
+        child: FadeTransition(
+          opacity: _fadeAnim,
+          child: SlideTransition(
+            position: _slideAnim,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.location_on, color: Cores.roxo, size: 48),
-                const SizedBox(height: 12),
-                Text(
-                  _endereco,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white54, fontFamily: "Poppins"),
+                _buildTopoVoltar(),
+                _buildTopInfoRow(),
+                const Divider(color: Cores.borda, height: 1),
+                _buildAbasSeletor(),
+                Expanded(
+                  child: _abaAtual == 0 ? _buildAbaSugestoes() : _buildAbaSobre(),
                 ),
+                _buildBotaoFixo(),
               ],
             ),
           ),
         ),
-      );
-    }
-
-    final adjustedCenter = LatLng(
-      coords.latitude - 0.0055,
-      coords.longitude,
-    );
-
-    return SizedBox(
-      height: MediaQuery.of(context).size.height,
-      child: FlutterMap(
-        options: MapOptions(
-          initialCenter: adjustedCenter,
-          initialZoom: 15.5,
-        ),
-        children: [
-          TileLayer(
-            // Tile padrão do OpenStreetMap — gratuito, sem chave de API.
-            urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-            userAgentPackageName: 'com.suggesto.app',
-          ),
-          MarkerLayer(
-            markers: [
-              Marker(
-                point: coords,
-                width: 60,
-                height: 60,
-                child: const Icon(
-                  Icons.location_on,
-                  color: Cores.roxo,
-                  size: 44,
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }
 
-  Widget _buildInfoPanel() {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.64,
-      decoration: const BoxDecoration(
-        color: Cores.cartao,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: Column(
+  Widget _buildTopoVoltar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      child: Row(
         children: [
-          // puxador
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 10),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.white24,
-              borderRadius: BorderRadius.circular(10),
+          GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Cores.cartao,
+                shape: BoxShape.circle,
+                border: Border.all(color: Cores.borda),
+              ),
+              child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
             ),
           ),
-
-          _buildTopInfoRow(),
-          const Divider(color: Cores.borda, height: 1),
-          _buildAbasSeletor(),
-
-          Expanded(
-            child: _abaAtual == 0 ? _buildAbaSugestoes() : _buildAbaSobre(),
-          ),
-
-          _buildBotaoFixo(),
         ],
       ),
     );
@@ -581,27 +460,60 @@ class _InfoLocalPageState extends State<InfoLocalPage>
           ],
           if (resposta != null && resposta.isNotEmpty) ...[
             const SizedBox(height: 10),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: Cores.fundo, borderRadius: BorderRadius.circular(10)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Row(
-                    children: [
-                      Icon(Icons.reply, color: Cores.roxo, size: 13),
-                      SizedBox(width: 6),
-                      Text('Resposta do estabelecimento', style: TextStyle(color: Cores.roxo, fontSize: 11, fontFamily: 'PoppinsSemi', fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(resposta, style: const TextStyle(color: Colors.white60, fontSize: 12, fontFamily: 'Poppins', height: 1.4)),
-                ],
-              ),
-            ),
+            _buildCaixaResposta(resposta),
           ],
         ],
+      ),
+    );
+  }
+
+  // Caixa de resposta com destaque: fundo levemente tingido de roxo, barra
+  // vertical sólida colada na esquerda e título em roxo claro com ícone de
+  // loja — pra dar hierarquia de "isso é a voz do estabelecimento".
+  Widget _buildCaixaResposta(String resposta) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        color: Cores.roxo.withOpacity(0.10),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(width: 4, color: Cores.roxo),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.storefront_outlined, color: Cores.roxo, size: 14),
+                          const SizedBox(width: 6),
+                          Text(
+                            'RESPOSTA DO ESTABELECIMENTO',
+                            style: TextStyle(
+                              color: Cores.roxo,
+                              fontSize: 10.5,
+                              fontFamily: 'PoppinsSemi',
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        resposta,
+                        style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 13, fontFamily: 'Poppins', height: 1.5),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -649,12 +561,115 @@ class _InfoLocalPageState extends State<InfoLocalPage>
             Text(_sobre!, style: const TextStyle(color: Colors.white60, fontSize: 13, fontFamily: 'Poppins', height: 1.5)),
             const SizedBox(height: 18),
           ],
-          _cardSobreItem(Icons.location_on_outlined, 'Endereço', _endereco, Cores.roxo),
+          _buildCardEndereco(),
           const SizedBox(height: 10),
           _cardSobreItem(Icons.schedule_outlined, 'Horário de funcionamento', _horario, Cores.verde),
           const SizedBox(height: 10),
           _cardSobreItem(Icons.phone_outlined, 'Telefone', _telefone, Cores.azul),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCardEndereco() {
+    final temEndereco = _endereco != 'Endereço não informado';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Cores.campo,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Cores.borda),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(color: Cores.roxo.withOpacity(0.15), borderRadius: BorderRadius.circular(10)),
+                child: const Icon(Icons.location_on_outlined, color: Cores.roxo, size: 18),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Endereço', style: TextStyle(color: Colors.white38, fontSize: 11, fontFamily: 'Poppins')),
+                    const SizedBox(height: 3),
+                    Text(_endereco, style: const TextStyle(color: Colors.white, fontSize: 13, fontFamily: 'Poppins', height: 1.3)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (temEndereco) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _abrirNoMaps,
+                    icon: const Icon(Icons.directions_outlined, size: 16, color: Cores.roxo),
+                    label: const Text('Abrir no Maps', style: TextStyle(color: Cores.roxo, fontFamily: 'PoppinsSemi', fontSize: 12)),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Cores.roxo),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _abrirMapaInterno,
+                    icon: const Icon(Icons.map_outlined, size: 16, color: Colors.white70),
+                    label: const Text('Ver no mapa', style: TextStyle(color: Colors.white70, fontFamily: 'PoppinsSemi', fontSize: 12)),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Cores.borda),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // Endereço em texto — o Google Maps geocodifica sozinho ao abrir o link,
+  // não precisa da Nominatim aqui (só o mapa embutido usa, ver mapaLocal.dart).
+  Future<void> _abrirNoMaps() async {
+    final uri = Uri.https('www.google.com', '/maps/search/', {'api': '1', 'query': _endereco});
+    final abriu = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!abriu && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível abrir o mapa.', style: TextStyle(fontFamily: 'Poppins'))),
+      );
+    }
+  }
+
+  void _abrirMapaInterno() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MapaLocalPage(
+          nome: _nome,
+          endereco: _endereco,
+          rua: _rua,
+          numero: _numero,
+          cidade: _cidade,
+          estado: _estado,
+          lat: _lat,
+          lng: _lng,
+        ),
       ),
     );
   }
