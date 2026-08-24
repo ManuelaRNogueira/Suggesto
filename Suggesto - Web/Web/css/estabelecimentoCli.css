@@ -404,20 +404,22 @@ body {
   position: fixed; bottom: 0;
   left: var(--sidebar-w); right: 0;
   background: var(--fundo2); border-top: 1px solid var(--borda);
-  padding: 12px 24px; display: flex; gap: 10px; z-index: 20;
+  padding: 12px 24px; display: flex; justify-content: center; gap: 10px; z-index: 20;
 }
 .btn-mapa {
-  flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
-  background: var(--roxo); border: none; border-radius: 12px;
-  padding: 13px; font-family: var(--f-texto); font-size: 14px; font-weight: 600;
+  flex: 0 1 auto; min-width: 150px;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: var(--roxo); border: none; border-radius: 10px;
+  padding: 10px 20px; font-family: var(--f-texto); font-size: 13px; font-weight: 600;
   color: #fff; cursor: pointer; transition: var(--anim);
 }
 .btn-mapa:hover { background: #6d28d9; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(124,58,237,0.4); }
 .btn-sugerir {
-  flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+  flex: 0 1 auto; min-width: 150px;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
   background: var(--roxo-bg); border: 1px solid var(--roxo-borda);
-  border-radius: 12px; padding: 13px;
-  font-family: var(--f-texto); font-size: 14px; font-weight: 600;
+  border-radius: 10px; padding: 10px 20px;
+  font-family: var(--f-texto); font-size: 13px; font-weight: 600;
   color: var(--roxo-claro); cursor: pointer; transition: var(--anim);
 }
 .btn-sugerir:hover { background: rgba(124,58,237,0.2); }
