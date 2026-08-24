@@ -4,7 +4,6 @@ import com.suggesto.backend.model.Estabelecimento;
 import com.suggesto.backend.model.SolicitacaoEquipe;
 import com.suggesto.backend.model.TipoUsuario;
 import com.suggesto.backend.model.Usuario;
-import com.suggesto.backend.repository.AvaliacaoRepository;
 import com.suggesto.backend.repository.EstabelecimentoRepository;
 import com.suggesto.backend.repository.SolicitacaoEquipeRepository;
 import com.suggesto.backend.repository.UsuarioRepository;
@@ -33,9 +32,6 @@ public class EstabelecimentoController {
     private EstabelecimentoRepository repository;
 
     @Autowired
-    private AvaliacaoRepository avaliacaoRepository;
-
-    @Autowired
     private UsuarioRepository usuarioRepository;
 
     @Autowired
@@ -43,6 +39,9 @@ public class EstabelecimentoController {
 
     @Autowired
     private com.suggesto.backend.service.PlanoService planoService;
+
+    @Autowired
+    private com.suggesto.backend.service.AvaliacaoService avaliacaoService;
 
     @Autowired
     private CloudinaryService cloudinaryService;
@@ -67,7 +66,7 @@ public class EstabelecimentoController {
         try {
             return repository.findById(id)
                     .map(estab -> {
-                        aplicarMediasDeAvaliacao(List.of(estab));
+                        avaliacaoService.aplicarMediasDeAvaliacao(List.of(estab));
                         return ResponseEntity.ok(estab);
                     })
                     .orElse(ResponseEntity.notFound().build());
@@ -476,7 +475,7 @@ public class EstabelecimentoController {
     public ResponseEntity<List<Estabelecimento>> listarTodos() {
         try {
             List<Estabelecimento> lista = repository.buscarTodosAtivos();
-            aplicarMediasDeAvaliacao(lista);
+            avaliacaoService.aplicarMediasDeAvaliacao(lista);
             return ResponseEntity.ok(lista);
         } catch (Exception e) {
             return ResponseEntity.status(500).build();
@@ -511,7 +510,7 @@ public class EstabelecimentoController {
                     .filter(e -> TextoUtil.mesmaCidade(cidade, e.getCidade()))
                     .collect(Collectors.toList());
 
-            aplicarMediasDeAvaliacao(daCidade);
+            avaliacaoService.aplicarMediasDeAvaliacao(daCidade);
             daCidade.sort(Comparator.comparingDouble(
                     (Estabelecimento e) -> e.getMediaAvaliacoes() == null ? 0d : e.getMediaAvaliacoes()
             ).reversed());
@@ -523,19 +522,4 @@ public class EstabelecimentoController {
         }
     }
 
-    // Preenche a média/contagem de avaliações (calculadas, não persistidas) de cada estabelecimento.
-    private void aplicarMediasDeAvaliacao(List<Estabelecimento> estabelecimentos) {
-        Map<Long, Object[]> medias = new HashMap<>();
-        for (Object[] linha : avaliacaoRepository.calcularMediaEContagemPorEstabelecimento()) {
-            medias.put((Long) linha[0], linha);
-        }
-
-        for (Estabelecimento estab : estabelecimentos) {
-            Object[] linha = medias.get(estab.getIdEstabelecimento());
-            if (linha != null) {
-                estab.setMediaAvaliacoes((Double) linha[1]);
-                estab.setTotalAvaliacoes((Long) linha[2]);
-            }
-        }
-    }
 }

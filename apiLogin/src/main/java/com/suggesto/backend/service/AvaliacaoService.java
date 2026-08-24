@@ -14,7 +14,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -176,5 +179,25 @@ public class AvaliacaoService {
             return false;
         }
         return STATUS_ACEITOS.contains(status.trim().toLowerCase(Locale.ROOT));
+    }
+
+    // Preenche a média/contagem de avaliações (calculadas, não persistidas) de
+    // cada estabelecimento. Extraído de EstabelecimentoController pra também
+    // ser usado por LocalSalvoController — antes só o endpoint /estabelecimentos
+    // chamava isso, e /locais-salvos/usuario/{id} devolvia mediaAvaliacoes
+    // sempre null pros mesmos estabelecimentos.
+    public void aplicarMediasDeAvaliacao(List<Estabelecimento> estabelecimentos) {
+        Map<Long, Object[]> medias = new HashMap<>();
+        for (Object[] linha : avaliacaoRepository.calcularMediaEContagemPorEstabelecimento()) {
+            medias.put((Long) linha[0], linha);
+        }
+
+        for (Estabelecimento estab : estabelecimentos) {
+            Object[] linha = medias.get(estab.getIdEstabelecimento());
+            if (linha != null) {
+                estab.setMediaAvaliacoes((Double) linha[1]);
+                estab.setTotalAvaliacoes((Long) linha[2]);
+            }
+        }
     }
 }

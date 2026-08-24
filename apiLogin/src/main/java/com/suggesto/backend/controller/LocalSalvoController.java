@@ -30,6 +30,9 @@ public class LocalSalvoController {
     @Autowired
     private EstabelecimentoRepository estabelecimentoRepository;
 
+    @Autowired
+    private com.suggesto.backend.service.AvaliacaoService avaliacaoService;
+
     @PostMapping
     public ResponseEntity<?> salvar(@RequestBody Map<String, Long> dados) {
         try {
@@ -131,6 +134,12 @@ public class LocalSalvoController {
                 estabelecimentoRepository.findById(salvo.getEstabelecimentoId())
                         .ifPresent(estabelecimentos::add);
             }
+
+            // Sem isso, mediaAvaliacoes/totalAvaliacoes vêm sempre null aqui —
+            // são campos @Transient, só preenchidos quando alguém calcula (ver
+            // AvaliacaoService.aplicarMediasDeAvaliacao). O card de Locais
+            // Salvos no front depende desse valor pra mostrar a nota real.
+            avaliacaoService.aplicarMediasDeAvaliacao(estabelecimentos);
 
             return ResponseEntity.ok(estabelecimentos);
         } catch (Exception e) {
