@@ -1,5 +1,4 @@
 const API_BASE = window.API_BASE;
-const PLACEHOLDER_ESTABELECIMENTO = "imagens/placeholder-local.png";
 
 function obterIdUsuario() {
   const raw = localStorage.getItem("idUsuario") ?? sessionStorage.getItem("idUsuario");
@@ -7,27 +6,17 @@ function obterIdUsuario() {
   return Number.isFinite(id) && id > 0 ? id : null;
 }
 
-function obterIdEstabelecimento(estab) {
-  const candidatos = [
-    estab?.idEstabelecimento,
-    estab?.id_estabelecimento,
-    estab?.id
-  ];
+// Todo card desta página já está salvo, então o favorito nasce sempre
+// preenchido/ativo — clicar nele abre o mesmo modal de confirmação que já
+// existia (ver removerComConfirmacao / confirmarRemover).
+const opcoesCardSalvo = {
+  verificarSalvo: () => true,
+  aoClicarFavorito: removerComConfirmacao,
+};
 
-  for (const valor of candidatos) {
-    const id = Number(valor);
-    if (Number.isFinite(id) && id > 0) return id;
-  }
-
-  return null;
-}
-
-function urlFotoEstabelecimento(fotoPath) {
-  const nome = fotoPath ? String(fotoPath).trim() : "";
-  if (!nome) return PLACEHOLDER_ESTABELECIMENTO;
-  if (nome.startsWith("http://") || nome.startsWith("https://")) return nome;
-  const relativo = nome.replace(/^uploads\//, "");
-  return `${window.API_ORIGIN}/uploads/${relativo}`;
+function removerComConfirmacao(idEstab, btn) {
+  const card = btn.closest('.local-card');
+  if (card) confirmarRemover(card);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -101,66 +90,7 @@ async function carregarLocaisSalvos() {
 }
 
 function criarCardSalvo(estab) {
-  const idCerto = obterIdEstabelecimento(estab);
-  const nomeCerto = estab.nome || 'Nome Indisponível';
-  const categoriaCard = estab.categoria ? estab.categoria.toLowerCase() : 'outros';
-  const imagemURL = urlFotoEstabelecimento(estab.fotoPath);
-
-  const card = document.createElement('div');
-  card.className = 'local-card';
-  card.dataset.categoria = categoriaCard;
-  card.dataset.nome = nomeCerto;
-  if (idCerto) {
-    card.dataset.estabelecimentoId = String(idCerto);
-  }
-
-  const status = calcularStatusEstabelecimento(estab.horarioFuncionamento);
-  const statusHtml = status.disponivel
-    ? `<span class="local-status ${status.aberto ? 'aberto' : 'fechado'}"><span class="local-status-dot"></span>${status.label}</span>`
-    : '';
-
-  card.innerHTML = `
-    <div class="local-imagem">
-      <img class="local-foto" src="${imagemURL}" alt="${nomeCerto}"
-        onerror="this.onerror=null;this.src='${PLACEHOLDER_ESTABELECIMENTO}'">
-      <span class="local-categoria">${estab.categoria || 'Local'}</span>
-      <button class="local-remover" type="button" title="Remover dos salvos"
-        data-estabelecimento-id="${idCerto ?? ''}">
-        <i class="fas fa-heart"></i>
-      </button>
-      ${statusHtml}
-    </div>
-    <div class="local-info">
-      <div class="local-info-topo">
-        <div>
-          <h3 class="local-nome">${nomeCerto}</h3>
-          <p class="local-endereco"><i class="fas fa-map-marker-alt"></i> ${estab.endereco || 'Endereço não informado'}</p>
-        </div>
-        <div class="local-nota">
-          <i class="fas fa-star"></i>
-          <span>5.0</span>
-        </div>
-      </div>
-      <div class="local-rodape">
-        <span class="local-tag">#${estab.categoria || 'Sugestão'}</span>
-        <button class="local-btn-sugestao" type="button">
-          <i class="fas fa-comment-alt"></i> Sugerir
-        </button>
-      </div>
-    </div>
-  `;
-
-  card.querySelector('.local-remover')?.addEventListener('click', (event) => {
-    event.stopPropagation();
-    confirmarRemover(card);
-  });
-
-  card.querySelector('.local-btn-sugestao')?.addEventListener('click', (event) => {
-    event.stopPropagation();
-    window.location.href = `./fazerSugestao.html?id=${idCerto}&nome=${encodeURIComponent(nomeCerto)}`;
-  });
-
-  return card;
+  return criarCardEstabelecimento(estab, opcoesCardSalvo);
 }
 
 function filtrarLocais() {
@@ -240,11 +170,7 @@ function confirmarRemover(card) {
     if (!cardParaRemover) return;
 
     const usuarioId = obterIdUsuario();
-    const btnRemover = cardParaRemover.querySelector('.local-remover');
-    const estabelecimentoId = Number(
-      cardParaRemover.dataset.estabelecimentoId
-      || btnRemover?.dataset?.estabelecimentoId
-    );
+    const estabelecimentoId = Number(cardParaRemover.dataset.estabelecimentoId);
     const nomeLocal = cardParaRemover.querySelector('.local-nome').textContent;
 
     console.log("Usuario:", usuarioId, "Estabelecimento:", estabelecimentoId);

@@ -1,6 +1,14 @@
 const API_BASE = window.API_BASE;
-const PLACEHOLDER_ESTABELECIMENTO = "imagens/placeholder-local.png";
 let locaisSalvosIds = new Set();
+
+// Opções passadas pra criarCardEstabelecimento (ver js/localCard.js) em
+// todo card desta página: favorito de verdade (consulta/alterna
+// locaisSalvosIds), diferente de Locais Salvos onde tudo já está salvo.
+const opcoesCardCliente = {
+  verificarSalvo: (id) => (id ? locaisSalvosIds.has(id) : false),
+  aoClicarFavorito: toggleFavorito,
+  aoClicarSugerir: (id, nome) => irParaPaginaSugestao(nome, id),
+};
 
 function obterIdUsuario() {
   const raw =
@@ -8,50 +16,6 @@ function obterIdUsuario() {
   const id = Number(raw);
   return Number.isFinite(id) && id > 0 ? id : null;
 }
-
-function obterIdEstabelecimento(estab) {
-  const candidatos = [
-    estab?.idEstabelecimento,
-    estab?.id_estabelecimento,
-    estab?.id,
-  ];
-
-  for (const valor of candidatos) {
-    const id = Number(valor);
-    if (Number.isFinite(id) && id > 0) return id;
-  }
-
-  return null;
-}
-
-function urlFotoEstabelecimento(fotoPath) {
-  const nome = fotoPath ? String(fotoPath).trim() : "";
-  if (!nome) return PLACEHOLDER_ESTABELECIMENTO;
-  if (nome.startsWith("http://") || nome.startsWith("https://")) return nome;
-  const relativo = nome.replace(/^uploads\//, "");
-  return `${window.API_ORIGIN}/uploads/${relativo}`;
-}
-
-function formatarMediaEstabelecimento(estab) {
-  const candidatos = [
-    estab?.mediaAvaliacoes,
-    estab?.mediaAvaliacao,
-    estab?.notaMedia,
-    estab?.nota,
-  ];
-
-  for (const valor of candidatos) {
-    const num = Number(valor);
-    if (Number.isFinite(num) && num > 0) return num.toFixed(1);
-  }
-
-  return "N/A";
-}
-
-const SVG_SALVAR_OFF =
-  '<svg class="salvar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>';
-const SVG_SALVAR_ON =
-  '<svg class="salvar-icon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.8"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>';
 
 document.addEventListener("DOMContentLoaded", () => {
   carregarDadosUsuario();
@@ -191,7 +155,7 @@ async function carregarRecomendados() {
 
     estabelecimentos
       .slice(0, 6)
-      .forEach((estab) => grade.appendChild(criarCardEstabelecimento(estab)));
+      .forEach((estab) => grade.appendChild(criarCardEstabelecimento(estab, opcoesCardCliente)));
 
     secao.style.display = "";
   } catch (error) {
@@ -212,7 +176,7 @@ async function carregarEstabelecimentos() {
     grade.innerHTML = "";
 
     estabelecimentos.forEach((estab) => {
-      grade.appendChild(criarCardEstabelecimento(estab));
+      grade.appendChild(criarCardEstabelecimento(estab, opcoesCardCliente));
     });
   } catch (error) {
     console.error("Erro ao carregar estabelecimentos:", error);
@@ -223,139 +187,6 @@ async function carregarEstabelecimentos() {
             </p>
         `;
   }
-}
-
-function criarCardEstabelecimento(estab) {
-  const card = document.createElement("div");
-  card.className = "local-card";
-
-  const categoriaCard = estab.categoria
-    ? estab.categoria.toLowerCase()
-    : "outros";
-  card.dataset.categoria = categoriaCard;
-
-  const nomeCerto = estab.nome || "Nome Indisponível";
-  const idCerto = obterIdEstabelecimento(estab);
-  const jaSalvo = idCerto ? locaisSalvosIds.has(idCerto) : false;
-  const imagemURL = urlFotoEstabelecimento(estab.fotoPath);
-
-  const imagemDiv = document.createElement("div");
-  imagemDiv.className = "local-imagem";
-
-  const imgFoto = document.createElement("img");
-  imgFoto.className = "local-foto";
-  imgFoto.alt = nomeCerto;
-  imgFoto.src = imagemURL;
-  imgFoto.onerror = function () {
-    this.onerror = null;
-    this.src = PLACEHOLDER_ESTABELECIMENTO;
-  };
-  imagemDiv.appendChild(imgFoto);
-
-  imagemDiv.addEventListener("click", () => {
-    if (!idCerto) {
-      console.error("Erro: ID do estabelecimento não encontrado.");
-      return;
-    }
-    window.location.href = `estabelecimentoCli.html?id=${idCerto}`;
-  });
-
-  const categoriaSpan = document.createElement("span");
-  categoriaSpan.className = "local-categoria";
-  categoriaSpan.textContent = estab.categoria || "Local";
-
-  const btnFavorito = criarBotaoFavorito(idCerto, jaSalvo);
-
-  imagemDiv.appendChild(categoriaSpan);
-  imagemDiv.appendChild(btnFavorito);
-
-  const status = calcularStatusEstabelecimento(estab.horarioFuncionamento);
-  if (status.disponivel) {
-    const statusSpan = document.createElement("span");
-    statusSpan.className = `local-status ${status.aberto ? "aberto" : "fechado"}`;
-    statusSpan.innerHTML = `<span class="local-status-dot"></span>${status.label}`;
-    imagemDiv.appendChild(statusSpan);
-  }
-
-  const infoDiv = document.createElement("div");
-  infoDiv.className = "local-info";
-
-  const topoDiv = document.createElement("div");
-  topoDiv.className = "local-info-topo";
-
-  const nomeContainer = document.createElement("div");
-
-  const nomeEl = document.createElement("h3");
-  nomeEl.className = "local-nome";
-  nomeEl.textContent = nomeCerto;
-
-  const enderecoEl = document.createElement("p");
-  enderecoEl.className = "local-endereco";
-  const enderecoCompleto = estab.rua
-    ? `${estab.rua}, ${estab.numero}${estab.bairro ? ` - ${estab.bairro}` : ""} (${estab.cidade}/${estab.estado})`
-    : "Endereço não informado";
-
-  enderecoEl.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${enderecoCompleto}`;
-
-  nomeContainer.appendChild(nomeEl);
-  nomeContainer.appendChild(enderecoEl);
-
-  const notaDiv = document.createElement("div");
-  notaDiv.className = "local-nota";
-  notaDiv.innerHTML = `
-            <i class="fas fa-star"></i>
-            <span>${formatarMediaEstabelecimento(estab)}</span>
-        `;
-
-  topoDiv.appendChild(nomeContainer);
-  topoDiv.appendChild(notaDiv);
-
-  const rodapeDiv = document.createElement("div");
-  rodapeDiv.className = "local-rodape";
-
-  const tagSpan = document.createElement("span");
-  tagSpan.className = "local-tag";
-  tagSpan.textContent = `#${estab.categoria || "Sugestão"}`;
-
-  const botao = document.createElement("button");
-  botao.className = "local-btn-sugestao";
-  botao.innerHTML = `<i class="fas fa-comment-alt"></i> Sugerir`;
-
-  botao.addEventListener("click", () => {
-    irParaPaginaSugestao(nomeCerto, idCerto);
-  });
-
-  rodapeDiv.appendChild(tagSpan);
-  rodapeDiv.appendChild(botao);
-
-  infoDiv.appendChild(topoDiv);
-  infoDiv.appendChild(rodapeDiv);
-
-  card.appendChild(imagemDiv);
-  card.appendChild(infoDiv);
-
-  return card;
-}
-
-function criarBotaoFavorito(estabelecimentoId, salvo) {
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = `local-favorito${salvo ? " salvo" : ""}`;
-  btn.title = salvo ? "Remover dos salvos" : "Salvar local";
-  btn.innerHTML = salvo ? SVG_SALVAR_ON : SVG_SALVAR_OFF;
-
-  btn.addEventListener("click", (event) => {
-    event.stopPropagation();
-    toggleFavorito(estabelecimentoId, btn);
-  });
-
-  return btn;
-}
-
-function atualizarIconeFavorito(btn, salvo) {
-  btn.classList.toggle("salvo", salvo);
-  btn.innerHTML = salvo ? SVG_SALVAR_ON : SVG_SALVAR_OFF;
-  btn.title = salvo ? "Remover dos salvos" : "Salvar local";
 }
 
 async function toggleFavorito(estabelecimentoId, btn) {
