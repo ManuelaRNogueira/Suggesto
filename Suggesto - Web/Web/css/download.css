@@ -545,4 +545,6 @@
 
 @media (max-width: 480px) {
   .download-hero-titulo { letter-spacing: -1px; }
+  .download-opcoes { gap: 12px; }
+  .download-btn { padding: 14px 20px; }
 }

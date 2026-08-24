@@ -59,6 +59,7 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: 100dvh; /* Considera barra do navegador no mobile */
   overflow: hidden;
   position: relative;
 }
@@ -435,16 +436,19 @@ body {
   :root { --sidebar-w: 0px; }
   .sidebar { display: none; }
   .conteudo { margin-left: 0; }
-  .info-card { max-height: 50vh; }
+  .info-card { max-height: 55vh; }
   .info-card-inner { padding: 16px 20px; }
   .info-nome { font-size: 16px; }
   .info-logo { width: 64px; height: 64px; }
   .info-logo-placeholder { width: 64px; height: 64px; }
   .toast { left: 50%; }
+  .modal { max-width: min(480px, 92vw); }
 }
 
 @media (max-width: 480px) {
   .info-acoes { flex-direction: column; }
   .btn-acao-salvar { width: 100%; height: 46px; }
-  .info-topo { gap: 14px; }
+  .info-topo { gap: 12px; }
+  .info-nota { font-size: 12px; padding: 3px 10px; }
+  .detalhe-item { gap: 10px; padding: 10px 4px; }
 }

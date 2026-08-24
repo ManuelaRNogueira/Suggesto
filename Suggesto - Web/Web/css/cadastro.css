@@ -152,7 +152,7 @@ body {
 
     z-index: 1;
 
-    width: 650px;
+    width: min(650px, 92vw);
 
     padding: 42px 42px 38px;
 

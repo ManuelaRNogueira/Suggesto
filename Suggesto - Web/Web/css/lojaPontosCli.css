@@ -907,7 +907,7 @@ body {
   border-radius: 8px;
   padding: 36px 32px;
   width: 100%;
-  max-width: 460px;
+  max-width: min(460px, 92vw);
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -1077,16 +1077,20 @@ body {
   :root { --lateral: 0px; }
   .barra-lateral { display: none; }
   .conteudo { margin-left: 0; padding: 20px; max-width: 100vw; }
-  .campo-busca input { width: 140px; }
+  .campo-busca { flex: 1; }
+  .campo-busca input { width: 100%; min-width: 0; }
   .painel-saldo { padding: 24px 20px; }
+  .recomp-grade { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
 }
 
 @media (max-width: 480px) {
   .conteudo-header { flex-direction: column; align-items: flex-start; }
   .header-direita { width: 100%; }
-  .campo-busca { flex: 1; }
+  .campo-busca { flex: 1; width: 100%; }
   .campo-busca input { width: 100%; }
-  .faixas-wrap { gap: 6px; }
+  .faixas-wrap { gap: 6px; flex-wrap: wrap; }
   .faixa-btn { padding: 7px 12px; font-size: 12px; }
-  .modal { padding: 24px 20px; }
+  .modal { padding: 24px 18px; }
+  .recomp-grade { grid-template-columns: 1fr; }
+  .saldo-numero { font-size: clamp(32px, 8vw, 48px); }
 }

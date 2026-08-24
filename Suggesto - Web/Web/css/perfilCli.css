@@ -921,7 +921,7 @@ body {
   .perfil-grid { grid-template-columns: 1fr; }
   .perfil-col-dir { display: flex; flex-direction: column; gap: 16px; }
   .perfil-col-dir .card-secao + .card-secao { margin-top: 0; }
-  .conquistas-grid { grid-template-columns: repeat(6, 1fr); }
+  .conquistas-grid { grid-template-columns: repeat(4, 1fr); }
 }
 @media (max-width: 768px) {
   :root { --lateral-largura: 0px; }
@@ -931,12 +931,14 @@ body {
   .perfil-hero { padding: 24px 24px 0; }
   .hero-conteudo { gap: 16px; }
   .botao-editar-perfil { display: none; }
+  .conquistas-grid { grid-template-columns: repeat(3, 1fr); }
 }
 @media (max-width: 480px) {
   .hero-nome { font-size: 22px; }
   .stat-valor { font-size: 20px; }
   .conquistas-grid { grid-template-columns: repeat(3, 1fr); }
   .conteudo-header { flex-wrap: wrap; }
+  .hero-stats { flex-wrap: wrap; gap: 12px; }
 }
 
 /* Contador de conquistas desbloqueadas no cabeçalho da seção */

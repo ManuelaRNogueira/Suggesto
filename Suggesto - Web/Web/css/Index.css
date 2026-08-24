@@ -831,30 +831,59 @@ img { max-width: 100%; display: block; }
   .nav-links, .nav-botoes { display: none; }
   .nav-menu-btn { display: flex; }
 
+  /* Quando o menu abre, a navbar se expande para acomodar links e botões */
+  .barra-nav.aberto {
+    height: auto;
+    background: rgba(14, 14, 18, 0.97);
+    backdrop-filter: blur(20px);
+    border-color: var(--cor-borda);
+  }
+
+  .barra-nav.aberto .barra-nav-interna {
+    flex-wrap: wrap;
+    gap: 0;
+    padding-bottom: 20px;
+    align-items: center;
+  }
+
+  .barra-nav.aberto .nav-logo {
+    flex: 1;
+  }
+
   .barra-nav.aberto .nav-links {
     display: flex;
     flex-direction: column;
-    position: fixed;
-    top: var(--altura-nav);
-    left: 0; right: 0;
-    background: rgba(14, 14, 18, 0.97);
-    backdrop-filter: blur(20px);
-    padding: 24px 32px;
+    width: 100%;
+    gap: 2px;
+    padding: 12px 0 16px;
     border-bottom: 1px solid var(--cor-borda);
-    gap: 4px;
+    margin-top: 4px;
   }
+
+  .barra-nav.aberto .nav-links a {
+    font-size: 15px;
+    padding: 10px 8px;
+  }
+
   .barra-nav.aberto .nav-botoes {
     display: flex;
-    position: fixed;
-    top: calc(var(--altura-nav) + 200px);
-    left: 32px; right: 32px;
     flex-direction: column;
-    background: rgba(14, 14, 18, 0.97);
-    padding: 0 0 24px;
+    width: 100%;
+    gap: 10px;
+    padding-top: 16px;
   }
+
   .barra-nav.aberto .nav-botoes .botao {
     width: 100%;
     justify-content: center;
+    padding: 14px 22px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .barra-nav.aberto .nav-botoes .botao-principal {
+    font-weight: 700;
+    box-shadow: 0 4px 16px rgba(124, 58, 237, 0.3);
   }
 
   .hero-numeros { flex-wrap: wrap; gap: 20px; padding: 16px 24px; }
