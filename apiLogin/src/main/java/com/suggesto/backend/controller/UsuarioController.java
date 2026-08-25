@@ -1,5 +1,6 @@
 package com.suggesto.backend.controller;
 
+import com.suggesto.backend.config.UsuarioConvidadoSeeder;
 import com.suggesto.backend.model.Usuario;
 import com.suggesto.backend.util.TextoUtil;
 import com.suggesto.backend.util.UploadStorage;
@@ -50,6 +51,22 @@ public class UsuarioController {
 
     @Autowired
     private CloudinaryService cloudinaryService;
+
+    // ID do usuário convidado (criado pelo UsuarioConvidadoSeeder), usado pelo
+    // front pra deixar quem chegou via QR code sem login navegar pelo app
+    // normalmente, "logado" como convidado.
+    @GetMapping("/convidado")
+    public ResponseEntity<?> buscarConvidado() {
+        return repository.findByUsername(UsuarioConvidadoSeeder.USERNAME_CONVIDADO)
+                .<ResponseEntity<?>>map(usuario -> ResponseEntity.ok(Map.of(
+                        "idUsuario", usuario.getId(),
+                        "nome", usuario.getNome() != null ? usuario.getNome() : "Convidado"
+                )))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                        "success", false,
+                        "message", "Usuário convidado não encontrado."
+                )));
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> buscarPorId(@PathVariable Long id) {

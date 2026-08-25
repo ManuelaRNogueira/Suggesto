@@ -479,7 +479,7 @@ function acaoVoltar() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(window.location.search);
     const idEstabUrl = params.get('id');
     const nomeEstabUrl = params.get('nome');
@@ -489,12 +489,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const str = d.toLocaleDateString('pt-BR', opts);
     document.getElementById('data-hoje').textContent = str.charAt(0).toUpperCase() + str.slice(1);
 
+    await entrarComoConvidadoSeNecessario();
+
     if (idEstabUrl && nomeEstabUrl) {
         iniciarFormulario(idEstabUrl, nomeEstabUrl);
     } else {
         mostrarTelaDePesquisa();
     }
 });
+
+// Quem chega aqui via QR code sem estar logado vira o usuário "Convidado":
+// assim dá pra continuar navegando pelo resto do site (inicioCli, mapaCli...)
+// sem esbarrar na tela de login, em vez de ficar preso só nesta página.
+async function entrarComoConvidadoSeNecessario() {
+    if (localStorage.getItem('idUsuario')) return;
+
+    try {
+        const resposta = await fetch(`${window.API_BASE}/usuarios/convidado`);
+        if (!resposta.ok) return;
+        const convidado = await resposta.json();
+        localStorage.setItem('idUsuario', convidado.idUsuario);
+        localStorage.setItem('nomeUsuario', convidado.nome || 'Convidado');
+    } catch (err) {
+        console.error('Não foi possível entrar como convidado:', err);
+    }
+}
 
 function mostrarTelaDePesquisa() {
     document.getElementById('form-card').style.display = 'none';
@@ -630,6 +649,8 @@ async function enviar() {
   const payload = {
     idUsuario: idUsuarioLogado ? parseInt(idUsuarioLogado) : null,
     idEstabelecimento: parseInt(estado.idEstabelecimento),
+    // Se por algum motivo entrarComoConvidadoSeNecessario() falhou (ex: API fora do
+    // ar no load), idUsuario cai como null e o backend usa o convidado padrão.
     idCategoria: parseInt(estado.idCategoria) || 1,
     nota: parseInt(estado.nota), comentario: msg, tipo: estado.tipo
   };
