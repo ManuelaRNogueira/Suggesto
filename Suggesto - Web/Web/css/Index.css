@@ -853,6 +853,9 @@ img { max-width: 100%; display: block; }
   .barra-nav.aberto .nav-links {
     display: flex;
     flex-direction: column;
+    flex: 1 1 100%; /* sem isso, o "flex: 1" do modo desktop (flex-basis: 0%)
+                        ignora o width:100% e a lista fica espremida numa
+                        coluna estreita em vez de ocupar a largura toda */
     width: 100%;
     gap: 2px;
     padding: 12px 0 16px;
