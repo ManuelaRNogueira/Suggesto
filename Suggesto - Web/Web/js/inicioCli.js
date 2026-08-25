@@ -20,7 +20,6 @@ function obterIdUsuario() {
 document.addEventListener("DOMContentLoaded", () => {
   carregarDadosUsuario();
   iniciarSecoesDeLocais();
-  carregarDestaques();
 });
 
 function abrirSugestao() {
@@ -54,60 +53,6 @@ async function carregarIdsSalvos() {
     );
   } catch (error) {
     console.error("Erro ao carregar favoritos:", error);
-  }
-}
-
-function escaparHtml(texto) {
-  const div = document.createElement("div");
-  div.textContent = texto ?? "";
-  return div.innerHTML;
-}
-
-// Destaque de posts: sugestões recentes de clientes que já subiram de nível.
-// É o benefício visível de chegar a Ouro/Platina.
-async function carregarDestaques() {
-  const secao = document.getElementById("destaquesSecao");
-  const grade = document.getElementById("destaquesGrade");
-  if (!secao || !grade) return;
-
-  try {
-    const resposta = await fetch(`${API_BASE}/avaliacoes/destaques`);
-    if (!resposta.ok) return;
-
-    const destaques = await resposta.json();
-    if (!Array.isArray(destaques) || destaques.length === 0) return;
-
-    grade.innerHTML = destaques
-      .map((a) => {
-        const autor = a.usuario?.nome || "Cliente";
-        const nivel = a.usuario?.nivel || "ouro";
-        const nivelNome = a.usuario?.nivelNome || "Ouro";
-        const local = a.estabelecimento?.nome || "Estabelecimento";
-        const nota = Number(a.nota) || 0;
-        const estrelas = Array.from(
-          { length: 5 },
-          (_, i) => `<i class="fas fa-star${i < nota ? "" : " vazia"}"></i>`,
-        ).join("");
-
-        return `
-          <article class="destaque-card destaque-${nivel}">
-            <div class="destaque-topo">
-              <span class="destaque-avatar">${escaparHtml(autor.charAt(0).toUpperCase())}</span>
-              <div class="destaque-autor-info">
-                <span class="destaque-autor">${escaparHtml(autor)}</span>
-                <span class="destaque-local">${escaparHtml(local)}</span>
-              </div>
-              <span class="destaque-nivel nivel-${nivel}">${escaparHtml(nivelNome)}</span>
-            </div>
-            <div class="destaque-estrelas">${estrelas}</div>
-            <p class="destaque-texto">${escaparHtml(a.comentario || "")}</p>
-          </article>`;
-      })
-      .join("");
-
-    secao.style.display = "";
-  } catch (error) {
-    console.error("Erro ao carregar destaques:", error);
   }
 }
 
