@@ -60,7 +60,11 @@
   .sidebar {
     transform: translateX(-100%);
     transition: transform 0.25s ease;
-    z-index: 30;
+    /* !important porque o <style> de cada página define ".sidebar" nesse
+       mesmo lugar com z-index mais baixo, e como vem depois no HTML, sem
+       isso ele ganhava — o fundo escurecido ficava por cima do menu e
+       "engolia" o toque nos itens. */
+    z-index: 30 !important;
   }
 
   .sidebar.aberto {
