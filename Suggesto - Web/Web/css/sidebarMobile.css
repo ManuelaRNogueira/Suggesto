@@ -16,6 +16,8 @@
   color: #e8e6ff;
   font-size: 16px;
   cursor: pointer;
+  touch-action: manipulation; /* evita o atraso de ~300ms do Safari no toque */
+  z-index: 5;
 }
 
 .sidebar-hamburguer:hover {
