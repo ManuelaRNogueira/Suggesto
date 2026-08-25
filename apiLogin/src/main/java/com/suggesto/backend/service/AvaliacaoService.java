@@ -1,5 +1,6 @@
 package com.suggesto.backend.service;
 
+import com.suggesto.backend.config.UsuarioConvidadoSeeder;
 import com.suggesto.backend.dto.AvaliacaoRequestDTO;
 import com.suggesto.backend.model.Avaliacao;
 import com.suggesto.backend.model.Categoria;
@@ -46,8 +47,11 @@ public class AvaliacaoService {
 
     @Transactional
     public void registrarNovaAvaliacao(AvaliacaoRequestDTO dto) {
-        Usuario usuario = usuarioRepository.findById(dto.getIdUsuario())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado. ID: " + dto.getIdUsuario()));
+        Usuario usuario = dto.getIdUsuario() != null
+                ? usuarioRepository.findById(dto.getIdUsuario())
+                        .orElseThrow(() -> new RuntimeException("Usuário não encontrado. ID: " + dto.getIdUsuario()))
+                : usuarioRepository.findByUsername(UsuarioConvidadoSeeder.USERNAME_CONVIDADO)
+                        .orElseThrow(() -> new RuntimeException("Usuário convidado não encontrado."));
 
         Estabelecimento est = estabelecimentoRepository.findById(dto.getIdEstabelecimento())
                 .orElseThrow(() -> new RuntimeException("Estabelecimento não encontrado. ID: " + dto.getIdEstabelecimento()));

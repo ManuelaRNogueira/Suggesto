@@ -626,9 +626,9 @@ async function enviar() {
   document.getElementById('spinner').style.display = 'block'; document.getElementById('enviar-ico').style.display = 'none';
   document.getElementById('enviar-txt').textContent = 'Enviando...';
 
-  const idUsuarioTeste = localStorage.getItem("idUsuario") || 11;
+  const idUsuarioLogado = localStorage.getItem("idUsuario");
   const payload = {
-    idUsuario: parseInt(idUsuarioTeste),
+    idUsuario: idUsuarioLogado ? parseInt(idUsuarioLogado) : null,
     idEstabelecimento: parseInt(estado.idEstabelecimento),
     idCategoria: parseInt(estado.idCategoria) || 1,
     nota: parseInt(estado.nota), comentario: msg, tipo: estado.tipo
