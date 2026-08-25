@@ -407,19 +407,19 @@ body {
   padding: 12px 24px; display: flex; justify-content: center; gap: 10px; z-index: 20;
 }
 .btn-mapa {
-  flex: 0 1 auto; min-width: 150px;
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  background: var(--roxo); border: none; border-radius: 10px;
-  padding: 10px 20px; font-family: var(--f-texto); font-size: 13px; font-weight: 600;
+  flex: 0 1 auto; min-width: 180px;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  background: var(--roxo); border: none; border-radius: 11px;
+  padding: 12px 26px; font-family: var(--f-texto); font-size: 14px; font-weight: 600;
   color: #fff; cursor: pointer; transition: var(--anim);
 }
 .btn-mapa:hover { background: #6d28d9; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(124,58,237,0.4); }
 .btn-sugerir {
-  flex: 0 1 auto; min-width: 150px;
-  display: flex; align-items: center; justify-content: center; gap: 6px;
+  flex: 0 1 auto; min-width: 180px;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
   background: var(--roxo-bg); border: 1px solid var(--roxo-borda);
-  border-radius: 10px; padding: 10px 20px;
-  font-family: var(--f-texto); font-size: 13px; font-weight: 600;
+  border-radius: 11px; padding: 12px 26px;
+  font-family: var(--f-texto); font-size: 14px; font-weight: 600;
   color: var(--roxo-claro); cursor: pointer; transition: var(--anim);
 }
 .btn-sugerir:hover { background: rgba(124,58,237,0.2); }
