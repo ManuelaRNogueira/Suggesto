@@ -387,7 +387,7 @@
             <img id="avatarImg" src="" alt="Foto de perfil" style="display:none" onerror="this.style.display='none'; document.getElementById('avatarIniciais').style.display='flex'">
             <div class="avatar-iniciais" id="avatarIniciais">--</div>
           </div>
-          <button class="avatar-editar" title="Editar foto">
+          <button class="avatar-editar" id="btnEditarFoto" type="button" title="Adicionar ou trocar foto" aria-label="Adicionar ou trocar foto de perfil">
             <i class="fas fa-camera"></i>
           </button>
         </div>
@@ -407,7 +407,7 @@
         </div>
 
         <!-- Botão editar -->
-        <button class="botao-editar-perfil" onclick="abrirEdicao()">
+        <button class="botao-editar-perfil" type="button">
           <i class="fas fa-pen"></i>
           Editar perfil
         </button>
@@ -609,7 +609,39 @@
 
       <div class="campo-grupo">
         <label class="campo-label">Foto de perfil</label>
-        <input type="file" id="editFotoFile" class="campo-input" accept="image/*">
+        <div class="foto-seletor" id="fotoSeletor">
+          <input
+            type="file"
+            id="editFotoFile"
+            class="foto-input"
+            accept="image/jpeg,image/png,image/gif,image/webp"
+          >
+          <label class="foto-seletor-area" for="editFotoFile">
+            <span class="foto-preview">
+              <img id="editFotoPreview" src="" alt="Prévia da foto de perfil" hidden>
+              <span class="foto-preview-iniciais" id="editFotoIniciais">--</span>
+            </span>
+            <span class="foto-seletor-textos">
+              <strong id="fotoSeletorTitulo">Escolher uma foto</strong>
+              <small>JPG, PNG, GIF ou WebP · máximo 5 MB</small>
+            </span>
+            <span class="foto-seletor-botao">
+              <i class="fas fa-image"></i>
+              <span id="fotoSeletorAcao">Selecionar</span>
+            </span>
+          </label>
+
+          <div class="foto-arquivo" id="fotoArquivo" hidden>
+            <i class="fas fa-file-image"></i>
+            <span class="foto-arquivo-info">
+              <strong id="fotoArquivoNome"></strong>
+              <small id="fotoArquivoTamanho"></small>
+            </span>
+            <button type="button" class="foto-arquivo-remover" id="btnRemoverFotoSelecionada" title="Remover foto selecionada" aria-label="Remover foto selecionada">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
       </div>
 
       <button class="botao-modal" type="button" onclick="salvarEdicao()">

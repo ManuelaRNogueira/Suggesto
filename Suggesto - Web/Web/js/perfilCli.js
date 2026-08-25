@@ -1,5 +1,6 @@
 const API_BASE = window.API_BASE;
 let usuarioAtual = null;
+let fotoPreviewObjectUrl = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     iniciarEventos();
@@ -23,7 +24,10 @@ function iniciarEventos() {
         });
     });
 
-    document.querySelector(".botao-editar-perfil")?.addEventListener("click", abrirEdicao);
+    document.querySelector(".botao-editar-perfil")?.addEventListener("click", () => abrirEdicao());
+    document.getElementById("btnEditarFoto")?.addEventListener("click", () => abrirEdicao(true));
+    document.getElementById("editFotoFile")?.addEventListener("change", atualizarPreviaFotoSelecionada);
+    document.getElementById("btnRemoverFotoSelecionada")?.addEventListener("click", limparSelecaoFoto);
 
     document.querySelectorAll(".toggle").forEach(toggle => {
         toggle.addEventListener("click", (e) => toggleSwitch(toggle, e));
@@ -41,7 +45,7 @@ function abrirModalSair() {
     document.getElementById("modalSaida")?.classList.add("aberto");
 }
 
-function abrirEdicao() {
+function abrirEdicao(selecionarFoto = false) {
     if (!usuarioAtual) {
         usuarioAtual = {
             nome: localStorage.getItem("nomeUsuario") || document.getElementById("heroNome")?.textContent || "",
@@ -57,12 +61,21 @@ function abrirEdicao() {
     if (editNome) editNome.value = usuarioAtual.nome || "";
     if (editEmail) editEmail.value = usuarioAtual.email || "";
     if (editFotoFile) editFotoFile.value = "";
+    liberarFotoPreviewTemporaria();
+    restaurarPreviaFotoAtual();
 
     document.getElementById("modalEdicao")?.classList.add("aberto");
+
+    if (selecionarFoto) {
+        editFotoFile?.click();
+    }
 }
 
 function fecharModal(id) {
     document.getElementById(id)?.classList.remove("aberto");
+    if (id === "modalEdicao") {
+        liberarFotoPreviewTemporaria();
+    }
 }
 
 function logout() {
@@ -450,6 +463,92 @@ function resolverUrlFoto(fotoUrl) {
     return `${window.API_ORIGIN}/uploads/${fotoUrl}`;
 }
 
+function atualizarPreviaFotoSelecionada(event) {
+    const input = event.currentTarget;
+    const arquivo = input.files?.[0];
+    if (!arquivo) {
+        restaurarPreviaFotoAtual();
+        return;
+    }
+
+    const erro = validarArquivoFoto(arquivo);
+    if (erro) {
+        input.value = "";
+        restaurarPreviaFotoAtual();
+        mostrarToast(erro);
+        return;
+    }
+
+    liberarFotoPreviewTemporaria();
+    fotoPreviewObjectUrl = URL.createObjectURL(arquivo);
+    exibirPreviaFoto(fotoPreviewObjectUrl, gerarIniciais(usuarioAtual?.nome));
+
+    setTexto("fotoSeletorTitulo", "Foto pronta para salvar");
+    setTexto("fotoSeletorAcao", "Trocar foto");
+    setTexto("fotoArquivoNome", arquivo.name);
+    setTexto("fotoArquivoTamanho", formatarTamanhoArquivo(arquivo.size));
+
+    const arquivoInfo = document.getElementById("fotoArquivo");
+    if (arquivoInfo) arquivoInfo.hidden = false;
+}
+
+function validarArquivoFoto(arquivo) {
+    const tiposPermitidos = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+
+    if (!tiposPermitidos.includes(arquivo.type.toLowerCase())) {
+        return "Use uma imagem JPG, PNG, GIF ou WebP.";
+    }
+    if (arquivo.size > 5 * 1024 * 1024) {
+        return "A imagem deve ter no máximo 5 MB.";
+    }
+    return "";
+}
+
+function limparSelecaoFoto() {
+    const input = document.getElementById("editFotoFile");
+    if (input) input.value = "";
+    liberarFotoPreviewTemporaria();
+    restaurarPreviaFotoAtual();
+}
+
+function restaurarPreviaFotoAtual() {
+    const fotoAtual = resolverUrlFoto(usuarioAtual?.fotoUrl);
+    exibirPreviaFoto(fotoAtual, gerarIniciais(usuarioAtual?.nome));
+    setTexto("fotoSeletorTitulo", fotoAtual ? "Trocar foto de perfil" : "Escolher uma foto");
+    setTexto("fotoSeletorAcao", fotoAtual ? "Trocar foto" : "Selecionar");
+
+    const arquivoInfo = document.getElementById("fotoArquivo");
+    if (arquivoInfo) arquivoInfo.hidden = true;
+}
+
+function exibirPreviaFoto(fotoUrl, iniciais) {
+    const img = document.getElementById("editFotoPreview");
+    const iniciaisEl = document.getElementById("editFotoIniciais");
+    if (!img || !iniciaisEl) return;
+
+    if (fotoUrl) {
+        img.src = fotoUrl;
+        img.hidden = false;
+        iniciaisEl.hidden = true;
+    } else {
+        img.removeAttribute("src");
+        img.hidden = true;
+        iniciaisEl.hidden = false;
+        iniciaisEl.textContent = iniciais || "??";
+    }
+}
+
+function liberarFotoPreviewTemporaria() {
+    if (!fotoPreviewObjectUrl) return;
+    URL.revokeObjectURL(fotoPreviewObjectUrl);
+    fotoPreviewObjectUrl = null;
+}
+
+function formatarTamanhoArquivo(bytes) {
+    if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1).replace(".", ",")} MB`;
+}
+
 async function salvarEdicao() {
     const idUsuario = localStorage.getItem("idUsuario");
     if (!idUsuario) {
@@ -462,12 +561,9 @@ async function salvarEdicao() {
 
     const arquivoFoto = document.getElementById("editFotoFile")?.files?.[0];
     if (arquivoFoto) {
-        if (!arquivoFoto.type.startsWith("image/")) {
-            mostrarToast("Selecione um arquivo de imagem válido.");
-            return;
-        }
-        if (arquivoFoto.size > 5 * 1024 * 1024) {
-            mostrarToast("A imagem deve ter no máximo 5 MB.");
+        const erroFoto = validarArquivoFoto(arquivoFoto);
+        if (erroFoto) {
+            mostrarToast(erroFoto);
             return;
         }
         formData.append("foto", arquivoFoto);
@@ -493,6 +589,7 @@ async function salvarEdicao() {
         }
 
         fecharModal("modalEdicao");
+        liberarFotoPreviewTemporaria();
         mostrarToast("Perfil atualizado com sucesso!");
     } catch (error) {
         console.error("Erro ao salvar perfil:", error);
