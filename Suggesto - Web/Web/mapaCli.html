@@ -324,16 +324,13 @@
         <i class="fas fa-times"></i>
       </button>
 
-      <!-- Mapa do Google -->
+      <!-- Mapa interativo -->
       <div id="mapa" class="mapa"></div>
 
-      <!-- Overlay clicável para abrir no Google Maps -->
-      <div class="mapa-overlay" id="mapaOverlay" onclick="abrirNoMaps()" title="Abrir no Google Maps">
-        <div class="mapa-overlay-hint" id="mapaHint">
-          <i class="fas fa-external-link-alt"></i>
-          Abrir no Google Maps
-        </div>
-      </div>
+      <button class="btn-abrir-maps" type="button" onclick="abrirNoMaps()" title="Abrir rota no Google Maps">
+        <i class="fas fa-route"></i>
+        Abrir rota
+      </button>
 
     </div>
 
@@ -382,7 +379,7 @@
         <!-- Detalhes -->
         <div class="info-detalhes">
 
-          <div class="detalhe-item" id="itemEndereco" onclick="abrirNoMaps()">
+          <div class="detalhe-item" id="itemEndereco">
             <div class="detalhe-icone detalhe-icone-roxo">
               <i class="fas fa-map-marker-alt"></i>
             </div>
@@ -392,7 +389,6 @@
                 R. Oliveira Cardoso, 376 – Jardim Chapadão, Campinas – SP, 13070-148
               </span>
             </div>
-            <i class="fas fa-chevron-right detalhe-seta"></i>
           </div>
 
           <div class="detalhe-item">

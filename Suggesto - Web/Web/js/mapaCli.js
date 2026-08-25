@@ -9,17 +9,10 @@ const dadosEstab = {
   logo:       sessionStorage.getItem('loc_logo')       || '',
 };
 
-// Limpa sessionStorage logo após ler
-['loc_id','loc_nome','loc_endereco','loc_telefone','loc_horario',
- 'loc_nota','loc_avaliacoes','loc_logo']
-  .forEach(k => sessionStorage.removeItem(k));
-
-// URL do Google Maps para redirecionamento — usa o endereço real
-const urlMaps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dadosEstab.endereco)}`;
-
 // ── ESTADO ───────────────────────────────────────────────────────────
 let localSalvo  = false;
 let mapaLeaflet = null;
+let coordenadasMapa = null;
 
 
 // ── INICIALIZA AO CARREGAR ───────────────────────────────────────────
@@ -61,24 +54,32 @@ function preencherDados() {
 async function buscarCoordenadas() {
   mostrarCarregandoMapa();
 
+  if (!dadosEstab.endereco.trim()) {
+    mostrarErroMapa('Este estabelecimento ainda não possui endereço cadastrado.');
+    return;
+  }
+
   try {
     // Nominatim aceita endereço em texto e devolve lat/lng reais
     const url = `https://nominatim.openstreetmap.org/search?` +
       `q=${encodeURIComponent(dadosEstab.endereco)}` +
-      `&format=json&limit=1&addressdetails=1`;
+      `&format=jsonv2&limit=1&addressdetails=1&countrycodes=br`;
 
     const resposta = await fetch(url, {
       headers: {
-        // Nominatim exige identificação do app no User-Agent
         'Accept-Language': 'pt-BR',
       }
     });
 
+    if (!resposta.ok) {
+      throw new Error(`Geocodificação indisponível (${resposta.status}).`);
+    }
+
     const resultados = await resposta.json();
 
     if (resultados.length === 0) {
-      // Endereço não encontrado — tenta só com cidade
-      await buscarPorCidade();
+      // Endereço não encontrado — tenta combinar nome e endereço.
+      await buscarPorEstabelecimento();
       return;
     }
 
@@ -87,59 +88,74 @@ async function buscarCoordenadas() {
 
   } catch (erro) {
     console.error('Erro ao buscar coordenadas:', erro);
-    mostrarErrroMapa();
+    mostrarErroMapa();
   }
 }
 
-// Fallback: busca só pelo nome do estabelecimento + cidade
-async function buscarPorCidade() {
+// Segunda tentativa: combina o nome do local com o endereço cadastrado.
+async function buscarPorEstabelecimento() {
   try {
-    const termoBusca = `${dadosEstab.nome}, Campinas, SP, Brasil`;
+    await new Promise(resolve => setTimeout(resolve, 1100));
+    const termoBusca = `${dadosEstab.nome}, ${dadosEstab.endereco}`;
     const url = `https://nominatim.openstreetmap.org/search?` +
       `q=${encodeURIComponent(termoBusca)}` +
-      `&format=json&limit=1`;
+      `&format=jsonv2&limit=1&countrycodes=br`;
 
     const resposta  = await fetch(url);
+    if (!resposta.ok) throw new Error(`Geocodificação indisponível (${resposta.status}).`);
     const resultados = await resposta.json();
 
     if (resultados.length > 0) {
       const { lat, lon } = resultados[0];
       iniciarMapa(parseFloat(lat), parseFloat(lon));
     } else {
-      mostrarErrroMapa();
+      mostrarErroMapa();
     }
   } catch {
-    mostrarErrroMapa();
+    mostrarErroMapa();
   }
 }
 
 
 // ── INICIAR MAPA COM AS COORDENADAS REAIS ────────────────────────────
 function iniciarMapa(lat, lng) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    mostrarErroMapa('O endereço retornou coordenadas inválidas.');
+    return;
+  }
+
+  if (typeof L === 'undefined') {
+    mostrarErroMapa('Não foi possível carregar o componente do mapa.');
+    return;
+  }
+
   // Remove o loader
   const loader = document.getElementById('mapaLoader');
   if (loader) loader.remove();
 
   const posicao = [lat, lng];
+  coordenadasMapa = { lat, lng };
 
   // Cria o mapa Leaflet
   mapaLeaflet = L.map('mapa', {
     center: posicao,
     zoom: 16,
     zoomControl: false,
-    scrollWheelZoom: false,
-    doubleClickZoom: false,
-    dragging: false,     // desativa arrastar — clique abre Google Maps
-    touchZoom: false,
-    keyboard: false,
-    attributionControl: false,
+    scrollWheelZoom: true,
+    doubleClickZoom: true,
+    dragging: true,
+    touchZoom: true,
+    keyboard: true,
+    attributionControl: true,
   });
 
   // Tiles escuros do CartoDB (combina com o tema do projeto)
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     maxZoom: 19,
     subdomains: 'abcd',
+    attribution: '&copy; OpenStreetMap &copy; CARTO',
   }).addTo(mapaLeaflet);
+  L.control.zoom({ position: 'bottomleft' }).addTo(mapaLeaflet);
 
   // Pin SVG roxo personalizado
   const svgPin = `
@@ -166,24 +182,18 @@ function iniciarMapa(lat, lng) {
   // Marker na posição real
   const marker = L.marker(posicao, { icon: iconePin }).addTo(mapaLeaflet);
 
-  // Popup com nome e instrução
-  marker.bindPopup(`
-    <div style="
-      font-family:'DM Sans',sans-serif;
-      padding: 4px 2px;
-    ">
-      <strong style="font-size:13px;color:#f0f0f8;">${dadosEstab.nome}</strong><br>
-      <span style="font-size:11px;color:#a78bfa;">
-        Clique no mapa para abrir no Google Maps
-      </span>
-    </div>
-  `, { className: 'popup-suggesto', closeButton: false });
+  const popup = document.createElement('div');
+  popup.className = 'popup-suggesto-conteudo';
+  const nomePopup = document.createElement('strong');
+  nomePopup.textContent = dadosEstab.nome;
+  const enderecoPopup = document.createElement('span');
+  enderecoPopup.textContent = dadosEstab.endereco;
+  popup.append(nomePopup, enderecoPopup);
+
+  marker.bindPopup(popup, { className: 'popup-suggesto', closeButton: false });
 
   marker.openPopup();
-
-  // Todo clique no mapa abre o Google Maps com o endereço real
-  mapaLeaflet.on('click', abrirNoMaps);
-  marker.on('click', abrirNoMaps);
+  setTimeout(() => mapaLeaflet?.invalidateSize(), 0);
 }
 
 
@@ -217,14 +227,14 @@ function mostrarCarregandoMapa() {
 }
 
 // ── ERRO AO BUSCAR COORDENADAS ───────────────────────────────────────
-function mostrarErrroMapa() {
+function mostrarErroMapa(mensagem = 'Não foi possível encontrar o endereço no mapa.') {
   const loader = document.getElementById('mapaLoader');
   if (loader) {
     loader.innerHTML = `
       <div style="font-size:32px;opacity:0.3;">📍</div>
       <p style="font-size:13px;color:rgba(240,240,248,0.4);text-align:center;padding:0 24px;font-family:'DM Sans',sans-serif;">
-        Não foi possível encontrar o endereço no mapa.<br>
-        <span style="color:#a78bfa;">Clique abaixo para ver no Google Maps.</span>
+        ${mensagem}<br>
+        <span style="color:#a78bfa;">Você ainda pode abrir a rota externamente.</span>
       </p>
       <button onclick="abrirNoMaps()" style="
         padding:10px 22px; border-radius:999px;
@@ -241,6 +251,10 @@ function mostrarErrroMapa() {
 // ── ABRIR NO GOOGLE MAPS ─────────────────────────────────────────────
 // Usa o endereço real — Maps faz o geocoding próprio dele
 function abrirNoMaps() {
+  const consulta = coordenadasMapa
+    ? `${coordenadasMapa.lat},${coordenadasMapa.lng}`
+    : dadosEstab.endereco;
+  const urlMaps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(consulta)}`;
   window.open(urlMaps, '_blank', 'noopener,noreferrer');
 }
 
