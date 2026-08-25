@@ -34,20 +34,12 @@ function obterIdUsuario() {
   return Number.isFinite(id) && id > 0 ? id : null;
 }
 
-function normalizarPlanoFidelidade(nomePlano) {
-  const chave = (nomePlano || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  if (chave.includes("ouro") || chave.includes("gold")) return "ouro";
-  if (chave.includes("prata") || chave.includes("silver")) return "prata";
-  if (chave.includes("bronze")) return "bronze";
-  return "bronze";
-}
-
-function aplicarTemaPlano(nomePlano) {
+function aplicarTemaNivel(nivelId) {
   const painel = document.getElementById("painelSaldo");
   if (!painel) return;
 
-  painel.classList.remove("plano-bronze", "plano-prata", "plano-ouro");
-  painel.classList.add(`plano-${normalizarPlanoFidelidade(nomePlano)}`);
+  painel.classList.remove("nivel-bronze", "nivel-prata", "nivel-ouro", "nivel-platina");
+  painel.classList.add(`nivel-${nivelId}`);
 }
 
 async function carregarDadosUsuario() {
@@ -68,7 +60,6 @@ async function carregarDadosUsuario() {
 
     atualizarPainelSaldo(saldoAtual);
     atualizarEstatisticasUsuario(usuario);
-    aplicarTemaPlano(usuario.nomePlano);
   } catch (error) {
     console.error("Erro ao carregar pontos:", error);
     mostrarToast("Não foi possível carregar seu saldo de pontos.");
@@ -84,9 +75,6 @@ function atualizarEstatisticasUsuario(usuario) {
 
   if (elSugestoes) elSugestoes.textContent = totalSugestoes;
   if (elResgates) elResgates.textContent = totalResgates;
-
-  const elNivel = document.getElementById("estatNivel");
-  if (elNivel && usuario.nomePlano) elNivel.textContent = usuario.nomePlano;
 }
 
 function atualizarSidebar(nome) {
@@ -103,6 +91,7 @@ function atualizarSidebar(nome) {
 
 function atualizarPainelSaldo(pontos) {
   const prog = calcularProgressoNivel(pontos);
+  aplicarTemaNivel(prog.atual.id);
 
   const elSaldo = document.getElementById("saldoPontos");
   if (elSaldo) elSaldo.textContent = formatarPontos(pontos);

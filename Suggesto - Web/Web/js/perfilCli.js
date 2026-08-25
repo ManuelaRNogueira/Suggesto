@@ -373,6 +373,9 @@ function formatarDataRelativa(dataIso) {
 function aplicarNivelPerfil(pontos) {
     const prog = calcularProgressoNivel(pontos);
 
+    const cardNivel = document.querySelector(".card-nivel");
+    if (cardNivel) cardNivel.dataset.nivel = prog.atual.id;
+
     const desc = document.getElementById("perfilNivelDesc");
     if (desc) {
         desc.textContent = prog.proximo

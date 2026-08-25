@@ -218,53 +218,79 @@ body {
   transition: border-color var(--trans), box-shadow var(--trans);
 }
 
-.painel-saldo.plano-bronze {
-  border-color: rgba(180, 83, 9, 0.45);
-  box-shadow: inset 0 0 0 1px rgba(217, 119, 6, 0.12), 0 8px 32px rgba(180, 83, 9, 0.08);
+.painel-saldo.nivel-bronze {
+  border-color: rgba(184, 115, 51, 0.58);
+  box-shadow: inset 0 0 0 1px rgba(184, 115, 51, 0.15), 0 8px 32px rgba(119, 66, 28, 0.14);
+  background: linear-gradient(135deg, #1c1b26 0%, rgba(120, 66, 32, 0.2) 100%);
 }
-.painel-saldo.plano-bronze .saldo-numero { color: #f59e0b; }
-.painel-saldo.plano-bronze .saldo-barra-progresso {
-  background: linear-gradient(90deg, #92400e, #d97706);
+.painel-saldo.nivel-bronze .saldo-numero {
+  color: #d8915b;
+  text-shadow: 0 0 20px rgba(184, 115, 51, 0.3);
 }
-.painel-saldo.plano-bronze .saldo-estatisticas {
-  border-color: rgba(217, 119, 6, 0.25);
-  background: rgba(217, 119, 6, 0.08);
+.painel-saldo.nivel-bronze .saldo-unidade { color: rgba(216, 145, 91, 0.65); }
+.painel-saldo.nivel-bronze .saldo-barra-progresso {
+  background: linear-gradient(90deg, #7c3f22, #b87333, #dfa06e);
 }
-
-.painel-saldo.plano-prata {
-  border-color: rgba(203, 213, 225, 0.45);
-  box-shadow: inset 0 0 0 1px rgba(226, 232, 240, 0.1), 0 8px 32px rgba(148, 163, 184, 0.12);
-}
-.painel-saldo.plano-prata .saldo-numero {
-  color: #e2e8f0;
-  text-shadow: 0 0 18px rgba(226, 232, 240, 0.35);
-}
-.painel-saldo.plano-prata .saldo-barra-progresso {
-  background: linear-gradient(90deg, #94a3b8, #f8fafc);
-}
-.painel-saldo.plano-prata .saldo-estatisticas {
-  border-color: rgba(226, 232, 240, 0.22);
-  background: rgba(148, 163, 184, 0.1);
+.painel-saldo.nivel-bronze .saldo-estatisticas {
+  border-color: rgba(184, 115, 51, 0.3);
+  background: rgba(184, 115, 51, 0.09);
 }
 
-.painel-saldo.plano-ouro {
-  border-color: rgba(251, 191, 36, 0.55);
-  box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.15), 0 10px 40px rgba(251, 191, 36, 0.12);
-  background: linear-gradient(135deg, #1c1b26 0%, rgba(120, 53, 15, 0.18) 100%);
+.painel-saldo.nivel-prata {
+  border-color: rgba(203, 213, 225, 0.58);
+  box-shadow: inset 0 0 0 1px rgba(241, 245, 249, 0.13), 0 8px 32px rgba(148, 163, 184, 0.15);
+  background: linear-gradient(135deg, #1c1b26 0%, rgba(148, 163, 184, 0.16) 100%);
 }
-.painel-saldo.plano-ouro .saldo-numero {
-  color: #fcd34d;
-  text-shadow: 0 0 24px rgba(251, 191, 36, 0.45);
+.painel-saldo.nivel-prata .saldo-numero {
+  color: #e7edf4;
+  text-shadow: 0 0 20px rgba(226, 232, 240, 0.38);
 }
-.painel-saldo.plano-ouro .saldo-unidade { color: rgba(252, 211, 77, 0.65); }
-.painel-saldo.plano-ouro .saldo-barra-progresso {
-  background: linear-gradient(90deg, #b45309, #fbbf24, #fde68a);
+.painel-saldo.nivel-prata .saldo-unidade { color: rgba(226, 232, 240, 0.68); }
+.painel-saldo.nivel-prata .saldo-barra-progresso {
+  background: linear-gradient(90deg, #64748b, #cbd5e1, #f8fafc);
 }
-.painel-saldo.plano-ouro .saldo-estatisticas {
-  border-color: rgba(251, 191, 36, 0.28);
-  background: rgba(251, 191, 36, 0.08);
+.painel-saldo.nivel-prata .saldo-estatisticas {
+  border-color: rgba(226, 232, 240, 0.26);
+  background: rgba(203, 213, 225, 0.1);
 }
-.painel-saldo.plano-bronze::after {
+
+.painel-saldo.nivel-ouro {
+  border-color: rgba(212, 175, 55, 0.65);
+  box-shadow: inset 0 0 0 1px rgba(246, 211, 101, 0.18), 0 10px 40px rgba(212, 175, 55, 0.16);
+  background: linear-gradient(135deg, #1c1b26 0%, rgba(146, 98, 18, 0.24) 100%);
+}
+.painel-saldo.nivel-ouro .saldo-numero {
+  color: #f6d365;
+  text-shadow: 0 0 24px rgba(246, 211, 101, 0.5);
+}
+.painel-saldo.nivel-ouro .saldo-unidade { color: rgba(246, 211, 101, 0.72); }
+.painel-saldo.nivel-ouro .saldo-barra-progresso {
+  background: linear-gradient(90deg, #9a6b12, #d4af37, #fff0a6);
+}
+.painel-saldo.nivel-ouro .saldo-estatisticas {
+  border-color: rgba(246, 211, 101, 0.32);
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.painel-saldo.nivel-platina {
+  border-color: rgba(165, 180, 252, 0.6);
+  box-shadow: inset 0 0 0 1px rgba(224, 231, 255, 0.14), 0 10px 40px rgba(129, 140, 248, 0.14);
+  background: linear-gradient(135deg, #1c1b26 0%, rgba(79, 70, 229, 0.16) 100%);
+}
+.painel-saldo.nivel-platina .saldo-numero {
+  color: #c7d2fe;
+  text-shadow: 0 0 24px rgba(165, 180, 252, 0.46);
+}
+.painel-saldo.nivel-platina .saldo-unidade { color: rgba(199, 210, 254, 0.68); }
+.painel-saldo.nivel-platina .saldo-barra-progresso {
+  background: linear-gradient(90deg, #6366f1, #a5b4fc, #eef2ff);
+}
+.painel-saldo.nivel-platina .saldo-estatisticas {
+  border-color: rgba(165, 180, 252, 0.28);
+  background: rgba(129, 140, 248, 0.1);
+}
+
+.painel-saldo.nivel-bronze::after {
   content: "Bronze";
   position: absolute;
   top: 18px;
@@ -275,12 +301,12 @@ body {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #78350f;
-  background: linear-gradient(135deg, #fcd34d, #b45309);
-  border: 1px solid rgba(217, 119, 6, 0.45);
+  color: #3f2012;
+  background: linear-gradient(135deg, #e1a477, #b87333);
+  border: 1px solid rgba(225, 164, 119, 0.5);
 }
 
-.painel-saldo.plano-prata::after {
+.painel-saldo.nivel-prata::after {
   content: "Prata";
   position: absolute;
   top: 18px;
@@ -296,8 +322,8 @@ body {
   border: 1px solid rgba(226, 232, 240, 0.45);
 }
 
-.painel-saldo.plano-ouro::after {
-  content: "Gold";
+.painel-saldo.nivel-ouro::after {
+  content: "Ouro";
   position: absolute;
   top: 18px;
   right: 22px;
@@ -308,8 +334,24 @@ body {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #78350f;
-  background: linear-gradient(135deg, #fde68a, #fbbf24);
-  border: 1px solid rgba(251, 191, 36, 0.5);
+  background: linear-gradient(135deg, #fff0a6, #d4af37);
+  border: 1px solid rgba(246, 211, 101, 0.55);
+}
+
+.painel-saldo.nivel-platina::after {
+  content: "Platina";
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #312e81;
+  background: linear-gradient(135deg, #eef2ff, #a5b4fc);
+  border: 1px solid rgba(199, 210, 254, 0.55);
 }
 .saldo-fundo { display: none; }
 .saldo-conteudo {

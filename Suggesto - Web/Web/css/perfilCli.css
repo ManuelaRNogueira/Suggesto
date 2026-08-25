@@ -318,25 +318,25 @@ body {
   font-family: 'Inter', system-ui, sans-serif;
 }
 .nivel-bronze {
-  background: rgba(180, 83, 9, 0.2);
-  color: #d97706;
-  border: 1px solid rgba(180, 83, 9, 0.35);
+  background: rgba(184, 115, 51, 0.18);
+  color: #d8915b;
+  border: 1px solid rgba(184, 115, 51, 0.42);
 }
-.nivel-bronze i { color: #d97706; }
+.nivel-bronze i { color: #d8915b; }
 
 .nivel-prata {
-  background: rgba(148, 163, 184, 0.2);
-  color: #cbd5e1;
-  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(203, 213, 225, 0.16);
+  color: #e2e8f0;
+  border: 1px solid rgba(226, 232, 240, 0.38);
 }
-.nivel-prata i { color: #cbd5e1; }
+.nivel-prata i { color: #e2e8f0; }
 
 .nivel-ouro {
-  background: rgba(245, 158, 11, 0.18);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: rgba(212, 175, 55, 0.17);
+  color: #f6d365;
+  border: 1px solid rgba(246, 211, 101, 0.42);
 }
-.nivel-ouro i { color: #fbbf24; }
+.nivel-ouro i { color: #f6d365; }
 
 .nivel-platina {
   background: rgba(99, 102, 241, 0.15);
@@ -586,6 +586,24 @@ body {
   transition: width 1.2s ease;
 }
 .nivel-barra-brilho { display: none; }
+
+.card-nivel[data-nivel="bronze"] .nivel-barra-fill {
+  background: linear-gradient(90deg, #7c3f22, #b87333, #dfa06e);
+}
+.card-nivel[data-nivel="prata"] .nivel-barra-fill {
+  background: linear-gradient(90deg, #64748b, #cbd5e1, #f8fafc);
+}
+.card-nivel[data-nivel="ouro"] .nivel-barra-fill {
+  background: linear-gradient(90deg, #9a6b12, #d4af37, #fff0a6);
+}
+.card-nivel[data-nivel="platina"] .nivel-barra-fill {
+  background: linear-gradient(90deg, #6366f1, #a5b4fc, #eef2ff);
+}
+
+.card-nivel[data-nivel="bronze"] .nivel-faltam { color: #d8915b; }
+.card-nivel[data-nivel="prata"] .nivel-faltam { color: #e2e8f0; }
+.card-nivel[data-nivel="ouro"] .nivel-faltam { color: #f6d365; }
+.card-nivel[data-nivel="platina"] .nivel-faltam { color: #a5b4fc; }
 
 .nivel-faltam {
   font-size: 12px;
