@@ -7,7 +7,20 @@ const dadosEstab = {
   nota:       sessionStorage.getItem('loc_nota')       || '',
   avaliacoes: sessionStorage.getItem('loc_avaliacoes') || '0',
   logo:       sessionStorage.getItem('loc_logo')       || '',
+  rua:        sessionStorage.getItem('loc_rua')        || '',
+  numero:     sessionStorage.getItem('loc_numero')     || '',
+  cidade:     sessionStorage.getItem('loc_cidade')     || '',
+  estado:     sessionStorage.getItem('loc_estado')     || '',
+  lat:        lerCoordenadaSessao('loc_lat', -90, 90),
+  lng:        lerCoordenadaSessao('loc_lng', -180, 180),
 };
+
+function lerCoordenadaSessao(chave, minimo, maximo) {
+  const valor = sessionStorage.getItem(chave);
+  if (valor == null || !valor.trim()) return null;
+  const numero = Number(valor);
+  return Number.isFinite(numero) && numero >= minimo && numero <= maximo ? numero : null;
+}
 
 // ── ESTADO ───────────────────────────────────────────────────────────
 let localSalvo  = false;
@@ -20,7 +33,12 @@ document.addEventListener('DOMContentLoaded', () => {
   preencherDados();
   verificarStatus();
   verificarSeFavorito();
-  buscarCoordenadas(); // busca a localização real pelo endereço
+
+  if (dadosEstab.lat !== null && dadosEstab.lng !== null) {
+    iniciarMapa(dadosEstab.lat, dadosEstab.lng);
+  } else {
+    buscarCoordenadas();
+  }
 });
 
 
@@ -54,7 +72,8 @@ function preencherDados() {
 async function buscarCoordenadas() {
   mostrarCarregandoMapa();
 
-  if (!dadosEstab.endereco.trim()) {
+  const consulta = montarConsultaGeocodificacao(true);
+  if (!consulta) {
     mostrarErroMapa('Este estabelecimento ainda não possui endereço cadastrado.');
     return;
   }
@@ -62,7 +81,7 @@ async function buscarCoordenadas() {
   try {
     // Nominatim aceita endereço em texto e devolve lat/lng reais
     const url = `https://nominatim.openstreetmap.org/search?` +
-      `q=${encodeURIComponent(dadosEstab.endereco)}` +
+      `q=${encodeURIComponent(consulta)}` +
       `&format=jsonv2&limit=1&addressdetails=1&countrycodes=br`;
 
     const resposta = await fetch(url, {
@@ -78,8 +97,8 @@ async function buscarCoordenadas() {
     const resultados = await resposta.json();
 
     if (resultados.length === 0) {
-      // Endereço não encontrado — tenta combinar nome e endereço.
-      await buscarPorEstabelecimento();
+      // Alguns números ainda não constam no mapa; tenta localizar a rua.
+      await buscarSemNumero();
       return;
     }
 
@@ -92,11 +111,43 @@ async function buscarCoordenadas() {
   }
 }
 
-// Segunda tentativa: combina o nome do local com o endereço cadastrado.
-async function buscarPorEstabelecimento() {
+function normalizarTextoGeocodificacao(texto) {
+  return String(texto || '')
+    .replace(/['’`´]/g, ' ')
+    .replace(/[,–—-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function montarConsultaGeocodificacao(incluirNumero) {
+  if (dadosEstab.rua && dadosEstab.cidade) {
+    return [
+      normalizarTextoGeocodificacao(dadosEstab.rua),
+      incluirNumero ? normalizarTextoGeocodificacao(dadosEstab.numero) : '',
+      normalizarTextoGeocodificacao(dadosEstab.cidade),
+      normalizarTextoGeocodificacao(dadosEstab.estado),
+      'Brasil',
+    ].filter(Boolean).join(', ');
+  }
+
+  if (!incluirNumero) {
+    const partes = dadosEstab.endereco.split(',').map(parte => parte.trim()).filter(Boolean);
+    if (partes.length >= 3) {
+      return [partes[0], partes[1], partes[partes.length - 1], 'Brasil']
+        .map(normalizarTextoGeocodificacao)
+        .filter(Boolean)
+        .join(', ');
+    }
+  }
+
+  return normalizarTextoGeocodificacao(dadosEstab.endereco);
+}
+
+// Segunda tentativa: procura a rua e a cidade sem exigir um número mapeado.
+async function buscarSemNumero() {
   try {
     await new Promise(resolve => setTimeout(resolve, 1100));
-    const termoBusca = `${dadosEstab.nome}, ${dadosEstab.endereco}`;
+    const termoBusca = montarConsultaGeocodificacao(false);
     const url = `https://nominatim.openstreetmap.org/search?` +
       `q=${encodeURIComponent(termoBusca)}` +
       `&format=jsonv2&limit=1&countrycodes=br`;

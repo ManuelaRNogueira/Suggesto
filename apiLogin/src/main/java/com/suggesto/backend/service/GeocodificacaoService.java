@@ -47,7 +47,14 @@ public class GeocodificacaoService {
 
     private double[] consultar(String enderecoTexto) {
         try {
-            String query = java.net.URLEncoder.encode(enderecoTexto, StandardCharsets.UTF_8);
+            // Pontuação em nomes como "Princesa D'Oeste" pode impedir o
+            // Nominatim de reconhecer um número que existe no mapa.
+            String enderecoNormalizado = enderecoTexto
+                    .replaceAll("['’`´]", " ")
+                    .replaceAll("[,\u2013\u2014-]+", " ")
+                    .replaceAll("\\s+", " ")
+                    .trim();
+            String query = java.net.URLEncoder.encode(enderecoNormalizado, StandardCharsets.UTF_8);
             URI uri = URI.create(
                     "https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&q=" + query);
 

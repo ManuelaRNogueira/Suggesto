@@ -79,6 +79,12 @@ async function carregarEstabelecimento(id) {
       categoria: dados.categoria || '—',
       telefone: dados.telefone || '',
       endereco: montarEndereco(dados),
+      rua: dados.rua || '',
+      numero: dados.numero || '',
+      cidade: dados.cidade || '',
+      estado: dados.estado || '',
+      lat: dados.lat == null || !Number.isFinite(Number(dados.lat)) ? null : Number(dados.lat),
+      lng: dados.lng == null || !Number.isFinite(Number(dados.lng)) ? null : Number(dados.lng),
       horario: dados.horarioFuncionamento || '',
       sobre: dados.sobre || '',
       logo: urlFotoEstabelecimento(dados.fotoPath),
@@ -434,6 +440,18 @@ function irParaMapa() {
   sessionStorage.setItem('loc_nota',       media);
   sessionStorage.setItem('loc_avaliacoes', String(total));
   sessionStorage.setItem('loc_logo',       est.logo);
+  sessionStorage.setItem('loc_rua',        est.rua);
+  sessionStorage.setItem('loc_numero',     est.numero);
+  sessionStorage.setItem('loc_cidade',     est.cidade);
+  sessionStorage.setItem('loc_estado',     est.estado);
+
+  if (Number.isFinite(est.lat) && Number.isFinite(est.lng)) {
+    sessionStorage.setItem('loc_lat', String(est.lat));
+    sessionStorage.setItem('loc_lng', String(est.lng));
+  } else {
+    sessionStorage.removeItem('loc_lat');
+    sessionStorage.removeItem('loc_lng');
+  }
   window.location.href = 'mapaCli.html';
 }
 
