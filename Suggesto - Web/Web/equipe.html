@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="css/admBase.css">
   <link rel="stylesheet" href="css/inicioAdm.css">
   <link rel="stylesheet" href="css/equipe.css">
+  <link rel="stylesheet" href="css/sidebarMobile.css">
 </head>
 <body>
 
@@ -88,9 +89,16 @@
   </div>
 </aside>
 
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
 <main class="conteudo">
 
   <header class="conteudo-header">
+    <button class="sidebar-hamburguer" id="sidebarToggle" aria-label="Abrir menu">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
     <p class="header-saudacao" id="resumoSub">Carregando…</p>
     <h1 class="header-titulo">Acesso rápido à equipe</h1>
   </header>
@@ -147,5 +155,6 @@
 <script src="js/config.js"></script>
 <script src="js/admApi.js"></script>
 <script src="js/equipe.js"></script>
+<script src="js/sidebarMobile.js"></script>
 </body>
 </html>

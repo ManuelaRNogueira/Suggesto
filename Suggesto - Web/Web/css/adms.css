@@ -168,7 +168,7 @@ strong { color: var(--roxo-claro); }
 .hero-acoes { display: flex; gap: 12px; flex-wrap: wrap; }
 
 .nav-link-ativo {
-  color: var(--cor-roxo-claro) !important;
+  color: var(--roxo-claro) !important;
   background: rgba(124, 58, 237, 0.1) !important;
 }
 
@@ -450,6 +450,7 @@ strong { color: var(--roxo-claro); }
   .planos { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
   .comparacao { grid-template-columns: 1fr; gap: 16px; }
   .comp-meio { display: none; }
+  .hero-texto { max-width: 100%; }
   .hero-numeros { flex-direction: column; gap: 24px; width: 100%; }
   .num-sep { width: 100%; height: 1px; }
 }

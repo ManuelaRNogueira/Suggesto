@@ -541,6 +541,16 @@
   .cta-acoes { flex-direction: column; width: 100%; }
   .cta-acoes .botao { width: 100%; justify-content: center; }
   .aviso-restrito { flex-direction: column; text-align: center; }
+
+  /* Impede o zoom automático do iOS ao focar um campo (exige >=16px) */
+  .campo-input { font-size: 16px; }
+
+  /* Aumenta a área de toque do botão de mostrar/ocultar senha */
+  .campo-olho {
+    padding: 10px;
+    right: 6px;
+    font-size: 15px;
+  }
 }
 
 @media (max-width: 480px) {

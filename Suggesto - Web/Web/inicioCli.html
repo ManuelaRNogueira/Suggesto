@@ -12,6 +12,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
     />
     <link rel="stylesheet" href="css/inicioCli.css" />
+    <link rel="stylesheet" href="css/sidebarMobile.css" />
     <style>
       .sidebar {
         width: 256px;
@@ -400,10 +401,15 @@
       </div>
     </aside>
 
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
     <!-- CONTEÚDO PRINCIPAL -->
     <main class="conteudo">
       <!-- CABEÇALHO -->
       <header class="conteudo-header">
+        <button class="sidebar-hamburguer" id="sidebarToggle" aria-label="Abrir menu">
+          <i class="fas fa-bars"></i>
+        </button>
         <div>
           <p class="header-saudacao" id="saudacaoNome">Olá, João 👋</p>
           <h1 class="header-titulo">O que vamos melhorar hoje?</h1>
@@ -697,5 +703,6 @@
     <script src="js/geoUtils.js"></script>
     <script src="js/localCard.js"></script>
     <script src="js/inicioCli.js"></script>
+    <script src="js/sidebarMobile.js"></script>
   </body>
 </html>

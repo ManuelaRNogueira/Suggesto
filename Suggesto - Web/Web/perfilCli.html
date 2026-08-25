@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="css/perfilCli.css">
+  <link rel="stylesheet" href="css/sidebarMobile.css">
 
   <style>
 
@@ -353,11 +354,16 @@
 
 </aside>
 
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
   <!-- CONTEÚDO PRINCIPAL -->
   <main class="conteudo">
 
     <!-- CABEÇALHO -->
     <header class="conteudo-header">
+      <button class="sidebar-hamburguer" id="sidebarToggle" aria-label="Abrir menu">
+        <i class="fas fa-bars"></i>
+      </button>
       <div>
         <p class="header-saudacao">Meu espaço</p>
         <h1 class="header-titulo">Perfil</h1>
@@ -668,5 +674,6 @@
   <script src="js/pontosNiveis.js"></script>
   <script src="js/avaliacoesUtils.js"></script>
   <script src="js/perfilCli.js"></script>
+  <script src="js/sidebarMobile.js"></script>
 </body>
 </html>

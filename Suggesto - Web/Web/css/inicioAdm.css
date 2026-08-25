@@ -349,6 +349,7 @@
   letter-spacing: -0.02em;
   color: var(--st, var(--cor-texto));
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .kpi-destaque .kpi-val {
@@ -769,6 +770,13 @@
 }
 
 @media (max-width: 768px) {
-  .sidebar { display: none; }
   .conteudo { margin-left: 0; max-width: 100vw; padding: 20px; }
+}
+
+@media (max-width: 480px) {
+  .resumo-kpis { grid-template-columns: 1fr; }
+  .kpi-destaque .kpi-val { font-size: 1.9rem; }
+  .status-item { grid-template-columns: 96px 1fr auto; gap: 8px; }
+  .resumo-desktop { padding: 16px 18px; }
+  .modal { padding: 24px 20px; }
 }

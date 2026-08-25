@@ -159,9 +159,12 @@ img { max-width: 100%; display: block; }
 
 /* ===== HERO DA PÁGINA ===== */
 .sm-hero {
-  position: relative; min-height: 100vh;
-  display: grid; grid-template-columns: 1fr 1fr;*/
-  align-items: center; gap: 64px;
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr; /* dá mais espaço para o texto */
+  align-items: center; /* centraliza verticalmente os dois lados */
+  gap: 40px;
   padding: calc(var(--altura-nav) + 60px) 80px 80px;
   overflow: hidden;
 }
@@ -173,12 +176,17 @@ img { max-width: 100%; display: block; }
 }
 
 .sm-hero-visual img {
-  width: 200px;
+  width: clamp(120px, 20vw, 250px);
   height: auto;
 }
 
-.sm-hero-visual img {
-  width: clamp(120px, 20vw, 250px);
+.sm-hero-visual {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center; /* Garante que a imagem alinhe pelo meio do título/texto */
+  justify-content: center;
+  height: 100%; /* Garante que ela use a altura total do grid */
 }
 
 .sm-hero-fundo { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
@@ -240,42 +248,6 @@ img { max-width: 100%; display: block; }
   line-height: 1.7; max-width: 520px;
 }
 .sm-hero-acoes { display: flex; gap: 12px; flex-wrap: wrap; }
-
-
-.sm-hero {
-  position: relative; 
-  min-height: 100vh;
-  display: grid; 
-  /* Mudamos de 1fr 1fr para 1.5fr 1fr (dá mais espaço para o texto) */
-  grid-template-columns: 1.5fr 1fr; 
-  align-items: center; /* Isso ajuda a centralizar verticalmente os dois lados */
-  gap: 40px;
-  padding: calc(var(--altura-nav) + 60px) 80px 80px;
-  overflow: hidden;
-}
-
-.sm-hero-titulo {
-  font-family: var(--fonte-titulo); 
-  font-size: clamp(32px, 3.5vw, 52px);
-  font-weight: 800; 
-  line-height: 1.1; 
-  letter-spacing: -1.5px; 
-  color: var(--cor-texto);
-  max-width: 850px; 
-}
-
-
-CSS
-.sm-hero-visual { 
-  position: relative; 
-  z-index: 1; 
-  display: flex; 
-  align-items: center; /* Garante que a imagem alinhe pelo meio do título/texto */
-  justify-content: center;
-  height: 100%; /* Garante que ela use a altura total do grid */
-}
-
-
 
 /* ===== SEÇÕES PADRÃO ===== */
 .sm-secao { padding: 100px 32px; }
@@ -722,9 +694,6 @@ CSS
   .sm-hero-acoes .botao { width: 100%; justify-content: center; }
   .sm-cta-acoes { flex-direction: column; width: 100%; }
   .sm-cta-acoes .botao { width: 100%; justify-content: center; }
-  .fluxo-visual { flex-direction: column; padding: 24px; }
-  .fluxo-seta { flex-direction: column; min-width: 0; }
-  .fluxo-linha { width: 1px; height: 24px; }
   .rodape-topo { grid-template-columns: 1fr; }
   .barra-nav-interna { padding: 0 20px; }
 }

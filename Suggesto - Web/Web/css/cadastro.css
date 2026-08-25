@@ -972,4 +972,13 @@ body {
 
     }
 
+
+    /* Impede o zoom automático do iOS ao focar um campo (exige >=16px) */
+    .form input,
+    .form select.input-select {
+
+        font-size: 16px;
+
+    }
+
 }

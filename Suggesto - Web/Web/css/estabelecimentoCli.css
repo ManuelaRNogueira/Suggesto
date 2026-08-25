@@ -315,7 +315,7 @@ body {
 }
 .sugestao-card:hover { border-color: var(--roxo-borda); }
 
-.sug-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.sug-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
 .sug-usuario { display: flex; align-items: center; gap: 10px; }
 .sug-avatar {
   width: 36px; height: 36px; border-radius: 50%;
@@ -524,10 +524,16 @@ body {
   .toast { left: 50%; }
 }
 @media (max-width: 480px) {
-  .estab-logo { width: 64px; height: 64px; }
-  .estab-logo-placeholder { width: 64px; height: 64px; }
-  .estab-nome { font-size: 16px; }
+  .estab-header-inner { gap: 10px; }
+  .estab-info { gap: 10px; }
+  .estab-logo { width: 56px; height: 56px; }
+  .estab-logo-placeholder { width: 56px; height: 56px; font-size: 22px; }
+  .estab-nome { font-size: 15px; }
+  .estab-status { flex-wrap: wrap; row-gap: 2px; }
   .resumo-avaliacao { flex-direction: column; gap: 16px; }
+  .barra-inferior { padding: 10px 12px; gap: 8px; }
+  .btn-mapa, .btn-sugerir { min-width: 0; flex: 1; padding: 11px 10px; font-size: 12.5px; }
+  .modal { padding: 24px 20px; }
 }
 
 /* ── Resposta do estabelecimento ─────────────────────────────────────── */

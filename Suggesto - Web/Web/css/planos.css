@@ -430,15 +430,12 @@ font-family: var(--fonte-titulo);
 @media (max-width: 768px) {
   .planos-secao { padding: 0 24px 60px; }
   .comparativo { padding: 60px 24px 80px; }
-  .comparativo-tabela-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .tabela-wrapper { -webkit-overflow-scrolling: touch; }
   .faq { padding: 0 24px 80px; }
-  .cta-final { padding: 80px 24px; }
-  .cta-acoes { flex-direction: column; width: 100%; }
-  .cta-acoes .botao { width: 100%; justify-content: center; }
 }
 
 @media (max-width: 480px) {
   .planos-hero { padding: calc(var(--altura-nav) + 48px) 20px 60px; }
   .planos-grade { max-width: 100%; }
-  .plano-recurso { font-size: 13px; }
+  .plano-lista li { font-size: 13px; }
 }

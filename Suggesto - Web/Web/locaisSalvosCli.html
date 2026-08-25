@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="css/locaisSalvosCli.css">
+  <link rel="stylesheet" href="css/sidebarMobile.css">
 
   <style>
     .sidebar {
@@ -327,11 +328,16 @@
 
 </aside>
 
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
   <!-- CONTEÚDO PRINCIPAL -->
-  <main class="conteudo main">
+  <main class="conteudo">
 
     <!-- CABEÇALHO -->
     <header class="conteudo-header">
+      <button class="sidebar-hamburguer" id="sidebarToggle" aria-label="Abrir menu">
+        <i class="fas fa-bars"></i>
+      </button>
       <div>
         <p class="header-saudacao">Sua coleção</p>
         <h1 class="header-titulo">Locais Salvos</h1>
@@ -476,5 +482,6 @@
   <script src="js/horarioUtils.js"></script>
   <script src="js/localCard.js"></script>
   <script src="js/locaisSalvosCli.js"></script>
+  <script src="js/sidebarMobile.js"></script>
 </body>
 </html>

@@ -456,7 +456,6 @@ body {
 
 @media (max-width: 768px) {
   :root { --lateral-largura: 0px; }
-  .barra-lateral { display: none; }
   .conteudo { margin-left: 0 !important; padding: 20px; max-width: 100vw; }
   .campo-busca { flex: 1; }
   .campo-busca input { width: 100%; min-width: 0; }

@@ -11,6 +11,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
     />
     <link rel="stylesheet" href="css/sugestoesCli.css" />
+    <link rel="stylesheet" href="css/sidebarMobile.css" />
     <style>
       .sidebar {
         width: 256px;
@@ -404,10 +405,15 @@
       </div>
     </aside>
 
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
     <!-- CONTEÚDO PRINCIPAL -->
     <main class="conteudo">
       <!-- CABEÇALHO -->
       <header class="conteudo-header">
+        <button class="sidebar-hamburguer" id="sidebarToggle" aria-label="Abrir menu">
+          <i class="fas fa-bars"></i>
+        </button>
         <div class="header-esquerda">
           <p class="header-sub">Acompanhe o que você enviou</p>
           <h1 class="header-titulo">Minhas Sugestões</h1>
@@ -717,5 +723,6 @@
     <script src="js/config.js"></script>
     <script src="js/avaliacoesUtils.js"></script>
     <script src="js/sugestoesCli.js"></script>
+    <script src="js/sidebarMobile.js"></script>
   </body>
 </html>

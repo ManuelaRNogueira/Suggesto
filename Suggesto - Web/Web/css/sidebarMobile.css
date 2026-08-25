@@ -1,0 +1,72 @@
+/* Navegação mobile do menu lateral — compartilhado por todas as páginas que
+   usam a casca <aside class="sidebar"> + <main class="conteudo">.
+   Vira uma gaveta deslizante com um botão de hambúrguer, em vez de sumir
+   sem dar nenhum jeito de navegar. */
+
+.sidebar-hamburguer {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #e8e6ff;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.sidebar-hamburguer:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 4, 10, 0.6);
+  z-index: 19;
+}
+
+.sidebar-backdrop.aberto {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .sidebar-hamburguer {
+    display: flex;
+  }
+
+  /* O botão fica fixo no canto do cabeçalho, com posição absoluta — assim
+     não depende de como cada página organiza o resto do conteúdo do
+     cabeçalho (com ou sem div, com espaçamento "space-between" etc). */
+  .conteudo-header {
+    position: relative;
+    padding-left: 50px;
+  }
+
+  .conteudo-header .sidebar-hamburguer {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    z-index: 30;
+  }
+
+  .sidebar.aberto {
+    transform: translateX(0);
+    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.45);
+  }
+
+  .conteudo,
+  .main {
+    margin-left: 0 !important;
+    max-width: 100vw;
+  }
+}

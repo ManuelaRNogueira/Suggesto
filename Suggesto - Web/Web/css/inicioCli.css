@@ -600,9 +600,7 @@ body {
 }
 
 @media (max-width: 768px) {
-  :root { --lateral-largura: 0px; }
-  .barra-lateral { display: none; }
-  .conteudo { margin-left: 0; padding: 20px; max-width: 100vw; }
+  .conteudo { padding: 20px; }
   .campo-busca { flex: 1; }
   .campo-busca input { width: 100%; min-width: 0; }
   .banner-conteudo { padding: 28px 24px; }
@@ -616,7 +614,7 @@ body {
   .campo-busca input { width: 100%; }
   .banner-acoes { flex-direction: column; }
   .botao-banner { width: 100%; justify-content: center; }
-  .resumo-grade { grid-template-columns: 1fr 1fr; }
+  .modal { padding: 24px 20px; }
 }
 
 /* ── Sugestões em destaque (clientes Ouro/Platina) ────────────────────── */
