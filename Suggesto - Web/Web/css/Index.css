@@ -827,23 +827,48 @@ img { max-width: 100%; display: block; }
   .vitrine-imagem { width: 140px; align-self: center; }
 }
 
+/* Fundo escurecido atrás da gaveta do menu mobile — criado via JS
+   (js/navDrawerBackdrop.js), igual ao usado no painel administrativo. */
+.nav-drawer-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 4, 10, 0.6);
+  z-index: 999;
+}
+.nav-drawer-backdrop.aberto {
+  display: block;
+}
+
 @media (max-width: 768px) {
   .nav-links, .nav-botoes { display: none; }
   .nav-menu-btn { display: flex; }
 
-  /* Quando o menu abre, a navbar se expande para acomodar links e botões */
+  /* O menu agora abre como uma gaveta lateral (igual à do painel), em vez
+     de expandir a barra pra baixo. */
   .barra-nav.aberto {
-    height: auto;
-    background: rgba(14, 14, 18, 0.97);
-    backdrop-filter: blur(20px);
-    border-color: var(--cor-borda);
+    background: transparent;
+    backdrop-filter: none;
+    border-color: transparent;
   }
 
   .barra-nav.aberto .barra-nav-interna {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(280px, 82vw);
+    margin: 0;
+    padding: 20px 22px 24px;
     flex-wrap: wrap;
-    gap: 0;
-    padding-bottom: 20px;
     align-items: center;
+    align-content: flex-start;
+    gap: 0;
+    background: rgba(14, 14, 18, 0.98);
+    backdrop-filter: blur(20px);
+    border-right: 1px solid var(--cor-borda);
+    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.45);
+    overflow-y: auto;
   }
 
   .barra-nav.aberto .nav-logo {
@@ -858,7 +883,7 @@ img { max-width: 100%; display: block; }
                         coluna estreita em vez de ocupar a largura toda */
     width: 100%;
     gap: 2px;
-    padding: 12px 0 16px;
+    padding: 20px 0 16px;
     border-bottom: 1px solid var(--cor-borda);
     margin-top: 4px;
   }
@@ -871,6 +896,7 @@ img { max-width: 100%; display: block; }
   .barra-nav.aberto .nav-botoes {
     display: flex;
     flex-direction: column;
+    flex: 1 1 100%;
     width: 100%;
     gap: 10px;
     padding-top: 16px;
