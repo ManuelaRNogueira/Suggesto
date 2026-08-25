@@ -73,11 +73,17 @@ function atualizarIconeFavorito(btn, salvo) {
   btn.title = salvo ? "Remover dos salvos" : "Salvar local";
 }
 
+function formatarDistanciaCard(km) {
+  if (km < 1) return `${Math.round(km * 1000)} m`;
+  return `${km.toFixed(1).replace(".", ",")} km`;
+}
+
 // opcoes:
 //   verificarSalvo(idEstab) -> bool   (padrão: sempre não-salvo)
 //   aoClicarFavorito(idEstab, btn)    (se omitido, o botão de favorito não aparece)
 //   aoClicarSugerir(idEstab, nome)    (padrão: navega pra fazerSugestao.html)
 //   aoClicarImagem(idEstab)           (padrão: navega pra estabelecimentoCli.html)
+//   distanciaKm                       (número opcional — some ao endereço, ex: "· 1,2 km")
 function criarCardEstabelecimento(estab, opcoes = {}) {
   const card = document.createElement("div");
   card.className = "local-card";
@@ -149,7 +155,11 @@ function criarCardEstabelecimento(estab, opcoes = {}) {
 
   const enderecoEl = document.createElement("p");
   enderecoEl.className = "local-endereco";
-  enderecoEl.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${montarEnderecoCard(estab)}`;
+  let enderecoTexto = montarEnderecoCard(estab);
+  if (typeof opcoes.distanciaKm === "number") {
+    enderecoTexto += ` · ${formatarDistanciaCard(opcoes.distanciaKm)}`;
+  }
+  enderecoEl.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${enderecoTexto}`;
 
   nomeContainer.appendChild(nomeEl);
   nomeContainer.appendChild(enderecoEl);

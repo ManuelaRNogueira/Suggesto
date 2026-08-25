@@ -19,8 +19,7 @@ function obterIdUsuario() {
 
 document.addEventListener("DOMContentLoaded", () => {
   carregarDadosUsuario();
-  carregarEstabelecimentos();
-  carregarRecomendados();
+  iniciarSecoesDeLocais();
   carregarDestaques();
 });
 
@@ -112,58 +111,18 @@ async function carregarDestaques() {
   }
 }
 
-// Recomendação por proximidade: estabelecimentos da mesma cidade do cliente.
-// Quando não há nada para mostrar, a seção continua visível com uma explicação —
-// sumir sem aviso passava a impressão de que a funcionalidade estava quebrada.
-async function carregarRecomendados() {
-  const secao = document.getElementById("recomendadosSecao");
-  const grade = document.getElementById("recomendadosGrade");
-  const vazio = document.getElementById("recomendadosVazio");
-  const idUsuario = obterIdUsuario();
-  if (!secao || !grade || !idUsuario) return;
+// ── Home: "Perto de você" (raio real) + "Descubra Novos Locais" ───────────
+// Um estabelecimento nunca aparece nas duas seções. Fluxo: carrega a lista
+// completa uma vez → mostra "Descubra Novos Locais" com tudo (não trava a
+// página esperando a permissão de localização) → pede a localização →
+// quando ela resolver (com ou sem sucesso), classifica por distância (ou
+// cai no fallback por cidade se a localização não estiver disponível) e
+// re-renderiza as duas seções sem duplicidade.
 
-  try {
-    const resposta = await fetch(
-      `${API_BASE}/estabelecimentos/recomendados?idUsuario=${idUsuario}`,
-    );
-    if (!resposta.ok) return;
+let estabelecimentosCache = [];
+let idsPertoDeVoce = new Set();
 
-    const dados = await resposta.json();
-    const estabelecimentos = Array.isArray(dados.estabelecimentos)
-      ? dados.estabelecimentos
-      : [];
-    const cidade = dados.cidade;
-
-    const rotuloCidade = document.getElementById("recomendadosCidade");
-    if (rotuloCidade) rotuloCidade.textContent = cidade || "";
-
-    grade.innerHTML = "";
-
-    if (estabelecimentos.length === 0) {
-      if (vazio) {
-        // Sem cidade é conta antiga, criada antes do endereço virar obrigatório.
-        vazio.querySelector("p").textContent = cidade
-          ? "Nenhum local cadastrado na sua cidade ainda"
-          : "Preencha seu endereço no perfil para recomendarmos os melhores locais da sua região";
-        vazio.classList.add("visivel");
-      }
-      secao.style.display = "";
-      return;
-    }
-
-    if (vazio) vazio.classList.remove("visivel");
-
-    estabelecimentos
-      .slice(0, 6)
-      .forEach((estab) => grade.appendChild(criarCardEstabelecimento(estab, opcoesCardCliente)));
-
-    secao.style.display = "";
-  } catch (error) {
-    console.error("Erro ao carregar recomendados:", error);
-  }
-}
-
-async function carregarEstabelecimentos() {
+async function iniciarSecoesDeLocais() {
   const grade = document.getElementById("locaisGrade");
   if (!grade) return;
 
@@ -171,21 +130,113 @@ async function carregarEstabelecimentos() {
 
   try {
     const resposta = await fetch(`${API_BASE}/estabelecimentos`);
-    const estabelecimentos = await resposta.json();
-
-    grade.innerHTML = "";
-
-    estabelecimentos.forEach((estab) => {
-      grade.appendChild(criarCardEstabelecimento(estab, opcoesCardCliente));
-    });
+    estabelecimentosCache = await resposta.json();
   } catch (error) {
     console.error("Erro ao carregar estabelecimentos:", error);
-
     grade.innerHTML = `
             <p style="color: white; text-align: center; grid-column: 1/-1;">
                 Não foi possível carregar os dados do servidor.
             </p>
         `;
+    return;
+  }
+
+  renderizarDescubraNovosLocais();
+  carregarPertoDeVoce();
+}
+
+function renderizarDescubraNovosLocais() {
+  const grade = document.getElementById("locaisGrade");
+  if (!grade) return;
+
+  grade.innerHTML = "";
+  estabelecimentosCache
+    .filter((estab) => !idsPertoDeVoce.has(obterIdEstabelecimento(estab)))
+    .forEach((estab) => grade.appendChild(criarCardEstabelecimento(estab, opcoesCardCliente)));
+}
+
+async function carregarPertoDeVoce() {
+  const secao = document.getElementById("recomendadosSecao");
+  const grade = document.getElementById("recomendadosGrade");
+  const vazio = document.getElementById("recomendadosVazio");
+  const rotuloCidade = document.getElementById("recomendadosCidade");
+  if (!secao || !grade) return;
+
+  // Estado de carregamento discreto — evita mostrar uma classificação errada
+  // enquanto a localização ainda não chegou.
+  secao.style.display = "";
+  if (vazio) vazio.classList.remove("visivel");
+  grade.innerHTML = `<p style="color: var(--cor-texto-fraco, #a0a0b8); grid-column: 1/-1; font-size: 13px;">Buscando locais perto de você…</p>`;
+
+  const localizacao = await obterLocalizacaoUsuario();
+
+  let proximos;
+  if (localizacao) {
+    if (rotuloCidade) rotuloCidade.textContent = "";
+    proximos = estabelecimentosCache
+      .map((estab) => {
+        if (typeof estab.lat !== "number" || typeof estab.lng !== "number") return null;
+        const distancia = calcularDistanciaKm(localizacao.lat, localizacao.lng, estab.lat, estab.lng);
+        return distancia <= RAIO_PERTO_KM ? { estab, distancia } : null;
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.distancia - b.distancia);
+  } else {
+    // Sem permissão/indisponível/timeout — mantém o comportamento anterior
+    // (recomendação pela cidade cadastrada no perfil) como fallback.
+    proximos = await buscarRecomendadosPorCidade(rotuloCidade);
+  }
+
+  idsPertoDeVoce = new Set(proximos.map((p) => obterIdEstabelecimento(p.estab)));
+
+  grade.innerHTML = "";
+
+  if (proximos.length === 0) {
+    if (vazio) {
+      vazio.querySelector("p").textContent = localizacao
+        ? `Nenhum estabelecimento a menos de ${RAIO_PERTO_KM} km de você`
+        : "Permita o acesso à localização ou preencha seu endereço no perfil para recomendarmos os melhores locais perto de você";
+      vazio.classList.add("visivel");
+    }
+  } else {
+    if (vazio) vazio.classList.remove("visivel");
+    proximos
+      .slice(0, 6)
+      .forEach(({ estab, distancia }) =>
+        grade.appendChild(
+          criarCardEstabelecimento(estab, {
+            ...opcoesCardCliente,
+            ...(distancia != null ? { distanciaKm: distancia } : {}),
+          }),
+        ),
+      );
+  }
+
+  // Agora que sabemos quem ficou em "Perto de você", tira essas mesmas
+  // pessoas de "Descubra Novos Locais".
+  renderizarDescubraNovosLocais();
+}
+
+// Fallback quando não há localização real: mesma lógica de sempre (cidade do
+// perfil), só reformatada pro mesmo formato { estab, distancia } do cálculo
+// por coordenadas — aqui distancia fica null porque não é uma medida real.
+async function buscarRecomendadosPorCidade(rotuloCidade) {
+  const idUsuario = obterIdUsuario();
+  if (!idUsuario) return [];
+
+  try {
+    const resposta = await fetch(
+      `${API_BASE}/estabelecimentos/recomendados?idUsuario=${idUsuario}`,
+    );
+    if (!resposta.ok) return [];
+
+    const dados = await resposta.json();
+    const estabelecimentos = Array.isArray(dados.estabelecimentos) ? dados.estabelecimentos : [];
+    if (rotuloCidade) rotuloCidade.textContent = dados.cidade || "";
+    return estabelecimentos.map((estab) => ({ estab, distancia: null }));
+  } catch (error) {
+    console.error("Erro ao carregar recomendados por cidade:", error);
+    return [];
   }
 }
 
