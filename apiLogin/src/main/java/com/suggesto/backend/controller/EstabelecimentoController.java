@@ -46,6 +46,9 @@ public class EstabelecimentoController {
     @Autowired
     private CloudinaryService cloudinaryService;
 
+    @Autowired
+    private com.suggesto.backend.service.GeocodificacaoService geocodificacaoService;
+
     private static final String ALFABETO_CODIGO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final SecureRandom RANDOM = new SecureRandom();
 
@@ -104,6 +107,23 @@ public class EstabelecimentoController {
 
                 String fotoUrl = cloudinaryService.upload(arquivo, "estabelecimentos", nomeArquivo);
                 novoEstabelecimento.setFotoPath(fotoUrl);
+            }
+
+            // Melhor esforço: se a Nominatim falhar ou demorar, o cadastro segue
+            // sem coordenadas em vez de travar — "perto de você" na Home
+            // simplesmente ignora estabelecimentos sem lat/lng.
+            try {
+                double[] coords = geocodificacaoService.geocodificar(
+                        novoEstabelecimento.getRua(),
+                        novoEstabelecimento.getNumero(),
+                        novoEstabelecimento.getCidade(),
+                        novoEstabelecimento.getEstado());
+                if (coords != null) {
+                    novoEstabelecimento.setLat(coords[0]);
+                    novoEstabelecimento.setLng(coords[1]);
+                }
+            } catch (Exception ignorado) {
+                // Sem coordenadas — segue o cadastro normalmente.
             }
 
             Estabelecimento salvo = repository.save(novoEstabelecimento);
@@ -378,19 +398,40 @@ public class EstabelecimentoController {
                 return ResponseEntity.badRequest().body("Este CNPJ já está cadastrado.");
             }
 
+            String cidadeNormalizada = TextoUtil.normalizarCidade(dadosAtualizados.getCidade());
+            boolean enderecoMudou = !java.util.Objects.equals(estab.getRua(), dadosAtualizados.getRua())
+                    || !java.util.Objects.equals(estab.getNumero(), dadosAtualizados.getNumero())
+                    || !java.util.Objects.equals(estab.getCidade(), cidadeNormalizada)
+                    || !java.util.Objects.equals(estab.getEstado(), dadosAtualizados.getEstado());
+
             estab.setNome(dadosAtualizados.getNome());
             estab.setCnpj(dadosAtualizados.getCnpj());
             estab.setCategoria(dadosAtualizados.getCategoria());
             estab.setTelefone(dadosAtualizados.getTelefone());
             estab.setCep(dadosAtualizados.getCep());
             estab.setEstado(dadosAtualizados.getEstado());
-            estab.setCidade(TextoUtil.normalizarCidade(dadosAtualizados.getCidade()));
+            estab.setCidade(cidadeNormalizada);
             estab.setBairro(dadosAtualizados.getBairro());
             estab.setRua(dadosAtualizados.getRua());
             estab.setNumero(dadosAtualizados.getNumero());
             estab.setComplemento(dadosAtualizados.getComplemento());
             estab.setHorarioFuncionamento(dadosAtualizados.getHorarioFuncionamento());
             estab.setSobre(dadosAtualizados.getSobre());
+
+            // Endereço mudou de verdade — as coordenadas antigas não valem mais.
+            // Melhor esforço: se a Nominatim falhar, fica sem coordenada em vez
+            // de travar a edição (ou de manter uma coordenada do endereço antigo).
+            if (enderecoMudou) {
+                try {
+                    double[] coords = geocodificacaoService.geocodificar(
+                            estab.getRua(), estab.getNumero(), estab.getCidade(), estab.getEstado());
+                    estab.setLat(coords != null ? coords[0] : null);
+                    estab.setLng(coords != null ? coords[1] : null);
+                } catch (Exception ignorado) {
+                    estab.setLat(null);
+                    estab.setLng(null);
+                }
+            }
 
             if (arquivo != null && !arquivo.isEmpty()) {
                 String nomeLimpo = UploadStorage.normalizarNomeArquivo(arquivo.getOriginalFilename());
@@ -469,6 +510,46 @@ public class EstabelecimentoController {
             repository.save(estab);
             return ResponseEntity.ok().build();
         }).orElse(ResponseEntity.notFound().build());
+    }
+
+    // Backfill único pros estabelecimentos cadastrados antes de lat/lng existir
+    // — cadastro novo e edição de endereço já geocodificam sozinhos (ver
+    // cadastrar/atualizar acima). Idempotente: só processa quem ainda não tem
+    // coordenada, então rodar de novo não faz nada extra pros já geocodificados.
+    // Uma chamada de cada vez, com pausa entre elas, pra respeitar o limite de
+    // uso da Nominatim (~1 req/s) — não é pra ser chamado a cada acesso à API.
+    @PostMapping("/geocodificar-existentes")
+    public ResponseEntity<?> geocodificarExistentes() {
+        List<Estabelecimento> semCoordenadas = repository.buscarTodosAtivos().stream()
+                .filter(e -> e.getLat() == null || e.getLng() == null)
+                .collect(Collectors.toList());
+
+        int sucesso = 0;
+        int falha = 0;
+
+        for (Estabelecimento estab : semCoordenadas) {
+            try {
+                double[] coords = geocodificacaoService.geocodificar(
+                        estab.getRua(), estab.getNumero(), estab.getCidade(), estab.getEstado());
+                if (coords != null) {
+                    estab.setLat(coords[0]);
+                    estab.setLng(coords[1]);
+                    repository.save(estab);
+                    sucesso++;
+                } else {
+                    falha++;
+                }
+                Thread.sleep(1100);
+            } catch (Exception e) {
+                falha++;
+            }
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "totalProcessados", semCoordenadas.size(),
+                "geocodificados", sucesso,
+                "falharam", falha
+        ));
     }
 
     @GetMapping

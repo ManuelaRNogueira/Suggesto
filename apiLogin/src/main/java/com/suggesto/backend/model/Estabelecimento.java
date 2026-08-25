@@ -64,6 +64,16 @@ public class Estabelecimento {
 
     private String fotoPath;
 
+    // Coordenadas geocodificadas a partir do endereço (ver GeocodificacaoService)
+    // — preenchidas automaticamente no cadastro, ou pelo endpoint de backfill
+    // pros estabelecimentos que já existiam antes desse campo. Nulas até lá:
+    // "perto de você" na Home simplesmente ignora quem ainda não tem.
+    @Column(name = "lat")
+    private Double lat;
+
+    @Column(name = "lng")
+    private Double lng;
+
     // Calculados a partir das avaliações, não persistidos no banco.
     @Transient
     private Double mediaAvaliacoes;
