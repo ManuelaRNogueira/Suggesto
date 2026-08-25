@@ -1,6 +1,6 @@
 package com.suggesto.backend.controller;
 
-import com.suggesto.backend.config.UsuarioConvidadoSeeder;
+import com.suggesto.backend.model.TipoUsuario;
 import com.suggesto.backend.model.Usuario;
 import com.suggesto.backend.util.TextoUtil;
 import com.suggesto.backend.util.UploadStorage;
@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -52,20 +54,35 @@ public class UsuarioController {
     @Autowired
     private CloudinaryService cloudinaryService;
 
-    // ID do usuário convidado (criado pelo UsuarioConvidadoSeeder), usado pelo
-    // front pra deixar quem chegou via QR code sem login navegar pelo app
-    // normalmente, "logado" como convidado.
-    @GetMapping("/convidado")
-    public ResponseEntity<?> buscarConvidado() {
-        return repository.findByUsername(UsuarioConvidadoSeeder.USERNAME_CONVIDADO)
-                .<ResponseEntity<?>>map(usuario -> ResponseEntity.ok(Map.of(
-                        "idUsuario", usuario.getId(),
-                        "nome", usuario.getNome() != null ? usuario.getNome() : "Convidado"
-                )))
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                        "success", false,
-                        "message", "Usuário convidado não encontrado."
-                )));
+    // Cria um usuário convidado novo (Convidado 1, Convidado 2...) pra quem chega
+    // sem login via QR code, um por dispositivo/navegador — assim dá pra navegar
+    // pelo app "logado" sem precisar se cadastrar, e sem misturar o histórico de
+    // pessoas diferentes num único convidado compartilhado. A senha é aleatória e
+    // descartada na hora, então essa conta nunca é utilizável pra login.
+    @PostMapping("/convidado")
+    public ResponseEntity<?> criarConvidado() {
+        try {
+            Usuario convidado = new Usuario();
+            convidado.setTipoUsuario(TipoUsuario.Cliente);
+            convidado.setSenha(new BCryptPasswordEncoder().encode(UUID.randomUUID().toString()));
+            convidado = repository.save(convidado);
+
+            convidado.setNome("Convidado " + convidado.getId());
+            convidado.setUsername("convidado_" + convidado.getId());
+            convidado.setEmail("convidado" + convidado.getId() + "@suggesto.app");
+            convidado = repository.save(convidado);
+
+            return ResponseEntity.ok(Map.of(
+                    "idUsuario", convidado.getId(),
+                    "nome", convidado.getNome()
+            ));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "success", false,
+                    "message", "Erro ao criar convidado: " + e.getMessage()
+            ));
+        }
     }
 
     @GetMapping("/{id}")

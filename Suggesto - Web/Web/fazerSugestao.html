@@ -498,14 +498,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// Quem chega aqui via QR code sem estar logado vira o usuário "Convidado":
-// assim dá pra continuar navegando pelo resto do site (inicioCli, mapaCli...)
-// sem esbarrar na tela de login, em vez de ficar preso só nesta página.
+// Quem chega aqui via QR code sem estar logado vira um usuário "Convidado N"
+// novo (um por dispositivo/navegador): assim dá pra continuar navegando pelo
+// resto do site (inicioCli, mapaCli...) sem esbarrar na tela de login, e sem
+// misturar o histórico de pessoas diferentes num único convidado só.
 async function entrarComoConvidadoSeNecessario() {
     if (localStorage.getItem('idUsuario')) return;
 
     try {
-        const resposta = await fetch(`${window.API_BASE}/usuarios/convidado`);
+        const resposta = await fetch(`${window.API_BASE}/usuarios/convidado`, { method: 'POST' });
         if (!resposta.ok) return;
         const convidado = await resposta.json();
         localStorage.setItem('idUsuario', convidado.idUsuario);
