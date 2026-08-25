@@ -91,7 +91,8 @@ document.querySelectorAll('.plano-card, .faq-item').forEach((elemento, indice) =
 // ===== NAVEGAÇÃO =====
 function assinarPlano(nomePlano) {
   sessionStorage.setItem("planoEscolhido", nomePlano);
-  window.location.href = "cadastroAdm.html";
+  sessionStorage.setItem("periodoEscolhido", periodoAnual ? "anual" : "mensal");
+  window.location.href = "pagamento.html";
 }
 
 function abrirCadastroAdm() {

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pagamento — Suggesto</title>
+  <link rel="icon" type="image/png" href="imagens/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="css/Index.css">
+  <link rel="stylesheet" href="css/pagamento.css">
+</head>
+<body class="pagina-pagamento">
+
+  <!-- AVISO DE AMBIENTE DE DEMONSTRAÇÃO -->
+  <div class="faixa-demo">
+    <i class="fas fa-flask"></i>
+    <span>Ambiente de demonstração — nenhum pagamento real é processado e nenhum dado de cartão é armazenado.</span>
+  </div>
+
+  <!-- FUNDO DECORATIVO -->
+  <div class="hero-fundo pagamento-fundo">
+    <div class="hero-bola hero-bola-1"></div>
+    <div class="hero-bola hero-bola-2"></div>
+    <div class="hero-bola hero-bola-3"></div>
+    <div class="hero-grade"></div>
+  </div>
+
+  <!-- BARRA DE CHECKOUT -->
+  <header class="checkout-nav">
+    <div class="checkout-nav-interna">
+      <a href="planos.html" class="nav-logo">
+        <img src="imagens/logo.png" alt="Suggesto" class="nav-logo-img">
+        <span>Suggesto</span>
+      </a>
+
+      <ol class="passos">
+        <li class="passo passo-feito">
+          <span class="passo-bolha"><i class="fas fa-check"></i></span>
+          <span class="passo-nome">Plano</span>
+        </li>
+        <li class="passo-linha"></li>
+        <li class="passo passo-ativo">
+          <span class="passo-bolha">2</span>
+          <span class="passo-nome">Pagamento</span>
+        </li>
+        <li class="passo-linha"></li>
+        <li class="passo">
+          <span class="passo-bolha">3</span>
+          <span class="passo-nome">Conta</span>
+        </li>
+      </ol>
+
+      <div class="selo-seguro">
+        <i class="fas fa-lock"></i>
+        <span>Conexão segura</span>
+      </div>
+    </div>
+  </header>
+
+
+  <main class="checkout-grade">
+
+    <!-- ================= COLUNA ESQUERDA: FORMULÁRIO ================= -->
+    <section class="checkout-coluna">
+
+      <a href="planos.html" class="voltar-link">
+        <i class="fas fa-arrow-left"></i> Voltar para os planos
+      </a>
+
+      <h1 class="checkout-titulo">Finalize sua <span class="titulo-roxo">assinatura</span></h1>
+      <p class="checkout-subtitulo">
+        Você está assinando o plano <strong id="tituloPlano">Pro</strong>.
+        O primeiro pagamento só acontece após os 14 dias de teste grátis.
+      </p>
+
+      <!-- ABAS DE MÉTODO -->
+      <div class="metodo-abas" role="tablist">
+        <button class="metodo-aba ativa" id="abaCartao" role="tab" onclick="trocarMetodo('cartao')">
+          <i class="fas fa-credit-card"></i>
+          <span>Cartão de crédito</span>
+        </button>
+        <button class="metodo-aba" id="abaPix" role="tab" onclick="trocarMetodo('pix')">
+          <i class="fas fa-qrcode"></i>
+          <span>PIX</span>
+          <span class="aba-etiqueta">à vista</span>
+        </button>
+      </div>
+
+
+      <!-- ================= PAINEL: CARTÃO ================= -->
+      <div class="metodo-painel ativo" id="painelCartao">
+
+        <!-- CARTÃO VISUAL ANIMADO -->
+        <div class="cartao-cena">
+          <div class="cartao" id="cartaoVisual">
+
+            <!-- FRENTE -->
+            <div class="cartao-face cartao-frente">
+              <div class="cartao-brilho"></div>
+
+              <div class="cartao-topo">
+                <div class="cartao-chip">
+                  <span></span><span></span><span></span>
+                  <span></span><span></span><span></span>
+                </div>
+                <div class="cartao-bandeira" id="cartaoBandeira">
+                  <i class="fas fa-wifi cartao-nfc"></i>
+                </div>
+              </div>
+
+              <div class="cartao-numero" id="cartaoNumero" data-campo="numero">
+                <span>•</span><span>•</span><span>•</span><span>•</span>
+                <span class="esp"></span>
+                <span>•</span><span>•</span><span>•</span><span>•</span>
+                <span class="esp"></span>
+                <span>•</span><span>•</span><span>•</span><span>•</span>
+                <span class="esp"></span>
+                <span>•</span><span>•</span><span>•</span><span>•</span>
+              </div>
+
+              <div class="cartao-base">
+                <div class="cartao-campo cartao-campo-nome" data-campo="nome">
+                  <label>Titular do cartão</label>
+                  <span id="cartaoNome">NOME COMO NO CARTÃO</span>
+                </div>
+                <div class="cartao-campo cartao-campo-validade" data-campo="validade">
+                  <label>Validade</label>
+                  <span id="cartaoValidade">MM/AA</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- VERSO -->
+            <div class="cartao-face cartao-verso">
+              <div class="cartao-tarja"></div>
+              <div class="cartao-assinatura">
+                <div class="assinatura-linha"></div>
+                <div class="cartao-cvv" id="cartaoCvv">•••</div>
+              </div>
+              <p class="cartao-aviso">
+                Cartão meramente ilustrativo. Este é um projeto acadêmico sem
+                processamento real de pagamentos.
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- FORMULÁRIO DO CARTÃO -->
+        <form class="form-pagamento" id="formCartao" novalidate>
+
+          <div class="campo-grupo">
+            <label for="numeroCartao">Número do cartão</label>
+            <div class="campo-com-icone">
+              <input
+                type="text"
+                id="numeroCartao"
+                inputmode="numeric"
+                autocomplete="cc-number"
+                placeholder="0000 0000 0000 0000"
+                maxlength="23">
+              <span class="campo-icone-bandeira" id="iconeBandeira"></span>
+            </div>
+            <span class="campo-erro" id="erroNumeroCartao"></span>
+          </div>
+
+          <div class="campo-grupo">
+            <label for="nomeCartao">Nome impresso no cartão</label>
+            <input
+              type="text"
+              id="nomeCartao"
+              autocomplete="cc-name"
+              placeholder="Como aparece no cartão">
+            <span class="campo-erro" id="erroNomeCartao"></span>
+          </div>
+
+          <div class="campo-linha">
+            <div class="campo-grupo">
+              <label for="validadeCartao">Validade</label>
+              <input
+                type="text"
+                id="validadeCartao"
+                inputmode="numeric"
+                autocomplete="cc-exp"
+                placeholder="MM/AA"
+                maxlength="5">
+              <span class="campo-erro" id="erroValidadeCartao"></span>
+            </div>
+
+            <div class="campo-grupo">
+              <label for="cvvCartao">
+                CVV
+                <span class="campo-dica" title="Os 3 dígitos no verso do cartão">
+                  <i class="fas fa-circle-question"></i>
+                </span>
+              </label>
+              <input
+                type="text"
+                id="cvvCartao"
+                inputmode="numeric"
+                autocomplete="cc-csc"
+                placeholder="000"
+                maxlength="4">
+              <span class="campo-erro" id="erroCvvCartao"></span>
+            </div>
+          </div>
+
+          <div class="campo-linha">
+            <div class="campo-grupo">
+              <label for="cpfTitular">CPF do titular</label>
+              <input
+                type="text"
+                id="cpfTitular"
+                inputmode="numeric"
+                placeholder="000.000.000-00"
+                maxlength="14">
+              <span class="campo-erro" id="erroCpfTitular"></span>
+            </div>
+
+            <div class="campo-grupo">
+              <label for="parcelas">Parcelamento</label>
+              <select id="parcelas" class="campo-select"></select>
+            </div>
+          </div>
+
+          <div class="checkbox-linha">
+            <input type="checkbox" id="salvarCartao" checked>
+            <label for="salvarCartao">Salvar este cartão para as próximas cobranças</label>
+          </div>
+
+          <button type="submit" class="botao botao-principal botao-pagar" id="btnPagar">
+            <span class="btn-texto">
+              <i class="fas fa-lock"></i>
+              Confirmar assinatura
+            </span>
+            <span class="btn-carregando">
+              <span class="giro"></span>
+              Processando pagamento...
+            </span>
+          </button>
+
+          <p class="form-nota">
+            <i class="fas fa-shield-halved"></i>
+            Seus dados trafegam criptografados. Você pode cancelar a assinatura a qualquer momento.
+          </p>
+        </form>
+      </div>
+
+
+      <!-- ================= PAINEL: PIX ================= -->
+      <div class="metodo-painel" id="painelPix">
+        <div class="pix-caixa">
+
+          <div class="pix-qr-area">
+            <div class="pix-qr-moldura">
+              <canvas id="pixQr" width="220" height="220" aria-label="QR Code fictício do PIX"></canvas>
+              <div class="pix-qr-logo">
+                <img src="imagens/logo.png" alt="">
+              </div>
+            </div>
+            <div class="pix-contador">
+              <i class="fas fa-clock"></i>
+              Expira em <strong id="pixTempo">14:59</strong>
+            </div>
+          </div>
+
+          <div class="pix-info">
+            <h3>Pague com PIX e ative na hora</h3>
+            <ol class="pix-passos">
+              <li>Abra o aplicativo do seu banco</li>
+              <li>Escolha pagar via PIX com QR Code ou código</li>
+              <li>Confirme o valor de <strong id="pixValor">R$ 119,00</strong></li>
+            </ol>
+
+            <label class="pix-label">Código copia e cola</label>
+            <div class="pix-codigo-caixa">
+              <input type="text" id="pixCodigo" readonly>
+              <button type="button" class="botao botao-contorno pix-copiar" onclick="copiarPix()">
+                <i class="fas fa-copy"></i> Copiar
+              </button>
+            </div>
+
+            <button type="button" class="botao botao-principal botao-pagar" onclick="simularPix()">
+              <i class="fas fa-check"></i>
+              Já paguei — confirmar
+            </button>
+
+            <p class="form-nota">
+              <i class="fas fa-circle-info"></i>
+              QR Code e código são fictícios, gerados apenas para demonstração.
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+
+    <!-- ================= COLUNA DIREITA: RESUMO ================= -->
+    <aside class="resumo-coluna">
+      <div class="resumo-card">
+
+        <div class="resumo-topo">
+          <span class="resumo-olho">Resumo do pedido</span>
+          <h2 class="resumo-plano" id="resumoPlano">Plano Pro</h2>
+          <p class="resumo-descricao" id="resumoDescricao">
+            Para negócios em crescimento que querem transformar dados em decisões.
+          </p>
+        </div>
+
+        <!-- PERÍODO -->
+        <div class="resumo-periodo">
+          <button type="button" class="periodo-opcao ativa" id="opcaoMensal" onclick="definirPeriodo('mensal')">
+            <span class="periodo-marca"></span>
+            <span class="periodo-texto">
+              <strong>Mensal</strong>
+              <small id="labelMensalValor">R$ 119/mês</small>
+            </span>
+          </button>
+          <button type="button" class="periodo-opcao" id="opcaoAnual" onclick="definirPeriodo('anual')">
+            <span class="periodo-marca"></span>
+            <span class="periodo-texto">
+              <strong>Anual <span class="periodo-tag">-20%</span></strong>
+              <small id="labelAnualValor">R$ 95/mês</small>
+            </span>
+          </button>
+        </div>
+
+        <ul class="resumo-beneficios" id="resumoBeneficios"></ul>
+
+        <div class="resumo-divisor"></div>
+
+        <!-- CUPOM -->
+        <div class="cupom-area">
+          <label class="pix-label" for="cupom">Cupom de desconto</label>
+          <div class="cupom-linha">
+            <input type="text" id="cupom" placeholder="Digite seu cupom">
+            <button type="button" class="botao botao-contorno" onclick="aplicarCupom()">Aplicar</button>
+          </div>
+          <span class="cupom-retorno" id="cupomRetorno"></span>
+        </div>
+
+        <div class="resumo-divisor"></div>
+
+        <!-- VALORES -->
+        <div class="resumo-linhas">
+          <div class="resumo-linha">
+            <span id="resumoLabelBase">Plano Pro (mensal)</span>
+            <span id="resumoValorBase">R$ 119,00</span>
+          </div>
+          <div class="resumo-linha resumo-linha-desconto" id="linhaDescontoAnual" hidden>
+            <span>Desconto anual (20%)</span>
+            <span id="valorDescontoAnual">- R$ 0,00</span>
+          </div>
+          <div class="resumo-linha resumo-linha-desconto" id="linhaDescontoCupom" hidden>
+            <span id="labelDescontoCupom">Cupom</span>
+            <span id="valorDescontoCupom">- R$ 0,00</span>
+          </div>
+          <div class="resumo-linha">
+            <span>Teste grátis</span>
+            <span class="resumo-gratis">14 dias</span>
+          </div>
+        </div>
+
+        <div class="resumo-total">
+          <div>
+            <span class="total-label">Total hoje</span>
+            <span class="total-obs">Cobrança após o teste grátis</span>
+          </div>
+          <div class="total-valores">
+            <span class="total-hoje">R$ 0,00</span>
+            <span class="total-depois" id="totalDepois">depois R$ 119,00/mês</span>
+          </div>
+        </div>
+
+        <div class="resumo-garantias">
+          <span><i class="fas fa-rotate-left"></i> Cancele quando quiser</span>
+          <span><i class="fas fa-lock"></i> Pagamento protegido</span>
+          <span><i class="fas fa-headset"></i> Suporte incluído</span>
+        </div>
+
+      </div>
+    </aside>
+
+  </main>
+
+
+  <!-- ================= OVERLAY DE SUCESSO ================= -->
+  <div class="sucesso-overlay" id="sucessoOverlay">
+    <div class="sucesso-card">
+      <div class="sucesso-icone">
+        <svg viewBox="0 0 52 52">
+          <circle class="sucesso-circulo" cx="26" cy="26" r="24" fill="none"/>
+          <path class="sucesso-check" fill="none" d="M14 27l8 8 16-16"/>
+        </svg>
+      </div>
+      <h2>Pagamento aprovado!</h2>
+      <p id="sucessoTexto">
+        Sua assinatura do plano <strong>Pro</strong> foi confirmada.
+        Agora é só criar a conta do seu estabelecimento.
+      </p>
+
+      <div class="sucesso-recibo">
+        <div><span>Transação</span><strong id="reciboId">#SGT-000000</strong></div>
+        <div><span>Método</span><strong id="reciboMetodo">Cartão de crédito</strong></div>
+        <div><span>Valor</span><strong id="reciboValor">R$ 0,00 hoje</strong></div>
+      </div>
+
+      <button class="botao botao-principal botao-pagar" onclick="irParaCadastro()">
+        Continuar para o cadastro <i class="fas fa-arrow-right"></i>
+      </button>
+      <p class="sucesso-nota">Transação fictícia — projeto acadêmico Suggesto.</p>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script src="js/pagamento.js"></script>
+</body>
+</html>
