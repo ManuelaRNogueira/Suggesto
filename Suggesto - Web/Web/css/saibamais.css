@@ -668,7 +668,7 @@ img { max-width: 100%; display: block; }
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(5, 4, 10, 0.6);
+  background: rgba(5, 4, 10, 0.35);
   z-index: 999;
 }
 .nav-drawer-backdrop.aberto {

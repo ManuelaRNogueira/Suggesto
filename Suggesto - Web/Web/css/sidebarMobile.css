@@ -26,7 +26,9 @@
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(5, 4, 10, 0.6);
+  /* Mais leve que um overlay comum porque o fundo do app já é bem escuro —
+     0.6 deixava tudo praticamente preto atrás da gaveta. */
+  background: rgba(5, 4, 10, 0.35);
   z-index: 19;
 }
 
