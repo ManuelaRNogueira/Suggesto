@@ -28,8 +28,18 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
       erro = null;
     });
     try {
-      final lista = await buscarAvaliacoesUsuario(Sessao.idUsuario!);
-      setState(() => sugestoes = lista.cast<Map<String, dynamic>>());
+      final lista = (await buscarAvaliacoesUsuario(Sessao.idUsuario!)).cast<Map<String, dynamic>>();
+      // Mais nova primeiro — a API não garante ordem, então ordena aqui pela
+      // data real de criação (dataAvaliacao), não pela ordem de chegada.
+      lista.sort((a, b) {
+        final dataA = DateTime.tryParse(a['dataAvaliacao'] as String? ?? '');
+        final dataB = DateTime.tryParse(b['dataAvaliacao'] as String? ?? '');
+        if (dataA == null && dataB == null) return 0;
+        if (dataA == null) return 1;
+        if (dataB == null) return -1;
+        return dataB.compareTo(dataA);
+      });
+      setState(() => sugestoes = lista);
     } on ApiException catch (e) {
       setState(() => erro = e.mensagem);
     } finally {
