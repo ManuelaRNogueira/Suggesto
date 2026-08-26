@@ -392,6 +392,7 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
     final fotoUrl = urlFotoEstabelecimento(fotoPath);
     final titulo = (recompensa['nome'] as String?) ?? 'Recompensa';
     final parceiro = (estabelecimento?['nome'] as String?) ?? '—';
+    final descricao = (recompensa['descricao'] as String?)?.trim();
 
     showModalBottomSheet(
       context: context,
@@ -487,6 +488,18 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
                 ),
               ],
             ),
+            if (descricao != null && descricao.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(
+                descricao,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.7),
+                  fontSize: 13,
+                  fontFamily: 'Poppins',
+                  height: 1.4,
+                ),
+              ),
+            ],
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
