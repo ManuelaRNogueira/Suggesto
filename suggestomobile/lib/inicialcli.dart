@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:suggestomobile/buscarEstabelecimento.dart';
 import 'infoLocal.dart';
 import 'api.dart';
+import 'sessao.dart';
+import 'localCardCliente.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,6 +16,7 @@ class _HomePageState extends State<HomePage> {
   bool carregando = true;
   String? erro;
   List<Map<String, dynamic>> locais = [];
+  Set<int> locaisSalvosIds = {};
 
   @override
   void initState() {
@@ -27,12 +30,60 @@ class _HomePageState extends State<HomePage> {
       erro = null;
     });
     try {
-      final lista = await buscarEstabelecimentos();
-      setState(() => locais = lista.cast<Map<String, dynamic>>());
+      final idUsuario = Sessao.idUsuario;
+      final resultados = await Future.wait([
+        buscarEstabelecimentos(),
+        if (idUsuario != null) buscarLocaisSalvos(idUsuario) else Future.value(<dynamic>[]),
+      ]);
+      final lista = resultados[0];
+      final salvos = resultados[1];
+      setState(() {
+        locais = lista.cast<Map<String, dynamic>>();
+        locaisSalvosIds = salvos
+            .map((e) => (e['idEstabelecimento'] as num?)?.toInt())
+            .whereType<int>()
+            .toSet();
+      });
     } on ApiException catch (e) {
       setState(() => erro = e.mensagem);
     } finally {
       if (mounted) setState(() => carregando = false);
+    }
+  }
+
+  // Mesmas chamadas que infoLocal.dart já usa pro botão de favorito lá —
+  // sem duplicar lógica, só reaproveitando a API existente.
+  Future<void> _alternarFavorito(int idEstabelecimento) async {
+    final idUsuario = Sessao.idUsuario;
+    if (idUsuario == null) return;
+
+    final jaSalvo = locaisSalvosIds.contains(idEstabelecimento);
+    setState(() {
+      if (jaSalvo) {
+        locaisSalvosIds.remove(idEstabelecimento);
+      } else {
+        locaisSalvosIds.add(idEstabelecimento);
+      }
+    });
+
+    try {
+      if (jaSalvo) {
+        await removerLocalSalvo(usuarioId: idUsuario, estabelecimentoId: idEstabelecimento);
+      } else {
+        await salvarLocal(usuarioId: idUsuario, estabelecimentoId: idEstabelecimento);
+      }
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        if (jaSalvo) {
+          locaisSalvosIds.add(idEstabelecimento);
+        } else {
+          locaisSalvosIds.remove(idEstabelecimento);
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.mensagem, style: const TextStyle(fontFamily: 'Poppins')), backgroundColor: Colors.redAccent),
+      );
     }
   }
 
@@ -325,22 +376,14 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _placeholderImagem() {
-    return Container(
-      color: const Color(0xFF2A1A4A),
-      child: const Icon(Icons.storefront, color: Colors.white38, size: 40),
-    );
-  }
-
   // ─────────────────────────────────────────────────────────────────
   Widget _buildLocalCard(Map<String, dynamic> local) {
-    final fotoUrl = urlFotoEstabelecimento(local['fotoPath'] as String?);
-    final cidade = (local['cidade'] as String?) ?? '';
-    final bairro = (local['bairro'] as String?) ?? '';
-    final localizacao = [bairro, cidade].where((s) => s.isNotEmpty).join(', ');
-    final nota = (local['mediaAvaliacoes'] as num?)?.toStringAsFixed(1) ?? '—';
+    final idEstabelecimento = (local['idEstabelecimento'] as num?)?.toInt();
+    final salvo = idEstabelecimento != null && locaisSalvosIds.contains(idEstabelecimento);
 
-    return GestureDetector(
+    return cardEstabelecimentoCliente(
+      local: local,
+      salvo: salvo,
       onTap: () {
         Navigator.push(
           context,
@@ -349,148 +392,7 @@ class _HomePageState extends State<HomePage> {
           ),
         );
       },
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1E0E32),
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        clipBehavior: Clip.hardEdge,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Imagem
-            Stack(
-              children: [
-                SizedBox(
-                  height: 160,
-                  width: double.infinity,
-                  child: fotoUrl != null
-                      ? Image.network(
-                          fotoUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _placeholderImagem(),
-                        )
-                      : _placeholderImagem(),
-                ),
-                Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.5),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            // Infos
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Nome e bairro
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          (local['nome'] as String?) ?? 'Sem nome',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          '| $localizacao',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.55),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(width: 8),
-
-                  // Coluna direita
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Container(
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF3A1A6A),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          (local['categoria'] as String?) ?? '—',
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2D5A27),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.star,
-                                    color: Color(0xFF4CAF50), size: 12),
-                                const SizedBox(width: 2),
-                                Text(
-                                  nota,
-                                  style: const TextStyle(
-                                    color: Color(0xFF4CAF50),
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          const Icon(
-                            Icons.bookmark_border,
-                            color: Colors.white54,
-                            size: 18,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+      onToggleFavorito: idEstabelecimento == null ? null : () => _alternarFavorito(idEstabelecimento),
     );
   }
 

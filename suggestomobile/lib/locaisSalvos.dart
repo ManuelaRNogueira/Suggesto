@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'infoLocal.dart';
 import 'api.dart';
 import 'sessao.dart';
+import 'localCardCliente.dart';
 
 class LocaisSalvosPage extends StatefulWidget {
   const LocaisSalvosPage({super.key});
@@ -217,204 +218,28 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
     );
   }
 
-  // ─── Grid de locais ────────────────────────────────────────────────
+  // ─── Lista de locais (mesmo card e estrutura da Home) ──────────────
   Widget _buildLocaisGrid() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 14,
-          crossAxisSpacing: 14,
-          childAspectRatio: 0.72,
-        ),
-        itemCount: locais.length,
-        itemBuilder: (context, index) => _buildLocalCard(locais[index], index),
+    return Column(
+      children: List.generate(
+        locais.length,
+        (index) => _buildLocalCard(locais[index], index),
       ),
     );
   }
 
-  // ─── Card do local ─────────────────────────────────────────────────
+  // ─── Card do local — componente compartilhado com a Home ───────────
   Widget _buildLocalCard(Map<String, dynamic> local, int index) {
-    final fotoUrl = urlFotoEstabelecimento(local['fotoPath'] as String?);
-    final cidade = (local['cidade'] as String?) ?? '';
-    final bairro = (local['bairro'] as String?) ?? '';
-    final localizacao = [bairro, cidade].where((s) => s.isNotEmpty).join(', ');
-    final nota = (local['mediaAvaliacoes'] as num?)?.toStringAsFixed(1) ?? '—';
-
-    return GestureDetector(
+    return cardEstabelecimentoCliente(
+      local: local,
+      salvo: true, // tudo aqui já está salvo, por definição da tela
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => InfoLocalPage(local: local)),
         );
       },
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF1E0E32),
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.35),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        clipBehavior: Clip.hardEdge,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Imagem ──────────────────────────────────────────────
-            Expanded(
-              flex: 5,
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: fotoUrl != null
-                        ? Image.network(
-                            fotoUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => _placeholderImagem(),
-                          )
-                        : _placeholderImagem(),
-                  ),
-                  Positioned.fill(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withOpacity(0.55),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.55),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        ((local['categoria'] as String?) ?? '—').toUpperCase(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: "Poppins",
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 6,
-                    right: 6,
-                    child: GestureDetector(
-                      onTap: () => _removerSalvo(index),
-                      child: Container(
-                        width: 30,
-                        height: 30,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF9B59D0),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(Icons.bookmark, color: Colors.white, size: 16),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // ── Infos ────────────────────────────────────────────────
-            Expanded(
-              flex: 4,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      (local['nome'] as String?) ?? 'Sem nome',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: "PoppinsSemi",
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        const Icon(Icons.location_on, color: Colors.white38, size: 10),
-                        const SizedBox(width: 2),
-                        Expanded(
-                          child: Text(
-                            localizacao,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.45),
-                              fontSize: 10,
-                              fontFamily: "Poppins"
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF2D5A27),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.star, color: Color(0xFF4CAF50), size: 11),
-                              const SizedBox(width: 2),
-                              Text(
-                                nota,
-                                style: const TextStyle(
-                                  color: Color(0xFF4CAF50),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: "Poppins",
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Spacer(),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _placeholderImagem() {
-    return Container(
-      color: const Color(0xFF2A1A4A),
-      child: const Icon(Icons.storefront, color: Colors.white38, size: 36),
+      onToggleFavorito: () => _removerSalvo(index),
     );
   }
 }
