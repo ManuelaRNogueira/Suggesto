@@ -9,7 +9,7 @@ class Suggesto extends StatefulWidget {
 
 class _SuggestoState extends State<Suggesto> {
   //cria o modelo do bloco, depois só precisa colocar os valoers lá em baixo
-   static Widget bloco({
+  static Widget bloco({
     required String titulo,
     required IconData icone,
     required String texto,
@@ -46,7 +46,7 @@ class _SuggestoState extends State<Suggesto> {
             indent: 4,
             endIndent: 4,
           ),
-          
+
           //edita o texto
           Text(
             texto,
@@ -64,7 +64,7 @@ class _SuggestoState extends State<Suggesto> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: tags.map((tag) {
                 return Container(
-                  margin: EdgeInsets.symmetric(horizontal: 10), 
+                  margin: EdgeInsets.symmetric(horizontal: 10),
                   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
                     color: Color.fromARGB(80, 101, 26, 177),
@@ -91,94 +91,130 @@ class _SuggestoState extends State<Suggesto> {
     );
   }
 
+  Widget _buildTopoVoltar(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E0E32),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF2A1A4A)),
+              ),
+              child: const Icon(
+                Icons.arrow_back,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-    backgroundColor: Color(0xFF12061E),
-      body: SingleChildScrollView(
-        child: Center(
-          child: Column(
-            children: [
-              SizedBox(height: 50),
- 
-              Text(
-                "Sobre o Projeto",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 30,
-                  fontFamily: "PoppinsSemi",
+      backgroundColor: Color(0xFF12061E),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildTopoVoltar(context),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Center(
+                  child: Column(
+                    children: [
+                      SizedBox(height: 50),
+
+                      Text(
+                        "Sobre o Projeto",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 30,
+                          fontFamily: "PoppinsSemi",
+                        ),
+                      ),
+                      Text(
+                        "Como tudo funciona",
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 147, 100, 236),
+                        ),
+                      ),
+
+                      SizedBox(height: 40),
+
+                      bloco(
+                        titulo: "Missão",
+                        icone: Icons.flag_outlined,
+                        texto:
+                            "Aproximar clientes e estabelecimentos por meio de um canal direto, organizado e eficiente de sugestões e feedbacks, transformando opiniões em decisões e melhorias reais.",
+                      ),
+                      SizedBox(height: 30),
+
+                      bloco(
+                        titulo: "Visão",
+                        icone: Icons.visibility_outlined,
+                        texto:
+                            "Ser o elo que transforma a opinião do cliente em melhoria real para as empresas. Queremos que escutar quem compra vire rotina em negócios que buscam crescer com propósito.",
+                      ),
+                      SizedBox(height: 30),
+
+                      bloco(
+                        titulo: "Valores",
+                        icone: Icons.favorite_border,
+                        texto:
+                            "Acreditamos em transparência, conexão real e respeito mútuo entre quem dá e quem recebe o feedback. Para nós, nenhuma ideia ou sugestão deve ser descartada.",
+                      ),
+                      SizedBox(height: 30),
+
+                      bloco(
+                        icone: Icons.desktop_windows_outlined,
+                        titulo: "Desktop (Windows)",
+                        texto:
+                            "Aplicação nativa em Electron com React para interfaces modernas e fluidas no ambiente Windows.",
+                        tags: ["Electron", "React"],
+                      ),
+                      SizedBox(height: 30),
+
+                      bloco(
+                        icone: Icons.language,
+                        titulo: "Web",
+                        texto:
+                            "Interface responsiva construída com HTML, CSS e JavaScript, compatível com todos os navegadores modernos.",
+                        tags: ["HTML5", "CSS3", "JavaScript"],
+                      ),
+                      SizedBox(height: 30),
+
+                      bloco(
+                        icone: Icons.phone_android_outlined,
+                        titulo: "Mobile",
+                        texto:
+                            "Aplicativo em Flutter com suporte a Android e iOS a partir de uma única base de código otimizada.",
+                        tags: ["Flutter", "Dart", "Android · iOS"],
+                      ),
+                      SizedBox(height: 30),
+
+                      bloco(
+                        icone: Icons.storage_outlined,
+                        titulo: "Banco de Dados",
+                        texto:
+                            "Integração via SQL para armazenamento estruturado de usuários, estabelecimentos, sugestões e métricas.",
+                        tags: ["SQL", "Autenticação", "Validação"],
+                      ),
+                      SizedBox(height: 50),
+                    ],
+                  ),
                 ),
               ),
-              Text(
-                "Como tudo funciona",
-                style: TextStyle(
-                  color: Color.fromARGB(255, 147, 100, 236),
-                ),
-              ),
-
-              SizedBox(height: 40),
-
-              bloco(
-                titulo: "Missão",
-                icone: Icons.flag_outlined,
-                texto:
-                    "Aproximar clientes e estabelecimentos por meio de um canal direto, organizado e eficiente de sugestões e feedbacks, transformando opiniões em decisões e melhorias reais.",
-              ),
-              SizedBox(height: 30),
- 
-              bloco(
-                titulo: "Visão",
-                icone: Icons.visibility_outlined,
-                texto:
-                    "Ser o elo que transforma a opinião do cliente em melhoria real para as empresas. Queremos que escutar quem compra vire rotina em negócios que buscam crescer com propósito.",
-              ),
-              SizedBox(height: 30),
-
-              bloco(
-                titulo: "Valores",
-                icone: Icons.favorite_border,
-                texto:
-                    "Acreditamos em transparência, conexão real e respeito mútuo entre quem dá e quem recebe o feedback. Para nós, nenhuma ideia ou sugestão deve ser descartada.",
-              ),
-              SizedBox(height: 30),
-
-              bloco(
-                icone: Icons.desktop_windows_outlined,
-                titulo: "Desktop (Windows)",
-                texto:
-                    "Aplicação nativa em Electron com React para interfaces modernas e fluidas no ambiente Windows.",
-                tags: ["Electron", "React"],
-              ),
-              SizedBox(height: 30),
- 
-              bloco(
-                icone: Icons.language,
-                titulo: "Web",
-                texto:
-                    "Interface responsiva construída com HTML, CSS e JavaScript, compatível com todos os navegadores modernos.",
-                tags: ["HTML5", "CSS3", "JavaScript"],
-              ),
-              SizedBox(height: 30),
- 
-              bloco(
-                icone: Icons.phone_android_outlined,
-                titulo: "Mobile",
-                texto:
-                    "Aplicativo em Flutter com suporte a Android e iOS a partir de uma única base de código otimizada.",
-                tags: ["Flutter", "Dart", "Android · iOS"],
-              ),
-              SizedBox(height: 30),
- 
-              bloco(
-                icone: Icons.storage_outlined,
-                titulo: "Banco de Dados",
-                texto:
-                    "Integração via SQL para armazenamento estruturado de usuários, estabelecimentos, sugestões e métricas.",
-                tags: ["SQL", "Autenticação", "Validação"],
-              ),
-              SizedBox(height: 50),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

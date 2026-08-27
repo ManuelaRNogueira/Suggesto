@@ -17,7 +17,6 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
   final List<Map<String, dynamic>> _menuItems = [
     {'icon': Icons.bookmark_outlined, 'label': 'Locais Salvos', 'route': '/locais_salvos'},
     {'icon': Icons.chat_bubble_outline, 'label': 'Minhas Sugestões', 'route': '/minhasSugestoes'},
-    {'icon': Icons.bar_chart, 'label': 'Contribuição', 'route': null},
     {'icon': Icons.person_outline, 'label': 'Sobre Nós', 'route': '/sobrenos'},
     {'icon': Icons.person_outline, 'label': 'O Suggesto', 'route': '/suggesto'},
   ];
@@ -110,8 +109,6 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            _buildIconButton(Icons.notifications_outlined, onTap: () {}),
-            SizedBox(width: 10),
             _buildIconButton(Icons.settings_outlined, onTap: () {}),
           ],
         ),
@@ -279,14 +276,39 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
     );
   }
 
+  Future<void> _confirmarSaida() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Color(0xFF12061E),
+          title: Text("Sair da conta", style: TextStyle(color: Colors.white)),
+          content: Text("Tem certeza que deseja sair da sua conta?", style: TextStyle(color: Colors.white70)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text("Cancelar"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text("Sair", style: TextStyle(color: Colors.redAccent)),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmar != true || !mounted) return;
+
+    Sessao.sair();
+    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+  }
+
   Widget _buildSairButton() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20),
       child: GestureDetector(
-        onTap: () {
-          Sessao.sair();
-          Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-        },
+        onTap: _confirmarSaida,
         child: Container(
           width: double.infinity,
           height: 50,
