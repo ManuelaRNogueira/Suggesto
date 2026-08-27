@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:suggestomobile/buscarEstabelecimento.dart';
 import 'package:suggestomobile/cadastro.dart';
 import 'package:suggestomobile/infoLocal.dart';
 import 'package:suggestomobile/inicialcli.dart';

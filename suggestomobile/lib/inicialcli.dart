@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:suggestomobile/buscarEstabelecimento.dart';
 import 'infoLocal.dart';
 import 'api.dart';
 import 'sessao.dart';
@@ -18,10 +17,41 @@ class _HomePageState extends State<HomePage> {
   List<Map<String, dynamic>> locais = [];
   Set<int> locaisSalvosIds = {};
 
+  // Busca inline no lugar do botão da lupa — sem navegar pra outra tela.
+  bool _pesquisando = false;
+  final TextEditingController _pesquisaController = TextEditingController();
+  String _termoPesquisa = '';
+
   @override
   void initState() {
     super.initState();
     _carregar();
+  }
+
+  @override
+  void dispose() {
+    _pesquisaController.dispose();
+    super.dispose();
+  }
+
+  // Mesma lógica que existia na tela "Achar um estabelecimento": separa o
+  // nome por palavras e compara pelo início de cada uma.
+  List<Map<String, dynamic>> get _locaisExibidos {
+    if (_termoPesquisa.isEmpty) return locais;
+    final pesquisa = _termoPesquisa.toLowerCase();
+    return locais.where((local) {
+      final nome = (local['nome'] as String?)?.toLowerCase() ?? '';
+      final palavras = nome.split(' ');
+      return palavras.any((palavra) => palavra.startsWith(pesquisa));
+    }).toList();
+  }
+
+  void _fecharPesquisa() {
+    setState(() {
+      _pesquisando = false;
+      _termoPesquisa = '';
+      _pesquisaController.clear();
+    });
   }
 
   Future<void> _carregar() async {
@@ -152,15 +182,19 @@ class _HomePageState extends State<HomePage> {
         ),
       );
     }
-    if (locais.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 30),
+    final exibidos = _locaisExibidos;
+    if (exibidos.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 30),
         child: Center(
-          child: Text('Nenhum estabelecimento encontrado.', style: TextStyle(color: Colors.white54, fontFamily: 'Poppins')),
+          child: Text(
+            _termoPesquisa.isEmpty ? 'Nenhum estabelecimento encontrado.' : 'Nenhum resultado para "$_termoPesquisa".',
+            style: const TextStyle(color: Colors.white54, fontFamily: 'Poppins'),
+          ),
         ),
       );
     }
-    return Column(children: locais.map((local) => _buildLocalCard(local)).toList());
+    return Column(children: exibidos.map((local) => _buildLocalCard(local)).toList());
   }
 
   // ─────────────────────────────────────────────────────────────────
@@ -221,64 +255,25 @@ class _HomePageState extends State<HomePage> {
                       bottomRight: Radius.circular(36),
                     ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
                     children: [
-                      Text(
-                        'Fazer sugestão',
-                        style: TextStyle(
-                          color: const Color(0xFF1A1A1A).withOpacity(0.85),
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800, 
+                      Expanded(
+                        child: Container(
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.65),
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                          child: const Icon(
+                            Icons.camera_alt_rounded,
+                            size: 26,
+                            color: Color(0xFF2D2D2D),
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              height: 56,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.65),
-                                borderRadius: BorderRadius.circular(28),
-                              ),
-                              child: const Icon(
-                                Icons.camera_alt_rounded,
-                                size: 26,
-                                color: Color(0xFF2D2D2D),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                        Expanded(
-                            //Envolvemos o Container com um GestureDetector
-                            child: GestureDetector( 
-                              //Adicionamos a ação de toque (onTap)
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    // Substitua "BuscarEstabelecimentoPage" pelo nome exato da sua tela
-                                    builder: (context) => BuscarEstabelecimento(locais: locais), 
-                                  ),
-                                );
-                              },
-                              //Seu Container original continua intacto aqui dentro
-                              child: Container(
-                                height: 56,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.65),
-                                  borderRadius: BorderRadius.circular(28),
-                                ),
-                                child: const Icon(
-                                  Icons.search_rounded,
-                                  size: 26,
-                                  color: Color(0xFF2D2D2D),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _pesquisando ? _buildCampoPesquisa() : _buildBotaoPesquisa(),
                       ),
                     ],
                   ),
@@ -300,6 +295,62 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Botão de lupa — ao tocar, vira campo de pesquisa no mesmo lugar (sem
+  // navegar pra outra tela).
+  Widget _buildBotaoPesquisa() {
+    return GestureDetector(
+      onTap: () => setState(() => _pesquisando = true),
+      child: Container(
+        height: 56,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.65),
+          borderRadius: BorderRadius.circular(28),
+        ),
+        child: const Icon(
+          Icons.search_rounded,
+          size: 26,
+          color: Color(0xFF2D2D2D),
+        ),
+      ),
+    );
+  }
+
+  // Campo de pesquisa — mesmo tamanho/formato do botão que ele substitui.
+  Widget _buildCampoPesquisa() {
+    return Container(
+      height: 56,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.65),
+        borderRadius: BorderRadius.circular(28),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.search_rounded, size: 20, color: Color(0xFF2D2D2D)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TextField(
+              controller: _pesquisaController,
+              autofocus: true,
+              onChanged: (texto) => setState(() => _termoPesquisa = texto),
+              style: const TextStyle(color: Color(0xFF1A1A1A), fontFamily: 'Poppins', fontSize: 13),
+              decoration: InputDecoration(
+                isCollapsed: true,
+                hintText: 'Pesquisar estabelecimento',
+                hintStyle: TextStyle(color: const Color(0xFF1A1A1A).withOpacity(0.5), fontFamily: 'Poppins', fontSize: 13),
+                border: InputBorder.none,
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: _fecharPesquisa,
+            child: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF2D2D2D)),
+          ),
+        ],
       ),
     );
   }
