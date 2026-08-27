@@ -49,6 +49,14 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Só usado no profile "local" (application-local.properties), pra rodar a
+             API sem precisar de um MySQL de verdade. Não afeta o profile "prod". -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <dependency>
             <groupId>com.cloudinary</groupId>
             <artifactId>cloudinary-http44</artifactId>
