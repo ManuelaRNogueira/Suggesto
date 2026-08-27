@@ -1,3 +1,6 @@
+// Lista única de tipos de estabelecimento, usada no cadastro pela equipe
+// (ModalEstabelecimento.jsx) e no autocadastro pelo site (cadastroAdm.html) —
+// mantenha as três em sincronia.
 const CATEGORIAS_OFICIAIS = [
   { slug: "restaurante", label: "Restaurante" },
   { slug: "bar", label: "Bar" },
@@ -6,6 +9,25 @@ const CATEGORIAS_OFICIAIS = [
   { slug: "cafeteria", label: "Cafeteria" },
   { slug: "padaria", label: "Padaria" },
   { slug: "sorveteria", label: "Sorveteria" },
+  { slug: "hamburgueria", label: "Hamburgueria" },
+  { slug: "doceria", label: "Doceria / Confeitaria" },
+  { slug: "acaiteria", label: "Açaiteria" },
+  { slug: "food-truck", label: "Food Truck" },
+  { slug: "hotel-pousada", label: "Hotel / Pousada" },
+  { slug: "academia", label: "Academia" },
+  { slug: "salao-beleza", label: "Salão de Beleza / Barbearia" },
+  { slug: "clinica-saude", label: "Clínica / Consultório de Saúde" },
+  { slug: "farmacia", label: "Farmácia" },
+  { slug: "escola-educacao", label: "Escola / Educação" },
+  { slug: "petshop", label: "Petshop" },
+  { slug: "loja-comercio", label: "Loja / Comércio" },
+  { slug: "supermercado", label: "Supermercado / Mercado" },
+  { slug: "oficina", label: "Oficina Automotiva" },
+  { slug: "posto-combustivel", label: "Posto de Combustível" },
+  { slug: "escritorio-empresa", label: "Escritório / Empresa (Tecnologia e Serviços)" },
+  { slug: "coworking", label: "Coworking" },
+  { slug: "espaco-eventos", label: "Espaço para Eventos" },
+  { slug: "banco", label: "Banco / Serviços Financeiros" },
   { slug: "outro", label: "Outro" },
 ];
 
@@ -58,7 +80,7 @@ function iconeStatus(status) {
 function slugCategoriaEstabelecimento(categoria) {
   const texto = normalizarTexto(categoria);
   const encontrada = CATEGORIAS_OFICIAIS.find(
-    (cat) => texto === cat.slug || texto.startsWith(cat.slug)
+    (cat) => texto === normalizarTexto(cat.label)
   );
   return encontrada ? encontrada.slug : "outro";
 }

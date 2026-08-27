@@ -367,16 +367,8 @@ textarea:focus { border-color: var(--purple-glow); background: rgba(167,139,250,
 
       <div class="campo">
         <label>Área do feedback <span class="obrig">*</span></label>
-        <div class="chips-grid" id="chips-categorias">
-          <div class="chip-cat" data-cat="atendimento" data-id="1" onclick="selecionarCat(this)"><div class="chip-txt">Atendimento</div></div>
-          <div class="chip-cat" data-cat="qualidade" data-id="2" onclick="selecionarCat(this)"><div class="chip-txt">Qualidade do produto</div></div>
-          <div class="chip-cat" data-cat="preco" data-id="3" onclick="selecionarCat(this)"><div class="chip-txt">Preço</div></div>
-          <div class="chip-cat" data-cat="estrutura" data-id="4" onclick="selecionarCat(this)"><div class="chip-txt">Estrutura</div></div>
-          <div class="chip-cat" data-cat="ambiente" data-id="5" onclick="selecionarCat(this)"><div class="chip-txt">Ambiente</div></div>
-          <div class="chip-cat" data-cat="higiene" data-id="6" onclick="selecionarCat(this)"><div class="chip-txt">Higiene</div></div>
-          <div class="chip-cat" data-cat="cardapio" data-id="7" onclick="selecionarCat(this)"><div class="chip-txt">Cardápio</div></div>
-          <div class="chip-cat" data-cat="outro" data-id="8" onclick="selecionarCat(this)"><div class="chip-txt">Outro</div></div>
-        </div>
+        <!-- Preenchido em carregarCategorias(), varia de acordo com o tipo do estabelecimento -->
+        <div class="chips-grid" id="chips-categorias"></div>
       </div>
     </div>
 
@@ -535,6 +527,45 @@ function iniciarFormulario(id, nome) {
     document.querySelector('.hero').style.display = 'block';
     document.getElementById('form-card').style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    carregarCategoriasDoEstabelecimento(id);
+}
+
+// Busca o tipo do estabelecimento (ex: "Restaurante", "Escritório / Empresa...")
+// e pede ao backend só as categorias de sugestão que fazem sentido pra esse tipo
+// (CategoriaController filtra: Cardápio só pra quem serve comida, Estrutura/
+// Ambiente/Higiene só pra quem tem espaço físico).
+async function carregarCategoriasDoEstabelecimento(idEstabelecimento) {
+    const grade = document.getElementById('chips-categorias');
+    grade.innerHTML = '<p style="color: var(--muted); font-size: 0.85rem;">Carregando...</p>';
+
+    let tipoEstabelecimento = '';
+    try {
+        const est = await fetch(`${window.API_BASE}/estabelecimentos/${idEstabelecimento}`).then(r => r.json());
+        tipoEstabelecimento = est?.categoria || '';
+    } catch (err) {
+        console.error('Não foi possível identificar o tipo do estabelecimento:', err);
+    }
+
+    try {
+        const url = tipoEstabelecimento
+            ? `${window.API_BASE}/categorias?tipoEstabelecimento=${encodeURIComponent(tipoEstabelecimento)}`
+            : `${window.API_BASE}/categorias`;
+        const categorias = await fetch(url).then(r => r.json());
+        renderizarChipsCategorias(categorias);
+    } catch (err) {
+        console.error('Erro ao carregar categorias de sugestão:', err);
+        grade.innerHTML = '<p style="color: var(--muted); font-size: 0.85rem;">Não foi possível carregar as categorias.</p>';
+    }
+}
+
+function renderizarChipsCategorias(categorias) {
+    const grade = document.getElementById('chips-categorias');
+    grade.innerHTML = categorias.map((cat) => `
+        <div class="chip-cat" data-id="${cat.idCategoria}" data-nome="${cat.nomeCategoria.replace(/"/g, '&quot;')}" onclick="selecionarCat(this)">
+            <div class="chip-txt">${cat.nomeCategoria}</div>
+        </div>
+    `).join('');
 }
 
 async function carregarEstabelecimentos() {
@@ -608,7 +639,7 @@ function selecionarTipo(el) {
 function selecionarCat(el) {
   document.querySelectorAll('.chip-cat').forEach(c => c.classList.remove('selecionado'));
   el.classList.add('selecionado');
-  estado.categoria = el.dataset.cat;
+  estado.categoria = el.dataset.nome;
   estado.idCategoria = el.dataset.id;
 }
 
@@ -628,11 +659,10 @@ function atualizarContador(el) {
 }
 
 const LABEL_TIPO = { sugestao: 'Sugestão', critica: 'Crítica', elogio: 'Elogio' };
-const LABEL_CAT  = { atendimento: 'Atendimento', qualidade: 'Qualidade', preco: 'Preço', estrutura: 'Estrutura', ambiente: 'Ambiente', higiene: 'Higiene', cardapio: 'Cardápio', outro: 'Outro' };
 
 function atualizarResumo() {
   document.getElementById('res-tipo').textContent = LABEL_TIPO[estado.tipo] || '—';
-  document.getElementById('res-cat').textContent  = LABEL_CAT[estado.categoria] || '—';
+  document.getElementById('res-cat').textContent  = estado.categoria || '—';
   document.getElementById('res-nota').textContent = estado.nota ? `${estado.nota}/5` : '—';
 }
 
