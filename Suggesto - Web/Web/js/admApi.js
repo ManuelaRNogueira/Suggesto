@@ -45,6 +45,20 @@ async function admPostJson(url, corpo) {
   return resposta.json();
 }
 
+async function admPatchJson(url, corpo) {
+  const resposta = await fetch(url, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(corpo ?? {}),
+  });
+  if (!resposta.ok) {
+    const erro = await resposta.json().catch(() => null);
+    throw new Error(erro?.message || `Erro ${resposta.status}`);
+  }
+  if (resposta.status === 204) return null;
+  return resposta.json();
+}
+
 function admQueryGerente() {
   const id = admIdGerente();
   return id ? `?idGerente=${id}` : "";
@@ -75,6 +89,26 @@ async function admBuscarEstabelecimentos() {
 
 async function admBuscarUsuario(id) {
   return admFetchJson(`${ADM_API_BASE}/usuarios/${id}`);
+}
+
+// ── Sugestões (mesmos endpoints do Sugestoes.jsx no desktop) ───────────────
+
+async function admBuscarSugestoes() {
+  return admFetchJson(`${ADM_API_BASE}/admin/sugestoes${admQueryGerente()}`);
+}
+
+async function admAtualizarStatusSugestao(id, status) {
+  return admPatchJson(`${ADM_API_BASE}/avaliacoes/${id}/status`, { status });
+}
+
+async function admResponderSugestao(id, { idAdmin, resposta }) {
+  return admPatchJson(`${ADM_API_BASE}/avaliacoes/${id}/resposta`, { idAdmin, resposta });
+}
+
+// Exportação de dados é um recurso de plano (ver planos.html).
+async function admBuscarMeuPlano() {
+  const id = localStorage.getItem("idUsuario");
+  return admFetchJson(`${ADM_API_BASE}/planos/meu?idUsuario=${id}`);
 }
 
 // ── Gestão de equipe (mesmos endpoints do Solicitacoes.jsx no desktop) ─────

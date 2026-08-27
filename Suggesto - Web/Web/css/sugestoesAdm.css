@@ -1,0 +1,407 @@
+/* Sugestões do admin — porte de Suggesto_DesktopReact/renderer/src/pages/admin/Sugestoes.css,
+   trocando os tokens do desktop pelos equivalentes de admBase.css. */
+
+.st-pendente { --st: var(--cor-amarelo); }
+.st-implementado { --st: var(--cor-verde); }
+.st-recusado { --st: var(--cor-vermelho); }
+
+/* ── Barra de busca + exportar ─────────────────────────────────────────── */
+
+.sug-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.sug-busca {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--cor-fundo-2);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--radius-sm);
+  padding: 0 11px;
+  color: var(--cor-texto-muito-fraco);
+  transition: border-color 0.15s, color 0.15s;
+  width: 320px;
+  max-width: 100%;
+}
+
+.sug-busca:focus-within {
+  border-color: var(--cor-borda-roxa);
+  color: var(--cor-roxo-claro);
+}
+
+.sug-busca-campo {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  font-family: var(--fonte);
+  font-size: 0.8125rem;
+  color: var(--cor-texto);
+  padding: 8px 0;
+}
+
+.sug-busca-campo::placeholder { color: var(--cor-texto-muito-fraco); }
+
+/* ── Filtros ───────────────────────────────────────────────────────────── */
+
+.sug-filtros {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.sug-chips {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.sug-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--fonte);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--cor-texto-fraco);
+  background: transparent;
+  border: 1px solid var(--cor-borda);
+  border-radius: 999px;
+  padding: 6px 13px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.sug-chip:hover {
+  color: var(--cor-texto);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.sug-chip.ativo {
+  color: var(--cor-texto);
+  background: var(--cor-fundo-3);
+  border-color: color-mix(in srgb, var(--st, var(--cor-roxo)) 45%, transparent);
+}
+
+.sug-chip-ponto {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--st);
+}
+
+.sug-chip-num {
+  font-size: 0.6875rem;
+  color: var(--cor-texto-muito-fraco);
+}
+
+.sug-chip.ativo .sug-chip-num { color: var(--cor-texto-fraco); }
+
+.sug-ordem {
+  font-family: var(--fonte);
+  font-size: 0.8125rem;
+  color: var(--cor-texto);
+  background: var(--cor-fundo-2);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+}
+
+/* ── Grade: lista + painel ─────────────────────────────────────────────── */
+
+.sug-grade {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 230px;
+  gap: 18px;
+  align-items: start;
+}
+
+.sug-lista-col { min-width: 0; }
+
+.sug-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Cartão de sugestão ────────────────────────────────────────────────── */
+
+.sug-card {
+  background: var(--cor-fundo-2);
+  border: 1px solid var(--cor-borda);
+  border-left: 2px solid var(--st);
+  border-radius: 6px var(--radius) var(--radius) 6px;
+  padding: 15px 18px;
+  transition: border-color 0.15s;
+}
+
+.sug-card:hover { border-color: rgba(255, 255, 255, 0.13); }
+
+.sug-card-topo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 9px;
+}
+
+.sug-card-id {
+  font-size: 0.6875rem;
+  color: var(--cor-texto-muito-fraco);
+}
+
+.sug-card-nota {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.6875rem;
+  color: var(--cor-amarelo);
+}
+
+.sug-card-tempo {
+  margin-left: auto;
+  font-size: 0.6875rem;
+  color: var(--cor-texto-muito-fraco);
+}
+
+.sug-card-txt {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0 0 10px;
+}
+
+.sug-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  font-size: 0.6875rem;
+  color: var(--cor-texto-muito-fraco);
+}
+
+.sug-card-autor {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--cor-texto-fraco);
+}
+
+.sug-card-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: var(--cor-fundo-3);
+  border: 1px solid var(--cor-borda);
+  color: var(--cor-texto-fraco);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sug-card-sep { opacity: 0.4; }
+
+.sug-card-acoes {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin-top: 13px;
+  padding-top: 13px;
+  border-top: 1px solid var(--cor-borda);
+}
+
+/* ── Resposta do admin ─────────────────────────────────────────────────── */
+
+.sug-resposta {
+  margin-top: 13px;
+  padding-top: 13px;
+  border-top: 1px solid var(--cor-borda);
+}
+
+.sug-resposta-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.sug-resposta-rotulo {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--cor-roxo-claro);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.sug-resposta-editar {
+  font-family: var(--fonte);
+  font-size: 0.6875rem;
+  color: var(--cor-texto-muito-fraco);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s;
+}
+
+.sug-resposta-editar:hover { color: var(--cor-texto); }
+
+.sug-resposta-texto {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  margin: 0 0 6px;
+  color: var(--cor-texto-fraco);
+}
+
+.sug-resposta-autor {
+  font-size: 0.6875rem;
+  color: var(--cor-texto-muito-fraco);
+}
+
+.sug-resposta-form {
+  margin-top: 13px;
+  padding-top: 13px;
+  border-top: 1px solid var(--cor-borda);
+}
+
+.sug-resposta-campo {
+  width: 100%;
+  resize: vertical;
+  font-family: var(--fonte);
+  font-size: 0.8125rem;
+  color: var(--cor-texto);
+  background: var(--cor-fundo-2);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--radius-sm);
+  padding: 9px 11px;
+}
+
+.sug-resposta-campo:focus { outline: none; border-color: var(--cor-borda-roxa); }
+
+.sug-resposta-acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 9px;
+}
+
+.adm-btn-principal {
+  background: var(--cor-roxo);
+  border-color: var(--cor-roxo);
+  color: #fff;
+}
+
+/* ── Paginação ─────────────────────────────────────────────────────────── */
+
+.sug-paginacao {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.sug-paginacao-info {
+  font-size: 0.75rem;
+  color: var(--cor-texto-muito-fraco);
+}
+
+/* ── Painel de categorias ──────────────────────────────────────────────── */
+
+.sug-painel {
+  position: sticky;
+  top: 0;
+}
+
+.sug-cats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sug-cat {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-family: var(--fonte);
+  font-size: 0.75rem;
+  color: var(--cor-texto-fraco);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.15s, background 0.15s;
+}
+
+.sug-cat:hover {
+  color: var(--cor-texto);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sug-cat.ativo {
+  color: var(--cor-texto);
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.sug-cat span { color: var(--cor-texto-muito-fraco); flex-shrink: 0; }
+
+/* ── Selo de nível do autor (prioridade de resposta) ────────────────────── */
+
+.sug-nivel {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.sug-nivel.nivel-prata {
+  color: #cbd5e1;
+  background: rgba(203, 213, 225, 0.12);
+  border: 1px solid rgba(203, 213, 225, 0.3);
+}
+
+.sug-nivel.nivel-ouro {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.sug-nivel.nivel-platina {
+  color: #818cf8;
+  background: rgba(129, 140, 248, 0.14);
+  border: 1px solid rgba(129, 140, 248, 0.35);
+}
+
+@media (max-width: 1100px) {
+  .sug-grade { grid-template-columns: 1fr; }
+  .sug-painel { position: static; }
+  .sug-busca { width: 220px; }
+}
+
+@media (max-width: 640px) {
+  .sug-topo { flex-direction: column; align-items: stretch; }
+  .sug-busca { width: 100%; }
+}
