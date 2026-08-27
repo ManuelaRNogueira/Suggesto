@@ -239,7 +239,7 @@ function carregarDadosUsuario() {
   const elementoAvatar = document.getElementById("sidebarAvatar");
 
   if (elementoSaudacao)
-    elementoSaudacao.innerText = `Olá, ${nome.split(" ")[0]} 👋`;
+    elementoSaudacao.innerText = `Olá, ${nome.split(" ")[0]}`;
 
   if (elementoSidebar) elementoSidebar.innerText = nome;
 
