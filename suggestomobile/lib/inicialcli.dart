@@ -3,6 +3,8 @@ import 'infoLocal.dart';
 import 'api.dart';
 import 'sessao.dart';
 import 'localCardCliente.dart';
+import 'qrScanner.dart';
+import 'sugerir.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -54,6 +56,75 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Future<void> _abrirScannerQr() async {
+    final conteudo = await Navigator.of(
+      context,
+    ).push<String>(MaterialPageRoute(builder: (_) => const QrScannerPage()));
+    if (!mounted || conteudo == null) return;
+
+    final idEstabelecimento = _extrairIdEstabelecimento(conteudo);
+    if (idEstabelecimento == null) {
+      _mostrarErroQr('Este QR Code não pertence a um estabelecimento.');
+      return;
+    }
+
+    Map<String, dynamic>? local;
+    for (final item in locais) {
+      if ((item['idEstabelecimento'] as num?)?.toInt() == idEstabelecimento) {
+        local = item;
+        break;
+      }
+    }
+
+    try {
+      local ??= await buscarEstabelecimento(idEstabelecimento);
+    } on ApiException catch (e) {
+      if (mounted) _mostrarErroQr(e.mensagem);
+      return;
+    }
+
+    if (!mounted) return;
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => SugerirPage(local: local)));
+  }
+
+  int? _extrairIdEstabelecimento(String conteudo) {
+    final valor = conteudo.trim();
+    final idDireto = int.tryParse(valor);
+    if (idDireto != null) return idDireto;
+
+    final uri = Uri.tryParse(valor);
+    if (uri != null) {
+      final parametro =
+          uri.queryParameters['id'] ??
+          uri.queryParameters['idEstabelecimento'] ??
+          uri.queryParameters['estabelecimentoId'];
+      final idParametro = int.tryParse(parametro ?? '');
+      if (idParametro != null) return idParametro;
+
+      if (uri.pathSegments.isNotEmpty) {
+        final idNoCaminho = int.tryParse(uri.pathSegments.last);
+        if (idNoCaminho != null) return idNoCaminho;
+      }
+    }
+
+    final correspondencia = RegExp(
+      r'(?:idEstabelecimento|estabelecimentoId|id)[=:/](\d+)',
+      caseSensitive: false,
+    ).firstMatch(valor);
+    return int.tryParse(correspondencia?.group(1) ?? '');
+  }
+
+  void _mostrarErroQr(String mensagem) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(mensagem, style: const TextStyle(fontFamily: 'Poppins')),
+        backgroundColor: Colors.redAccent,
+      ),
+    );
+  }
+
   Future<void> _carregar() async {
     setState(() {
       carregando = true;
@@ -63,7 +134,10 @@ class _HomePageState extends State<HomePage> {
       final idUsuario = Sessao.idUsuario;
       final resultados = await Future.wait([
         buscarEstabelecimentos(),
-        if (idUsuario != null) buscarLocaisSalvos(idUsuario) else Future.value(<dynamic>[]),
+        if (idUsuario != null)
+          buscarLocaisSalvos(idUsuario)
+        else
+          Future.value(<dynamic>[]),
       ]);
       final lista = resultados[0];
       final salvos = resultados[1];
@@ -98,9 +172,15 @@ class _HomePageState extends State<HomePage> {
 
     try {
       if (jaSalvo) {
-        await removerLocalSalvo(usuarioId: idUsuario, estabelecimentoId: idEstabelecimento);
+        await removerLocalSalvo(
+          usuarioId: idUsuario,
+          estabelecimentoId: idEstabelecimento,
+        );
       } else {
-        await salvarLocal(usuarioId: idUsuario, estabelecimentoId: idEstabelecimento);
+        await salvarLocal(
+          usuarioId: idUsuario,
+          estabelecimentoId: idEstabelecimento,
+        );
       }
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -112,7 +192,13 @@ class _HomePageState extends State<HomePage> {
         }
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.mensagem, style: const TextStyle(fontFamily: 'Poppins')), backgroundColor: Colors.redAccent),
+        SnackBar(
+          content: Text(
+            e.mensagem,
+            style: const TextStyle(fontFamily: 'Poppins'),
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
       );
     }
   }
@@ -126,7 +212,9 @@ class _HomePageState extends State<HomePage> {
         color: const Color(0xFF9B59D0),
         onRefresh: _carregar,
         child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
           padding: EdgeInsets.zero,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,7 +226,6 @@ class _HomePageState extends State<HomePage> {
 
               // Botão "Solicitar algo"
               _buildSolicitarAlgo(),*/
-
               const SizedBox(height: 24),
 
               // Título + filtro
@@ -164,7 +251,9 @@ class _HomePageState extends State<HomePage> {
     if (carregando) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 40),
-        child: Center(child: CircularProgressIndicator(color: Color(0xFF9B59D0))),
+        child: Center(
+          child: CircularProgressIndicator(color: Color(0xFF9B59D0)),
+        ),
       );
     }
     if (erro != null) {
@@ -172,11 +261,25 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
         child: Column(
           children: [
-            Text(erro!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent, fontSize: 13, fontFamily: 'Poppins')),
+            Text(
+              erro!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.redAccent,
+                fontSize: 13,
+                fontFamily: 'Poppins',
+              ),
+            ),
             const SizedBox(height: 12),
             TextButton(
               onPressed: _carregar,
-              child: const Text('Tentar de novo', style: TextStyle(color: Color(0xFF9B59D0), fontFamily: 'Poppins')),
+              child: const Text(
+                'Tentar de novo',
+                style: TextStyle(
+                  color: Color(0xFF9B59D0),
+                  fontFamily: 'Poppins',
+                ),
+              ),
             ),
           ],
         ),
@@ -188,110 +291,144 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.symmetric(vertical: 30),
         child: Center(
           child: Text(
-            _termoPesquisa.isEmpty ? 'Nenhum estabelecimento encontrado.' : 'Nenhum resultado para "$_termoPesquisa".',
-            style: const TextStyle(color: Colors.white54, fontFamily: 'Poppins'),
+            _termoPesquisa.isEmpty
+                ? 'Nenhum estabelecimento encontrado.'
+                : 'Nenhum resultado para "$_termoPesquisa".',
+            style: const TextStyle(
+              color: Colors.white54,
+              fontFamily: 'Poppins',
+            ),
           ),
         ),
       );
     }
-    return Column(children: exibidos.map((local) => _buildLocalCard(local)).toList());
+    return Column(
+      children: exibidos.map((local) => _buildLocalCard(local)).toList(),
+    );
   }
 
   // ─────────────────────────────────────────────────────────────────
   Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.centerLeft, 
-          end: Alignment.centerRight,
-          colors: [
-            Color(0xFF88C3BE), 
-            Color(0xFF839DCF), 
-            Color(0xFFA6AADF), 
-            Color(0xFFA9ADDA), 
-            Color(0xFFB9BCE1), 
-            Color(0xFFCED0EA), 
-            Color(0xFFCED0EA), 
-          ],
-          stops: [0.0, 0.36, 0.51, 0.62, 0.73, 0.81, 0.89],
-        ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(36),
-          bottomRight: Radius.circular(36),
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Stack(
-          clipBehavior: Clip.none,
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+        child: Column(
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(24, 32, 140, 28), 
-                  child: Text(
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF1A0A3A),
+                    Color(0xFF2D1060),
+                    Color(0xFF1A0A3A),
+                  ],
+                  stops: [0, 0.5, 1],
+                ),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: const Color(0x406366F1)),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x337C3AED),
+                    blurRadius: 60,
+                    spreadRadius: 4,
+                    offset: Offset(-30, -20),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
                     'Algo te desagradou?\nSugira uma melhoria!',
                     style: TextStyle(
-                      color: Color(0xFF1A1A1A), 
+                      color: Colors.white,
                       fontSize: 22,
-                      fontFamily: 'PoppinsBold',
-                      fontWeight: FontWeight.bold,
-                      height: 1.3,
+                      fontFamily: 'Syne',
+                      fontWeight: FontWeight.w800,
+                      height: 1.2,
+                      letterSpacing: -0.5,
                     ),
                   ),
-                ),
-
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.35),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(32),
-                      topRight: Radius.circular(32),
-                      bottomLeft: Radius.circular(36),
-                      bottomRight: Radius.circular(36),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Sua opinião transforma experiências. Envie uma sugestão agora e ajude os lugares que você frequenta a melhorarem.',
+                    style: TextStyle(
+                      color: Color(0xA6FFFFFF),
+                      fontSize: 14,
+                      fontFamily: 'Poppins',
+                      height: 1.65,
                     ),
                   ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          height: 56,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.65),
-                            borderRadius: BorderRadius.circular(28),
-                          ),
-                          child: const Icon(
-                            Icons.camera_alt_rounded,
-                            size: 26,
-                            color: Color(0xFF2D2D2D),
-                          ),
+                  const SizedBox(height: 24),
+                  Material(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(999),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(999),
+                      onTap: () => setState(() => _pesquisando = true),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 22,
+                          vertical: 11,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.send_rounded,
+                              color: Color(0xFF7C3AED),
+                              size: 18,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Fazer sugestão',
+                              style: TextStyle(
+                                color: Color(0xFF7C3AED),
+                                fontSize: 14,
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _pesquisando ? _buildCampoPesquisa() : _buildBotaoPesquisa(),
-                      ),
-                    ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                GestureDetector(
+                  onTap: _abrirScannerQr,
+                  child: Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1A1924),
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(color: const Color(0x12FFFFFF)),
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt_rounded,
+                      size: 24,
+                      color: Color(0xFFF0F0F8),
+                    ),
                   ),
                 ),
-              ],
-            ),
-
-            Positioned(
-              right: 0,
-              bottom: 80, 
-              child: SizedBox(
-                width: 175,
-                height: 175,
-                child: Image.asset(
-                  'assets/images/imagemInicio.png',
-                  fit: BoxFit.contain,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _pesquisando
+                      ? _buildCampoPesquisa()
+                      : _buildBotaoPesquisa(),
                 ),
-              ),
+              ],
             ),
           ],
         ),
@@ -307,13 +444,24 @@ class _HomePageState extends State<HomePage> {
       child: Container(
         height: 56,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.65),
+          color: const Color(0xFF1A1924),
           borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: const Color(0x12FFFFFF)),
         ),
-        child: const Icon(
-          Icons.search_rounded,
-          size: 26,
-          color: Color(0xFF2D2D2D),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.search_rounded, size: 22, color: Color(0x8CF0F0F8)),
+            SizedBox(width: 8),
+            Text(
+              'Buscar estabelecimento...',
+              style: TextStyle(
+                color: Color(0x8CF0F0F8),
+                fontFamily: 'Poppins',
+                fontSize: 13,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -325,30 +473,43 @@ class _HomePageState extends State<HomePage> {
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.65),
+        color: const Color(0xFF1A1924),
         borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: const Color(0x12FFFFFF)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.search_rounded, size: 20, color: Color(0xFF2D2D2D)),
+          const Icon(Icons.search_rounded, size: 20, color: Color(0x8CF0F0F8)),
           const SizedBox(width: 8),
           Expanded(
             child: TextField(
               controller: _pesquisaController,
               autofocus: true,
               onChanged: (texto) => setState(() => _termoPesquisa = texto),
-              style: const TextStyle(color: Color(0xFF1A1A1A), fontFamily: 'Poppins', fontSize: 13),
+              style: const TextStyle(
+                color: Color(0xFFF0F0F8),
+                fontFamily: 'Poppins',
+                fontSize: 13,
+              ),
               decoration: InputDecoration(
                 isCollapsed: true,
                 hintText: 'Pesquisar estabelecimento',
-                hintStyle: TextStyle(color: const Color(0xFF1A1A1A).withOpacity(0.5), fontFamily: 'Poppins', fontSize: 13),
+                hintStyle: const TextStyle(
+                  color: Color(0x8CF0F0F8),
+                  fontFamily: 'Poppins',
+                  fontSize: 13,
+                ),
                 border: InputBorder.none,
               ),
             ),
           ),
           GestureDetector(
             onTap: _fecharPesquisa,
-            child: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF2D2D2D)),
+            child: const Icon(
+              Icons.close_rounded,
+              size: 20,
+              color: Color(0x8CF0F0F8),
+            ),
           ),
         ],
       ),
@@ -416,11 +577,7 @@ class _HomePageState extends State<HomePage> {
               color: const Color(0xFF2A1A4A),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(
-              Icons.tune,
-              color: Colors.white,
-              size: 18,
-            ),
+            child: const Icon(Icons.tune, color: Colors.white, size: 18),
           ),
         ],
       ),
@@ -430,7 +587,9 @@ class _HomePageState extends State<HomePage> {
   // ─────────────────────────────────────────────────────────────────
   Widget _buildLocalCard(Map<String, dynamic> local) {
     final idEstabelecimento = (local['idEstabelecimento'] as num?)?.toInt();
-    final salvo = idEstabelecimento != null && locaisSalvosIds.contains(idEstabelecimento);
+    final salvo =
+        idEstabelecimento != null &&
+        locaisSalvosIds.contains(idEstabelecimento);
 
     return cardEstabelecimentoCliente(
       local: local,
@@ -438,12 +597,12 @@ class _HomePageState extends State<HomePage> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => InfoLocalPage(local: local),
-          ),
+          MaterialPageRoute(builder: (_) => InfoLocalPage(local: local)),
         );
       },
-      onToggleFavorito: idEstabelecimento == null ? null : () => _alternarFavorito(idEstabelecimento),
+      onToggleFavorito: idEstabelecimento == null
+          ? null
+          : () => _alternarFavorito(idEstabelecimento),
     );
   }
 
