@@ -18,9 +18,16 @@ const IC = {
   logo:    "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5",
 };
 
+// Lista única de tipos de estabelecimento — mantenha em sincronia com
+// ModalEditarEstabelecimento.jsx, cadastroAdm.html e avaliacoesUtils.js.
 const CATEGORIAS = [
-  "Restaurante", "Bar", "Lanchonete", "Pizzaria",
-  "Cafeteria", "Padaria", "Sorveteria", "Outro",
+  "Restaurante", "Bar", "Lanchonete", "Pizzaria", "Cafeteria", "Padaria",
+  "Sorveteria", "Hamburgueria", "Doceria / Confeitaria", "Açaiteria", "Food Truck",
+  "Hotel / Pousada", "Academia", "Salão de Beleza / Barbearia",
+  "Clínica / Consultório de Saúde", "Farmácia", "Escola / Educação", "Petshop",
+  "Loja / Comércio", "Supermercado / Mercado", "Oficina Automotiva",
+  "Posto de Combustível", "Escritório / Empresa (Tecnologia e Serviços)",
+  "Coworking", "Espaço para Eventos", "Banco / Serviços Financeiros", "Outro",
 ];
 
 /* ─── FUNÇÕES AUXILIARES DE VALIDAÇÃO MATEMÁTICA ────────────────────────── */

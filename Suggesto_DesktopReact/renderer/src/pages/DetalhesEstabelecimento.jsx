@@ -14,14 +14,18 @@ const SENTIMENTOS = [
   { key: 'ruim',   label: 'Ruins'  },
 ];
 
+// `key` precisa bater exato com `av.categoria.nomeCategoria` em minúsculas
+// (ver mapeamento de `categoria` logo abaixo) — as 8 categorias reais.
 const CATEGORIAS = [
-  { key: 'todos',       label: 'Todas as categorias' },
-  { key: 'sugestão',    label: 'Sugestão'    },
-  { key: 'crítica',     label: 'Crítica'     },
-  { key: 'qualidade',   label: 'Qualidade'   },
-  { key: 'atendimento', label: 'Atendimento' },
-  { key: 'preço',       label: 'Preço'       },
-  { key: 'ambiente',    label: 'Ambiente'    },
+  { key: 'todos',                label: 'Todas as categorias' },
+  { key: 'atendimento',          label: 'Atendimento'         },
+  { key: 'qualidade do produto', label: 'Qualidade do produto' },
+  { key: 'preço',                label: 'Preço'               },
+  { key: 'estrutura',            label: 'Estrutura'           },
+  { key: 'ambiente',             label: 'Ambiente'            },
+  { key: 'higiene',              label: 'Higiene'             },
+  { key: 'cardápio',             label: 'Cardápio'            },
+  { key: 'outro',                label: 'Outro'               },
 ];
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────

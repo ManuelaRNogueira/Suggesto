@@ -5,9 +5,16 @@ import Icone, { IC } from "../components/Icones";
 import { API_BASE, buscarUsuarios, urlFoto } from "../api/admin";
 import { useAviso } from "../components/Aviso";
 
+// Lista única de tipos de estabelecimento — mantenha em sincronia com
+// ModalEstabelecimento.jsx, cadastroAdm.html e avaliacoesUtils.js.
 const CATEGORIAS = [
-  "Restaurante", "Bar", "Lanchonete", "Pizzaria",
-  "Cafeteria", "Padaria", "Sorveteria", "Outro",
+  "Restaurante", "Bar", "Lanchonete", "Pizzaria", "Cafeteria", "Padaria",
+  "Sorveteria", "Hamburgueria", "Doceria / Confeitaria", "Açaiteria", "Food Truck",
+  "Hotel / Pousada", "Academia", "Salão de Beleza / Barbearia",
+  "Clínica / Consultório de Saúde", "Farmácia", "Escola / Educação", "Petshop",
+  "Loja / Comércio", "Supermercado / Mercado", "Oficina Automotiva",
+  "Posto de Combustível", "Escritório / Empresa (Tecnologia e Serviços)",
+  "Coworking", "Espaço para Eventos", "Banco / Serviços Financeiros", "Outro",
 ];
 
 // Extrai o primeiro e o último horário citados no texto livre salvo no banco
