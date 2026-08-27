@@ -8,6 +8,7 @@ import com.suggesto.backend.repository.ResgateRepository;
 import com.suggesto.backend.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -28,6 +29,7 @@ public class ResgateService {
     @Autowired
     private UsuarioRepository usuarioRepository; // Necessário para buscar o usuário completo
 
+    @Transactional
     public Map<String, Object> resgatar(Long usuarioId, Long recompensaId) {
         // 1. Busca o usuário no banco (se não achar, estoura erro)
         Usuario usuario = usuarioRepository.findById(usuarioId)
