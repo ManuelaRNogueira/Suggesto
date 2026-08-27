@@ -14,25 +14,35 @@ class SugerirPage extends StatefulWidget {
 class _SugerirPageState extends State<SugerirPage> {
   final TextEditingController texto = TextEditingController();
   final int maxCaracteres = 500;
-  String? categoriaSelecionada;
+  int? idCategoriaSelecionada;
   int notaSelecionada = 0; // 0 = nenhuma estrela
   bool enviado = false;
 
-  final List<String> categorias = [
-    'Atendimento',
-    'Qualidade do produto',
-    'Preço',
-    'Estrutura',
-    'Ambiente',
-    'Higiene',
-    'Cardápio',
-    'Outro',
-  ];
+  // Carregadas do backend em initState — variam de acordo com o tipo do
+  // estabelecimento (ver CategoriaController), então não são mais fixas aqui.
+  List<Map<String, dynamic>> categorias = [];
+  bool carregandoCategorias = true;
 
   @override
   void initState() {
     super.initState();
     texto.addListener(() => setState(() {}));
+    _carregarCategorias();
+  }
+
+  Future<void> _carregarCategorias() async {
+    try {
+      final tipoEstabelecimento = widget.local?['categoria'] as String?;
+      final resultado = await buscarCategorias(tipoEstabelecimento);
+      if (!mounted) return;
+      setState(() {
+        categorias = resultado.cast<Map<String, dynamic>>();
+        carregandoCategorias = false;
+      });
+    } on ApiException catch (_) {
+      if (!mounted) return;
+      setState(() => carregandoCategorias = false);
+    }
   }
 
   @override
@@ -43,7 +53,7 @@ class _SugerirPageState extends State<SugerirPage> {
 
   bool get podeEnviar =>
       texto.text.trim().isNotEmpty &&
-      categoriaSelecionada != null &&
+      idCategoriaSelecionada != null &&
       notaSelecionada > 0 &&
       !enviado;
 
@@ -63,14 +73,11 @@ class _SugerirPageState extends State<SugerirPage> {
 
     setState(() => enviado = true);
 
-    // Categorias são fixas e vêm nessa ordem exata do backend (1..8).
-    final idCategoria = categorias.indexOf(categoriaSelecionada!) + 1;
-
     try {
       await criarAvaliacao(
         idUsuario: Sessao.idUsuario!,
         idEstabelecimento: idEstabelecimento,
-        idCategoria: idCategoria,
+        idCategoria: idCategoriaSelecionada!,
         nota: notaSelecionada,
         comentario: texto.text.trim(),
       );
@@ -325,6 +332,15 @@ class _SugerirPageState extends State<SugerirPage> {
 
   // CATEGORIAS
   Widget Categorias() {
+    if (carregandoCategorias) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: CircularProgressIndicator(color: Color(0xFF9B59D0)),
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -345,12 +361,14 @@ class _SugerirPageState extends State<SugerirPage> {
     );
   }
 
-  Widget CategoriaCard(String label) {
-    final isSelected = categoriaSelecionada == label;
+  Widget CategoriaCard(Map<String, dynamic> categoria) {
+    final id = (categoria['idCategoria'] as num).toInt();
+    final label = categoria['nomeCategoria'] as String;
+    final isSelected = idCategoriaSelecionada == id;
 
     return GestureDetector(
       onTap: () => setState(() {
-        categoriaSelecionada = isSelected ? null : label;
+        idCategoriaSelecionada = isSelected ? null : id;
       }),
       child: AnimatedContainer(
         duration: Duration(milliseconds: 200),

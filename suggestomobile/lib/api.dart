@@ -210,10 +210,21 @@ Future<List<dynamic>> buscarAvaliacoesUsuario(int idUsuario) {
   return _lista('GET', '/avaliacoes/usuario/$idUsuario');
 }
 
-// POST /api/avaliacoes — cria uma sugestão/crítica/elogio. Categorias são
-// fixas (ver Suggesto - Web/Web/fazerSugestao.html): 1 Atendimento,
-// 2 Qualidade do produto, 3 Preço, 4 Estrutura, 5 Ambiente, 6 Higiene,
-// 7 Cardápio, 8 Outro.
+// GET /api/categorias?tipoEstabelecimento= — categorias de sugestão
+// disponíveis pra esse tipo de estabelecimento (CategoriaController filtra
+// pelo escopo: Cardápio só aparece pra quem serve comida, Estrutura/Ambiente/
+// Higiene não aparecem pra quem não tem espaço físico, ex: escritório).
+// Sem o parâmetro (tipoEstabelecimento vazio), o backend devolve todas.
+Future<List<dynamic>> buscarCategorias(String? tipoEstabelecimento) {
+  final query = (tipoEstabelecimento != null && tipoEstabelecimento.isNotEmpty)
+      ? '?tipoEstabelecimento=${Uri.encodeQueryComponent(tipoEstabelecimento)}'
+      : '';
+  return _lista('GET', '/categorias$query');
+}
+
+// POST /api/avaliacoes — cria uma sugestão/crítica/elogio. idCategoria vem
+// da lista retornada por buscarCategorias, que já varia por tipo de
+// estabelecimento (ver CategoriaController).
 Future<void> criarAvaliacao({
   required int idUsuario,
   required int idEstabelecimento,
