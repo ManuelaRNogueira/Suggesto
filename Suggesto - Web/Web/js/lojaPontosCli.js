@@ -13,14 +13,19 @@ function urlFotoEstabelecimento(fotoPath) {
   return `${API_BASE.replace("/api", "")}/uploads/${relativo}`;
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const idUsuario = localStorage.getItem("idUsuario");
   if (!idUsuario) {
     window.location.href = "login.html";
     return;
   }
 
-  carregarDadosUsuario();
+  // Espera o saldo carregar antes de montar a vitrine: renderizarMercado() lê
+  // saldoAtual pra decidir se cada recompensa está bloqueada, e as duas
+  // chamadas não têm ordem garantida — se a vitrine desenhasse primeiro, toda
+  // recompensa aparecia bloqueada (saldoAtual ainda em 0) e nunca mais era
+  // redesenhada quando o saldo real chegasse.
+  await carregarDadosUsuario();
   carregarRecompensas();
 
   if (window.location.hash === "#historico") {
