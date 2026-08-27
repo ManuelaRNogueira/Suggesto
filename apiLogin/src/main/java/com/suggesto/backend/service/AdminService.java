@@ -12,8 +12,9 @@ import com.suggesto.backend.util.NivelUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -61,7 +62,8 @@ public class AdminService {
 
         List<Avaliacao> sugestoes = buscarSugestoesPorEstabelecimentos(idGerente, ids);
 
-        LocalDateTime umaSemanaAtras = LocalDateTime.now().minus(7, ChronoUnit.DAYS);
+        // Semana atual = da segunda-feira 00:00 até agora, não os últimos 7 dias corridos.
+        LocalDateTime inicioSemanaAtual = LocalDate.now().with(DayOfWeek.MONDAY).atStartOfDay();
 
         int pendentes = 0;
         int implementados = 0;
@@ -76,7 +78,7 @@ public class AdminService {
                 case "recusado" -> recusados++;
                 default -> pendentes++;
             }
-            if (a.getDataAvaliacao() != null && a.getDataAvaliacao().isAfter(umaSemanaAtras)) {
+            if (a.getDataAvaliacao() != null && !a.getDataAvaliacao().isBefore(inicioSemanaAtual)) {
                 novasSemana++;
             }
             porCategoria.merge(classificarTipo(a.getTipo()), 1, Integer::sum);
@@ -99,7 +101,11 @@ public class AdminService {
         metricas.put("porCategoria", porCategoria);
         metricas.put("meses", janela);
         metricas.put("sugestoesPorMes", calcularSugestoesPorMes(sugestoes, janela));
-        metricas.put("sugestoesRecentes", sugestoes.stream().limit(8).map(this::resumirSugestao).collect(Collectors.toList()));
+        metricas.put("sugestoesRecentes", sugestoes.stream()
+                .filter(a -> a.getDataAvaliacao() != null && !a.getDataAvaliacao().isBefore(inicioSemanaAtual))
+                .limit(8)
+                .map(this::resumirSugestao)
+                .collect(Collectors.toList()));
 
         return metricas;
     }

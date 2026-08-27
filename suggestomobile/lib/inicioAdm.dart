@@ -116,43 +116,26 @@ class _InicioAdmState extends State<InicioAdm> {
   }
 
   Widget _buildCabecalho() {
-    return Row(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Início',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 26,
-                  fontFamily: 'PoppinsBold',
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                nomeEstabelecimento,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                  fontFamily: 'Poppins',
-                ),
-              ),
-            ],
+        const Text(
+          'Início',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 26,
+            fontFamily: 'PoppinsBold',
+            fontWeight: FontWeight.bold,
           ),
         ),
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: Cores.cartao,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Cores.borda),
+        const SizedBox(height: 4),
+        Text(
+          nomeEstabelecimento,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 14,
+            fontFamily: 'Poppins',
           ),
-          child: const Icon(Icons.notifications_none, color: Colors.white70, size: 22),
         ),
       ],
     );
