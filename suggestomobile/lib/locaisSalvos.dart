@@ -16,10 +16,42 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
   String? erro;
   List<Map<String, dynamic>> locais = [];
 
+  // Busca inline no lugar da lupa — mesma estrutura da tela inicial, sem
+  // navegar pra outra tela.
+  bool _pesquisando = false;
+  final TextEditingController _pesquisaController = TextEditingController();
+  String _termoPesquisa = '';
+
   @override
   void initState() {
     super.initState();
     _carregar();
+  }
+
+  @override
+  void dispose() {
+    _pesquisaController.dispose();
+    super.dispose();
+  }
+
+  // Mesma lógica de filtro usada na Home: separa o nome por palavras e
+  // compara pelo início de cada uma.
+  List<Map<String, dynamic>> get _locaisExibidos {
+    if (_termoPesquisa.isEmpty) return locais;
+    final pesquisa = _termoPesquisa.toLowerCase();
+    return locais.where((local) {
+      final nome = (local['nome'] as String?)?.toLowerCase() ?? '';
+      final palavras = nome.split(' ');
+      return palavras.any((palavra) => palavra.startsWith(pesquisa));
+    }).toList();
+  }
+
+  void _fecharPesquisa() {
+    setState(() {
+      _pesquisando = false;
+      _termoPesquisa = '';
+      _pesquisaController.clear();
+    });
   }
 
   Future<void> _carregar() async {
@@ -103,6 +135,11 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                 child: Text('Você ainda não salvou nenhum local.', style: TextStyle(color: Colors.white54, fontFamily: 'Poppins')),
               )
+            else if (_locaisExibidos.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                child: Text('Nenhum resultado para "$_termoPesquisa".', style: const TextStyle(color: Colors.white54, fontFamily: 'Poppins')),
+              )
             else
               _buildLocaisGrid(),
             const SizedBox(height: 24),
@@ -157,25 +194,32 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Text(
-                    'Locais Salvos',
-                    style: TextStyle(
-                      color: Color(0xFF1A0A2E),
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: "PoppinsBold",
+                  if (_pesquisando)
+                    Expanded(child: _buildCampoPesquisa())
+                  else ...[
+                    const Text(
+                      'Locais Salvos',
+                      style: TextStyle(
+                        color: Color(0xFF1A0A2E),
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: "PoppinsBold",
+                      ),
                     ),
-                  ),
-                  const Spacer(),
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.35),
-                      borderRadius: BorderRadius.circular(10),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: () => setState(() => _pesquisando = true),
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.35),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.search, color: Color(0xFF1A0A2E), size: 18),
+                      ),
                     ),
-                    child: const Icon(Icons.search, color: Color(0xFF1A0A2E), size: 18),
-                  ),
+                  ],
                 ],
               ),
               const SizedBox(height: 4),
@@ -193,6 +237,42 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // Campo de pesquisa — ocupa o espaço do título enquanto ativo.
+  Widget _buildCampoPesquisa() {
+    return Container(
+      height: 36,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.35),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.search, color: Color(0xFF1A0A2E), size: 16),
+          const SizedBox(width: 6),
+          Expanded(
+            child: TextField(
+              controller: _pesquisaController,
+              autofocus: true,
+              onChanged: (texto) => setState(() => _termoPesquisa = texto),
+              style: const TextStyle(color: Color(0xFF1A0A2E), fontFamily: 'Poppins', fontSize: 13),
+              decoration: InputDecoration(
+                isCollapsed: true,
+                hintText: 'Pesquisar local salvo',
+                hintStyle: TextStyle(color: const Color(0xFF1A0A2E).withOpacity(0.5), fontFamily: 'Poppins', fontSize: 13),
+                border: InputBorder.none,
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: _fecharPesquisa,
+            child: const Icon(Icons.close_rounded, color: Color(0xFF1A0A2E), size: 18),
+          ),
+        ],
       ),
     );
   }
@@ -220,11 +300,12 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
 
   // ─── Lista de locais (mesmo card e estrutura da Home) ──────────────
   Widget _buildLocaisGrid() {
+    final exibidos = _locaisExibidos;
     return Column(
-      children: List.generate(
-        locais.length,
-        (index) => _buildLocalCard(locais[index], index),
-      ),
+      children: exibidos.map((local) {
+        final index = locais.indexOf(local);
+        return _buildLocalCard(local, index);
+      }).toList(),
     );
   }
 
