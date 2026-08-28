@@ -30,6 +30,7 @@ let coordenadasMapa = null;
 
 // ── INICIALIZA AO CARREGAR ───────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  carregarDadosUsuario();
   preencherDados();
   verificarStatus();
   verificarSeFavorito();
@@ -41,6 +42,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+
+// ── SIDEBAR: NOME/AVATAR DO USUÁRIO ──────────────────────────────────
+function carregarDadosUsuario() {
+  const nome = localStorage.getItem('nomeUsuario') || 'Usuário';
+  const elementoNome = document.getElementById('sidebarNome');
+  const elementoAvatar = document.getElementById('sidebarAvatar');
+  if (elementoNome) elementoNome.textContent = nome;
+  if (elementoAvatar) elementoAvatar.textContent = nome.substring(0, 2).toUpperCase();
+}
 
 // ── PREENCHER DADOS NA TELA ──────────────────────────────────────────
 function preencherDados() {
