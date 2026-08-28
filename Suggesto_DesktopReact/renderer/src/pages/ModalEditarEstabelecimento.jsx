@@ -434,6 +434,7 @@ export default function ModalEditarEstabelecimento({ estab, fecharModal, aoSalva
         // Mesma proporção do card de estabelecimento no site (.local-imagem:
         // 300px de largura mínima × 180px de altura fixa).
         <RecorteImagem
+          key={arquivoParaRecorte.url}
           arquivo={arquivoParaRecorte.arquivo}
           urlImagem={arquivoParaRecorte.url}
           aspect={300 / 180}
