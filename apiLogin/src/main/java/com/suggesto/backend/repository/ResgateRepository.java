@@ -10,4 +10,7 @@ public interface ResgateRepository extends JpaRepository<Resgate, Long> {
     long countByUsuario_Id(Long usuarioId);
 
     List<Resgate> findByUsuario_IdOrderByDataResgateDesc(Long usuarioId);
+
+    // Cada cliente só pode resgatar uma recompensa específica uma vez.
+    boolean existsByUsuario_IdAndRecompensa_Id(Long usuarioId, Long recompensaId);
 }

@@ -17,6 +17,11 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
   List<Map<String, dynamic>> _recompensas = [];
   int _meusPontos = 0;
 
+  // Recompensas que esse cliente já resgatou — cada uma só pode ser resgatada
+  // uma vez, então elas somem da vitrine (ver ResgateService no backend, que
+  // também recusa um segundo resgate mesmo que a tela não tivesse escondido).
+  Set<int> _idsResgatados = {};
+
   final List<String> _faixas = [
     'Até 6.000 pts',
     'Até 18.000 pts',
@@ -45,11 +50,21 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
       final resultados = await Future.wait([
         buscarRecompensas(),
         buscarUsuario(Sessao.idUsuario!),
+        buscarResgates(Sessao.idUsuario!),
       ]);
       final recompensas = resultados[0] as List<dynamic>;
       final usuario = resultados[1] as Map<String, dynamic>;
+      final resgates = resultados[2] as List<dynamic>;
       setState(() {
-        _recompensas = recompensas.cast<Map<String, dynamic>>();
+        _idsResgatados = resgates
+            .cast<Map<String, dynamic>>()
+            .map((r) => (r['idRecompensa'] as num?)?.toInt())
+            .whereType<int>()
+            .toSet();
+        _recompensas = recompensas
+            .cast<Map<String, dynamic>>()
+            .where((r) => !_idsResgatados.contains((r['id'] as num?)?.toInt()))
+            .toList();
         _meusPontos = (usuario['pontos'] as num?)?.toInt() ?? 0;
       });
     } on ApiException catch (e) {
@@ -85,6 +100,8 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
       if (!mounted) return;
       setState(() {
         _meusPontos = (resultado['novoSaldo'] as num?)?.toInt() ?? _meusPontos;
+        _idsResgatados.add(id);
+        _recompensas.removeWhere((r) => (r['id'] as num?)?.toInt() == id);
       });
       final codigo = resultado['codigoCupom']?.toString() ?? '';
       showDialog(

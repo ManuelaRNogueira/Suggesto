@@ -5,6 +5,11 @@ let saldoAtual = 0;
 let resgateAtual = { id: null, nome: "", custo: 0 };
 let recompensasCache = [];
 
+// Recompensas que esse cliente já resgatou — cada uma só pode ser resgatada
+// uma vez, então somem da vitrine (o backend também recusa um segundo
+// resgate mesmo que a tela não tivesse escondido, ver ResgateService).
+let idsResgatados = new Set();
+
 function urlFotoEstabelecimento(fotoPath) {
   const nome = fotoPath ? String(fotoPath).trim() : "";
   if (!nome) return PLACEHOLDER_ESTABELECIMENTO;
@@ -26,6 +31,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // recompensa aparecia bloqueada (saldoAtual ainda em 0) e nunca mais era
   // redesenhada quando o saldo real chegasse.
   await carregarDadosUsuario();
+  await carregarIdsResgatados();
   carregarRecompensas();
 
   if (window.location.hash === "#historico") {
@@ -122,6 +128,24 @@ function atualizarPainelSaldo(pontos) {
   }
 }
 
+async function carregarIdsResgatados() {
+  const idUsuario = obterIdUsuario();
+  if (!idUsuario) return;
+
+  try {
+    const resposta = await fetch(`${API_BASE}/resgates/usuario/${idUsuario}`);
+    if (!resposta.ok) return;
+    const resgates = await resposta.json();
+    idsResgatados = new Set(
+      (Array.isArray(resgates) ? resgates : [])
+        .map((r) => Number(r.idRecompensa))
+        .filter((id) => Number.isFinite(id)),
+    );
+  } catch (error) {
+    console.error("Erro ao carregar resgates do usuário:", error);
+  }
+}
+
 async function carregarRecompensas() {
   const area = document.getElementById("mercadoArea");
   if (!area) return;
@@ -130,7 +154,8 @@ async function carregarRecompensas() {
     const resposta = await fetch(`${API_BASE}/recompensas`);
     if (!resposta.ok) throw new Error("Erro ao listar recompensas.");
 
-    recompensasCache = await resposta.json();
+    const todas = await resposta.json();
+    recompensasCache = todas.filter((rec) => !idsResgatados.has(Number(rec.id)));
     renderizarMercado(recompensasCache);
   } catch (error) {
     console.error("Erro ao carregar recompensas:", error);
@@ -352,6 +377,9 @@ async function confirmarResgate() {
 
     const saldoAnterior = saldoAtual;
     saldoAtual = Number(dados.novoSaldo) || 0;
+
+    idsResgatados.add(Number(resgateAtual.id));
+    recompensasCache = recompensasCache.filter((rec) => Number(rec.id) !== Number(resgateAtual.id));
 
     document.getElementById("modalCodigoCupom").textContent = dados.codigoCupom || "—";
     document.getElementById("modalCupomSucesso").style.display = "block";

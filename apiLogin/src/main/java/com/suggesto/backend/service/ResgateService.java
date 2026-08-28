@@ -39,6 +39,12 @@ public class ResgateService {
         Recompensa recompensa = recompensaRepository.findById(recompensaId)
                 .orElseThrow(() -> new IllegalArgumentException("Recompensa não encontrada com o ID: " + recompensaId));
 
+        // Cada cliente só resgata uma mesma recompensa uma vez — depois disso ela
+        // some da vitrine dele (ver lojaPontos.dart / lojaPontosCli.js).
+        if (resgateRepository.existsByUsuario_IdAndRecompensa_Id(usuarioId, recompensaId)) {
+            throw new IllegalArgumentException("Você já resgatou esta recompensa.");
+        }
+
         int custo = recompensa.getCustoPontos() != null ? recompensa.getCustoPontos() : 0;
         if (usuario.getPontos() < custo) {
             throw new IllegalArgumentException("Pontos insuficientes para este resgate.");
@@ -81,6 +87,7 @@ public class ResgateService {
     private Map<String, Object> resumirResgate(Resgate r) {
         Map<String, Object> item = new LinkedHashMap<>();
         item.put("id", r.getId());
+        item.put("idRecompensa", r.getRecompensa() != null ? r.getRecompensa().getId() : null);
         item.put("nomeRecompensa", r.getRecompensa() != null ? r.getRecompensa().getNome() : null);
         item.put("custoPontos", r.getRecompensa() != null ? r.getRecompensa().getCustoPontos() : null);
         item.put("estabelecimento",
