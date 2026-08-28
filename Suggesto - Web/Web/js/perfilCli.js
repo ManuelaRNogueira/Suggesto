@@ -484,7 +484,7 @@ async function atualizarPreviaFotoSelecionada(event) {
 
     // Deixa a pessoa escolher qual parte da foto vai aparecer antes de seguir
     // com a prévia/upload — sempre recorta em quadrado (ver js/imagemCrop.js).
-    const recortado = await abrirRecorteImagem(arquivo);
+    const recortado = await abrirRecorteImagem(arquivo, { aspectRatio: 1, redondo: true });
     if (!recortado) {
         input.value = "";
         restaurarPreviaFotoAtual();

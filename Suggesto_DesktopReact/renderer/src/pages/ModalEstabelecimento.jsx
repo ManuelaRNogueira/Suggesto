@@ -447,9 +447,12 @@ export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
       </div>
 
       {arquivoParaRecorte && (
+        // Mesma proporção do card de estabelecimento no site (.local-imagem:
+        // 300px de largura mínima × 180px de altura fixa).
         <RecorteImagem
           arquivo={arquivoParaRecorte.arquivo}
           urlImagem={arquivoParaRecorte.url}
+          aspect={300 / 180}
           onConfirmar={confirmarRecorte}
           onCancelar={cancelarRecorte}
         />

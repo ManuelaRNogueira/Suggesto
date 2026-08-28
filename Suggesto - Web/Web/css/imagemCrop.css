@@ -64,6 +64,14 @@
   max-width: 100%;
 }
 
+/* Máscara de recorte redonda (foto de perfil) — a saída continua sendo um
+   arquivo quadrado, isso só deixa a área de recorte com essa aparência
+   (igual ao avatar já é exibido depois, com border-radius: 50%). */
+.recorte-redondo .cropper-view-box,
+.recorte-redondo .cropper-face {
+  border-radius: 50%;
+}
+
 .recorte-zoom {
   display: flex;
   align-items: center;

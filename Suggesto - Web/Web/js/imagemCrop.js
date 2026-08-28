@@ -1,20 +1,27 @@
 // Modal de recorte de imagem — usado no upload de foto de perfil (perfilCli.js)
-// e de estabelecimento (cadastroAdm.js). Sempre corta em quadrado (1:1), que é
-// como a foto aparece em todo o site (avatar circular, logo de estabelecimento,
-// cards de local/recompensa — todos square + object-fit: cover).
+// e de estabelecimento (cadastroAdm.js).
 //
-// Uso: const recortado = await abrirRecorteImagem(arquivoOriginal);
-// Resolve com um novo File (já recortado) ou null se o usuário cancelar.
+// Uso: const recortado = await abrirRecorteImagem(arquivoOriginal, {
+//   aspectRatio: 1,      // largura/altura do recorte — 1 = quadrado
+//   redondo: false,      // true = máscara de recorte redonda (foto de perfil)
+// });
+// Resolve com um novo File (já recortado) ou null se o usuário cancelar. A
+// saída é sempre um arquivo retangular/quadrado (não dá pra salvar um "PNG
+// redondo" de verdade) — "redondo" só deixa a área de recorte com essa
+// aparência, igual ao avatar já é exibido depois (border-radius: 50%).
 //
 // Depende do Cropper.js (carregado via CDN nas páginas que usam isso).
 
-function abrirRecorteImagem(arquivo) {
+function abrirRecorteImagem(arquivo, { aspectRatio = 1, redondo = false } = {}) {
   return new Promise((resolve) => {
     const urlOriginal = URL.createObjectURL(arquivo);
     let finalizado = false;
 
+    const alturaSaida = 1000;
+    const larguraSaida = Math.round(alturaSaida * aspectRatio);
+
     const overlay = document.createElement("div");
-    overlay.className = "recorte-overlay";
+    overlay.className = `recorte-overlay${redondo ? " recorte-redondo" : ""}`;
     overlay.innerHTML = `
       <div class="recorte-modal">
         <div class="recorte-topo">
@@ -52,7 +59,7 @@ function abrirRecorteImagem(arquivo) {
 
     imgEl.addEventListener("load", () => {
       cropper = new Cropper(imgEl, {
-        aspectRatio: 1,
+        aspectRatio,
         viewMode: 1,
         dragMode: "move",
         autoCropArea: 1,
@@ -75,14 +82,16 @@ function abrirRecorteImagem(arquivo) {
 
     overlay.querySelector(".recorte-btn-confirmar").addEventListener("click", () => {
       if (!cropper) return;
-      cropper.getCroppedCanvas({ width: 1000, height: 1000, imageSmoothingQuality: "high" }).toBlob((blob) => {
-        if (!blob) {
-          finalizar(null);
-          return;
-        }
-        const arquivoRecortado = new File([blob], arquivo.name, { type: blob.type || arquivo.type });
-        finalizar(arquivoRecortado);
-      }, arquivo.type && arquivo.type !== "image/gif" ? arquivo.type : "image/png");
+      cropper
+        .getCroppedCanvas({ width: larguraSaida, height: alturaSaida, imageSmoothingQuality: "high" })
+        .toBlob((blob) => {
+          if (!blob) {
+            finalizar(null);
+            return;
+          }
+          const arquivoRecortado = new File([blob], arquivo.name, { type: blob.type || arquivo.type });
+          finalizar(arquivoRecortado);
+        }, arquivo.type && arquivo.type !== "image/gif" ? arquivo.type : "image/png");
     });
   });
 }

@@ -676,7 +676,10 @@ if (campoFotoEstabelecimento) {
 
         // Deixa a pessoa escolher qual parte da foto vai aparecer antes de
         // seguir — sempre recorta em quadrado (ver js/imagemCrop.js).
-        const recortado = await abrirRecorteImagem(arquivo);
+        // Mesma proporção do card de estabelecimento na Início/Locais salvos
+        // (.local-imagem: 300px de largura mínima × 180px de altura fixa —
+        // ver css/localCard.css), pra pessoa ver como a foto vai ficar lá.
+        const recortado = await abrirRecorteImagem(arquivo, { aspectRatio: 300 / 180 });
         if (!recortado) {
             this.value = "";
             return;

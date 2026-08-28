@@ -3,13 +3,17 @@ import Cropper from "react-easy-crop";
 import "./RecorteImagem.css";
 
 // Modal de recorte de imagem — usado no criar/editar estabelecimento
-// (ModalEstabelecimento.jsx / ModalEditarEstabelecimento.jsx). Sempre corta em
-// quadrado (1:1), que é como a foto aparece em todo o site (logo, cards,
-// avatar — todos square + object-fit: cover).
+// (ModalEstabelecimento.jsx / ModalEditarEstabelecimento.jsx).
+//
+// `aspect` é largura/altura do recorte (1 = quadrado, 300/180 = mesma
+// proporção do card de estabelecimento em .local-imagem). `redondo` deixa a
+// área de recorte com máscara circular (foto de perfil) — a saída continua
+// sendo um arquivo retangular/quadrado, só a aparência do recorte é redonda,
+// igual ao avatar já é exibido depois (border-radius: 50%).
 //
 // `urlImagem` é sempre um object URL local (URL.createObjectURL do arquivo
 // escolhido), nunca uma URL remota — então não tem questão de CORS no canvas.
-export default function RecorteImagem({ arquivo, urlImagem, onConfirmar, onCancelar }) {
+export default function RecorteImagem({ arquivo, urlImagem, aspect = 1, redondo = false, onConfirmar, onCancelar }) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [areaRecorte, setAreaRecorte] = useState(null);
@@ -23,7 +27,7 @@ export default function RecorteImagem({ arquivo, urlImagem, onConfirmar, onCance
     if (!areaRecorte || processando) return;
     setProcessando(true);
     try {
-      const blob = await recortarParaBlob(urlImagem, areaRecorte);
+      const blob = await recortarParaBlob(urlImagem, areaRecorte, aspect);
       const tipo = blob.type || arquivo?.type || "image/jpeg";
       const nome = arquivo?.name || "foto.jpg";
       onConfirmar(new File([blob], nome, { type: tipo }));
@@ -54,7 +58,8 @@ export default function RecorteImagem({ arquivo, urlImagem, onConfirmar, onCance
             image={urlImagem}
             crop={crop}
             zoom={zoom}
-            aspect={1}
+            aspect={aspect}
+            cropShape={redondo ? "round" : "rect"}
             onCropChange={setCrop}
             onZoomChange={setZoom}
             onCropComplete={aoCompletarCorte}
@@ -92,15 +97,17 @@ export default function RecorteImagem({ arquivo, urlImagem, onConfirmar, onCance
 
 // Recorta a imagem via canvas usando a área (em pixels) que o react-easy-crop
 // devolve em onCropComplete — receita padrão da documentação da lib.
-function recortarParaBlob(urlImagem, area) {
+function recortarParaBlob(urlImagem, area, aspect) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
+      const alturaSaida = 1000;
+      const larguraSaida = Math.round(alturaSaida * aspect);
       const canvas = document.createElement("canvas");
-      canvas.width = 1000;
-      canvas.height = 1000;
+      canvas.width = larguraSaida;
+      canvas.height = alturaSaida;
       const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, area.x, area.y, area.width, area.height, 0, 0, 1000, 1000);
+      ctx.drawImage(img, area.x, area.y, area.width, area.height, 0, 0, larguraSaida, alturaSaida);
       canvas.toBlob(
         (blob) => (blob ? resolve(blob) : reject(new Error("Não foi possível gerar a imagem recortada."))),
         "image/jpeg",
