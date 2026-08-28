@@ -661,7 +661,7 @@ const campoFotoEstabelecimento = document.getElementById("fotoEstabelecimento");
 
 if (campoFotoEstabelecimento) {
 
-    campoFotoEstabelecimento.addEventListener("change", function () {
+    campoFotoEstabelecimento.addEventListener("change", async function () {
 
         const arquivo = this.files[0];
         const preview = document.getElementById("previewFotoEstabelecimento");
@@ -674,10 +674,18 @@ if (campoFotoEstabelecimento) {
             return;
         }
 
-        fotoEstabelecimentoSelecionada = arquivo;
-        preview.src = URL.createObjectURL(arquivo);
+        // Deixa a pessoa escolher qual parte da foto vai aparecer antes de
+        // seguir — sempre recorta em quadrado (ver js/imagemCrop.js).
+        const recortado = await abrirRecorteImagem(arquivo);
+        if (!recortado) {
+            this.value = "";
+            return;
+        }
+
+        fotoEstabelecimentoSelecionada = recortado;
+        preview.src = URL.createObjectURL(recortado);
         preview.style.display = "block";
-        if (nomeArquivo) nomeArquivo.textContent = arquivo.name;
+        if (nomeArquivo) nomeArquivo.textContent = recortado.name;
     });
 }
 

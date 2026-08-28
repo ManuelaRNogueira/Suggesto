@@ -466,7 +466,7 @@ function resolverUrlFoto(fotoUrl) {
     return `${window.API_ORIGIN}/uploads/${fotoUrl}`;
 }
 
-function atualizarPreviaFotoSelecionada(event) {
+async function atualizarPreviaFotoSelecionada(event) {
     const input = event.currentTarget;
     const arquivo = input.files?.[0];
     if (!arquivo) {
@@ -482,14 +482,30 @@ function atualizarPreviaFotoSelecionada(event) {
         return;
     }
 
+    // Deixa a pessoa escolher qual parte da foto vai aparecer antes de seguir
+    // com a prévia/upload — sempre recorta em quadrado (ver js/imagemCrop.js).
+    const recortado = await abrirRecorteImagem(arquivo);
+    if (!recortado) {
+        input.value = "";
+        restaurarPreviaFotoAtual();
+        return;
+    }
+
+    // salvarEdicao() lê o arquivo direto de editFotoFile.files[0], então troca
+    // o arquivo do próprio input pelo já recortado (em vez de guardar numa
+    // variável à parte).
+    const dt = new DataTransfer();
+    dt.items.add(recortado);
+    input.files = dt.files;
+
     liberarFotoPreviewTemporaria();
-    fotoPreviewObjectUrl = URL.createObjectURL(arquivo);
+    fotoPreviewObjectUrl = URL.createObjectURL(recortado);
     exibirPreviaFoto(fotoPreviewObjectUrl, gerarIniciais(usuarioAtual?.nome));
 
     setTexto("fotoSeletorTitulo", "Foto pronta para salvar");
     setTexto("fotoSeletorAcao", "Trocar foto");
-    setTexto("fotoArquivoNome", arquivo.name);
-    setTexto("fotoArquivoTamanho", formatarTamanhoArquivo(arquivo.size));
+    setTexto("fotoArquivoNome", recortado.name);
+    setTexto("fotoArquivoTamanho", formatarTamanhoArquivo(recortado.size));
 
     const arquivoInfo = document.getElementById("fotoArquivo");
     if (arquivoInfo) arquivoInfo.hidden = false;

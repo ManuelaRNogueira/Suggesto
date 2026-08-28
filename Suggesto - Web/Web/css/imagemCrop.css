@@ -1,0 +1,119 @@
+/* Modal de recorte de imagem (js/imagemCrop.js) — cores fixas, não depende das
+   variáveis da página que o incluir (perfilCli e cadastroAdm usam esquemas
+   diferentes). */
+
+.recorte-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 14, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  padding: 20px;
+}
+
+.recorte-modal {
+  width: min(420px, 100%);
+  background: #1a1924;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 20px;
+  font-family: "Inter", system-ui, sans-serif;
+  color: #f0f0f8;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.recorte-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.recorte-topo h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.recorte-fechar {
+  background: none;
+  border: none;
+  color: rgba(240, 240, 248, 0.55);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.recorte-fechar:hover {
+  color: #f0f0f8;
+}
+
+.recorte-area {
+  width: 100%;
+  height: 320px;
+  background: #0e0e12;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.recorte-imagem {
+  display: block;
+  max-width: 100%;
+}
+
+.recorte-zoom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  color: rgba(240, 240, 248, 0.55);
+  font-size: 0.8rem;
+}
+
+.recorte-zoom-slider {
+  flex: 1;
+  accent-color: #6366f1;
+}
+
+.recorte-acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.recorte-btn {
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 9px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #1c1b26;
+  color: #f0f0f8;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.recorte-btn:hover {
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.recorte-btn-confirmar {
+  background: #6366f1;
+  border-color: #6366f1;
+}
+
+.recorte-btn-confirmar:hover {
+  background: #818cf8;
+  border-color: #818cf8;
+}
+
+@media (max-width: 480px) {
+  .recorte-area {
+    height: 260px;
+  }
+}
