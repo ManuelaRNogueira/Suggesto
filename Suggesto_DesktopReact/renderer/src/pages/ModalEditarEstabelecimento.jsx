@@ -4,6 +4,7 @@ import './ModalEditarEstabelecimento.css';
 import Icone, { IC } from "../components/Icones";
 import { API_BASE, buscarUsuarios, urlFoto } from "../api/admin";
 import { useAviso } from "../components/Aviso";
+import RecorteImagem from "../components/RecorteImagem";
 
 // Lista única de tipos de estabelecimento — mantenha em sincronia com
 // ModalEstabelecimento.jsx, cadastroAdm.html e avaliacoesUtils.js.
@@ -48,6 +49,8 @@ export default function ModalEditarEstabelecimento({ estab, fecharModal, aoSalva
 
   const [arquivo, setArquivo] = useState(null);
   const [preview, setPreview] = useState(urlFoto(estab.fotoPath));
+  // Arquivo escolhido, aguardando o usuário confirmar o recorte (RecorteImagem).
+  const [arquivoParaRecorte, setArquivoParaRecorte] = useState(null);
   const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef();
 
@@ -117,10 +120,11 @@ export default function ModalEditarEstabelecimento({ estab, fecharModal, aoSalva
     return n.replace(/^(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3");
   };
 
+  // Não usa direto — abre o modal de recorte primeiro, pra pessoa escolher
+  // qual parte da foto vai aparecer (ver RecorteImagem).
   const aplicarArquivo = (file) => {
     if (!file) return;
-    setArquivo(file);
-    setPreview(URL.createObjectURL(file));
+    setArquivoParaRecorte({ arquivo: file, url: URL.createObjectURL(file) });
   };
 
   const handleFile = (e) => aplicarArquivo(e.target.files[0]);
@@ -128,6 +132,19 @@ export default function ModalEditarEstabelecimento({ estab, fecharModal, aoSalva
     e.preventDefault();
     setDragOver(false);
     aplicarArquivo(e.dataTransfer.files[0]);
+  };
+
+  const confirmarRecorte = (arquivoRecortado) => {
+    setArquivo(arquivoRecortado);
+    setPreview(URL.createObjectURL(arquivoRecortado));
+    URL.revokeObjectURL(arquivoParaRecorte.url);
+    setArquivoParaRecorte(null);
+  };
+
+  const cancelarRecorte = () => {
+    URL.revokeObjectURL(arquivoParaRecorte.url);
+    setArquivoParaRecorte(null);
+    if (fileRef.current) fileRef.current.value = "";
   };
 
   const handleSalvar = async (e) => {
@@ -412,6 +429,15 @@ export default function ModalEditarEstabelecimento({ estab, fecharModal, aoSalva
           </div>
         </form>
       </div>
+
+      {arquivoParaRecorte && (
+        <RecorteImagem
+          arquivo={arquivoParaRecorte.arquivo}
+          urlImagem={arquivoParaRecorte.url}
+          onConfirmar={confirmarRecorte}
+          onCancelar={cancelarRecorte}
+        />
+      )}
     </>
   );
 }

@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { API_BASE } from "../api/admin";
 import { useAviso } from "../components/Aviso";
+import RecorteImagem from "../components/RecorteImagem";
 import './ModalEstabelecimento.css'; // Importando o CSS separado
 
 // ─── ÍCONE INLINE ─────────────────────────────────────────────────────────────
@@ -82,6 +83,8 @@ export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
   const [horarioFechamento, setHorarioFechamento] = useState("");
   const [arquivo,   setArquivo]   = useState(null);
   const [preview,   setPreview]   = useState(null);
+  // Arquivo escolhido, aguardando o usuário confirmar o recorte (RecorteImagem).
+  const [arquivoParaRecorte, setArquivoParaRecorte] = useState(null);
   const [salvando,  setSalvando]  = useState(false);
   const [dragOver,  setDragOver]  = useState(false);
   
@@ -160,10 +163,11 @@ export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
   };
 
   // ── Lógica de arquivo ───────────────────────────────────────────────────────
+  // Não usa direto — abre o modal de recorte primeiro, pra pessoa escolher
+  // qual parte da foto vai aparecer (ver RecorteImagem).
   const aplicarArquivo = (file) => {
     if (!file) return;
-    setArquivo(file);
-    setPreview(URL.createObjectURL(file));
+    setArquivoParaRecorte({ arquivo: file, url: URL.createObjectURL(file) });
   };
 
   const handleFile = (e) => aplicarArquivo(e.target.files[0]);
@@ -172,6 +176,19 @@ export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
     e.preventDefault();
     setDragOver(false);
     aplicarArquivo(e.dataTransfer.files[0]);
+  };
+
+  const confirmarRecorte = (arquivoRecortado) => {
+    setArquivo(arquivoRecortado);
+    setPreview(URL.createObjectURL(arquivoRecortado));
+    URL.revokeObjectURL(arquivoParaRecorte.url);
+    setArquivoParaRecorte(null);
+  };
+
+  const cancelarRecorte = () => {
+    URL.revokeObjectURL(arquivoParaRecorte.url);
+    setArquivoParaRecorte(null);
+    if (fileRef.current) fileRef.current.value = "";
   };
 
   // ── Submissão ───────────────────────────────────────────────────────────────
@@ -428,6 +445,15 @@ export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
           </div>
         </form>
       </div>
+
+      {arquivoParaRecorte && (
+        <RecorteImagem
+          arquivo={arquivoParaRecorte.arquivo}
+          urlImagem={arquivoParaRecorte.url}
+          onConfirmar={confirmarRecorte}
+          onCancelar={cancelarRecorte}
+        />
+      )}
     </>
   );
 }
