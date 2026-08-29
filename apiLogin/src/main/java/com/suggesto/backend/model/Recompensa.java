@@ -1,6 +1,7 @@
 package com.suggesto.backend.model;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "recompensa")
@@ -27,6 +28,20 @@ public class Recompensa {
     // estabelecimento (ver lojapontosCli.js).
     @Column(name = "foto_path")
     private String fotoPath;
+
+    // Quando a recompensa foi cadastrada — usado pra saber quem é "nova" na
+    // página de notificações do cliente (ver notificacoesCli.js). Nula pras
+    // que já existiam antes desse campo (ver adicionar_data_cadastro.sql).
+    @Column(name = "data_cadastro")
+    private LocalDateTime dataCadastro;
+
+    public LocalDateTime getDataCadastro() {
+        return dataCadastro;
+    }
+
+    public void setDataCadastro(LocalDateTime dataCadastro) {
+        this.dataCadastro = dataCadastro;
+    }
 
     public Long getId() {
         return id;

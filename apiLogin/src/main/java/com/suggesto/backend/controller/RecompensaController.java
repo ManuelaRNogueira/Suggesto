@@ -70,6 +70,7 @@ public class RecompensaController {
             recompensa.setDescricao(descricao);
             recompensa.setCustoPontos(custoPontos);
             recompensa.setEstabelecimento(estabelecimento);
+            recompensa.setDataCadastro(java.time.LocalDateTime.now());
 
             Recompensa salva = recompensaRepository.save(recompensa);
             return ResponseEntity.ok(salva);

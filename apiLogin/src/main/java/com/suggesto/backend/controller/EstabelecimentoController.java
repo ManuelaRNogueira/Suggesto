@@ -99,6 +99,7 @@ public class EstabelecimentoController {
 
             novoEstabelecimento.setCidade(TextoUtil.normalizarCidade(novoEstabelecimento.getCidade()));
             novoEstabelecimento.setCodigoAcesso(gerarCodigoAcessoUnico());
+            novoEstabelecimento.setDataCadastro(java.time.LocalDateTime.now());
 
             if (arquivo != null && !arquivo.isEmpty()) {
                 // CORREÇÃO: Limpa o nome do arquivo ORIGINAL antes de gerar o caminho e salvar
@@ -504,11 +505,23 @@ public class EstabelecimentoController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> inativarEstabelecimento(@PathVariable Long id) {
+    public ResponseEntity<?> inativarEstabelecimento(
+            @PathVariable Long id,
+            @RequestParam("idSolicitante") Long idSolicitante) {
         return repository.findById(id).map(estab -> {
+            if (estab.getIdGerente() != idSolicitante) {
+                return ResponseEntity.status(403).body(Map.of(
+                        "success", false,
+                        "message", "Apenas o administrador principal pode desativar este estabelecimento."
+                ));
+            }
+
             estab.setAtivo(0);
             repository.save(estab);
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Estabelecimento desativado com sucesso."
+            ));
         }).orElse(ResponseEntity.notFound().build());
     }
 

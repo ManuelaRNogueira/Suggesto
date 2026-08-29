@@ -2,6 +2,7 @@ package com.suggesto.backend.model;
 
 import lombok.Data;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "estabelecimento")
@@ -73,6 +74,12 @@ public class Estabelecimento {
 
     @Column(name = "lng")
     private Double lng;
+
+    // Quando o estabelecimento foi cadastrado — usado pra saber quem é "novo"
+    // na página de notificações do cliente (ver notificacoesCli.js). Nulo pros
+    // que já existiam antes desse campo (ver adicionar_data_cadastro.sql).
+    @Column(name = "data_cadastro")
+    private LocalDateTime dataCadastro;
 
     // Calculados a partir das avaliações, não persistidos no banco.
     @Transient
