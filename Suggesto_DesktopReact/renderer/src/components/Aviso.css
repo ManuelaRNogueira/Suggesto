@@ -33,9 +33,9 @@
   height: 44px;
   margin-bottom: 14px;
   border-radius: 50%;
-  background: var(--roxo-bg, rgba(99, 102, 241, 0.12));
-  border: 1px solid var(--borda-roxa, rgba(99, 102, 241, 0.25));
-  color: var(--roxo-claro, #818cf8);
+  background: var(--roxo-bg, rgba(123, 47, 190, 0.12));
+  border: 1px solid var(--borda-roxa, rgba(123, 47, 190, 0.25));
+  color: var(--roxo-claro, #9B59D0);
 }
 
 .aviso-titulo {
@@ -58,7 +58,7 @@
   padding: 11px 18px;
   border: none;
   border-radius: var(--raio-sm, 8px);
-  background: var(--roxo, #6366f1);
+  background: var(--roxo, #7B2FBE);
   color: #fff;
   font-family: inherit;
   font-size: 14px;
@@ -72,7 +72,7 @@
 }
 
 .aviso-botao:focus-visible {
-  outline: 2px solid var(--roxo-claro, #818cf8);
+  outline: 2px solid var(--roxo-claro, #9B59D0);
   outline-offset: 2px;
 }
 

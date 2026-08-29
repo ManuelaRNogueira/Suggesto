@@ -14,7 +14,7 @@ const PERIODOS = [3, 6, 12];
 
 // Paleta de categorias: variações do roxo da marca + as cores semânticas
 // que o projeto já usa. Nada de gradiente.
-const CORES_CAT = ["#6366f1", "#818cf8", "#60a5fa", "#22c55e", "#eab308", "#f59e0b"];
+const CORES_CAT = ["#7B2FBE", "#9B59D0", "#60a5fa", "#22c55e", "#eab308", "#f59e0b"];
 
 export default function Estatisticas() {
   const [meses, setMeses] = useState(6);
@@ -363,7 +363,7 @@ function Acumulado({ dados }) {
         role="img"
         aria-label="Total acumulado de sugestões no período"
       >
-        <path d={area} fill="rgba(99,102,241,0.14)" />
+        <path d={area} fill="rgba(123, 47, 190,0.14)" />
         <path
           d={`M ${linha}`}
           fill="none"

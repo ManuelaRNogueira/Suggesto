@@ -114,7 +114,7 @@ export default function Dashboard() {
 
 // Acentos rotativos: cada card recebe uma cor da paleta do projeto, para a
 // grade não virar um bloco monocromático.
-const CORES_ACENTO = ["#6366f1", "#818cf8", "#60a5fa", "#22c55e", "#f59e0b", "#eab308"];
+const CORES_ACENTO = ["#7B2FBE", "#9B59D0", "#60a5fa", "#22c55e", "#f59e0b", "#eab308"];
 
 function CardEstab({ estab, idx, deletando, onDeletar }) {
   const cor = CORES_ACENTO[idx % CORES_ACENTO.length];
