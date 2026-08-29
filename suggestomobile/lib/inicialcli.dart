@@ -24,6 +24,9 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _pesquisaController = TextEditingController();
   String _termoPesquisa = '';
 
+  // Filtro de categorias — usa as categorias reais dos locais já carregados.
+  final Set<String> _categoriasSelecionadas = {};
+
   @override
   void initState() {
     super.initState();
@@ -39,13 +42,35 @@ class _HomePageState extends State<HomePage> {
   // Mesma lógica que existia na tela "Achar um estabelecimento": separa o
   // nome por palavras e compara pelo início de cada uma.
   List<Map<String, dynamic>> get _locaisExibidos {
-    if (_termoPesquisa.isEmpty) return locais;
-    final pesquisa = _termoPesquisa.toLowerCase();
-    return locais.where((local) {
-      final nome = (local['nome'] as String?)?.toLowerCase() ?? '';
-      final palavras = nome.split(' ');
-      return palavras.any((palavra) => palavra.startsWith(pesquisa));
-    }).toList();
+    Iterable<Map<String, dynamic>> resultado = locais;
+    if (_categoriasSelecionadas.isNotEmpty) {
+      resultado = resultado.where(
+        (local) => _categoriasSelecionadas.contains(
+          (local['categoria'] as String?) ?? '',
+        ),
+      );
+    }
+    if (_termoPesquisa.isNotEmpty) {
+      final pesquisa = _termoPesquisa.toLowerCase();
+      resultado = resultado.where((local) {
+        final nome = (local['nome'] as String?)?.toLowerCase() ?? '';
+        final palavras = nome.split(' ');
+        return palavras.any((palavra) => palavra.startsWith(pesquisa));
+      });
+    }
+    return resultado.toList();
+  }
+
+  // Categorias reais existentes entre os locais já carregados — usadas
+  // como opções no filtro, sem depender de nenhuma lista fixa.
+  List<String> get _categoriasDisponiveis {
+    final categorias = <String>{};
+    for (final local in locais) {
+      final c = (local['categoria'] as String?)?.trim();
+      if (c != null && c.isNotEmpty) categorias.add(c);
+    }
+    final lista = categorias.toList()..sort();
+    return lista;
   }
 
   void _fecharPesquisa() {
@@ -570,16 +595,154 @@ class _HomePageState extends State<HomePage> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: const Color(0xFF2A1A4A),
-              borderRadius: BorderRadius.circular(10),
+          GestureDetector(
+            onTap: _abrirFiltro,
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFF2A1A4A),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.tune, color: Colors.white, size: 18),
             ),
-            child: const Icon(Icons.tune, color: Colors.white, size: 18),
           ),
         ],
+      ),
+    );
+  }
+
+  // Filtro por categoria — bottom sheet igual ao já usado em lojaPontos.dart,
+  // com os chips no mesmo estilo dos filtros do painel adm (sugestoesAdm.dart).
+  // Aplica o filtro em tempo real na lista, sem abrir nova tela.
+  void _abrirFiltro() {
+    final categorias = _categoriasDisponiveis;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => StatefulBuilder(
+        builder: (context, setModalState) {
+          void alternar(String categoria) {
+            setModalState(() {
+              setState(() {
+                if (_categoriasSelecionadas.contains(categoria)) {
+                  _categoriasSelecionadas.remove(categoria);
+                } else {
+                  _categoriasSelecionadas.add(categoria);
+                }
+              });
+            });
+          }
+
+          void limpar() {
+            setModalState(
+              () => setState(() => _categoriasSelecionadas.clear()),
+            );
+          }
+
+          return Container(
+            decoration: const BoxDecoration(
+              color: Color(0xFF1E0E32),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 36),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Filtrar por categoria',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontFamily: 'PoppinsBold',
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (_categoriasSelecionadas.isNotEmpty)
+                      GestureDetector(
+                        onTap: limpar,
+                        child: const Text(
+                          'Limpar filtros',
+                          style: TextStyle(
+                            color: Color(0xFF9B59D0),
+                            fontSize: 13,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                if (categorias.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Text(
+                      'Nenhuma categoria disponível.',
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  )
+                else
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: categorias.map((c) {
+                      final ativo = _categoriasSelecionadas.contains(c);
+                      return GestureDetector(
+                        onTap: () => alternar(c),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: ativo
+                                ? const Color(0xFF9B59D0)
+                                : const Color(0xFF2A1A4A),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: ativo
+                                  ? const Color(0xFF9B59D0)
+                                  : const Color(0xFF3A2A5A),
+                            ),
+                          ),
+                          child: Text(
+                            c,
+                            style: TextStyle(
+                              color: ativo ? Colors.white : Colors.white70,
+                              fontSize: 13,
+                              fontFamily: 'Poppins',
+                              fontWeight: ativo
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
