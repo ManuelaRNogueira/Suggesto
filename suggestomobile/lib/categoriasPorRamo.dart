@@ -45,7 +45,10 @@ const Map<String, List<String>> categoriasPorRamo = {
   'Espaço para Eventos': ['Atendimento', 'Estrutura', 'Limpeza', 'Organização', 'Preço', 'Equipamentos'],
   'Banco / Serviços Financeiros': ['Atendimento', 'Agilidade', 'Preço', 'Organização', 'Suporte', 'Segurança'],
 
-  'Apresentação': ['Atendimento', 'Estrutura', 'Equipamentos', 'Ambiente', 'Preço', 'Outro'],
+  // Apresentação de projeto/produto (defesa, pitch, TCC) — não é um espaço
+  // físico comercial, então usa categorias de avaliação de apresentação, não
+  // de atendimento/estrutura.
+  'Apresentação': ['Clareza', 'Conteúdo', 'Slides', 'Domínio do assunto', 'Objetividade', 'Outro'],
   'Evento': ['Atendimento', 'Organização', 'Estrutura', 'Ambiente', 'Preço', 'Outro'],
 };
 
