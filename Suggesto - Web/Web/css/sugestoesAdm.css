@@ -359,7 +359,7 @@
 
 .sug-cat.ativo {
   color: var(--cor-texto);
-  background: rgba(99, 102, 241, 0.12);
+  background: rgba(123, 47, 190, 0.12);
 }
 
 .sug-cat span { color: var(--cor-texto-muito-fraco); flex-shrink: 0; }
@@ -390,7 +390,7 @@
 }
 
 .sug-nivel.nivel-platina {
-  color: #818cf8;
+  color: #9B59D0;
   background: rgba(129, 140, 248, 0.14);
   border: 1px solid rgba(129, 140, 248, 0.35);
 }

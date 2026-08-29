@@ -3,14 +3,14 @@
   --fundo: #121214;
   --fundo-2: #1a1924;
   --fundo-3: #1c1b26;
-  --roxo: #6366f1;
-  --roxo-claro: #818cf8;
-  --roxo-brilho: rgba(99, 102, 241, 0.3);
+  --roxo: #7B2FBE;
+  --roxo-claro: #9B59D0;
+  --roxo-brilho: rgba(123, 47, 190, 0.3);
   --texto: #f0f0f8;
   --texto-fraco: rgba(240, 240, 248, 0.55);
   --texto-mfraco: rgba(240, 240, 248, 0.3);
   --borda: rgba(255, 255, 255, 0.07);
-  --borda-roxa: rgba(99, 102, 241, 0.25);
+  --borda-roxa: rgba(123, 47, 190, 0.25);
   --laranja: #f59e0b;
   --verde: #10b981;
   --azul: #3b82f6;
@@ -58,7 +58,7 @@ body {
 .logo-icone {
   width: 30px; height: 30px;
   border-radius: 8px;
-  background: #6366f1;
+  background: #7B2FBE;
   display: flex; align-items: center; justify-content: center;
   font-size: 14px;
   color: #fff;
@@ -94,7 +94,7 @@ body {
   color: var(--texto);
 }
 .lateral-item-ativo {
-  background: rgba(99, 102, 241, 0.15);
+  background: rgba(123, 47, 190, 0.15);
   color: var(--roxo-claro);
   border: 1px solid var(--borda-roxa);
 }
@@ -113,7 +113,7 @@ body {
 .usuario-avatar {
   width: 36px; height: 36px;
   border-radius: 50%;
-  background: #6366f1;
+  background: #7B2FBE;
   display: flex; align-items: center; justify-content: center;
   font-size: 12px;
   font-weight: 700;
@@ -283,7 +283,7 @@ body {
 }
 .painel-saldo.nivel-platina .saldo-unidade { color: rgba(199, 210, 254, 0.68); }
 .painel-saldo.nivel-platina .saldo-barra-progresso {
-  background: linear-gradient(90deg, #6366f1, #a5b4fc, #eef2ff);
+  background: linear-gradient(90deg, #7B2FBE, #a5b4fc, #eef2ff);
 }
 .painel-saldo.nivel-platina .saldo-estatisticas {
   border-color: rgba(165, 180, 252, 0.28);
@@ -432,7 +432,7 @@ body {
 }
 .saldo-barra-progresso {
   height: 100%;
-  background: #6366f1;
+  background: #7B2FBE;
   border-radius: 999px;
   transition: width 1s ease;
 }
@@ -538,7 +538,7 @@ body {
   color: #4ade80;
 }
 .historico-item-debito .historico-icone {
-  background: rgba(99, 102, 241, 0.15);
+  background: rgba(123, 47, 190, 0.15);
   color: var(--roxo-claro);
 }
 .historico-info {
@@ -598,7 +598,7 @@ body {
 }
 .faixa-btn:hover { border-color: var(--borda-roxa); color: var(--texto); }
 .faixa-btn-ativa {
-  background: rgba(99, 102, 241, 0.15);
+  background: rgba(123, 47, 190, 0.15);
   border-color: var(--borda-roxa);
   color: var(--roxo-claro);
 }
@@ -634,7 +634,7 @@ body {
 .secao-badge-verde { background: rgba(16, 185, 129, 0.15); color: var(--verde); }
 .secao-badge-azul  { background: rgba(59, 130, 246, 0.15); color: var(--azul); }
 .secao-badge-laranja { background: rgba(245, 158, 11, 0.15); color: var(--laranja); }
-.secao-badge-roxo  { background: rgba(99, 102, 241, 0.2);   color: var(--roxo-claro); }
+.secao-badge-roxo  { background: rgba(123, 47, 190, 0.2);   color: var(--roxo-claro); }
 
 .secao-titulo {
   font-family: var(--fonte-titulo);
@@ -667,10 +667,10 @@ body {
   border-color: var(--borda-roxa);
 }
 .recomp-card-premium {
-  border-color: rgba(99, 102, 241, 0.2);
+  border-color: rgba(123, 47, 190, 0.2);
 }
 .recomp-card-premium:hover {
-  border-color: rgba(99, 102, 241, 0.3);
+  border-color: rgba(123, 47, 190, 0.3);
 }
 
 @keyframes entrar {
@@ -818,7 +818,7 @@ body {
   font-size: 11px;
   font-weight: 600;
   color: #fff;
-  background: rgba(99, 102, 241, 0.85);
+  background: rgba(123, 47, 190, 0.85);
   border-radius: 999px;
   padding: 3px 10px;
 }
@@ -887,8 +887,8 @@ body {
   margin-top: 16px;
   padding: 16px;
   border-radius: 12px;
-  background: rgba(99, 102, 241, 0.12);
-  border: 1px dashed rgba(99, 102, 241, 0.4);
+  background: rgba(123, 47, 190, 0.12);
+  border: 1px dashed rgba(123, 47, 190, 0.4);
   text-align: center;
 }
 
@@ -903,7 +903,7 @@ body {
   font-size: 22px;
   font-weight: 800;
   letter-spacing: 0.12em;
-  color: #818cf8;
+  color: #9B59D0;
   margin: 0;
 }
 
@@ -988,14 +988,14 @@ body {
   align-items: center;
   gap: 16px;
   padding: 16px;
-  background: rgba(99, 102, 241, 0.08);
+  background: rgba(123, 47, 190, 0.08);
   border: 1px solid var(--borda-roxa);
   border-radius: 14px;
 }
 .modal-recomp-icone {
   width: 48px; height: 48px;
   border-radius: 12px;
-  background: rgba(99, 102, 241, 0.15);
+  background: rgba(123, 47, 190, 0.15);
   display: flex; align-items: center; justify-content: center;
   font-size: 20px;
   color: var(--roxo-claro);

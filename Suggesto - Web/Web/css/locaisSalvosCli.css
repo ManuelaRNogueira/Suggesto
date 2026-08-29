@@ -4,14 +4,14 @@
   --cor-fundo: #121214;
   --cor-fundo-2: #1a1924;
   --cor-fundo-3: #1c1b26;
-  --cor-roxo: #6366f1;
-  --cor-roxo-claro: #818cf8;
-  --cor-roxo-brilho: rgba(99, 102, 241, 0.3);
+  --cor-roxo: #7B2FBE;
+  --cor-roxo-claro: #9B59D0;
+  --cor-roxo-brilho: rgba(123, 47, 190, 0.3);
   --cor-texto: #f0f0f8;
   --cor-texto-fraco: rgba(240, 240, 248, 0.55);
   --cor-texto-muito-fraco: rgba(240, 240, 248, 0.3);
   --cor-borda: rgba(255, 255, 255, 0.07);
-  --cor-borda-roxa: rgba(99, 102, 241, 0.25);
+  --cor-borda-roxa: rgba(123, 47, 190, 0.25);
   --cor-laranja: #f59e0b;
   --cor-verde: #4ade80;
   --cor-perigo: #f87171;
@@ -153,7 +153,7 @@ body {
   flex-shrink: 0;
 }
 .stat-icone-roxo {
-  background: rgba(99, 102, 241, 0.15);
+  background: rgba(123, 47, 190, 0.15);
   color: var(--cor-roxo-claro);
 }
 .stat-icone-amarelo {
@@ -247,7 +247,7 @@ body {
 }
 .filtro-chip:hover { border-color: var(--cor-borda-roxa); color: var(--cor-texto); }
 .filtro-chip-ativo {
-  background: rgba(99, 102, 241, 0.15);
+  background: rgba(123, 47, 190, 0.15);
   border-color: var(--cor-borda-roxa);
   color: var(--cor-roxo-claro);
   font-weight: 500;
@@ -292,7 +292,7 @@ body {
 .locais-vazio span { font-size: 13px; }
 .btn-limpar-filtro {
   margin-top: 8px;
-  background: rgba(99, 102, 241, 0.12);
+  background: rgba(123, 47, 190, 0.12);
   border: 1px solid var(--cor-borda-roxa);
   border-radius: 999px;
   padding: 8px 20px;
@@ -302,7 +302,7 @@ body {
   cursor: pointer;
   transition: var(--animacao);
 }
-.btn-limpar-filtro:hover { background: rgba(99, 102, 241, 0.22); }
+.btn-limpar-filtro:hover { background: rgba(123, 47, 190, 0.22); }
 
 /* ===== MODAL ===== */
 .modal-fundo {
@@ -399,7 +399,7 @@ body {
 .botao-modal:hover {
   background: #6d28d9;
   transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 8px 24px rgba(123, 47, 190, 0.4);
 }
 .botao-modal-ghost {
   background: transparent;

@@ -83,7 +83,7 @@
 
 .recorte-zoom-slider {
   flex: 1;
-  accent-color: #6366f1;
+  accent-color: #7B2FBE;
 }
 
 .recorte-acoes {
@@ -107,17 +107,17 @@
 }
 
 .recorte-btn:hover {
-  border-color: rgba(99, 102, 241, 0.4);
+  border-color: rgba(123, 47, 190, 0.4);
 }
 
 .recorte-btn-confirmar {
-  background: #6366f1;
-  border-color: #6366f1;
+  background: #7B2FBE;
+  border-color: #7B2FBE;
 }
 
 .recorte-btn-confirmar:hover {
-  background: #818cf8;
-  border-color: #818cf8;
+  background: #9B59D0;
+  border-color: #9B59D0;
 }
 
 @media (max-width: 480px) {

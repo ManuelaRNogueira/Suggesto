@@ -85,7 +85,7 @@
   display: block;
 }
 .local-favorito.salvo {
-  color: var(--cor-roxo-claro, #818cf8);
+  color: var(--cor-roxo-claro, #9B59D0);
 }
 
 .local-status {
@@ -166,7 +166,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(99, 102, 241, 0.12);
+  background: rgba(123, 47, 190, 0.12);
   border: 1px solid var(--cor-borda-roxa);
   border-radius: 999px;
   padding: 5px 12px;
@@ -177,4 +177,4 @@
   cursor: pointer;
   transition: var(--animacao);
 }
-.local-btn-sugestao:hover { background: rgba(99, 102, 241, 0.22); }
+.local-btn-sugestao:hover { background: rgba(123, 47, 190, 0.22); }
