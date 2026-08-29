@@ -1,3 +1,10 @@
+/* ── Seletor de estabelecimento ────────────────────────────────────────── */
+
+.est-select-estab {
+  width: auto;
+  max-width: 220px;
+}
+
 /* ── Seletor de período ────────────────────────────────────────────────── */
 
 .est-periodos {

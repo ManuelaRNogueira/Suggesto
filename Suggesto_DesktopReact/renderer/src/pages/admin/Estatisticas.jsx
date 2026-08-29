@@ -23,11 +23,27 @@ export default function Estatisticas() {
   const [sugestoes, setSugestoes] = useState([]);
   const [erro, setErro] = useState(null);
   const [carregando, setCarregando] = useState(true);
+  const [estabelecimentoFiltro, setEstabelecimentoFiltro] = useState("todos");
+
+  // Só faz sentido separar estatísticas por estabelecimento quando o admin
+  // tem mais de um — com um só, "Todos" e o próprio local dão o mesmo número.
+  const estabelecimentosDisponiveis = useMemo(() => {
+    const mapa = new Map();
+    sugestoes.forEach((s) => {
+      if (s.estabelecimentoId == null) return;
+      if (!mapa.has(s.estabelecimentoId)) {
+        mapa.set(s.estabelecimentoId, { id: s.estabelecimentoId, nome: s.estabelecimento || "Estabelecimento" });
+      }
+    });
+    return [...mapa.values()].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  }, [sugestoes]);
+  const multiplosEstabelecimentos = estabelecimentosDisponiveis.length > 1;
 
   useEffect(() => {
     let vivo = true;
     setCarregando(true);
-    Promise.all([buscarMetricas(meses), buscarSugestoes()])
+    const idEstabelecimento = estabelecimentoFiltro === "todos" ? undefined : estabelecimentoFiltro;
+    Promise.all([buscarMetricas(meses, idEstabelecimento), buscarSugestoes()])
       .then(([m, s]) => {
         if (!vivo) return;
         setMetricas(m);
@@ -39,7 +55,15 @@ export default function Estatisticas() {
     return () => {
       vivo = false;
     };
-  }, [meses]);
+  }, [meses, estabelecimentoFiltro]);
+
+  // As sugestões (usadas nos gráficos calculados no cliente: notas, áreas,
+  // ranking) vêm sempre completas — filtra aqui pelo mesmo estabelecimento
+  // que já foi aplicado no lado do servidor para as métricas.
+  const sugestoesFiltradas = useMemo(() => {
+    if (estabelecimentoFiltro === "todos") return sugestoes;
+    return sugestoes.filter((s) => s.estabelecimentoId === estabelecimentoFiltro);
+  }, [sugestoes, estabelecimentoFiltro]);
 
   const porMes = metricas?.sugestoesPorMes || [];
 
@@ -54,7 +78,7 @@ export default function Estatisticas() {
     const variacao =
       mesAnterior > 0 ? ((mesAtual - mesAnterior) / mesAnterior) * 100 : null;
 
-    const comNota = sugestoes.filter((s) => typeof s.nota === "number");
+    const comNota = sugestoesFiltradas.filter((s) => typeof s.nota === "number");
     const notaMedia = comNota.length
       ? comNota.reduce((acc, s) => acc + s.nota, 0) / comNota.length
       : null;
@@ -69,7 +93,7 @@ export default function Estatisticas() {
       taxa: total ? (implementados / total) * 100 : 0,
       mediaMes: porMes.length ? noPeriodo / porMes.length : 0,
     };
-  }, [metricas, sugestoes, porMes]);
+  }, [metricas, sugestoesFiltradas, porMes]);
 
   // O backend chama esse mapa de "porCategoria", mas ele agrupa por tipo de post
   // (Sugestão / Crítica / Elogio) — ver AdminService.classificarTipo.
@@ -90,11 +114,11 @@ export default function Estatisticas() {
   // própria lista de sugestões, que já traz a categoria de cada uma.
   const porArea = useMemo(() => {
     const mapa = {};
-    sugestoes.forEach((s) => {
+    sugestoesFiltradas.forEach((s) => {
       const nome = s.categoria || "Sem categoria";
       mapa[nome] = (mapa[nome] || 0) + 1;
     });
-    const total = sugestoes.length;
+    const total = sugestoesFiltradas.length;
     return Object.entries(mapa)
       .sort((a, b) => b[1] - a[1])
       .map(([nome, qtd]) => ({
@@ -102,11 +126,11 @@ export default function Estatisticas() {
         qtd,
         pct: total ? (qtd / total) * 100 : 0,
       }));
-  }, [sugestoes]);
+  }, [sugestoesFiltradas]);
 
   const melhorAvaliadas = useMemo(
     () =>
-      sugestoes
+      sugestoesFiltradas
         .filter((s) => typeof s.nota === "number")
         .sort(
           (a, b) =>
@@ -114,7 +138,7 @@ export default function Estatisticas() {
             new Date(b.dataAvaliacao || 0) - new Date(a.dataAvaliacao || 0),
         )
         .slice(0, 5),
-    [sugestoes],
+    [sugestoesFiltradas],
   );
 
   if (erro) return <EstadoErro mensagem={erro} />;
@@ -131,6 +155,24 @@ export default function Estatisticas() {
           resumo.noPeriodo === 1 ? "sugestão" : "sugestões"
         } no período`}
       >
+        {multiplosEstabelecimentos && (
+          <select
+            className="adm-campo est-select-estab"
+            value={estabelecimentoFiltro}
+            onChange={(e) =>
+              setEstabelecimentoFiltro(
+                e.target.value === "todos" ? "todos" : Number(e.target.value),
+              )
+            }
+          >
+            <option value="todos">Todos os estabelecimentos</option>
+            {estabelecimentosDisponiveis.map((es) => (
+              <option key={es.id} value={es.id}>
+                {es.nome}
+              </option>
+            ))}
+          </select>
+        )}
         <div className="est-periodos">
           {PERIODOS.map((p) => (
             <button
@@ -235,6 +277,7 @@ export default function Estatisticas() {
                       <span className="est-rank-meta">
                         {s.categoria || "Sem categoria"} ·{" "}
                         {labelStatus(s.statusUi)}
+                        {multiplosEstabelecimentos && s.estabelecimento && ` · ${s.estabelecimento}`}
                       </span>
                     </span>
                     <span className="est-rank-nota adm-num">

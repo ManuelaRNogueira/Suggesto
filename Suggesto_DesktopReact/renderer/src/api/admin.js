@@ -47,8 +47,8 @@ async function fetchJson(url, opcoes = {}) {
   return resposta.json();
 }
 
-export function buscarMetricas(meses) {
-  return fetchJson(`${API_BASE}/admin/metricas${queryGerente({ meses })}`);
+export function buscarMetricas(meses, idEstabelecimento) {
+  return fetchJson(`${API_BASE}/admin/metricas${queryGerente({ meses, idEstabelecimento })}`);
 }
 
 export function buscarSugestoes() {
