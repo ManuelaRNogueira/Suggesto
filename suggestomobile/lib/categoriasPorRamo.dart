@@ -46,8 +46,8 @@ const Map<String, List<String>> categoriasPorRamo = {
   'Banco / Serviços Financeiros': ['Atendimento', 'Agilidade', 'Preço', 'Organização', 'Suporte', 'Segurança'],
 
   // Apresentação do Suggesto (feira/demo) — não é um espaço físico comercial,
-  // então avalia o app em si (design, uso, funcionalidades...), não
-  // atendimento/estrutura. Lista fechada, só estas 8.
+  // então avalia tanto o app em si (design, uso, funcionalidades...) quanto a
+  // apresentação/equipe. Lista fechada, só estas 12.
   'Apresentação': [
     'Design e interface',
     'Facilidade de uso',
@@ -56,6 +56,10 @@ const Map<String, List<String>> categoriasPorRamo = {
     'Experiência do usuário',
     'Acessibilidade',
     'Proposta do projeto',
+    'Clareza da apresentação',
+    'Organização da apresentação',
+    'Comunicação da equipe',
+    'Demonstração do sistema',
     'Outro',
   ],
   'Evento': ['Atendimento', 'Organização', 'Estrutura', 'Ambiente', 'Preço', 'Outro'],

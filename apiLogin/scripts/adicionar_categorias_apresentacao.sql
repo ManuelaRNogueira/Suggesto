@@ -1,6 +1,6 @@
 -- Categorias de sugestão do ramo "Apresentação" (o Suggesto avaliado como
--- app, numa feira/demo — ver js/categoriasPorRamo.js /
--- lib/categoriasPorRamo.dart). Lista fechada, só estas 7 + "Outro" (que já
+-- app e como apresentação, numa feira/demo — ver js/categoriasPorRamo.js /
+-- lib/categoriasPorRamo.dart). Lista fechada, só estas 11 + "Outro" (que já
 -- existe, id 8). Puramente aditivo, mesmo padrão dos scripts anteriores.
 --
 -- Se você já rodou uma versão anterior deste script (com "Clareza",
@@ -19,6 +19,10 @@ INSERT INTO categoria (nome_categoria) VALUES ('Desempenho');
 INSERT INTO categoria (nome_categoria) VALUES ('Experiência do usuário');
 INSERT INTO categoria (nome_categoria) VALUES ('Acessibilidade');
 INSERT INTO categoria (nome_categoria) VALUES ('Proposta do projeto');
+INSERT INTO categoria (nome_categoria) VALUES ('Clareza da apresentação');
+INSERT INTO categoria (nome_categoria) VALUES ('Organização da apresentação');
+INSERT INTO categoria (nome_categoria) VALUES ('Comunicação da equipe');
+INSERT INTO categoria (nome_categoria) VALUES ('Demonstração do sistema');
 
 -- Confira o resultado:
 --   SELECT * FROM categoria ORDER BY id_categoria;
