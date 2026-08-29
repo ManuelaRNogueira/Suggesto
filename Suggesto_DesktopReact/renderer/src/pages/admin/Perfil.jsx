@@ -85,7 +85,14 @@ export default function Perfil() {
       </Topo>
 
       <section className="per-cabecalho">
-        <span className="per-avatar">
+        <span
+          className="per-avatar"
+          style={
+            urlFoto(usuario.fotoUrl)
+              ? { background: "transparent", boxShadow: "none", border: "none" }
+              : undefined
+          }
+        >
           {urlFoto(usuario.fotoUrl) ? (
             <img
               src={urlFoto(usuario.fotoUrl)}

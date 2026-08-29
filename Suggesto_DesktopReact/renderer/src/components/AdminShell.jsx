@@ -154,7 +154,14 @@ export default function AdminShell() {
 
         <div className="adm-lateral-rodape">
           <div className="adm-usuario">
-            <span className="adm-usuario-avatar">
+            <span
+              className="adm-usuario-avatar"
+              style={
+                urlFoto(usuario.fotoUrl)
+                  ? { background: "transparent", boxShadow: "none", border: "none" }
+                  : undefined
+              }
+            >
               {urlFoto(usuario.fotoUrl) ? (
                 <img
                   src={urlFoto(usuario.fotoUrl)}
