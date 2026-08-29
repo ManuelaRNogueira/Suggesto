@@ -44,6 +44,9 @@ const Map<String, List<String>> categoriasPorRamo = {
   'Coworking': ['Atendimento', 'Estrutura', 'Limpeza', 'Internet/Wi-Fi', 'Preço', 'Ambiente'],
   'Espaço para Eventos': ['Atendimento', 'Estrutura', 'Limpeza', 'Organização', 'Preço', 'Equipamentos'],
   'Banco / Serviços Financeiros': ['Atendimento', 'Agilidade', 'Preço', 'Organização', 'Suporte', 'Segurança'],
+
+  'Apresentação': ['Atendimento', 'Estrutura', 'Equipamentos', 'Ambiente', 'Preço', 'Outro'],
+  'Evento': ['Atendimento', 'Organização', 'Estrutura', 'Ambiente', 'Preço', 'Outro'],
 };
 
 // Usado pro ramo "Outro" e pra qualquer ramo ainda não configurado acima.
