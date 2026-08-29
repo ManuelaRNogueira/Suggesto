@@ -25,6 +25,9 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
   bool carregando = true;
   String? erro;
   List<Map<String, dynamic>> sugestoes = [];
+  // Categorias reais da tabela `categoria` (GET /api/categorias, sem
+  // tipoEstabelecimento — o backend devolve todas nesse caso, uso admin).
+  List<Map<String, dynamic>> categoriasAdmin = [];
 
   final List<_Filtro> filtros = const [
     _Filtro('Todos', 'todos'),
@@ -45,10 +48,14 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
       erro = null;
     });
     try {
-      final lista = await buscarSugestoesAdmin(
-        idGerente: Sessao.idGerenteEfetivo,
-      );
-      setState(() => sugestoes = lista.cast<Map<String, dynamic>>());
+      final resultados = await Future.wait([
+        buscarSugestoesAdmin(idGerente: Sessao.idGerenteEfetivo),
+        buscarCategorias(null),
+      ]);
+      setState(() {
+        sugestoes = resultados[0].cast<Map<String, dynamic>>();
+        categoriasAdmin = resultados[1].cast<Map<String, dynamic>>();
+      });
     } on ApiException catch (e) {
       setState(() => erro = e.mensagem);
     } finally {
@@ -69,17 +76,6 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
       }
       return true;
     }).toList();
-  }
-
-  // Categorias reais das sugestões já carregadas — sem lista fixa no código.
-  List<String> get categoriasDisponiveis {
-    final categorias = <String>{};
-    for (final s in sugestoes) {
-      final c = (s['categoria'] as String?)?.trim();
-      if (c != null && c.isNotEmpty) categorias.add(c);
-    }
-    final lista = categorias.toList()..sort();
-    return lista;
   }
 
   Future<void> _abrirDetalhes(Map<String, dynamic> sugestao) async {
@@ -118,11 +114,15 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _buscaCampo(),
+                  Row(
+                    children: [
+                      Expanded(child: _buscaCampo()),
+                      const SizedBox(width: 10),
+                      _botaoFiltroCategoria(),
+                    ],
+                  ),
                   const SizedBox(height: 14),
                   _filtrosChips(),
-                  const SizedBox(height: 10),
-                  _filtrosCategoriaChips(),
                 ],
               ),
             ),
@@ -241,30 +241,140 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
     );
   }
 
-  // Segunda linha de chips, com rolagem horizontal própria — filtro por
-  // categoria, junto com o filtro de status já existente acima.
-  Widget _filtrosCategoriaChips() {
-    final categorias = categoriasDisponiveis;
-    if (categorias.isEmpty) return const SizedBox.shrink();
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _chipBase(
-            rotulo: 'Todas categorias',
-            ativo: categoriaFiltro == 'todas',
-            onTap: () => setState(() => categoriaFiltro = 'todas'),
+  // Botão com ícone de filtro ao lado da busca — abre o painel de categorias.
+  Widget _botaoFiltroCategoria() {
+    return GestureDetector(
+      onTap: _abrirFiltroCategoria,
+      child: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: categoriaFiltro == 'todas' ? Cores.cartao : Cores.roxo,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: categoriaFiltro == 'todas' ? Cores.borda : Cores.roxo,
           ),
-          const SizedBox(width: 8),
-          for (final c in categorias) ...[
-            _chipBase(
-              rotulo: c,
-              ativo: categoriaFiltro == c,
-              onTap: () => setState(() => categoriaFiltro = c),
+        ),
+        child: const Icon(Icons.tune, color: Colors.white, size: 20),
+      ),
+    );
+  }
+
+  // Painel de filtro por categoria — mesmo modelo de bottom sheet usado no
+  // filtro de "Descubra Novos Locais" da Home do cliente (inicialcli.dart):
+  // fundo Cores.cartao, topo arredondado, alça de arraste, título "Filtrar
+  // por categoria" e chips. Categorias vêm de GET /api/categorias (tabela
+  // `categoria`), não de lista fixa no código.
+  void _abrirFiltroCategoria() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => StatefulBuilder(
+        builder: (context, setModalState) {
+          void selecionar(String chave) {
+            setModalState(() => setState(() => categoriaFiltro = chave));
+          }
+
+          return Container(
+            decoration: const BoxDecoration(
+              color: Cores.cartao,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
-            const SizedBox(width: 8),
-          ],
-        ],
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 36),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Filtrar por categoria',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontFamily: 'PoppinsBold',
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (categoriaFiltro != 'todas')
+                      GestureDetector(
+                        onTap: () => selecionar('todas'),
+                        child: const Text(
+                          'Limpar filtro',
+                          style: TextStyle(
+                            color: Cores.roxo,
+                            fontSize: 13,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                if (categoriasAdmin.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Text(
+                      'Nenhuma categoria disponível.',
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  )
+                else
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: categoriasAdmin.map((c) {
+                      final nome = c['nomeCategoria'] as String;
+                      final ativo = categoriaFiltro == nome;
+                      return GestureDetector(
+                        onTap: () => selecionar(nome),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: ativo ? Cores.roxo : Cores.fundo,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: ativo ? Cores.roxo : Cores.borda,
+                            ),
+                          ),
+                          child: Text(
+                            nome,
+                            style: TextStyle(
+                              color: ativo ? Colors.white : Colors.white70,
+                              fontSize: 13,
+                              fontFamily: 'Poppins',
+                              fontWeight: ativo
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
