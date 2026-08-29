@@ -89,15 +89,18 @@ function preencherDados() {
 
   // Logo
   const logo = document.getElementById('logoEstab');
+  const placeholder = document.getElementById('logoPlaceholder');
   if (dadosEstab.logo) {
     logo.src = dadosEstab.logo;
+    logo.style.display = '';
+    placeholder.style.display = 'none';
     logo.onerror = () => {
       logo.style.display = 'none';
-      document.getElementById('logoPlaceholder').style.display = 'flex';
+      placeholder.style.display = 'flex';
     };
   } else {
     logo.style.display = 'none';
-    document.getElementById('logoPlaceholder').style.display = 'flex';
+    placeholder.style.display = 'flex';
   }
 }
 
