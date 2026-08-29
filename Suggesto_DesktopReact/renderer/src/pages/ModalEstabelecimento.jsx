@@ -20,7 +20,12 @@ const IC = {
 };
 
 // Lista única de tipos de estabelecimento — mantenha em sincronia com
-// ModalEditarEstabelecimento.jsx, cadastroAdm.html e avaliacoesUtils.js.
+// ModalEditarEstabelecimento.jsx. "Apresentação" e "Evento" são propositalmente
+// EXCLUSIVOS daqui (ferramenta interna da equipe) — não aparecem no
+// autocadastro público (cadastroAdm.html) nem em avaliacoesUtils.js, porque
+// são só pra casos internos tipo cadastrar o próprio Suggesto como
+// "estabelecimento" numa feira/apresentação, não tipos de negócio reais que
+// um usuário externo escolheria.
 const CATEGORIAS = [
   "Restaurante", "Bar", "Lanchonete", "Pizzaria", "Cafeteria", "Padaria",
   "Sorveteria", "Hamburgueria", "Doceria / Confeitaria", "Açaiteria", "Food Truck",
