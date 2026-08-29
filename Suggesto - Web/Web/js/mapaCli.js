@@ -210,11 +210,14 @@ function iniciarMapa(lat, lng) {
     attributionControl: true,
   });
 
-  // Tiles escuros do CartoDB (combina com o tema do projeto)
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  // Tiles padrão do OpenStreetMap — gratuito, sem chave de API (o CartoDB
+  // passou a exigir chave até pro tile "dark_all" que usávamos antes). O
+  // visual escuro agora vem de um filtro CSS em cima do tile (ver
+  // ".leaflet-tile-pane" em css/mapaCli.css), sem depender de nenhum serviço
+  // pago pra isso.
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
-    subdomains: 'abcd',
-    attribution: '&copy; OpenStreetMap &copy; CARTO',
+    attribution: '&copy; OpenStreetMap',
   }).addTo(mapaLeaflet);
   L.control.zoom({ position: 'bottomleft' }).addTo(mapaLeaflet);
 

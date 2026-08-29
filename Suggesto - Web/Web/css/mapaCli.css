@@ -21,8 +21,16 @@
 .popup-suggesto-conteudo span { color: #a78bfa; font-size: 11px; line-height: 1.35; }
 .leaflet-container {
   cursor: grab;
+  background: #13131f;
 }
 .leaflet-container.leaflet-drag-target { cursor: grabbing; }
+
+/* Escurece só os tiles do mapa (OpenStreetMap padrão, sempre claro) pra
+   combinar com o tema escuro do site — não afeta pin/popup, que ficam numa
+   camada separada do Leaflet. */
+.leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9) saturate(0.6);
+}
 
 .leaflet-control-zoom a {
   background: #13131f;
