@@ -58,12 +58,17 @@ class _PerfilAdmState extends State<PerfilAdm> {
       if (Sessao.ehPrincipal && idGerente != null) {
         // Só o admin principal gerencia a equipe — o backend também confere
         // isso em aceitar/recusar, então evita a chamada extra pros demais.
-        pendentes = (await buscarSolicitacoesAdmin(idGerente: idGerente)).cast<Map<String, dynamic>>();
+        pendentes = (await buscarSolicitacoesAdmin(
+          idGerente: idGerente,
+        )).cast<Map<String, dynamic>>();
       }
 
       setState(() {
         estabelecimento = resultados[0] as Map<String, dynamic>;
-        melhorias = ((resultados[1] as Map<String, dynamic>)['implementados'] as num?)?.toInt() ?? 0;
+        melhorias =
+            ((resultados[1] as Map<String, dynamic>)['implementados'] as num?)
+                ?.toInt() ??
+            0;
         codigoEquipe = estabs.first['codigoAcesso'] as String?;
         solicitacoes = pendentes;
       });
@@ -96,11 +101,19 @@ class _PerfilAdmState extends State<PerfilAdm> {
         await recusarSolicitacao(id, idGerente: idGerente);
       }
       if (!mounted) return;
-      setState(() => solicitacoes.removeWhere((s) => (s['id'] as num).toInt() == id));
+      setState(
+        () => solicitacoes.removeWhere((s) => (s['id'] as num).toInt() == id),
+      );
     } on ApiException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.mensagem, style: const TextStyle(fontFamily: 'Poppins')), backgroundColor: Colors.redAccent),
+        SnackBar(
+          content: Text(
+            e.mensagem,
+            style: const TextStyle(fontFamily: 'Poppins'),
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
       );
     } finally {
       if (mounted) setState(() => _solicitacoesProcessando.remove(id));
@@ -127,9 +140,23 @@ class _PerfilAdmState extends State<PerfilAdm> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(erro!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent, fontSize: 13, fontFamily: 'Poppins')),
+              Text(
+                erro!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.redAccent,
+                  fontSize: 13,
+                  fontFamily: 'Poppins',
+                ),
+              ),
               const SizedBox(height: 12),
-              TextButton(onPressed: _carregar, child: const Text('Tentar de novo', style: TextStyle(color: Cores.roxo, fontFamily: 'Poppins'))),
+              TextButton(
+                onPressed: _carregar,
+                child: const Text(
+                  'Tentar de novo',
+                  style: TextStyle(color: Cores.roxo, fontFamily: 'Poppins'),
+                ),
+              ),
             ],
           ),
         ),
@@ -141,7 +168,9 @@ class _PerfilAdmState extends State<PerfilAdm> {
       color: Cores.roxo,
       onRefresh: _carregar,
       child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,6 +190,78 @@ class _PerfilAdmState extends State<PerfilAdm> {
               const SizedBox(height: 16),
               _buildCardSolicitacoes(),
             ],
+            const SizedBox(height: 16),
+            _buildSairButton(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Mesma lógica de confirmação e logout do Perfil do cliente
+  // (perfilClie.dart) — só a tela de origem muda.
+  Future<void> _confirmarSaida() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Cores.fundo,
+          title: const Text(
+            'Sair da conta',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: const Text(
+            'Tem certeza que deseja sair da sua conta?',
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text(
+                'Sair',
+                style: TextStyle(color: Colors.redAccent),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmar != true || !mounted) return;
+
+    Sessao.sair();
+    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+  }
+
+  Widget _buildSairButton() {
+    return GestureDetector(
+      onTap: _confirmarSaida,
+      child: Container(
+        width: double.infinity,
+        height: 50,
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.redAccent.withOpacity(0.4)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.logout, color: Colors.redAccent, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              'Sair da conta',
+              style: TextStyle(
+                color: Colors.redAccent,
+                fontSize: 14,
+                fontFamily: 'PoppinsSemi',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),
@@ -181,7 +282,11 @@ class _PerfilAdmState extends State<PerfilAdm> {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Cores.borda),
             ),
-            child: const Icon(Icons.settings_outlined, color: Colors.white70, size: 20),
+            child: const Icon(
+              Icons.settings_outlined,
+              color: Colors.white70,
+              size: 20,
+            ),
           ),
         ),
       ],
@@ -227,7 +332,11 @@ class _PerfilAdmState extends State<PerfilAdm> {
                 const SizedBox(height: 2),
                 Text(
                   categoria,
-                  style: const TextStyle(color: Colors.white54, fontSize: 13, fontFamily: 'Poppins'),
+                  style: const TextStyle(
+                    color: Colors.white54,
+                    fontSize: 13,
+                    fontFamily: 'Poppins',
+                  ),
                 ),
               ],
               const SizedBox(height: 8),
@@ -235,7 +344,10 @@ class _PerfilAdmState extends State<PerfilAdm> {
                 children: [
                   if (nota != null) ...[
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Cores.tag,
                         borderRadius: BorderRadius.circular(20),
@@ -244,11 +356,20 @@ class _PerfilAdmState extends State<PerfilAdm> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.star, color: Cores.amarelo, size: 14),
+                          const Icon(
+                            Icons.star,
+                            color: Cores.amarelo,
+                            size: 14,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             nota.toStringAsFixed(1),
-                            style: const TextStyle(color: Colors.white, fontSize: 12, fontFamily: 'PoppinsSemi', fontWeight: FontWeight.w600),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontFamily: 'PoppinsSemi',
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ],
                       ),
@@ -258,18 +379,31 @@ class _PerfilAdmState extends State<PerfilAdm> {
                   GestureDetector(
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Editar perfil ainda não está pronto.', style: TextStyle(fontFamily: 'Poppins'))),
+                        const SnackBar(
+                          content: Text(
+                            'Editar perfil ainda não está pronto.',
+                            style: TextStyle(fontFamily: 'Poppins'),
+                          ),
+                        ),
                       );
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: Cores.roxoBotao,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Text(
                         'Editar perfil',
-                        style: TextStyle(color: Colors.white, fontSize: 12, fontFamily: 'PoppinsSemi', fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontFamily: 'PoppinsSemi',
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
@@ -286,7 +420,10 @@ class _PerfilAdmState extends State<PerfilAdm> {
     return Container(
       width: 64,
       height: 64,
-      decoration: BoxDecoration(color: Cores.cartao, borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(
+        color: Cores.cartao,
+        borderRadius: BorderRadius.circular(14),
+      ),
       child: const Icon(Icons.storefront, color: Colors.white38),
     );
   }
@@ -302,10 +439,16 @@ class _PerfilAdmState extends State<PerfilAdm> {
       if (bairro.isNotEmpty) bairro,
       if (cidade.isNotEmpty) (estado.isNotEmpty ? '$cidade - $estado' : cidade),
     ];
-    final endereco = partesEndereco.isNotEmpty ? partesEndereco.join(' - ') : 'Endereço não informado';
+    final endereco = partesEndereco.isNotEmpty
+        ? partesEndereco.join(' - ')
+        : 'Endereço não informado';
 
-    final telefone = (e['telefone'] as String?)?.isNotEmpty == true ? e['telefone'] as String : 'Não informado';
-    final email = (Sessao.email?.isNotEmpty == true) ? Sessao.email! : 'Não informado';
+    final telefone = (e['telefone'] as String?)?.isNotEmpty == true
+        ? e['telefone'] as String
+        : 'Não informado';
+    final email = (Sessao.email?.isNotEmpty == true)
+        ? Sessao.email!
+        : 'Não informado';
     final horario = (e['horarioFuncionamento'] as String?)?.isNotEmpty == true
         ? e['horarioFuncionamento'] as String
         : 'Não informado';
@@ -332,7 +475,11 @@ class _PerfilAdmState extends State<PerfilAdm> {
           Expanded(
             child: Text(
               texto,
-              style: const TextStyle(color: Colors.white70, fontSize: 13, fontFamily: 'Poppins'),
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 13,
+                fontFamily: 'Poppins',
+              ),
             ),
           ),
         ],
@@ -350,7 +497,12 @@ class _PerfilAdmState extends State<PerfilAdm> {
       filhos: [
         Text(
           sobre,
-          style: const TextStyle(color: Colors.white60, fontSize: 13, fontFamily: 'Poppins', height: 1.5),
+          style: const TextStyle(
+            color: Colors.white60,
+            fontSize: 13,
+            fontFamily: 'Poppins',
+            height: 1.5,
+          ),
         ),
       ],
     );
@@ -366,12 +518,21 @@ class _PerfilAdmState extends State<PerfilAdm> {
             const SizedBox(width: 12),
             Text(
               '$melhorias',
-              style: const TextStyle(color: Colors.white, fontSize: 20, fontFamily: 'PoppinsBold', fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontFamily: 'PoppinsBold',
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(width: 8),
             const Text(
               'melhorias',
-              style: TextStyle(color: Colors.white54, fontSize: 13, fontFamily: 'Poppins'),
+              style: TextStyle(
+                color: Colors.white54,
+                fontSize: 13,
+                fontFamily: 'Poppins',
+              ),
             ),
           ],
         ),
@@ -386,14 +547,22 @@ class _PerfilAdmState extends State<PerfilAdm> {
       filhos: [
         Text(
           'Compartilhe com quem vai administrar esse estabelecimento junto com você.',
-          style: const TextStyle(color: Colors.white54, fontSize: 12, fontFamily: 'Poppins', height: 1.4),
+          style: const TextStyle(
+            color: Colors.white54,
+            fontSize: 12,
+            fontFamily: 'Poppins',
+            height: 1.4,
+          ),
         ),
         const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: Cores.campo,
                   borderRadius: BorderRadius.circular(10),
@@ -440,7 +609,11 @@ class _PerfilAdmState extends State<PerfilAdm> {
         if (solicitacoes.isEmpty)
           const Text(
             'Nenhuma solicitação pendente.',
-            style: TextStyle(color: Colors.white38, fontSize: 13, fontFamily: 'Poppins'),
+            style: TextStyle(
+              color: Colors.white38,
+              fontSize: 13,
+              fontFamily: 'Poppins',
+            ),
           )
         else
           for (final s in solicitacoes) _linhaSolicitacao(s),
@@ -465,48 +638,86 @@ class _PerfilAdmState extends State<PerfilAdm> {
         children: [
           Text(
             nome,
-            style: const TextStyle(color: Colors.white, fontSize: 14, fontFamily: 'PoppinsSemi', fontWeight: FontWeight.w600),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontFamily: 'PoppinsSemi',
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: 2),
           Text(
             (s['emailUsuario'] as String?) ?? '',
-            style: const TextStyle(color: Colors.white54, fontSize: 12, fontFamily: 'Poppins'),
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 12,
+              fontFamily: 'Poppins',
+            ),
           ),
           const SizedBox(height: 2),
           Text(
             formatarData(s['dataSolicitacao'] as String?),
-            style: const TextStyle(color: Colors.white38, fontSize: 11, fontFamily: 'Poppins'),
+            style: const TextStyle(
+              color: Colors.white38,
+              fontSize: 11,
+              fontFamily: 'Poppins',
+            ),
           ),
           const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: processando ? null : () => _responderSolicitacao(id, false),
+                  onPressed: processando
+                      ? null
+                      : () => _responderSolicitacao(id, false),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     side: const BorderSide(color: Colors.redAccent),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                  child: const Text('Recusar', style: TextStyle(color: Colors.redAccent, fontFamily: 'PoppinsSemi', fontSize: 12)),
+                  child: const Text(
+                    'Recusar',
+                    style: TextStyle(
+                      color: Colors.redAccent,
+                      fontFamily: 'PoppinsSemi',
+                      fontSize: 12,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: processando ? null : () => _responderSolicitacao(id, true),
+                  onPressed: processando
+                      ? null
+                      : () => _responderSolicitacao(id, true),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     backgroundColor: Cores.verdeFundo,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                   child: processando
                       ? const SizedBox(
                           width: 14,
                           height: 14,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Cores.verde),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Cores.verde,
+                          ),
                         )
-                      : const Text('Aceitar', style: TextStyle(color: Cores.verde, fontFamily: 'PoppinsSemi', fontSize: 12)),
+                      : const Text(
+                          'Aceitar',
+                          style: TextStyle(
+                            color: Cores.verde,
+                            fontFamily: 'PoppinsSemi',
+                            fontSize: 12,
+                          ),
+                        ),
                 ),
               ),
             ],
@@ -531,7 +742,12 @@ class _PerfilAdmState extends State<PerfilAdm> {
           if (titulo != null) ...[
             Text(
               titulo,
-              style: const TextStyle(color: Colors.white, fontSize: 16, fontFamily: 'PoppinsSemi', fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontFamily: 'PoppinsSemi',
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 12),
           ],

@@ -350,10 +350,12 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: ativo ? Cores.roxo : Cores.fundo,
+                            color: ativo ? Cores.roxo : const Color(0xFF2A1A4A),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: ativo ? Cores.roxo : Cores.borda,
+                              color: ativo
+                                  ? Cores.roxo
+                                  : const Color(0xFF3A2A5A),
                             ),
                           ),
                           child: Text(
