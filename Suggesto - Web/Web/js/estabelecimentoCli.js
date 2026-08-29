@@ -55,6 +55,7 @@ function escapeHtml(texto) {
 // ── CARREGAR NOME DO USUÁRIO ─────────────────────────────────────────
 function carregarDadosUsuario() {
   const nomeCompleto = localStorage.getItem('nomeUsuario') || 'Cliente';
+  const idUsuario = localStorage.getItem('idUsuario');
   const partes = nomeCompleto.split(' ');
   let iniciais = partes[0].charAt(0).toUpperCase();
   if (partes.length > 1) iniciais += partes[partes.length - 1].charAt(0).toUpperCase();
@@ -63,6 +64,22 @@ function carregarDadosUsuario() {
   const elAvatar = document.getElementById('sidebarAvatar');
   if (elNome) elNome.innerText = nomeCompleto;
   if (elAvatar) elAvatar.innerText = iniciais;
+
+  // Busca a foto de perfil de verdade — só troca as iniciais se existir.
+  if (idUsuario) {
+    fetch(`${API_BASE}/usuarios/${idUsuario}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((usuario) => {
+        const urlFoto = urlFotoEstabelecimento(usuario?.fotoUrl);
+        if (urlFoto && elAvatar) {
+          elAvatar.innerHTML = `<img src="${urlFoto}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`;
+          elAvatar.style.background = "transparent";
+          elAvatar.style.boxShadow = "none";
+          elAvatar.style.border = "none";
+        }
+      })
+      .catch(() => {});
+  }
 }
 
 

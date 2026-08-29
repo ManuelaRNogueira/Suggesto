@@ -244,7 +244,7 @@
       <div class="logo-icon">
         <img src="imagens/logo.png" alt="Logo" class="logo-img-sidebar">
       </div>
-      <div class="logo-text">Suggesto<span>Plataforma</span></div>
+      <div class="logo-text">Suggesto<span>Clientes</span></div>
     </div>
 
     <nav class="sidebar-nav">
@@ -284,14 +284,15 @@
         </svg>
         Perfil
       </a>
-      <div class="nav-section-label">Sistema</div>
+      <!--<div class="nav-section-label">Sistema</div>
+
       <a class="nav-item" href="#">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
           <circle cx="12" cy="12" r="3"/>
           <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
         </svg>
         Configurações
-      </a>
+      </a>-->
     </nav>
 
     <div class="sidebar-footer">
@@ -301,7 +302,7 @@
           <div class="sb-user-name" id="sidebarNome">Carregando...</div>
           <div class="sb-user-role">Cliente</div>
         </div>
-        <button class="user-sair" title="Sair">
+        <button class="user-sair" title="Sair" onclick="abrirModalSair()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
             <polyline points="16 17 21 12 16 7"/>
@@ -460,6 +461,35 @@
   <div class="toast" id="toast">
     <i class="fas fa-check-circle" id="toastIcone"></i>
     <span id="toastMsg">Ação realizada!</span>
+  </div>
+
+  <!-- MODAL SAIR -->
+  <div class="modal-fundo" id="modalSair">
+    <div class="modal">
+      <div class="modal-topo">
+        <h3 class="modal-titulo">Sair da conta</h3>
+        <button class="modal-fechar" onclick="fecharModalSair()"><i class="fas fa-times"></i></button>
+      </div>
+      <p class="modal-sub">
+        Tem certeza que deseja encerrar sua sessão e sair do sistema?
+      </p>
+      <div style="display: flex; gap: 12px; margin-top: 24px">
+        <button
+          class="botao-modal"
+          style="background: transparent; border: 1px solid rgba(255, 255, 255, 0.1); color: #e8e6ff;"
+          onclick="fecharModalSair()"
+        >
+          Cancelar
+        </button>
+        <button
+          class="botao-modal"
+          style="background: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3);"
+          onclick="confirmarSair()"
+        >
+          <i class="fas fa-sign-out-alt"></i> Sair
+        </button>
+      </div>
+    </div>
   </div>
 
 

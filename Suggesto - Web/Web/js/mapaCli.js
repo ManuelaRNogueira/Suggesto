@@ -60,6 +60,9 @@ function carregarDadosUsuario() {
         const urlFoto = resolverUrlFotoUsuario(usuario?.fotoUrl);
         if (urlFoto && elementoAvatar) {
           elementoAvatar.innerHTML = `<img src="${urlFoto}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`;
+          elementoAvatar.style.background = "transparent";
+          elementoAvatar.style.boxShadow = "none";
+          elementoAvatar.style.border = "none";
         }
       })
       .catch(() => {});
@@ -411,6 +414,20 @@ function abrirSugestao() {
 
 function fecharModal() {
   document.getElementById('modalSugestao').classList.remove('aberto');
+}
+
+// ── MODAL SAIR ────────────────────────────────────────────────────────
+function abrirModalSair() {
+  document.getElementById('modalSair')?.classList.add('aberto');
+}
+
+function fecharModalSair() {
+  document.getElementById('modalSair')?.classList.remove('aberto');
+}
+
+function confirmarSair() {
+  localStorage.clear();
+  window.location.href = 'login.html';
 }
 
 document.addEventListener('DOMContentLoaded', () => {

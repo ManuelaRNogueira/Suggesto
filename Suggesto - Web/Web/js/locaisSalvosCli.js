@@ -53,6 +53,9 @@ function carregarDadosUsuario() {
         const urlFoto = resolverUrlFotoUsuario(usuario?.fotoUrl);
         if (urlFoto && elAvatar) {
           elAvatar.innerHTML = `<img src="${urlFoto}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`;
+          elAvatar.style.background = "transparent";
+          elAvatar.style.boxShadow = "none";
+          elAvatar.style.border = "none";
         }
       })
       .catch(() => {});

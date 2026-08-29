@@ -460,6 +460,9 @@ function definirAvatarElemento(elementoId, fotoUrl, iniciais) {
     const url = resolverUrlFoto(fotoUrl);
     if (url) {
         el.innerHTML = `<img src="${url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`;
+        el.style.background = "transparent";
+        el.style.boxShadow = "none";
+        el.style.border = "none";
     } else {
         el.textContent = iniciais;
     }
