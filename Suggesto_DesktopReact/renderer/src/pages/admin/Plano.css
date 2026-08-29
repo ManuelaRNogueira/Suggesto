@@ -5,6 +5,7 @@
 }
 
 .pln-cartao {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -15,11 +16,39 @@
   background: var(--roxo-bg);
 }
 
+.pln-destaque {
+  border-color: rgba(123, 47, 190, 0.4);
+  box-shadow: 0 0 0 1px rgba(123, 47, 190, 0.15), 0 12px 32px rgba(123, 47, 190, 0.12);
+}
+
+.pln-badge-popular {
+  position: absolute;
+  top: -11px;
+  left: 20px;
+  background: var(--roxo);
+  color: #fff;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(123, 47, 190, 0.4);
+}
+
 .pln-topo {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+
+.pln-nome {
+  font-family: var(--fonte);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0;
 }
 
 .pln-selo {
@@ -36,23 +65,47 @@
 }
 
 .pln-preco {
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  margin: 2px 0 0;
 }
 
-.pln-preco span {
-  font-size: 0.75rem;
+.pln-preco-moeda {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--texto-fraco);
+}
+
+.pln-preco-valor {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--texto);
+}
+
+.pln-preco-periodo {
+  font-size: 0.8125rem;
   font-weight: 500;
   color: var(--texto-mfraco);
-  margin-left: 3px;
+  margin-left: 2px;
 }
 
 .pln-descricao {
   font-size: 0.8125rem;
   color: var(--texto-fraco);
   margin: 0;
+  line-height: 1.5;
+}
+
+.pln-divisor {
+  height: 1px;
+  background: var(--borda);
+  margin: 2px 0;
+}
+
+.pln-divisor-roxo {
+  background: var(--borda-roxa);
 }
 
 .pln-recursos {
@@ -87,6 +140,18 @@
 }
 
 .pln-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+/* Modal de troca com o cartão de pagamento — mais largo que o adm-modal padrão */
+.pln-modal-pagamento {
+  max-width: 420px;
+  max-height: 92vh;
+  overflow-y: auto;
+}
+
+.pln-btn-cancelar {
   width: 100%;
   justify-content: center;
 }

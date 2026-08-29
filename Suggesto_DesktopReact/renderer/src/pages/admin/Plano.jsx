@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Topo } from "../../components/AdminShell";
 import Icone, { IC } from "../../components/Icones";
+import CartaoPagamento from "../../components/CartaoPagamento";
 import { EstadoCarregando, EstadoErro } from "./Inicio";
 import { buscarMeuPlano, listarPlanos, souPrincipal, trocarPlano } from "../../api/admin";
 import "./Plano.css";
@@ -79,17 +80,42 @@ export default function Plano() {
       <div className="pln-grade">
         {planos.map((p) => {
           const atual = p.nome === meuPlano?.nome;
+          const destaque = p.nome === "Pro";
           return (
-            <section key={p.id} className={`adm-cartao pln-cartao${atual ? " pln-atual" : ""}`}>
+            <section
+              key={p.id}
+              className={`adm-cartao pln-cartao${atual ? " pln-atual" : ""}${destaque ? " pln-destaque" : ""}`}
+            >
+              {destaque && <span className="pln-badge-popular">Mais popular</span>}
+
               <div className="pln-topo">
-                <h2 className="adm-cartao-titulo">{p.nome}</h2>
+                <h2 className="pln-nome">{p.nome}</h2>
                 {atual && <span className="pln-selo">Seu plano atual</span>}
               </div>
-              <p className="pln-preco">
-                {p.preco ? `R$ ${p.preco.toFixed(2).replace(".", ",")}` : "Grátis"}
-                {p.preco > 0 && <span>/mês</span>}
-              </p>
               {p.descricao && <p className="pln-descricao">{p.descricao}</p>}
+
+              <p className="pln-preco">
+                {p.preco ? (
+                  <>
+                    <span className="pln-preco-moeda">R$</span>
+                    <span className="pln-preco-valor">{p.preco.toFixed(2).replace(".", ",")}</span>
+                    <span className="pln-preco-periodo">/mês</span>
+                  </>
+                ) : (
+                  <span className="pln-preco-valor">Grátis</span>
+                )}
+              </p>
+
+              <button
+                type="button"
+                className={`adm-btn${atual ? "" : " adm-btn-principal"} pln-btn`}
+                disabled={atual || !principal}
+                onClick={() => setEscolhido(p)}
+              >
+                {atual ? "Plano atual" : `Trocar para o ${p.nome}`}
+              </button>
+
+              <div className={`pln-divisor${destaque ? " pln-divisor-roxo" : ""}`}></div>
 
               <ul className="pln-recursos">
                 <li>{limite(p.limiteEstabelecimentos, "estabelecimento", "estabelecimentos")}</li>
@@ -108,15 +134,6 @@ export default function Plano() {
                   Recompensas
                 </li>
               </ul>
-
-              <button
-                type="button"
-                className={`adm-btn${atual ? "" : " adm-btn-principal"} pln-btn`}
-                disabled={atual || !principal}
-                onClick={() => setEscolhido(p)}
-              >
-                {atual ? "Plano atual" : `Trocar para o ${p.nome}`}
-              </button>
             </section>
           );
         })}
@@ -127,7 +144,7 @@ export default function Plano() {
           className="adm-modal-fundo"
           onMouseDown={(e) => e.target === e.currentTarget && !trocando && setEscolhido(null)}
         >
-          <div className="adm-modal">
+          <div className="adm-modal pln-modal-pagamento">
             <div className="adm-modal-topo">
               <h2 className="adm-cartao-titulo">Trocar para o {escolhido.nome}</h2>
               <button
@@ -144,14 +161,21 @@ export default function Plano() {
               {escolhido.preco ? ` (R$ ${escolhido.preco.toFixed(2).replace(".", ",")}/mês)` : ""}.
             </p>
             {erroTroca && <div className="adm-erro">{erroTroca}</div>}
-            <div className="adm-modal-acoes">
-              <button type="button" className="adm-btn" onClick={() => setEscolhido(null)} disabled={trocando}>
-                Cancelar
-              </button>
-              <button type="button" className="adm-btn adm-btn-principal" onClick={confirmarTroca} disabled={trocando}>
-                {trocando ? "Trocando…" : "Confirmar troca"}
-              </button>
-            </div>
+
+            <CartaoPagamento
+              onConfirmar={confirmarTroca}
+              carregando={trocando}
+              textoBotao={`Confirmar assinatura do ${escolhido.nome}`}
+            />
+
+            <button
+              type="button"
+              className="adm-btn pln-btn-cancelar"
+              onClick={() => setEscolhido(null)}
+              disabled={trocando}
+            >
+              Cancelar
+            </button>
           </div>
         </div>
       )}
