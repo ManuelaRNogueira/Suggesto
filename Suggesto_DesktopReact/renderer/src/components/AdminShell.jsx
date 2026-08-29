@@ -5,8 +5,10 @@ import {
   buscarMeuPlano,
   buscarMetricas,
   buscarSolicitacoes,
+  buscarUsuario,
   iniciais,
   souPrincipal,
+  urlFoto,
 } from "../api/admin";
 import "../styles/tokens.css";
 import "./AdminShell.css";
@@ -45,6 +47,14 @@ export default function AdminShell() {
       nome: localStorage.getItem("nomeUsuario") || "Administrador",
       email: localStorage.getItem("emailUsuario") || "",
     });
+
+    // Busca a foto de perfil de verdade — só troca as iniciais se existir.
+    const idUsuario = localStorage.getItem("idUsuario");
+    if (idUsuario) {
+      buscarUsuario(idUsuario)
+        .then((dados) => setUsuario((u) => ({ ...u, fotoUrl: dados?.fotoUrl })))
+        .catch(() => {});
+    }
   }, []);
 
   useEffect(() => {
@@ -75,7 +85,7 @@ export default function AdminShell() {
       <aside className="adm-lateral">
         <div className="adm-lateral-logo">
           <span className="adm-logo-marca">
-            <Icone d={IC.logo} size={17} />
+            <img src="/img/logoBalao.png" alt="Suggesto" style={{ width: 22, height: 22, objectFit: "contain" }} />
           </span>
           <span className="adm-logo-txt">
             Suggesto
@@ -144,7 +154,17 @@ export default function AdminShell() {
 
         <div className="adm-lateral-rodape">
           <div className="adm-usuario">
-            <span className="adm-usuario-avatar">{iniciais(usuario.nome)}</span>
+            <span className="adm-usuario-avatar">
+              {urlFoto(usuario.fotoUrl) ? (
+                <img
+                  src={urlFoto(usuario.fotoUrl)}
+                  alt=""
+                  style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%", display: "block" }}
+                />
+              ) : (
+                iniciais(usuario.nome)
+              )}
+            </span>
             <span className="adm-usuario-info">
               <strong>{usuario.nome}</strong>
               <small>{usuario.email || "Administrador"}</small>

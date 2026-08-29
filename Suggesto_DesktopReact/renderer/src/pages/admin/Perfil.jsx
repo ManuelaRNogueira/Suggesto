@@ -11,6 +11,7 @@ import {
   buscarUsuarios,
   idGerente,
   iniciais,
+  urlFoto,
 } from "../../api/admin";
 import "./Perfil.css";
 
@@ -84,7 +85,17 @@ export default function Perfil() {
       </Topo>
 
       <section className="per-cabecalho">
-        <span className="per-avatar">{iniciais(usuario.nome)}</span>
+        <span className="per-avatar">
+          {urlFoto(usuario.fotoUrl) ? (
+            <img
+              src={urlFoto(usuario.fotoUrl)}
+              alt=""
+              style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%", display: "block" }}
+            />
+          ) : (
+            iniciais(usuario.nome)
+          )}
+        </span>
         <div className="per-identidade">
           <h2 className="per-nome">
             {usuario.nome || "Sem nome"}

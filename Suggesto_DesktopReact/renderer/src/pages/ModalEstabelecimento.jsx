@@ -277,7 +277,9 @@ export default function ModalEstabelecimento({ fecharModal, aoSalvar }) {
         {/* ── Cabeçalho ─────────────────────────────────────────────────── */}
         <div className="modal-header">
           <div className="header-left">
-            <div className="logo-icon"><Icon d={IC.logo} size={16} /></div>
+            <div className="logo-icon">
+              <img src="/img/logoBalao.png" alt="" style={{ width: 24, height: 24, objectFit: "contain" }} />
+            </div>
             <div>
               <h2 className="modal-titulo">Novo Estabelecimento</h2>
               <p className="modal-subtitulo">Preencha os dados para cadastrar</p>
