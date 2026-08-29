@@ -132,6 +132,14 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
     );
   }
 
+  String _iniciaisPerfil(String nome) {
+    final partes = nome.trim().split(RegExp(r'\s+'));
+    if (partes.isEmpty || partes.first.isEmpty) return '?';
+    final primeira = partes.first[0];
+    final ultima = partes.length > 1 ? partes.last[0] : '';
+    return (primeira + ultima).toUpperCase();
+  }
+
   Widget _buildPerfilHeader() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20),
@@ -155,19 +163,19 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
             child: ClipOval(
               child: () {
                 final fotoUrl = urlFotoUsuario(usuario?['fotoUrl'] as String?);
-                if (fotoUrl == null) {
-                  return Container(
-                    color: Color(0xFF2A1A4A),
-                    child: Icon(Icons.person, color: Colors.white38, size: 40),
-                  );
-                }
+                final iniciaisWidget = Container(
+                  color: Color(0xFF2A1A4A),
+                  alignment: Alignment.center,
+                  child: Text(
+                    _iniciaisPerfil((usuario?['nome'] as String?) ?? ''),
+                    style: TextStyle(color: Colors.white70, fontSize: 26, fontFamily: 'PoppinsBold'),
+                  ),
+                );
+                if (fotoUrl == null) return iniciaisWidget;
                 return Image.network(
                   fotoUrl,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    color: Color(0xFF2A1A4A),
-                    child: Icon(Icons.person, color: Colors.white38, size: 40),
-                  ),
+                  errorBuilder: (_, __, ___) => iniciaisWidget,
                 );
               }(),
             ),

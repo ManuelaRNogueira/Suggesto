@@ -399,6 +399,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
   Widget _buildCardSugestao(Map<String, dynamic> a) {
     final usuario = a['usuario'] as Map<String, dynamic>?;
     final nomeUsuario = (usuario?['nome'] as String?) ?? 'Usuário';
+    final fotoUsuario = urlFotoUsuario(usuario?['fotoUrl'] as String?);
     final nota = (a['nota'] as num?)?.toInt() ?? 0;
     final categoriaNome = ((a['categoria'] as Map<String, dynamic>?)?['nomeCategoria'] as String?) ?? 'Geral';
     final tipoInfo = _estiloTipo((a['tipo'] as String?) ?? 'sugestao');
@@ -422,10 +423,13 @@ class _InfoLocalPageState extends State<InfoLocalPage>
               CircleAvatar(
                 radius: 16,
                 backgroundColor: Cores.tag,
-                child: Text(
-                  _iniciais(nomeUsuario),
-                  style: const TextStyle(color: Colors.white, fontSize: 12, fontFamily: 'PoppinsSemi', fontWeight: FontWeight.w600),
-                ),
+                backgroundImage: fotoUsuario != null ? NetworkImage(fotoUsuario) : null,
+                child: fotoUsuario != null
+                    ? null
+                    : Text(
+                        _iniciais(nomeUsuario),
+                        style: const TextStyle(color: Colors.white, fontSize: 12, fontFamily: 'PoppinsSemi', fontWeight: FontWeight.w600),
+                      ),
               ),
               const SizedBox(width: 10),
               Expanded(
