@@ -210,11 +210,11 @@ Future<List<dynamic>> buscarAvaliacoesUsuario(int idUsuario) {
   return _lista('GET', '/avaliacoes/usuario/$idUsuario');
 }
 
-// GET /api/categorias?tipoEstabelecimento= — categorias de sugestão
-// disponíveis pra esse tipo de estabelecimento (CategoriaController filtra
-// pelo escopo: Cardápio só aparece pra quem serve comida, Estrutura/Ambiente/
-// Higiene não aparecem pra quem não tem espaço físico, ex: escritório).
-// Sem o parâmetro (tipoEstabelecimento vazio), o backend devolve todas.
+// GET /api/categorias — devolve todas as categorias de sugestão que existem.
+// Quem decide quais fazem sentido pra cada ramo de estabelecimento é o
+// config central em categoriasPorRamo.dart (ver filtrarCategoriasPorRamo),
+// não o backend — o parâmetro abaixo é aceito mas ignorado pela API, mantido
+// só porque não atrapalha e documenta a intenção de quem chama.
 Future<List<dynamic>> buscarCategorias(String? tipoEstabelecimento) {
   final query = (tipoEstabelecimento != null && tipoEstabelecimento.isNotEmpty)
       ? '?tipoEstabelecimento=${Uri.encodeQueryComponent(tipoEstabelecimento)}'
@@ -223,8 +223,7 @@ Future<List<dynamic>> buscarCategorias(String? tipoEstabelecimento) {
 }
 
 // POST /api/avaliacoes — cria uma sugestão/crítica/elogio. idCategoria vem
-// da lista retornada por buscarCategorias, que já varia por tipo de
-// estabelecimento (ver CategoriaController).
+// da lista já filtrada por filtrarCategoriasPorRamo (ver sugerir.dart).
 Future<void> criarAvaliacao({
   required int idUsuario,
   required int idEstabelecimento,

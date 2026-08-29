@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'api.dart';
+import 'categoriasPorRamo.dart';
 import 'sessao.dart';
 
 class SugerirPage extends StatefulWidget {
@@ -18,8 +19,8 @@ class _SugerirPageState extends State<SugerirPage> {
   int notaSelecionada = 0; // 0 = nenhuma estrela
   bool enviado = false;
 
-  // Carregadas do backend em initState — variam de acordo com o tipo do
-  // estabelecimento (ver CategoriaController), então não são mais fixas aqui.
+  // Carregadas do backend em initState — filtradas pelo ramo do
+  // estabelecimento usando o config central em categoriasPorRamo.dart.
   List<Map<String, dynamic>> categorias = [];
   bool carregandoCategorias = true;
 
@@ -34,9 +35,10 @@ class _SugerirPageState extends State<SugerirPage> {
     try {
       final tipoEstabelecimento = widget.local?['categoria'] as String?;
       final resultado = await buscarCategorias(tipoEstabelecimento);
+      final todas = resultado.cast<Map<String, dynamic>>();
       if (!mounted) return;
       setState(() {
-        categorias = resultado.cast<Map<String, dynamic>>();
+        categorias = filtrarCategoriasPorRamo(todas, tipoEstabelecimento);
         carregandoCategorias = false;
       });
     } on ApiException catch (_) {
