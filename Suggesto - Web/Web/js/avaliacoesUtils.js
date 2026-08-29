@@ -28,6 +28,8 @@ const CATEGORIAS_OFICIAIS = [
   { slug: "coworking", label: "Coworking" },
   { slug: "espaco-eventos", label: "Espaço para Eventos" },
   { slug: "banco", label: "Banco / Serviços Financeiros" },
+  { slug: "apresentacao", label: "Apresentação" },
+  { slug: "evento", label: "Evento" },
   { slug: "outro", label: "Outro" },
 ];
 

@@ -15,7 +15,8 @@ const CATEGORIAS = [
   "Clínica / Consultório de Saúde", "Farmácia", "Escola / Educação", "Petshop",
   "Loja / Comércio", "Supermercado / Mercado", "Oficina Automotiva",
   "Posto de Combustível", "Escritório / Empresa (Tecnologia e Serviços)",
-  "Coworking", "Espaço para Eventos", "Banco / Serviços Financeiros", "Outro",
+  "Coworking", "Espaço para Eventos", "Banco / Serviços Financeiros",
+  "Apresentação", "Evento", "Outro",
 ];
 
 // Extrai o primeiro e o último horário citados no texto livre salvo no banco
