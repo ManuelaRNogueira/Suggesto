@@ -436,6 +436,7 @@ textarea:focus { border-color: var(--purple-glow); background: rgba(167,139,250,
 </div>
 
 <script src="js/config.js"></script>
+<script src="js/categoriasPorRamo.js"></script>
 <script>
 const estado = { 
     tipo: null, categoria: null, idCategoria: null, 
@@ -529,10 +530,9 @@ function iniciarFormulario(id, nome) {
     carregarCategoriasDoEstabelecimento(id);
 }
 
-// Busca o tipo do estabelecimento (ex: "Restaurante", "Escritório / Empresa...")
-// e pede ao backend só as categorias de sugestão que fazem sentido pra esse tipo
-// (CategoriaController filtra: Cardápio só pra quem serve comida, Estrutura/
-// Ambiente/Higiene só pra quem tem espaço físico).
+// Busca o tipo do estabelecimento (ex: "Restaurante", "Academia", "Hotel /
+// Pousada") e monta a lista de categorias certa pra esse ramo, usando o
+// config central em js/categoriasPorRamo.js.
 async function carregarCategoriasDoEstabelecimento(idEstabelecimento) {
     const grade = document.getElementById('chips-categorias');
     grade.innerHTML = '<p style="color: var(--muted); font-size: 0.85rem;">Carregando...</p>';
@@ -546,10 +546,10 @@ async function carregarCategoriasDoEstabelecimento(idEstabelecimento) {
     }
 
     try {
-        const url = tipoEstabelecimento
-            ? `${window.API_BASE}/categorias?tipoEstabelecimento=${encodeURIComponent(tipoEstabelecimento)}`
-            : `${window.API_BASE}/categorias`;
-        const categorias = await fetch(url).then(r => r.json());
+        // O backend devolve todas — quem decide quais fazem sentido pra esse
+        // ramo é o config central em js/categoriasPorRamo.js.
+        const todas = await fetch(`${window.API_BASE}/categorias`).then(r => r.json());
+        const categorias = obterCategoriasParaRamo(todas, tipoEstabelecimento);
         renderizarChipsCategorias(categorias);
     } catch (err) {
         console.error('Erro ao carregar categorias de sugestão:', err);
