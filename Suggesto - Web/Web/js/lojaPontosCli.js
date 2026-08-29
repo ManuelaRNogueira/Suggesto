@@ -66,7 +66,7 @@ async function carregarDadosUsuario() {
 
     if (usuario.nome) {
       localStorage.setItem("nomeUsuario", usuario.nome);
-      atualizarSidebar(usuario.nome);
+      atualizarSidebar(usuario.nome, usuario.fotoUrl);
     }
 
     atualizarPainelSaldo(saldoAtual);
@@ -88,7 +88,7 @@ function atualizarEstatisticasUsuario(usuario) {
   if (elResgates) elResgates.textContent = totalResgates;
 }
 
-function atualizarSidebar(nome) {
+function atualizarSidebar(nome, fotoUrl) {
   const elNome = document.getElementById("sidebarNome");
   const elAvatar = document.getElementById("sidebarAvatar");
   if (elNome) elNome.textContent = nome;
@@ -96,8 +96,23 @@ function atualizarSidebar(nome) {
     const partes = nome.trim().split(/\s+/);
     let iniciais = partes[0].charAt(0).toUpperCase();
     if (partes.length > 1) iniciais += partes[partes.length - 1].charAt(0).toUpperCase();
-    elAvatar.textContent = iniciais;
+    const urlFoto = resolverUrlFotoUsuario(fotoUrl);
+    if (urlFoto) {
+      elAvatar.innerHTML = `<img src="${urlFoto}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`;
+    } else {
+      elAvatar.textContent = iniciais;
+    }
   }
+}
+
+// Mesma lógica de urlFotoEstabelecimento, sem o placeholder (avatar sem foto
+// mostra iniciais, não uma imagem de substituição).
+function resolverUrlFotoUsuario(fotoUrl) {
+  const nome = fotoUrl ? String(fotoUrl).trim() : "";
+  if (!nome) return "";
+  if (nome.startsWith("http://") || nome.startsWith("https://")) return nome;
+  const relativo = nome.replace(/^uploads\//, "");
+  return `${API_BASE.replace("/api", "")}/uploads/${relativo}`;
 }
 
 function atualizarPainelSaldo(pontos) {

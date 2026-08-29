@@ -275,6 +275,10 @@ function renderizarSugestoes() {
 function renderizarCardSugestao(a) {
   const nomeUsuario = (a.usuario && a.usuario.nome) || 'Usuário';
   const iniciais = obterIniciais(nomeUsuario);
+  const urlFotoUsuario = urlFotoEstabelecimento(a.usuario && a.usuario.fotoUrl);
+  const avatarHtml = urlFotoUsuario
+    ? `<img src="${urlFotoUsuario}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`
+    : escapeHtml(iniciais);
   const nota = Number(a.nota) || 0;
   const estrelasHtml = Array.from({ length: 5 }, (_, i) =>
     `<i class="fas fa-star${i < nota ? '' : ' vazia'}"></i>`).join('');
@@ -290,7 +294,7 @@ function renderizarCardSugestao(a) {
     <div class="sugestao-card" id="card-${a.idAvaliacao}">
       <div class="sug-topo">
         <div class="sug-usuario">
-          <div class="sug-avatar">${escapeHtml(iniciais)}</div>
+          <div class="sug-avatar">${avatarHtml}</div>
           <div class="sug-user-info">
             <span class="sug-nome">${escapeHtml(nomeUsuario)}</span>
             <span class="sug-data">${dataFormatada}</span>

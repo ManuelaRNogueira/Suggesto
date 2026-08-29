@@ -130,6 +130,27 @@ function admIniciais(nome) {
   return nome.trim().split(/\s+/).slice(0, 2).map(p => p[0]?.toUpperCase() || "").join("");
 }
 
+function admResolverUrlFoto(fotoUrl) {
+  const nome = fotoUrl ? String(fotoUrl).trim() : "";
+  if (!nome) return "";
+  if (nome.startsWith("http://") || nome.startsWith("https://")) return nome;
+  const relativo = nome.replace(/^uploads\//, "");
+  return `${ADM_API_BASE.replace("/api", "")}/uploads/${relativo}`;
+}
+
+// Preenche um avatar (ex: da barra lateral do admin) com a foto de perfil
+// redonda quando existir, ou as iniciais quando não.
+function admDefinirAvatarElemento(elementoId, fotoUrl, iniciais) {
+  const el = document.getElementById(elementoId);
+  if (!el) return;
+  const url = admResolverUrlFoto(fotoUrl);
+  if (url) {
+    el.innerHTML = `<img src="${url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`;
+  } else {
+    el.textContent = iniciais;
+  }
+}
+
 // Data e hora completas em que a sugestão chegou (ex: "08/08/2026 às 16:32").
 function admFormatarData(iso) {
   if (!iso) return "—";

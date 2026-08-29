@@ -89,6 +89,14 @@ function montarConta() {
   document.getElementById("contaNome").textContent = nome;
   document.getElementById("contaAvatar").textContent = admIniciais(nome);
   if (email) document.getElementById("contaEmail").textContent = email;
+
+  // Busca a foto de perfil de verdade — só troca as iniciais se existir.
+  const idUsuario = localStorage.getItem("idUsuario");
+  if (idUsuario) {
+    admBuscarUsuario(idUsuario)
+      .then((usuario) => admDefinirAvatarElemento("contaAvatar", usuario?.fotoUrl, admIniciais(nome)))
+      .catch(() => {});
+  }
 }
 
 async function carregar() {

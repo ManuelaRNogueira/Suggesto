@@ -356,6 +356,7 @@ function mostrarToast(mensagem, tipo = "sucesso") {
 
 function carregarDadosUsuario() {
     const nome = localStorage.getItem('nomeUsuario') || 'Usuário';
+    const idUsuario = localStorage.getItem('idUsuario');
 
     const elementoSaudacao = document.getElementById('saudacaoNome');
     const elementoSidebar = document.getElementById('sidebarNome');
@@ -369,6 +370,29 @@ function carregarDadosUsuario() {
 
     if (elementoAvatar)
         elementoAvatar.innerText = nome.substring(0, 2).toUpperCase();
+
+    // Busca a foto de perfil de verdade — só troca as iniciais se existir.
+    if (idUsuario) {
+        fetch(`${window.API_BASE}/usuarios/${idUsuario}`)
+            .then((r) => (r.ok ? r.json() : null))
+            .then((usuario) => {
+                const urlFoto = resolverUrlFotoUsuario(usuario?.fotoUrl);
+                if (urlFoto && elementoAvatar) {
+                    elementoAvatar.innerHTML = `<img src="${urlFoto}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`;
+                }
+            })
+            .catch(() => {});
+    }
+}
+
+// Mesma lógica usada pra foto de estabelecimento, sem placeholder — avatar
+// sem foto mostra iniciais, não uma imagem substituta.
+function resolverUrlFotoUsuario(fotoUrl) {
+    const nome = fotoUrl ? String(fotoUrl).trim() : "";
+    if (!nome) return "";
+    if (nome.startsWith("http://") || nome.startsWith("https://")) return nome;
+    const relativo = nome.replace(/^uploads\//, "");
+    return `${window.API_BASE.replace("/api", "")}/uploads/${relativo}`;
 }
 
 function abrirModalSair() { 

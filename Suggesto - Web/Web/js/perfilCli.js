@@ -257,7 +257,7 @@ function preencherPerfil(usuario) {
     const pontos = Number(usuario.pontos) || 0;
 
     setTexto("sidebarNome", nome);
-    setTexto("sidebarAvatar", iniciais);
+    definirAvatarElemento("sidebarAvatar", fotoUrl, iniciais);
     setTexto("heroNome", nome);
     setTexto("heroEmail", email);
 
@@ -449,6 +449,19 @@ function atualizarAvatar(fotoUrl, iniciais) {
         img.style.display = "none";
         iniciaisEl.style.display = "flex";
         iniciaisEl.textContent = iniciais;
+    }
+}
+
+// Preenche um avatar simples (uma única div, ex: da barra lateral) com a foto
+// de perfil redonda quando existir, ou as iniciais quando não.
+function definirAvatarElemento(elementoId, fotoUrl, iniciais) {
+    const el = document.getElementById(elementoId);
+    if (!el) return;
+    const url = resolverUrlFoto(fotoUrl);
+    if (url) {
+        el.innerHTML = `<img src="${url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`;
+    } else {
+        el.textContent = iniciais;
     }
 }
 

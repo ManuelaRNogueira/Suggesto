@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function carregarDadosUsuario() {
   const nomeCompleto = localStorage.getItem('nomeUsuario') || 'Cliente';
+  const idUsuario = obterIdUsuario();
 
   const partes = nomeCompleto.split(' ');
   let iniciais = partes[0].charAt(0).toUpperCase();
@@ -43,6 +44,29 @@ function carregarDadosUsuario() {
   const elAvatar = document.getElementById('sidebarAvatar');
   if (elNome) elNome.innerText = nomeCompleto;
   if (elAvatar) elAvatar.innerText = iniciais;
+
+  // Busca a foto de perfil de verdade — só troca as iniciais se existir.
+  if (idUsuario) {
+    fetch(`${API_BASE}/usuarios/${idUsuario}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((usuario) => {
+        const urlFoto = resolverUrlFotoUsuario(usuario?.fotoUrl);
+        if (urlFoto && elAvatar) {
+          elAvatar.innerHTML = `<img src="${urlFoto}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`;
+        }
+      })
+      .catch(() => {});
+  }
+}
+
+// Mesma lógica usada pra foto de estabelecimento (ver js/localCard.js), sem
+// placeholder — avatar sem foto mostra iniciais, não uma imagem substituta.
+function resolverUrlFotoUsuario(fotoUrl) {
+  const nome = fotoUrl ? String(fotoUrl).trim() : "";
+  if (!nome) return "";
+  if (nome.startsWith("http://") || nome.startsWith("https://")) return nome;
+  const relativo = nome.replace(/^uploads\//, "");
+  return `${API_BASE.replace("/api", "")}/uploads/${relativo}`;
 }
 
 async function carregarLocaisSalvos() {
