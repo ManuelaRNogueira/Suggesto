@@ -44,7 +44,7 @@ export default function Perfil() {
     }
     let vivo = true;
     Promise.all([
-      buscarUsuario(id),
+      buscarUsuario(meuId),
       buscarMetricas(),
       buscarUsuarios(),
       buscarEstabelecimentos(),
@@ -61,7 +61,7 @@ export default function Perfil() {
     return () => {
       vivo = false;
     };
-  }, [id]);
+  }, [id, meuId]);
 
   useEffect(() => {
     if (!aviso) return;
@@ -70,7 +70,7 @@ export default function Perfil() {
   }, [aviso]);
 
   const salvar = async (dados) => {
-    const atualizado = await atualizarPerfil(id, dados);
+    const atualizado = await atualizarPerfil(meuId, dados);
     setUsuario(atualizado);
     if (dados.nome) localStorage.setItem("nomeUsuario", dados.nome);
     setEditando(false);
