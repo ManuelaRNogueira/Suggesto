@@ -40,6 +40,7 @@ export default function Sugestoes() {
   const [busca, setBusca] = useState("");
   const [status, setStatus] = useState("todos");
   const [categoria, setCategoria] = useState("todas");
+  const [estabelecimentoFiltro, setEstabelecimentoFiltro] = useState("todos");
   const [ordem, setOrdem] = useState("recente");
   const [pagina, setPagina] = useState(1);
 
@@ -64,7 +65,10 @@ export default function Sugestoes() {
     return () => clearTimeout(t);
   }, [aviso]);
 
-  useEffect(() => setPagina(1), [busca, status, categoria, ordem]);
+  useEffect(
+    () => setPagina(1),
+    [busca, status, categoria, estabelecimentoFiltro, ordem],
+  );
 
   const contagens = useMemo(() => {
     const base = { todos: sugestoes.length };
@@ -83,11 +87,31 @@ export default function Sugestoes() {
     return [...mapa.entries()].sort((a, b) => b[1] - a[1]);
   }, [sugestoes]);
 
+  // Só faz sentido separar por estabelecimento quando o admin tem mais de um
+  // — com um só, todo mundo já sabe de onde é a sugestão.
+  const estabelecimentosDisponiveis = useMemo(() => {
+    const mapa = new Map();
+    sugestoes.forEach((s) => {
+      if (s.estabelecimentoId == null) return;
+      const atual = mapa.get(s.estabelecimentoId);
+      if (atual) atual.qtd += 1;
+      else mapa.set(s.estabelecimentoId, { id: s.estabelecimentoId, nome: s.estabelecimento || "Estabelecimento", qtd: 1 });
+    });
+    return [...mapa.values()].sort((a, b) => b.qtd - a.qtd);
+  }, [sugestoes]);
+  const multiplosEstabelecimentos = estabelecimentosDisponiveis.length > 1;
+
   const filtradas = useMemo(() => {
     const termo = busca.trim().toLowerCase();
     const lista = sugestoes.filter((s) => {
       if (status !== "todos" && s.statusUi !== status) return false;
       if (categoria !== "todas" && (s.categoria || "Sem categoria") !== categoria)
+        return false;
+      if (
+        multiplosEstabelecimentos &&
+        estabelecimentoFiltro !== "todos" &&
+        s.estabelecimentoId !== estabelecimentoFiltro
+      )
         return false;
       if (!termo) return true;
       return [s.comentario, s.autor, s.estabelecimento, s.categoria]
@@ -109,7 +133,7 @@ export default function Sugestoes() {
         return (b.prioridade || 1) - (a.prioridade || 1) || data(b) - data(a);
       return data(b) - data(a);
     });
-  }, [sugestoes, busca, status, categoria, ordem]);
+  }, [sugestoes, busca, status, categoria, estabelecimentoFiltro, multiplosEstabelecimentos, ordem]);
 
   const totalPaginas = Math.max(1, Math.ceil(filtradas.length / POR_PAGINA));
   const paginaAtual = Math.min(pagina, totalPaginas);
@@ -304,6 +328,7 @@ export default function Sugestoes() {
                   onCancelarResposta={cancelarResposta}
                   onTextoRespostaChange={setTextoResposta}
                   onEnviarResposta={enviarResposta}
+                  mostrarEstabelecimento={multiplosEstabelecimentos}
                 />
               ))}
             </ul>
@@ -335,6 +360,36 @@ export default function Sugestoes() {
         </div>
 
         <aside className="sug-painel">
+          {multiplosEstabelecimentos && (
+            <section className="adm-cartao" style={{ marginBottom: 14 }}>
+              <div className="adm-cartao-topo">
+                <h2 className="adm-cartao-titulo">Estabelecimento</h2>
+              </div>
+              <ul className="sug-cats">
+                <li>
+                  <button
+                    type="button"
+                    className={`sug-cat${estabelecimentoFiltro === "todos" ? " ativo" : ""}`}
+                    onClick={() => setEstabelecimentoFiltro("todos")}
+                  >
+                    Todos <span className="adm-num">{sugestoes.length}</span>
+                  </button>
+                </li>
+                {estabelecimentosDisponiveis.map((e) => (
+                  <li key={e.id}>
+                    <button
+                      type="button"
+                      className={`sug-cat${estabelecimentoFiltro === e.id ? " ativo" : ""}`}
+                      onClick={() => setEstabelecimentoFiltro(e.id)}
+                    >
+                      {e.nome} <span className="adm-num">{e.qtd}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           <section className="adm-cartao">
             <div className="adm-cartao-topo">
               <h2 className="adm-cartao-titulo">Categoria</h2>
@@ -399,6 +454,7 @@ function Cartao({
   onCancelarResposta,
   onTextoRespostaChange,
   onEnviarResposta,
+  mostrarEstabelecimento,
 }) {
   const acoes = ACOES[sugestao.statusUi] || [];
 
@@ -406,6 +462,12 @@ function Cartao({
     <li className={`sug-card st-${sugestao.statusUi}`}>
       <div className="sug-card-topo">
         <span className="adm-pill">{labelStatus(sugestao.statusUi)}</span>
+        {mostrarEstabelecimento && sugestao.estabelecimento && (
+          <span className="sug-card-estab">
+            <Icone d={IC.predios} size={11} />
+            {sugestao.estabelecimento}
+          </span>
+        )}
         <span className="sug-card-id adm-num">#{sugestao.id}</span>
         {sugestao.nota != null && (
           <span className="sug-card-nota adm-num">
@@ -430,7 +492,7 @@ function Cartao({
         </span>
         <span className="sug-card-sep">·</span>
         <span>{sugestao.categoria || "Sem categoria"}</span>
-        {sugestao.estabelecimento && (
+        {!mostrarEstabelecimento && sugestao.estabelecimento && (
           <>
             <span className="sug-card-sep">·</span>
             <span>{sugestao.estabelecimento}</span>

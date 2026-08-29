@@ -151,6 +151,23 @@
   color: var(--texto-mfraco);
 }
 
+.sug-card-estab {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--roxo-claro);
+  background: var(--roxo-bg);
+  border: 1px solid var(--borda-roxa);
+  border-radius: 999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
 .sug-card-txt {
   font-size: 0.875rem;
   line-height: 1.5;
