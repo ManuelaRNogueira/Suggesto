@@ -19,6 +19,7 @@ class SugestoesAdm extends StatefulWidget {
 class _SugestoesAdmState extends State<SugestoesAdm> {
   int paginaAtual = 1;
   String filtro = 'todos';
+  String categoriaFiltro = 'todas';
   String busca = '';
 
   bool carregando = true;
@@ -44,7 +45,9 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
       erro = null;
     });
     try {
-      final lista = await buscarSugestoesAdmin(idGerente: Sessao.idGerenteEfetivo);
+      final lista = await buscarSugestoesAdmin(
+        idGerente: Sessao.idGerenteEfetivo,
+      );
       setState(() => sugestoes = lista.cast<Map<String, dynamic>>());
     } on ApiException catch (e) {
       setState(() => erro = e.mensagem);
@@ -56,6 +59,10 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
   List<Map<String, dynamic>> get sugestoesFiltradas {
     return sugestoes.where((s) {
       if (filtro != 'todos' && s['statusUi'] != filtro) return false;
+      if (categoriaFiltro != 'todas' &&
+          (s['categoria'] as String?) != categoriaFiltro) {
+        return false;
+      }
       if (busca.isNotEmpty) {
         final titulo = tituloSugestao(s['comentario'] as String?).toLowerCase();
         if (!titulo.contains(busca.toLowerCase())) return false;
@@ -64,10 +71,23 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
     }).toList();
   }
 
+  // Categorias reais das sugestões já carregadas — sem lista fixa no código.
+  List<String> get categoriasDisponiveis {
+    final categorias = <String>{};
+    for (final s in sugestoes) {
+      final c = (s['categoria'] as String?)?.trim();
+      if (c != null && c.isNotEmpty) categorias.add(c);
+    }
+    final lista = categorias.toList()..sort();
+    return lista;
+  }
+
   Future<void> _abrirDetalhes(Map<String, dynamic> sugestao) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => DetalhesSugestaoAdm(sugestao: sugestao)),
+      MaterialPageRoute(
+        builder: (_) => DetalhesSugestaoAdm(sugestao: sugestao),
+      ),
     );
     // A tela de detalhes pode ter mudado o status (mesmo mapa, por referência) —
     // atualiza a lista pra refletir isso.
@@ -101,6 +121,8 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
                   _buscaCampo(),
                   const SizedBox(height: 14),
                   _filtrosChips(),
+                  const SizedBox(height: 10),
+                  _filtrosCategoriaChips(),
                 ],
               ),
             ),
@@ -124,9 +146,23 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(erro!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent, fontSize: 13, fontFamily: 'Poppins')),
+              Text(
+                erro!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.redAccent,
+                  fontSize: 13,
+                  fontFamily: 'Poppins',
+                ),
+              ),
               const SizedBox(height: 12),
-              TextButton(onPressed: _carregar, child: const Text('Tentar de novo', style: TextStyle(color: Cores.roxo, fontFamily: 'Poppins'))),
+              TextButton(
+                onPressed: _carregar,
+                child: const Text(
+                  'Tentar de novo',
+                  style: TextStyle(color: Cores.roxo, fontFamily: 'Poppins'),
+                ),
+              ),
             ],
           ),
         ),
@@ -136,7 +172,11 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
       return const Center(
         child: Text(
           'Nenhuma sugestão encontrada.',
-          style: TextStyle(color: Colors.white54, fontSize: 13, fontFamily: 'Poppins'),
+          style: TextStyle(
+            color: Colors.white54,
+            fontSize: 13,
+            fontFamily: 'Poppins',
+          ),
         ),
       );
     }
@@ -144,7 +184,9 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
       color: Cores.roxo,
       onRefresh: _carregar,
       child: ListView.builder(
-        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
         itemCount: lista.length,
         itemBuilder: (context, i) => _cartaoSugestao(lista[i]),
@@ -154,13 +196,24 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
 
   Widget _buscaCampo() {
     return Container(
-      decoration: BoxDecoration(color: Cores.cartao, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: Cores.cartao,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: TextField(
         onChanged: (v) => setState(() => busca = v),
-        style: const TextStyle(color: Colors.white, fontFamily: 'Poppins', fontSize: 14),
+        style: const TextStyle(
+          color: Colors.white,
+          fontFamily: 'Poppins',
+          fontSize: 14,
+        ),
         decoration: const InputDecoration(
           hintText: 'Buscar sugestões',
-          hintStyle: TextStyle(color: Colors.white38, fontFamily: 'Poppins', fontSize: 14),
+          hintStyle: TextStyle(
+            color: Colors.white38,
+            fontFamily: 'Poppins',
+            fontSize: 14,
+          ),
           prefixIcon: Icon(Icons.search, color: Colors.white54, size: 20),
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(vertical: 14),
@@ -174,8 +227,41 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          for (final f in filtros) ...[
-            _chip(f),
+          for (final f in filtros) ...[_chip(f), const SizedBox(width: 8)],
+        ],
+      ),
+    );
+  }
+
+  Widget _chip(_Filtro f) {
+    return _chipBase(
+      rotulo: f.rotulo,
+      ativo: filtro == f.chave,
+      onTap: () => setState(() => filtro = f.chave),
+    );
+  }
+
+  // Segunda linha de chips, com rolagem horizontal própria — filtro por
+  // categoria, junto com o filtro de status já existente acima.
+  Widget _filtrosCategoriaChips() {
+    final categorias = categoriasDisponiveis;
+    if (categorias.isEmpty) return const SizedBox.shrink();
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _chipBase(
+            rotulo: 'Todas categorias',
+            ativo: categoriaFiltro == 'todas',
+            onTap: () => setState(() => categoriaFiltro = 'todas'),
+          ),
+          const SizedBox(width: 8),
+          for (final c in categorias) ...[
+            _chipBase(
+              rotulo: c,
+              ativo: categoriaFiltro == c,
+              onTap: () => setState(() => categoriaFiltro = c),
+            ),
             const SizedBox(width: 8),
           ],
         ],
@@ -183,10 +269,13 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
     );
   }
 
-  Widget _chip(_Filtro f) {
-    final ativo = filtro == f.chave;
+  Widget _chipBase({
+    required String rotulo,
+    required bool ativo,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
-      onTap: () => setState(() => filtro = f.chave),
+      onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
@@ -195,7 +284,7 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
           border: Border.all(color: ativo ? Cores.roxo : Cores.borda),
         ),
         child: Text(
-          f.rotulo,
+          rotulo,
           style: TextStyle(
             color: ativo ? Colors.white : Colors.white70,
             fontSize: 12,
@@ -227,7 +316,11 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
                 pillStatus((s['statusUi'] as String?) ?? 'pendente'),
                 Text(
                   formatarData(s['dataAvaliacao'] as String?),
-                  style: const TextStyle(color: Colors.white38, fontSize: 11, fontFamily: 'Poppins'),
+                  style: const TextStyle(
+                    color: Colors.white38,
+                    fontSize: 11,
+                    fontFamily: 'Poppins',
+                  ),
                 ),
               ],
             ),
@@ -244,14 +337,22 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
             const SizedBox(height: 3),
             Text(
               'Categoria: ${s['categoria'] ?? 'Sem categoria'}',
-              style: const TextStyle(color: Colors.white54, fontSize: 12, fontFamily: 'Poppins'),
+              style: const TextStyle(
+                color: Colors.white54,
+                fontSize: 12,
+                fontFamily: 'Poppins',
+              ),
             ),
             const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerRight,
               child: Text(
                 (s['autor'] as String?) ?? 'Anônimo',
-                style: const TextStyle(color: Colors.white24, fontSize: 10, fontFamily: 'Poppins'),
+                style: const TextStyle(
+                  color: Colors.white24,
+                  fontSize: 10,
+                  fontFamily: 'Poppins',
+                ),
               ),
             ),
           ],
@@ -303,7 +404,8 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
           );
           return;
         }
-        if (aba.rota != '/sugestoesAdm') Navigator.pushNamed(context, aba.rota!);
+        if (aba.rota != '/sugestoesAdm')
+          Navigator.pushNamed(context, aba.rota!);
       },
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
