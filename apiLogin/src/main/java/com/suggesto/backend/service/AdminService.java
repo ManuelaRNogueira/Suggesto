@@ -260,6 +260,8 @@ public class AdminService {
         item.put("pontos", u.getPontos());
         item.put("plano", u.getPlano() != null ? u.getPlano().getNome() : null);
         item.put("principal", u.getEstabelecimento() != null && u.getEstabelecimento().getIdGerente() == u.getId());
+        item.put("estabelecimentoId", u.getEstabelecimento() != null ? u.getEstabelecimento().getIdEstabelecimento() : null);
+        item.put("estabelecimentoNome", u.getEstabelecimento() != null ? u.getEstabelecimento().getNome() : null);
         return item;
     }
 }

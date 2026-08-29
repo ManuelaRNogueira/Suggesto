@@ -75,7 +75,11 @@ export default function ModalEditarEstabelecimento({ estab, fecharModal, aoSalva
     buscarUsuarios()
       .then((todos) => {
         if (!vivo) return;
-        setAdmins((todos || []).filter((a) => a.tipoUsuario === "Administrador"));
+        setAdmins(
+          (todos || []).filter(
+            (a) => a.tipoUsuario === "Administrador" && a.estabelecimentoId === estab.idEstabelecimento,
+          ),
+        );
       })
       .catch(() => {});
     return () => { vivo = false; };

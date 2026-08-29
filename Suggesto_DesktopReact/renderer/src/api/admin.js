@@ -63,8 +63,32 @@ export function buscarEstabelecimentos() {
   return fetchJson(`${API_BASE}/admin/estabelecimentos${queryGerente()}`);
 }
 
+export function desativarEstabelecimento(id) {
+  const idSolicitante = localStorage.getItem("idUsuario");
+  return fetchJson(
+    `${API_BASE}/estabelecimentos/${id}?idSolicitante=${encodeURIComponent(idSolicitante)}`,
+    { method: "DELETE" },
+  );
+}
+
 export function buscarUsuario(id) {
   return fetchJson(`${API_BASE}/usuarios/${id}`);
+}
+
+// Só o administrador principal do estabelecimento consegue remover alguém da
+// equipe, e só com o código de acesso do local como confirmação (mesma regra
+// já usada na edição do estabelecimento — ver ModalEditarEstabelecimento.jsx).
+export async function removerAdministrador(idEstabelecimento, idUsuario, codigoConfirmacao) {
+  const idSolicitante = localStorage.getItem("idUsuario");
+  const url =
+    `${API_BASE}/estabelecimentos/${idEstabelecimento}/administradores/${idUsuario}` +
+    `?idSolicitante=${idSolicitante}&codigoConfirmacao=${encodeURIComponent((codigoConfirmacao || "").trim())}`;
+  const resposta = await fetch(url, { method: "DELETE" });
+  const dados = await resposta.json().catch(() => null);
+  if (!resposta.ok) {
+    throw new Error(dados?.message || `Erro ${resposta.status}`);
+  }
+  return dados;
 }
 
 // Limites do plano do admin logado — usado para esconder o que o plano não inclui.
