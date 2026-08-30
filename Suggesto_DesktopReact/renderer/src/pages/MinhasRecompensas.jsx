@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Topo } from "../components/AdminShell";
 import Icone, { IC } from "../components/Icones";
 import { EstadoCarregando, EstadoErro } from "./admin/Inicio";
-import { API_BASE, idGerente } from "../api/admin";
+import { API_BASE, buscarMinhasEstabelecimentos, idGerente } from "../api/admin";
 import "./MinhasRecompensas.css";
 
 const RAIZ = API_BASE.replace("/api", "");
@@ -50,11 +50,10 @@ export default function MinhasRecompensas() {
     let vivo = true;
     (async () => {
       try {
-        const r = await fetch(`${API_BASE}/estabelecimentos/gerente/${gerente}`);
-        if (!r.ok) throw new Error(`Erro ${r.status}`);
-        const lista = await r.json();
+        // Portfólio completo: os que possuo + os de que sou funcionária.
+        const lista = await buscarMinhasEstabelecimentos();
         if (!vivo) return;
-        setEstabelecimentos(lista);
+        setEstabelecimentos(lista || []);
         if (!idEstabParam && lista.length > 0) {
           setIdEstabelecimento(String(lista[0].idEstabelecimento));
         }

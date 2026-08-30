@@ -3,7 +3,7 @@ import { Topo } from "../../components/AdminShell";
 import Icone, { IC } from "../../components/Icones";
 import CartaoPagamento from "../../components/CartaoPagamento";
 import { EstadoCarregando, EstadoErro } from "./Inicio";
-import { buscarMeuPlano, listarPlanos, souPrincipal, trocarPlano } from "../../api/admin";
+import { buscarMeuPlano, listarPlanos, possuoAlgumEstabelecimento, trocarPlano } from "../../api/admin";
 import "./Plano.css";
 
 function limite(n, singular, plural) {
@@ -20,8 +20,19 @@ export default function Plano() {
   const [trocando, setTrocando] = useState(false);
   const [erroTroca, setErroTroca] = useState(null);
   const [aviso, setAviso] = useState(null);
+  // null = ainda não sabemos; "sou dona de algo" agora é por estabelecimento,
+  // então precisa ser buscado (não dá mais pra saber só com o localStorage).
+  const [principal, setPrincipal] = useState(null);
 
-  const principal = souPrincipal();
+  useEffect(() => {
+    let vivo = true;
+    possuoAlgumEstabelecimento()
+      .then((v) => vivo && setPrincipal(v))
+      .catch(() => vivo && setPrincipal(false));
+    return () => {
+      vivo = false;
+    };
+  }, []);
 
   const carregar = () => {
     let vivo = true;
@@ -71,9 +82,9 @@ export default function Plano() {
     <>
       <Topo titulo="Plano" sub="Compare os planos e troque quando precisar" />
 
-      {!principal && (
+      {principal === false && (
         <div className="adm-erro" style={{ marginBottom: 20 }}>
-          Só o administrador principal pode trocar o plano do estabelecimento.
+          Só quem possui um estabelecimento pode trocar o plano.
         </div>
       )}
 
@@ -109,7 +120,7 @@ export default function Plano() {
               <button
                 type="button"
                 className={`adm-btn${atual ? "" : " adm-btn-principal"} pln-btn`}
-                disabled={atual || !principal}
+                disabled={atual || principal === false}
                 onClick={() => setEscolhido(p)}
               >
                 {atual ? "Plano atual" : `Trocar para o ${p.nome}`}

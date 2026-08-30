@@ -10,7 +10,6 @@ import {
   buscarUsuario,
   buscarUsuarios,
   desativarEstabelecimento,
-  idGerente,
   iniciais,
   removerAdministrador,
   urlFoto,
@@ -32,12 +31,10 @@ export default function Perfil() {
   const [codigoRemocao, setCodigoRemocao] = useState("");
   const [removendoId, setRemovendoId] = useState(null);
 
-  const id = idGerente();
   const meuId = localStorage.getItem("idUsuario");
-  const souPrincipal = String(meuId) === String(id);
 
   useEffect(() => {
-    if (!id) {
+    if (!meuId) {
       setErro("Sessão sem id de usuário. Entre novamente.");
       setCarregando(false);
       return;
@@ -61,7 +58,7 @@ export default function Perfil() {
     return () => {
       vivo = false;
     };
-  }, [id, meuId]);
+  }, [meuId]);
 
   useEffect(() => {
     if (!aviso) return;
@@ -79,7 +76,7 @@ export default function Perfil() {
 
   const confirmarDesativacao = async () => {
     const estabelecimento = confirmandoDesativacao;
-    if (!estabelecimento || !souPrincipal) return;
+    if (!estabelecimento || !estabelecimento.souDono) return;
 
     setDesativandoId(estabelecimento.id);
     try {
@@ -110,7 +107,8 @@ export default function Perfil() {
 
   const confirmarRemocao = async () => {
     const admin = confirmandoRemocao;
-    if (!admin || !souPrincipal || admin.estabelecimentoId == null) return;
+    const estab = estabelecimentos.find((e) => e.id === admin?.estabelecimentoId);
+    if (!admin || !estab?.souDono) return;
 
     setRemovendoId(admin.id);
     try {
@@ -126,7 +124,13 @@ export default function Perfil() {
     }
   };
 
-  // Só separa por estabelecimento quando o admin principal tem mais de um —
+  // "Sou principal" agora é por estabelecimento (campo souDono, vindo da
+  // API) — uma pessoa pode ser dona de um e só funcionária de outro ao mesmo
+  // tempo. Isso aqui é só "sou dona de pelo menos um", usado pros atalhos
+  // que não fazem sentido pra quem não possui nenhum.
+  const souDonoDeAlgo = estabelecimentos.some((e) => e.souDono);
+
+  // Só separa por estabelecimento quando a pessoa tem mais de um vínculo —
   // com um só, a lista plana de sempre já é suficiente.
   const multiplosEstabelecimentos = estabelecimentos.length > 1;
 
@@ -184,7 +188,7 @@ export default function Perfil() {
           <h2 className="per-nome">
             {usuario.nome || "Sem nome"}
             <span className="per-tag">{usuario.tipoUsuario || "—"}</span>
-            {souPrincipal && <span className="per-tag per-tag-principal">Admin principal</span>}
+            {souDonoDeAlgo && <span className="per-tag per-tag-principal">Admin principal</span>}
           </h2>
           <p className="per-email">{usuario.email || "—"}</p>
           <p className="per-id adm-num">ID #{usuario.id}</p>
@@ -231,7 +235,7 @@ export default function Perfil() {
               <Atalho para="/sugestoes" icone={IC.chat} titulo="Sugestões" sub="Triar e responder" />
               <Atalho para="/estatisticas" icone={IC.barras} titulo="Estatísticas" sub="Volume e categorias" />
               <Atalho para="/estabelecimentos" icone={IC.predios} titulo="Estabelecimentos" sub="Cadastrar e editar" />
-              {souPrincipal && (
+              {souDonoDeAlgo && (
                 <Atalho para="/plano" icone={IC.estrela} titulo="Plano" sub="Ver e trocar o plano" />
               )}
             </div>
@@ -258,7 +262,7 @@ export default function Perfil() {
                     <ListaAdmins
                       itens={grupo.itens}
                       meuId={meuId}
-                      souPrincipal={souPrincipal}
+                      estabelecimentos={estabelecimentos}
                       removendoId={removendoId}
                       onRemover={pedirRemocao}
                     />
@@ -269,7 +273,7 @@ export default function Perfil() {
               <ListaAdmins
                 itens={admins}
                 meuId={meuId}
-                souPrincipal={souPrincipal}
+                estabelecimentos={estabelecimentos}
                 removendoId={removendoId}
                 onRemover={pedirRemocao}
               />
@@ -303,7 +307,7 @@ export default function Perfil() {
                     >
                       {e.ativo === 1 ? "Ativo" : "Inativo"}
                     </span>
-                    {souPrincipal && e.ativo === 1 && (
+                    {e.souDono && e.ativo === 1 && (
                       <button
                         type="button"
                         className="per-estab-desativar"
@@ -355,34 +359,40 @@ export default function Perfil() {
   );
 }
 
-function ListaAdmins({ itens, meuId, souPrincipal, removendoId, onRemover }) {
+function ListaAdmins({ itens, meuId, estabelecimentos, removendoId, onRemover }) {
   return (
     <ul className="per-admins">
-      {itens.map((a) => (
-        <li key={a.id} className="per-admin">
-          <span className="per-admin-avatar">{iniciais(a.nome)}</span>
-          <span className="per-admin-info">
-            <span className="per-admin-nome">
-              {a.nome}
-              {a.principal && <span className="per-admin-principal">principal</span>}
-              {String(a.id) === String(meuId) && <span className="per-admin-voce">você</span>}
+      {itens.map((a) => {
+        // O botão de remover só aparece se EU sou dona do estabelecimento
+        // específico dessa linha — não mais um flag único da página inteira.
+        const estab = estabelecimentos.find((e) => e.id === a.estabelecimentoId);
+        const possoRemover = !!estab?.souDono && !a.principal;
+        return (
+          <li key={`${a.id}-${a.estabelecimentoId}`} className="per-admin">
+            <span className="per-admin-avatar">{iniciais(a.nome)}</span>
+            <span className="per-admin-info">
+              <span className="per-admin-nome">
+                {a.nome}
+                {a.principal && <span className="per-admin-principal">principal</span>}
+                {String(a.id) === String(meuId) && <span className="per-admin-voce">você</span>}
+              </span>
+              <span className="per-admin-email">{a.email}</span>
             </span>
-            <span className="per-admin-email">{a.email}</span>
-          </span>
-          {a.cargo && <span className="per-admin-cargo">{a.cargo}</span>}
-          {souPrincipal && !a.principal && a.estabelecimentoId != null && (
-            <button
-              type="button"
-              className="per-admin-remover"
-              onClick={() => onRemover(a)}
-              disabled={removendoId === a.id}
-              title={`Remover ${a.nome} da equipe`}
-            >
-              <Icone d={IC.x} size={12} />
-            </button>
-          )}
-        </li>
-      ))}
+            {a.cargo && <span className="per-admin-cargo">{a.cargo}</span>}
+            {possoRemover && (
+              <button
+                type="button"
+                className="per-admin-remover"
+                onClick={() => onRemover(a)}
+                disabled={removendoId === a.id}
+                title={`Remover ${a.nome} da equipe`}
+              >
+                <Icone d={IC.x} size={12} />
+              </button>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }

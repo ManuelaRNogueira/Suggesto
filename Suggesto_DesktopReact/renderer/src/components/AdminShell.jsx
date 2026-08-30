@@ -7,7 +7,7 @@ import {
   buscarSolicitacoes,
   buscarUsuario,
   iniciais,
-  souPrincipal,
+  possuoAlgumEstabelecimento,
   urlFoto,
 } from "../api/admin";
 import "../styles/tokens.css";
@@ -41,6 +41,9 @@ export default function AdminShell() {
   // Enquanto o plano não chega, nada é escondido — evita a sidebar "piscar".
   const [plano, setPlano] = useState(null);
   const [avisoPlano, setAvisoPlano] = useState(null);
+  // "Sou dona de algo" é por estabelecimento agora, então precisa ser
+  // buscado — null enquanto carrega (nada fica escondido até resolver).
+  const [souDonoDeAlgo, setSouDonoDeAlgo] = useState(null);
 
   useEffect(() => {
     setUsuario({
@@ -62,18 +65,27 @@ export default function AdminShell() {
     buscarMetricas()
       .then((m) => vivo && setBadges((b) => ({ ...b, sugestoes: m.novasSemana ?? null })))
       .catch(() => vivo && setBadges((b) => ({ ...b, sugestoes: null })));
-    if (souPrincipal()) {
-      buscarSolicitacoes()
-        .then((lista) => vivo && setBadges((b) => ({ ...b, solicitacoes: lista.length })))
-        .catch(() => vivo && setBadges((b) => ({ ...b, solicitacoes: null })));
-    }
     buscarMeuPlano()
       .then((p) => vivo && setPlano(p))
       .catch(() => {});
+    possuoAlgumEstabelecimento()
+      .then((v) => vivo && setSouDonoDeAlgo(v))
+      .catch(() => vivo && setSouDonoDeAlgo(false));
     return () => {
       vivo = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!souDonoDeAlgo) return;
+    let vivo = true;
+    buscarSolicitacoes()
+      .then((lista) => vivo && setBadges((b) => ({ ...b, solicitacoes: lista.length })))
+      .catch(() => vivo && setBadges((b) => ({ ...b, solicitacoes: null })));
+    return () => {
+      vivo = false;
+    };
+  }, [souDonoDeAlgo]);
 
   const confirmarSair = () => {
     localStorage.clear();
@@ -95,7 +107,7 @@ export default function AdminShell() {
 
         <nav className="adm-nav">
           <p className="adm-nav-secao">Menu</p>
-          {NAV.filter((item) => !item.somentePrincipal || souPrincipal()).map((item) => {
+          {NAV.filter((item) => !item.somentePrincipal || souDonoDeAlgo !== false).map((item) => {
             const trancado = bloqueadoPorPlano(item, plano);
             if (trancado) {
               return (
@@ -140,7 +152,7 @@ export default function AdminShell() {
             <Icone d={IC.usuarios} size={17} className="adm-nav-icone" />
             Perfil e equipe
           </NavLink>
-          {souPrincipal() && (
+          {souDonoDeAlgo !== false && (
             <NavLink
               to="/plano"
               className={({ isActive }) => `adm-nav-item${isActive ? " ativo" : ""}`}

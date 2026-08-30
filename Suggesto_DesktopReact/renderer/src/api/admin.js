@@ -15,15 +15,21 @@ export function urlFoto(fotoPath) {
   return `${API_BASE.replace("/api", "")}/uploads/${limpo}`;
 }
 
+// Uma pessoa pode ser dona de estabelecimento(s) e funcionária de outro(s) ao
+// mesmo tempo agora — não existe mais um "dono efetivo" fixo por sessão. Os
+// endpoints resolvem o portfólio inteiro (posse + vínculos) a partir do
+// próprio idUsuario, então é isso que sempre mandamos como "idGerente".
 export function idGerente() {
-  return localStorage.getItem("idGerenteEfetivo") || localStorage.getItem("idUsuario");
+  return localStorage.getItem("idUsuario");
 }
 
-// Só o administrador principal (dono do estabelecimento) pode gerenciar a
-// equipe e editar os dados do estabelecimento.
-export function souPrincipal() {
-  const meuId = localStorage.getItem("idUsuario");
-  return !!meuId && meuId === idGerente();
+// "Sou principal" virou uma propriedade por estabelecimento (campo souDono
+// de cada item de buscarEstabelecimentos/buscarMinhasEstabelecimentos), não
+// mais um flag único de sessão. Isto aqui resolve "sou dona de PELO MENOS
+// um" — usado só para esconder/mostrar telas como Plano e Solicitações.
+export async function possuoAlgumEstabelecimento() {
+  const estabs = await buscarEstabelecimentos();
+  return (estabs || []).some((e) => e.souDono);
 }
 
 function queryGerente(extra = {}) {
@@ -61,6 +67,14 @@ export function buscarUsuarios() {
 
 export function buscarEstabelecimentos() {
   return fetchJson(`${API_BASE}/admin/estabelecimentos${queryGerente()}`);
+}
+
+// Portfólio completo de quem está logado: os estabelecimentos que possui +
+// os de que é funcionária, sem distinção — diferente de "estabelecimentos
+// que eu possuo" (usado em Solicitações, que é só-dono de propósito).
+export function buscarMinhasEstabelecimentos() {
+  const idUsuario = localStorage.getItem("idUsuario");
+  return fetchJson(`${API_BASE}/estabelecimentos/minhas/${idUsuario}`);
 }
 
 export function desativarEstabelecimento(id) {

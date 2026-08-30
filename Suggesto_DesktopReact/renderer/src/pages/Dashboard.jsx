@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import ModalEstabelecimento from "./ModalEstabelecimento";
 import { Topo } from "../components/AdminShell";
 import Icone, { IC } from "../components/Icones";
-import { API_BASE, idGerente, urlFoto } from "../api/admin";
+import { API_BASE, buscarMinhasEstabelecimentos, idGerente, urlFoto } from "../api/admin";
 import { useAviso } from "../components/Aviso";
 import "./Dashboard.css";
 
@@ -25,9 +25,8 @@ export default function Dashboard() {
     let vivo = true;
     (async () => {
       try {
-        const resposta = await fetch(`${API_BASE}/estabelecimentos/gerente/${gerente}`);
-        if (!resposta.ok) throw new Error(`Erro ${resposta.status}`);
-        const lista = await resposta.json();
+        // Portfólio completo: os que possuo + os de que sou funcionária.
+        const lista = await buscarMinhasEstabelecimentos();
         if (vivo) setEstab(lista || []);
       } catch (e) {
         if (vivo) setErro(e.message);
@@ -118,6 +117,8 @@ const CORES_ACENTO = ["#7B2FBE", "#9B59D0", "#60a5fa", "#22c55e", "#f59e0b", "#e
 
 function CardEstab({ estab, idx, deletando, onDeletar }) {
   const cor = CORES_ACENTO[idx % CORES_ACENTO.length];
+  const meuId = localStorage.getItem("idUsuario");
+  const souDono = String(estab.idGerente) === String(meuId);
 
   const imagemURL = urlFoto(estab.fotoPath);
 
@@ -141,15 +142,17 @@ function CardEstab({ estab, idx, deletando, onDeletar }) {
           <span className="card-badge" style={{ background: `${cor}18`, color: cor }}>
             {estab.categoria}
           </span>
-          <button
-            type="button"
-            className="card-trash"
-            onClick={() => onDeletar(estab.idEstabelecimento)}
-            disabled={deletando}
-            title="Excluir"
-          >
-            {deletando ? "…" : <Icone d={IC.x} size={13} />}
-          </button>
+          {souDono && (
+            <button
+              type="button"
+              className="card-trash"
+              onClick={() => onDeletar(estab.idEstabelecimento)}
+              disabled={deletando}
+              title="Excluir"
+            >
+              {deletando ? "…" : <Icone d={IC.x} size={13} />}
+            </button>
+          )}
         </div>
 
         <h3 className="card-nome">{estab.nome}</h3>

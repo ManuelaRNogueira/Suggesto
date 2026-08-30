@@ -52,7 +52,6 @@ export default function Login({ aoLogar }) {
         localStorage.setItem("emailUsuario", email)
         localStorage.setItem("idUsuario", resultado.idUsuario)
         localStorage.setItem("tipoUsuario", resultado.tipoUsuario)
-        localStorage.setItem("idGerenteEfetivo", resultado.idGerenteEfetivo ?? resultado.idUsuario)
 
         setMensagem("Conectando...");
         setMsgColor("#c8e6c9");
