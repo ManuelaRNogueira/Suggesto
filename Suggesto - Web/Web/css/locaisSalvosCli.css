@@ -229,10 +229,34 @@ body {
 .ordenacao-select option { background: var(--cor-fundo-2); color: var(--cor-texto); }
 
 /* ===== FILTROS RÁPIDOS ===== */
-.filtros-rapidos {
+.locais-filtro {
   display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--cor-fundo-2);
+  border: 1px solid var(--cor-borda);
+  border-radius: 999px;
+  padding: 8px 16px;
+  color: var(--cor-texto-fraco);
+  font-family: var(--fonte-texto);
+  font-size: 13px;
+  cursor: pointer;
+  transition: var(--animacao);
+}
+.locais-filtro:hover { border-color: var(--cor-borda-roxa); color: var(--cor-roxo-claro); }
+.locais-filtro.ativo { border-color: var(--cor-borda-roxa); color: var(--cor-roxo-claro); background: rgba(123, 47, 190, 0.1); }
+
+/* Fica escondido até clicar em "Filtrar" (ver abrirFiltro em
+   locaisSalvosCli.js) — com ~27 categorias oficiais, deixar sempre visível
+   polui a tela. */
+.filtros-rapidos {
+  display: none;
   gap: 8px;
   flex-wrap: wrap;
+  margin-top: 12px;
+}
+.filtros-rapidos.aberto {
+  display: flex;
 }
 .filtro-chip {
   background: var(--cor-fundo-2);

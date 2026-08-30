@@ -23,6 +23,16 @@ document.addEventListener("DOMContentLoaded", () => {
   gerarChipsCategoria("filtrosRapidos", "filtro-chip");
 });
 
+// Painel de categorias começa fechado (ver .filtros-rapidos em
+// inicioCli.css) — só aparece quando a pessoa clica em "Filtrar".
+function abrirFiltro() {
+  const painel = document.getElementById("filtrosRapidos");
+  const botao = document.querySelector(".locais-filtro");
+  if (!painel) return;
+  const aberto = painel.classList.toggle("aberto");
+  botao?.classList.toggle("ativo", aberto);
+}
+
 function abrirSugestao() {
   window.location.href = "./fazerSugestao.html";
 }

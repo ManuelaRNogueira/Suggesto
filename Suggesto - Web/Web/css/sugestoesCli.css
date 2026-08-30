@@ -203,6 +203,29 @@ body {
 }
 .campo-busca input::placeholder { color: var(--texto-mfraco); }
 
+.btn-filtro {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--fundo-3); border: 1px solid var(--borda);
+  border-radius: 12px; padding: 10px 16px;
+  font-family: var(--fonte-corpo); font-size: 14px;
+  color: var(--texto-fraco); cursor: pointer;
+  transition: border-color var(--trans), color var(--trans);
+  flex-shrink: 0;
+}
+.btn-filtro:hover { border-color: var(--roxo); color: var(--texto); }
+.btn-filtro.ativo { border-color: var(--roxo); color: var(--roxo-claro); background: rgba(123, 47, 190, 0.1); }
+
+/* Escondido até clicar em "Filtrar" (ver abrirFiltro em sugestoesCli.js) —
+   com ~27 categorias oficiais, deixar tudo sempre visível polui a tela. */
+.filtros-chips-wrapper {
+  display: none;
+  flex-direction: column;
+  gap: 14px;
+}
+.filtros-chips-wrapper.aberto {
+  display: flex;
+}
+
 .filtro-data-wrap, .filtro-select-wrap {
   display: flex; align-items: center; gap: 10px;
   background: var(--fundo-3); border: 1px solid var(--borda);
@@ -623,6 +646,7 @@ body {
   .resumo-grade { grid-template-columns: 1fr; }
   .filtros-linha { flex-direction: column; }
   .campo-busca { width: 100%; }
+  .btn-filtro { width: 100%; justify-content: center; }
   .modal { padding: 24px 18px; }
   .card-corpo { padding: 16px 16px; }
   .card-topo { gap: 10px; }

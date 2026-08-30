@@ -417,12 +417,19 @@ body {
   transition: var(--animacao);
 }
 .locais-filtro:hover { border-color: var(--cor-borda-roxa); color: var(--cor-roxo-claro); }
+.locais-filtro.ativo { border-color: var(--cor-borda-roxa); color: var(--cor-roxo-claro); background: rgba(123, 47, 190, 0.1); }
 
 /* ===== FILTROS RÁPIDOS ===== */
+/* Fica escondido até clicar em "Filtrar" (ver abrirFiltro em inicioCli.js) —
+   com ~27 categorias oficiais, deixar sempre visível polui a tela. */
 .filtros-rapidos {
-  display: flex;
+  display: none;
   gap: 8px;
   flex-wrap: wrap;
+  margin-top: 12px;
+}
+.filtros-rapidos.aberto {
+  display: flex;
 }
 .filtro-chip {
   background: var(--cor-fundo-2);

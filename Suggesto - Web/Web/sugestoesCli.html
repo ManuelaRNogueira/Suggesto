@@ -493,70 +493,77 @@
               <i class="fas fa-times"></i>
             </button>
           </div>
-        </div>
-
-        <!-- CHIPS DE TIPO (Sugestão, Crítica, Elogio) -->
-        <div class="filtros-chips">
-          <button
-            class="chip chip-tipo chip-ativo"
-            onclick="filtrarTipo(this, 'todos')"
-          >
-            Todos os Tipos
-          </button>
-          <button
-            class="chip chip-tipo"
-            onclick="filtrarTipo(this, 'sugestao')"
-          >
-            Sugestão
-          </button>
-          <button class="chip chip-tipo" onclick="filtrarTipo(this, 'critica')">
-            Crítica
-          </button>
-          <button class="chip chip-tipo" onclick="filtrarTipo(this, 'elogio')">
-            Elogio
+          <button class="btn-filtro" onclick="abrirFiltro()">
+            <i class="fas fa-sliders-h"></i>
+            Filtrar
           </button>
         </div>
 
-        <!-- CHIPS DE CATEGORIA (tipos oficiais de estabelecimento) -->
-        <div class="filtros-chips" id="filtrosCategorias">
-          <button
-            class="chip chip-cat chip-ativo"
-            onclick="filtrarCategoria(this, 'todos')"
-          >
-            Todas as categorias
-          </button>
-        </div>
+        <!-- CHIPS (tipo, categoria, status) — escondidos até clicar em "Filtrar" -->
+        <div class="filtros-chips-wrapper" id="filtrosChipsWrapper">
+          <!-- CHIPS DE TIPO (Sugestão, Crítica, Elogio) -->
+          <div class="filtros-chips">
+            <button
+              class="chip chip-tipo chip-ativo"
+              onclick="filtrarTipo(this, 'todos')"
+            >
+              Todos os Tipos
+            </button>
+            <button
+              class="chip chip-tipo"
+              onclick="filtrarTipo(this, 'sugestao')"
+            >
+              Sugestão
+            </button>
+            <button class="chip chip-tipo" onclick="filtrarTipo(this, 'critica')">
+              Crítica
+            </button>
+            <button class="chip chip-tipo" onclick="filtrarTipo(this, 'elogio')">
+              Elogio
+            </button>
+          </div>
 
-        <!-- CHIPS DE STATUS -->
-        <div class="filtros-chips">
-          <button
-            class="chip chip-status chip-ativo"
-            onclick="filtrarStatus(this, 'todos')"
-          >
-            <span class="status-bolinha" style="background: #a78bfa"></span>
-            Todos os status
-          </button>
-          <button
-            class="chip chip-status"
-            onclick="filtrarStatus(this, 'pendente')"
-          >
-            <span class="status-bolinha" style="background: #f59e0b"></span>
-            Pendente
-          </button>
-          <button
-            class="chip chip-status"
-            onclick="filtrarStatus(this, 'aceita')"
-          >
-            <span class="status-bolinha" style="background: #10b981"></span>
-            Aprovada
-          </button>
-          <button
-            class="chip chip-status"
-            onclick="filtrarStatus(this, 'recusada')"
-          >
-            <span class="status-bolinha" style="background: #f87171"></span>
-            Recusada
-          </button>
+          <!-- CHIPS DE CATEGORIA (tipos oficiais de estabelecimento) -->
+          <div class="filtros-chips" id="filtrosCategorias">
+            <button
+              class="chip chip-cat chip-ativo"
+              onclick="filtrarCategoria(this, 'todos')"
+            >
+              Todas as categorias
+            </button>
+          </div>
+
+          <!-- CHIPS DE STATUS -->
+          <div class="filtros-chips">
+            <button
+              class="chip chip-status chip-ativo"
+              onclick="filtrarStatus(this, 'todos')"
+            >
+              <span class="status-bolinha" style="background: #a78bfa"></span>
+              Todos os status
+            </button>
+            <button
+              class="chip chip-status"
+              onclick="filtrarStatus(this, 'pendente')"
+            >
+              <span class="status-bolinha" style="background: #f59e0b"></span>
+              Pendente
+            </button>
+            <button
+              class="chip chip-status"
+              onclick="filtrarStatus(this, 'aceita')"
+            >
+              <span class="status-bolinha" style="background: #10b981"></span>
+              Aprovada
+            </button>
+            <button
+              class="chip chip-status"
+              onclick="filtrarStatus(this, 'recusada')"
+            >
+              <span class="status-bolinha" style="background: #f87171"></span>
+              Recusada
+            </button>
+          </div>
         </div>
       </div>
 

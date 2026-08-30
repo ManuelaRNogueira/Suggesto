@@ -139,6 +139,16 @@ function filtrarLocais() {
   atualizarContador();
 }
 
+// Painel de categorias começa fechado (ver .filtros-rapidos em
+// locaisSalvosCli.css) — só aparece quando a pessoa clica em "Filtrar".
+function abrirFiltro() {
+  const painel = document.getElementById('filtrosRapidos');
+  const botao = document.querySelector('.locais-filtro');
+  if (!painel) return;
+  const aberto = painel.classList.toggle('aberto');
+  botao?.classList.toggle('ativo', aberto);
+}
+
 function filtrarCategoria(botao, categoria) {
   document.querySelectorAll('.filtro-chip').forEach(b => b.classList.remove('filtro-chip-ativo'));
   botao.classList.add('filtro-chip-ativo');

@@ -97,6 +97,16 @@ function aplicarFiltros() {
   btnLimpar.style.display = temFiltro ? "inline-block" : "none";
 }
 
+// Painel de filtros (tipo/categoria/status) começa fechado (ver
+// .filtros-chips-wrapper em sugestoesCli.css) — só aparece ao clicar em "Filtrar".
+function abrirFiltro() {
+  const painel = document.getElementById("filtrosChipsWrapper");
+  const botao = document.querySelector(".btn-filtro");
+  if (!painel) return;
+  const aberto = painel.classList.toggle("aberto");
+  botao?.classList.toggle("ativo", aberto);
+}
+
 function filtrarTipo(botao, valor) {
   document
     .querySelectorAll(".chip-tipo")
