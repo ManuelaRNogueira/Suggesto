@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'cores.dart';
-import 'statusSugestao.dart';
-import 'formatacao.dart';
 import 'sessao.dart';
 import 'api.dart';
 import 'detalhesSugestaoAdm.dart';
+import 'cartaoSugestaoAdm.dart';
 
 // Início do painel administrativo — busca em GET /api/admin/metricas e
 // GET /api/admin/estabelecimentos (ver AdminController no backend).
@@ -322,80 +321,22 @@ class _InicioAdmState extends State<InicioAdm> {
             ),
           )
         else
-          for (final s in sugestoesRecentes) _cartaoSugestao(s),
+          for (final s in sugestoesRecentes)
+            cartaoSugestaoAdm(
+              sugestao: s,
+              mostrarEstabelecimento: true,
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => DetalhesSugestaoAdm(sugestao: s),
+                  ),
+                );
+                setState(() {});
+              },
+            ),
       ],
     );
-  }
-
-  Widget _cartaoSugestao(Map<String, dynamic> s) {
-    return GestureDetector(
-      onTap: () async {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => DetalhesSugestaoAdm(sugestao: s)),
-        );
-        setState(() {});
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Cores.cartao,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Cores.borda),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                pillStatus((s['statusUi'] as String?) ?? 'pendente'),
-                Text(
-                  formatarData(s['dataAvaliacao'] as String?),
-                  style: const TextStyle(
-                    color: Colors.white38,
-                    fontSize: 11,
-                    fontFamily: 'Poppins',
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              tituloSugestao(s['comentario'] as String?),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontFamily: 'PoppinsSemi',
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              _metaSugestao(s),
-              style: const TextStyle(
-                color: Colors.white54,
-                fontSize: 12,
-                fontFamily: 'Poppins',
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Categoria · estabelecimento · autor numa linha só — mesmo formato usado
-  // na tela Início do admin no desktop (ini-recente-meta em Inicio.jsx).
-  String _metaSugestao(Map<String, dynamic> s) {
-    final partes = [
-      (s['categoria'] as String?) ?? 'Sem categoria',
-      if ((s['estabelecimento'] as String?)?.isNotEmpty == true)
-        s['estabelecimento'] as String,
-      if ((s['autor'] as String?)?.isNotEmpty == true) s['autor'] as String,
-    ];
-    return partes.join(' · ');
   }
 
   Widget _buildBarraNavegacao() {

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'cores.dart';
-import 'statusSugestao.dart';
 import 'formatacao.dart';
 import 'sessao.dart';
 import 'api.dart';
 import 'detalhesSugestaoAdm.dart';
+import 'cartaoSugestaoAdm.dart';
 
 // Lista de sugestões do painel admin — versão mobile da tela equivalente do
 // desktop (Suggesto_DesktopReact/renderer/src/pages/admin/Sugestoes.jsx).
@@ -19,16 +19,12 @@ class SugestoesAdm extends StatefulWidget {
 class _SugestoesAdmState extends State<SugestoesAdm> {
   int paginaAtual = 1;
   String filtro = 'todos';
-  String categoriaFiltro = 'todas';
   int? estabelecimentoFiltroId;
   String busca = '';
 
   bool carregando = true;
   String? erro;
   List<Map<String, dynamic>> sugestoes = [];
-  // Categorias reais da tabela `categoria` (GET /api/categorias, sem
-  // tipoEstabelecimento — o backend devolve todas nesse caso, uso admin).
-  List<Map<String, dynamic>> categoriasAdmin = [];
   // Estabelecimentos reais vinculados a este administrador (GET
   // /api/admin/estabelecimentos) — usados como opções do filtro.
   List<Map<String, dynamic>> estabelecimentosAdmin = [];
@@ -54,13 +50,11 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
     try {
       final resultados = await Future.wait([
         buscarSugestoesAdmin(idGerente: Sessao.idUsuario),
-        buscarCategorias(null),
         buscarEstabelecimentosAdmin(idGerente: Sessao.idUsuario),
       ]);
       setState(() {
         sugestoes = resultados[0].cast<Map<String, dynamic>>();
-        categoriasAdmin = resultados[1].cast<Map<String, dynamic>>();
-        estabelecimentosAdmin = resultados[2].cast<Map<String, dynamic>>();
+        estabelecimentosAdmin = resultados[1].cast<Map<String, dynamic>>();
       });
     } on ApiException catch (e) {
       setState(() => erro = e.mensagem);
@@ -72,10 +66,6 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
   List<Map<String, dynamic>> get sugestoesFiltradas {
     return sugestoes.where((s) {
       if (filtro != 'todos' && s['statusUi'] != filtro) return false;
-      if (categoriaFiltro != 'todas' &&
-          (s['categoria'] as String?) != categoriaFiltro) {
-        return false;
-      }
       if (estabelecimentoFiltroId != null &&
           (s['estabelecimentoId'] as num?)?.toInt() !=
               estabelecimentoFiltroId) {
@@ -125,13 +115,14 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(child: _buscaCampo()),
-                      const SizedBox(width: 10),
-                      _botaoFiltroCategoria(),
-                    ],
-                  ),
+                  _buscaCampo(),
+                  if (estabelecimentosAdmin.length > 1) ...[
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: _seletorEstabelecimento(),
+                    ),
+                  ],
                   const SizedBox(height: 14),
                   _filtrosChips(),
                 ],
@@ -200,7 +191,10 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
         ),
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
         itemCount: lista.length,
-        itemBuilder: (context, i) => _cartaoSugestao(lista[i]),
+        itemBuilder: (context, i) => cartaoSugestaoAdm(
+          sugestao: lista[i],
+          onTap: () => _abrirDetalhes(lista[i]),
+        ),
       ),
     );
   }
@@ -252,56 +246,77 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
     );
   }
 
-  bool get _temFiltroAvancado =>
-      categoriaFiltro != 'todas' || estabelecimentoFiltroId != null;
+  String get _nomeEstabelecimentoFiltro {
+    if (estabelecimentoFiltroId == null) return 'Todos os estabelecimentos';
+    final encontrado = estabelecimentosAdmin.firstWhere(
+      (e) => (e['id'] as num).toInt() == estabelecimentoFiltroId,
+      orElse: () => const {},
+    );
+    return (encontrado['nome'] as String?) ?? 'Estabelecimento';
+  }
 
-  // Botão com ícone de filtro ao lado da busca — abre o painel de categoria
-  // e estabelecimento.
-  Widget _botaoFiltroCategoria() {
+  // Seletor compacto de estabelecimento — só aparece quando o admin tem mais
+  // de um (com um só, não há o que filtrar). Mostra direto qual está
+  // selecionado, sem precisar abrir o painel pra saber.
+  Widget _seletorEstabelecimento() {
+    final ativo = estabelecimentoFiltroId != null;
     return GestureDetector(
-      onTap: _abrirFiltroCategoria,
+      onTap: _abrirSeletorEstabelecimento,
       child: Container(
-        width: 48,
-        height: 48,
+        constraints: const BoxConstraints(maxWidth: 260),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: _temFiltroAvancado ? Cores.roxo : Cores.cartao,
+          color: ativo ? Cores.roxo.withOpacity(0.15) : Cores.cartao,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: _temFiltroAvancado ? Cores.roxo : Cores.borda,
-          ),
+          border: Border.all(color: ativo ? Cores.roxo : Cores.borda),
         ),
-        child: const Icon(Icons.tune, color: Colors.white, size: 20),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.storefront_outlined,
+              size: 16,
+              color: ativo ? Cores.roxo : Colors.white54,
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                _nomeEstabelecimentoFiltro,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: ativo ? Cores.roxo : Colors.white70,
+                  fontSize: 13,
+                  fontFamily: 'PoppinsSemi',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 18,
+              color: ativo ? Cores.roxo : Colors.white54,
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  // Painel de filtros — mesmo modelo de bottom sheet usado no filtro de
-  // "Descubra Novos Locais" da Home do cliente (inicialcli.dart): fundo
-  // Cores.cartao, topo arredondado, alça de arraste, chips. Categorias vêm
-  // de GET /api/categorias (tabela `categoria`) e estabelecimentos de GET
-  // /api/admin/estabelecimentos — nada fixo no código.
-  void _abrirFiltroCategoria() {
+  // Bottom sheet de seleção — mesmo modelo já usado nos outros filtros do
+  // app (fundo Cores.cartao, topo arredondado, alça de arraste). Lista em
+  // vez de chips: nomes de estabelecimento podem ser longos, e uma lista
+  // com a opção marcada fica mais clara que vários botões lado a lado.
+  void _abrirSeletorEstabelecimento() {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (_) => StatefulBuilder(
         builder: (context, setModalState) {
-          void selecionarCategoria(String chave) {
-            setModalState(() => setState(() => categoriaFiltro = chave));
-          }
-
-          void selecionarEstabelecimento(int? id) {
+          void selecionar(int? id) {
             setModalState(() => setState(() => estabelecimentoFiltroId = id));
-          }
-
-          void limparTudo() {
-            setModalState(() {
-              setState(() {
-                categoriaFiltro = 'todas';
-                estabelecimentoFiltroId = null;
-              });
-            });
+            Navigator.pop(context);
           }
 
           return Container(
@@ -309,7 +324,7 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
               color: Cores.cartao,
               borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 36),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -326,111 +341,30 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Filtros',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontFamily: 'PoppinsBold',
-                          fontWeight: FontWeight.bold,
-                        ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4),
+                    child: Text(
+                      'Selecionar estabelecimento',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontFamily: 'PoppinsBold',
+                        fontWeight: FontWeight.bold,
                       ),
-                      if (categoriaFiltro != 'todas' ||
-                          estabelecimentoFiltroId != null)
-                        GestureDetector(
-                          onTap: limparTudo,
-                          child: const Text(
-                            'Limpar filtros',
-                            style: TextStyle(
-                              color: Cores.roxo,
-                              fontSize: 13,
-                              fontFamily: 'Poppins',
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Categoria',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 13,
-                      fontFamily: 'PoppinsSemi',
-                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  if (categoriasAdmin.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 4),
-                      child: Text(
-                        'Nenhuma categoria disponível.',
-                        style: TextStyle(
-                          color: Colors.white54,
-                          fontFamily: 'Poppins',
-                        ),
-                      ),
-                    )
-                  else
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: categoriasAdmin.map((c) {
-                        final nome = c['nomeCategoria'] as String;
-                        return _chipFiltro(
-                          rotulo: nome,
-                          ativo: categoriaFiltro == nome,
-                          onTap: () => selecionarCategoria(nome),
-                        );
-                      }).toList(),
-                    ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Estabelecimento',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 13,
-                      fontFamily: 'PoppinsSemi',
-                      fontWeight: FontWeight.w600,
-                    ),
+                  const SizedBox(height: 16),
+                  _linhaEstabelecimento(
+                    nome: 'Todos os estabelecimentos',
+                    ativo: estabelecimentoFiltroId == null,
+                    onTap: () => selecionar(null),
                   ),
-                  const SizedBox(height: 12),
-                  if (estabelecimentosAdmin.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 4),
-                      child: Text(
-                        'Nenhum estabelecimento vinculado.',
-                        style: TextStyle(
-                          color: Colors.white54,
-                          fontFamily: 'Poppins',
-                        ),
-                      ),
-                    )
-                  else
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _chipFiltro(
-                          rotulo: 'Todos',
-                          ativo: estabelecimentoFiltroId == null,
-                          onTap: () => selecionarEstabelecimento(null),
-                        ),
-                        for (final e in estabelecimentosAdmin)
-                          _chipFiltro(
-                            rotulo: (e['nome'] as String?) ?? 'Estabelecimento',
-                            ativo:
-                                estabelecimentoFiltroId ==
-                                (e['id'] as num).toInt(),
-                            onTap: () => selecionarEstabelecimento(
-                              (e['id'] as num).toInt(),
-                            ),
-                          ),
-                      ],
+                  for (final e in estabelecimentosAdmin)
+                    _linhaEstabelecimento(
+                      nome: (e['nome'] as String?) ?? 'Estabelecimento',
+                      ativo:
+                          estabelecimentoFiltroId == (e['id'] as num).toInt(),
+                      onTap: () => selecionar((e['id'] as num).toInt()),
                     ),
                 ],
               ),
@@ -441,30 +375,45 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
     );
   }
 
-  Widget _chipFiltro({
-    required String rotulo,
+  Widget _linhaEstabelecimento({
+    required String nome,
     required bool ativo,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: ativo ? Cores.roxo : const Color(0xFF2A1A4A),
-          borderRadius: BorderRadius.circular(20),
+          color: ativo ? Cores.roxo.withOpacity(0.15) : const Color(0xFF2A1A4A),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: ativo ? Cores.roxo : const Color(0xFF3A2A5A),
           ),
         ),
-        child: Text(
-          rotulo,
-          style: TextStyle(
-            color: ativo ? Colors.white : Colors.white70,
-            fontSize: 13,
-            fontFamily: 'Poppins',
-            fontWeight: ativo ? FontWeight.w600 : FontWeight.normal,
-          ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.storefront_outlined,
+              size: 16,
+              color: ativo ? Cores.roxo : Colors.white54,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                nome,
+                style: TextStyle(
+                  color: ativo ? Colors.white : Colors.white70,
+                  fontSize: 14,
+                  fontFamily: 'Poppins',
+                  fontWeight: ativo ? FontWeight.w600 : FontWeight.normal,
+                ),
+              ),
+            ),
+            if (ativo)
+              const Icon(Icons.check_circle, size: 18, color: Cores.roxo),
+          ],
         ),
       ),
     );
@@ -492,71 +441,6 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
             fontWeight: ativo ? FontWeight.w600 : FontWeight.normal,
             fontFamily: 'Poppins',
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _cartaoSugestao(Map<String, dynamic> s) {
-    return GestureDetector(
-      onTap: () => _abrirDetalhes(s),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Cores.cartao,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Cores.borda),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                pillStatus((s['statusUi'] as String?) ?? 'pendente'),
-                Text(
-                  formatarData(s['dataAvaliacao'] as String?),
-                  style: const TextStyle(
-                    color: Colors.white38,
-                    fontSize: 11,
-                    fontFamily: 'Poppins',
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              tituloSugestao(s['comentario'] as String?),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontFamily: 'PoppinsSemi',
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              'Categoria: ${s['categoria'] ?? 'Sem categoria'}',
-              style: const TextStyle(
-                color: Colors.white54,
-                fontSize: 12,
-                fontFamily: 'Poppins',
-              ),
-            ),
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                (s['autor'] as String?) ?? 'Anônimo',
-                style: const TextStyle(
-                  color: Colors.white24,
-                  fontSize: 10,
-                  fontFamily: 'Poppins',
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );
