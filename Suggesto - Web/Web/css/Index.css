@@ -280,11 +280,11 @@ img { max-width: 100%; display: block; }
 }
 .titulo-linha { display: block; }
 .titulo-roxo {
-  font-size: clamp(48px, 7vw, 80px);
+  font-size: clamp(32px, 11vw, 80px);
   color: var(--cor-roxo-claro);
 }
 .titulo-claro {
-  font-size: clamp(48px, 7vw, 80px);
+  font-size: clamp(32px, 11vw, 80px);
   color: rgba(240, 240, 245, 0.65);
 }
 
@@ -397,7 +397,7 @@ img { max-width: 100%; display: block; }
 
 /* ===== FUNCIONALIDADES ===== */
 .funcionalidades {
-  /*padding: 100px 32px;*/
+  padding: 0 32px;
   max-width: 1280px;
   margin: 0 auto;
 }
@@ -917,21 +917,21 @@ img { max-width: 100%; display: block; }
 
   .hero-numeros { flex-wrap: wrap; gap: 20px; padding: 16px 24px; }
   .numero-divisor { display: none; }
-  .funcionalidades { padding: 80px 24px; }
+  .funcionalidades { padding: 80px 28px; }
   .funcionalidades-grade { grid-template-columns: 1fr; gap: 12px; }
-  .papeis { padding: 60px 24px 80px; }
-  .vitrine { margin: 0 24px 80px; }
-  .caixas { padding: 0 24px 80px; }
-  .caixa { padding: 32px 24px; }
+  .papeis { padding: 60px 28px 80px; }
+  .vitrine { margin: 0 28px 80px; }
+  .caixas { padding: 0 28px 80px; }
+  .caixa { padding: 32px 28px; }
   .rodape-topo { grid-template-columns: 1fr 1fr; }
   .rodape-base { flex-direction: column; gap: 16px; text-align: center; }
 }
 
 @media (max-width: 480px) {
-  .hero { padding: calc(var(--altura-nav) + 40px) 20px 80px; }
+  .hero { padding: calc(var(--altura-nav) + 40px) 24px 80px; }
   .hero-acoes { flex-direction: column; width: 100%; }
   .hero-acoes .botao { width: 100%; justify-content: center; }
   .rodape-topo { grid-template-columns: 1fr; }
-  .vitrine-slide { padding: 36px 24px 72px; }
-  .barra-nav-interna { padding: 0 20px; }
+  .vitrine-slide { padding: 36px 28px 72px; }
+  .barra-nav-interna { padding: 0 24px; }
 }
