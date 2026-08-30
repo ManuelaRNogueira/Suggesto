@@ -5,6 +5,7 @@ import 'sessao.dart';
 import 'localCardCliente.dart';
 import 'qrScanner.dart';
 import 'sugerir.dart';
+import 'escolherEstabelecimento.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -395,7 +396,16 @@ class _HomePageState extends State<HomePage> {
                     borderRadius: BorderRadius.circular(999),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(999),
-                      onTap: () => setState(() => _pesquisando = true),
+                      // Mesma função do botão do banner no site (abrirSugestao
+                      // em js/inicioCli.js): manda pra uma página com todas as
+                      // opções de estabelecimento, não só abre a busca inline.
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              EscolherEstabelecimentoPage(locais: locais),
+                        ),
+                      ),
                       child: const Padding(
                         padding: EdgeInsets.symmetric(
                           horizontal: 22,
