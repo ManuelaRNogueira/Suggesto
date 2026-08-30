@@ -17,7 +17,7 @@ class PerfilAdm extends StatefulWidget {
 }
 
 class _PerfilAdmState extends State<PerfilAdm> {
-  int paginaAtual = 2;
+  int paginaAtual = 3;
 
   bool carregando = true;
   String? erro;
@@ -765,6 +765,7 @@ class _PerfilAdmState extends State<PerfilAdm> {
     final abas = [
       _Aba('Início', Icons.home_filled, '/inicioAdm'),
       _Aba('Sugestões', Icons.forum, '/sugestoesAdm'),
+      _Aba('Locais', Icons.storefront, '/estabelecimentosAdm'),
       _Aba('Perfil', Icons.person, '/perfilAdm'),
     ];
 
