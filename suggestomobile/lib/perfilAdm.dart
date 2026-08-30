@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'cores.dart';
 import 'sessao.dart';
 import 'api.dart';
-import 'formatacao.dart';
 
-// Perfil do administrador/estabelecimento — endereço, contato, sobre e
-// métricas vêm de GET /api/estabelecimentos/{id} (nota/avaliações incluídas
-// via aplicarMediasDeAvaliacao no backend) + GET /api/admin/metricas
-// (implementados, mesma fonte usada na tela Início do admin).
+// Perfil pessoal do administrador — mesma estrutura do Perfil do mobile
+// cliente (perfilClie.dart: foto, nome, e-mail, menu, sair), mas com dados
+// do próprio usuário logado (GET /api/usuarios/{id}) em vez de um
+// estabelecimento. As informações de estabelecimento (código da equipe,
+// solicitações, métricas) agora vivem na tela de detalhes de cada local
+// (ver detalhesEstabelecimentoAdm.dart), já que um admin pode ter vários.
 class PerfilAdm extends StatefulWidget {
   const PerfilAdm({super.key});
 
@@ -21,14 +21,16 @@ class _PerfilAdmState extends State<PerfilAdm> {
 
   bool carregando = true;
   String? erro;
+  Map<String, dynamic>? usuario;
 
-  Map<String, dynamic>? estabelecimento;
-  int melhorias = 0;
-
-  String? codigoEquipe;
-  List<Map<String, dynamic>> solicitacoes = [];
-  bool codigoCopiado = false;
-  final Set<int> _solicitacoesProcessando = {};
+  final List<Map<String, dynamic>> _menuItems = [
+    {'icon': Icons.info_outline, 'label': 'Sobre Nós', 'route': '/sobrenos'},
+    {
+      'icon': Icons.emoji_objects_outlined,
+      'label': 'O Suggesto',
+      'route': '/suggesto',
+    },
+  ];
 
   @override
   void initState() {
@@ -42,85 +44,17 @@ class _PerfilAdmState extends State<PerfilAdm> {
       erro = null;
     });
     try {
-      final idGerente = Sessao.idUsuario;
-      final estabs = await buscarEstabelecimentosAdmin(idGerente: idGerente);
-      if (estabs.isEmpty) {
-        setState(() => erro = 'Nenhum estabelecimento cadastrado.');
+      final idUsuario = Sessao.idUsuario;
+      if (idUsuario == null) {
+        setState(() => erro = 'Sessão inválida. Faça login novamente.');
         return;
       }
-      final idEstabelecimento = (estabs.first['id'] as num).toInt();
-      // "Sou dona" agora é por estabelecimento (campo souDono, vindo da API)
-      // — uma pessoa pode ser dona de um e só funcionária de outro.
-      Sessao.souDonoDoEstabelecimentoAtual =
-          (estabs.first['souDono'] as bool?) ?? false;
-      final resultados = await Future.wait([
-        buscarEstabelecimento(idEstabelecimento),
-        buscarMetricasAdmin(idGerente: idGerente),
-      ]);
-
-      List<Map<String, dynamic>> pendentes = [];
-      if (Sessao.souDonoDoEstabelecimentoAtual && idGerente != null) {
-        // Só o admin principal gerencia a equipe — o backend também confere
-        // isso em aceitar/recusar, então evita a chamada extra pros demais.
-        pendentes = (await buscarSolicitacoesAdmin(
-          idGerente: idGerente,
-        )).cast<Map<String, dynamic>>();
-      }
-
-      setState(() {
-        estabelecimento = resultados[0] as Map<String, dynamic>;
-        melhorias =
-            ((resultados[1] as Map<String, dynamic>)['implementados'] as num?)
-                ?.toInt() ??
-            0;
-        codigoEquipe = estabs.first['codigoAcesso'] as String?;
-        solicitacoes = pendentes;
-      });
+      final dados = await buscarUsuario(idUsuario);
+      setState(() => usuario = dados);
     } on ApiException catch (e) {
       setState(() => erro = e.mensagem);
     } finally {
       if (mounted) setState(() => carregando = false);
-    }
-  }
-
-  Future<void> _copiarCodigo() async {
-    final codigo = codigoEquipe;
-    if (codigo == null) return;
-    await Clipboard.setData(ClipboardData(text: codigo));
-    if (!mounted) return;
-    setState(() => codigoCopiado = true);
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) setState(() => codigoCopiado = false);
-    });
-  }
-
-  Future<void> _responderSolicitacao(int id, bool aceitar) async {
-    final idGerente = Sessao.idUsuario;
-    if (idGerente == null) return;
-    setState(() => _solicitacoesProcessando.add(id));
-    try {
-      if (aceitar) {
-        await aceitarSolicitacao(id, idGerente: idGerente);
-      } else {
-        await recusarSolicitacao(id, idGerente: idGerente);
-      }
-      if (!mounted) return;
-      setState(
-        () => solicitacoes.removeWhere((s) => (s['id'] as num).toInt() == id),
-      );
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            e.mensagem,
-            style: const TextStyle(fontFamily: 'Poppins'),
-          ),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _solicitacoesProcessando.remove(id));
     }
   }
 
@@ -167,7 +101,7 @@ class _PerfilAdmState extends State<PerfilAdm> {
       );
     }
 
-    final e = estabelecimento!;
+    final u = usuario!;
     return RefreshIndicator(
       color: Cores.roxo,
       onRefresh: _carregar,
@@ -181,23 +115,301 @@ class _PerfilAdmState extends State<PerfilAdm> {
           children: [
             _buildTopoConfig(),
             const SizedBox(height: 12),
-            _buildCabecalho(e),
+            _buildCabecalho(u),
             const SizedBox(height: 20),
-            _buildCardContato(e),
+            _buildCardContato(u),
             const SizedBox(height: 16),
-            _buildCardSobre(e),
-            const SizedBox(height: 16),
-            _buildCardMetricas(),
-            if (Sessao.souDonoDoEstabelecimentoAtual) ...[
-              const SizedBox(height: 16),
-              _buildCardCodigoEquipe(),
-              const SizedBox(height: 16),
-              _buildCardSolicitacoes(),
-            ],
+            _buildMenuList(),
             const SizedBox(height: 16),
             _buildSairButton(),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTopoConfig() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: Cores.cartao,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Cores.borda),
+          ),
+          child: const Icon(
+            Icons.settings_outlined,
+            color: Colors.white70,
+            size: 20,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _iniciais(String nome) {
+    final partes = nome.trim().split(RegExp(r'\s+'));
+    if (partes.isEmpty || partes.first.isEmpty) return '?';
+    final primeira = partes.first[0];
+    final ultima = partes.length > 1 ? partes.last[0] : '';
+    return (primeira + ultima).toUpperCase();
+  }
+
+  Widget _buildCabecalho(Map<String, dynamic> u) {
+    final nome = (u['nome'] as String?)?.trim();
+    final email = (u['email'] as String?) ?? '';
+    final fotoUrl = urlFotoUsuario(u['fotoUrl'] as String?);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: Cores.roxo, width: 2.5),
+          ),
+          child: ClipOval(
+            child: fotoUrl != null
+                ? Image.network(
+                    fotoUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) =>
+                        _iniciaisPlaceholder(nome ?? ''),
+                  )
+                : _iniciaisPlaceholder(nome ?? ''),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                (nome != null && nome.isNotEmpty) ? nome : 'Administrador',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontFamily: 'PoppinsSemi',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (email.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  email,
+                  style: const TextStyle(
+                    color: Colors.white54,
+                    fontSize: 13,
+                    fontFamily: 'Poppins',
+                  ),
+                ),
+              ],
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: Cores.tag,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Cores.roxo.withOpacity(0.4)),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.verified_user_outlined,
+                      color: Cores.roxo,
+                      size: 13,
+                    ),
+                    SizedBox(width: 5),
+                    Text(
+                      'Administrador',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontFamily: 'PoppinsSemi',
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _iniciaisPlaceholder(String nome) {
+    return Container(
+      color: Cores.cartao,
+      alignment: Alignment.center,
+      child: Text(
+        _iniciais(nome),
+        style: const TextStyle(
+          color: Colors.white70,
+          fontSize: 22,
+          fontFamily: 'PoppinsBold',
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCardContato(Map<String, dynamic> u) {
+    final telefone = (u['telefone'] as String?)?.trim();
+    final cidade = (u['cidade'] as String?)?.trim();
+    final estado = (u['estado'] as String?)?.trim();
+    final localizacao = [
+      if (cidade != null && cidade.isNotEmpty) cidade,
+      if (estado != null && estado.isNotEmpty) estado,
+    ].join(' - ');
+    final plano = (u['nomePlano'] as String?)?.trim();
+
+    final itens = <MapEntry<IconData, String>>[
+      MapEntry(
+        Icons.phone_outlined,
+        telefone != null && telefone.isNotEmpty ? telefone : 'Não informado',
+      ),
+      if (localizacao.isNotEmpty)
+        MapEntry(Icons.location_on_outlined, localizacao),
+      if (plano != null && plano.isNotEmpty)
+        MapEntry(Icons.workspace_premium_outlined, 'Plano $plano'),
+    ];
+
+    return _card(
+      titulo: null,
+      filhos: [
+        for (var i = 0; i < itens.length; i++)
+          _linhaContato(
+            itens[i].key,
+            itens[i].value,
+            ultima: i == itens.length - 1,
+          ),
+      ],
+    );
+  }
+
+  Widget _linhaContato(IconData icone, String texto, {bool ultima = false}) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: ultima ? 0 : 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icone, color: Cores.roxo, size: 18),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              texto,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 13,
+                fontFamily: 'Poppins',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenuList() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Cores.cartao,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Cores.borda, width: 1),
+      ),
+      child: Column(
+        children: List.generate(_menuItems.length, (index) {
+          final item = _menuItems[index];
+          final isLast = index == _menuItems.length - 1;
+          return Column(
+            children: [
+              _buildMenuItem(
+                icon: item['icon'] as IconData,
+                label: item['label'] as String,
+                onTap: () =>
+                    Navigator.pushNamed(context, item['route'] as String),
+              ),
+              if (!isLast)
+                Divider(
+                  height: 1,
+                  color: Colors.white.withOpacity(0.06),
+                  indent: 20,
+                  endIndent: 20,
+                ),
+            ],
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildMenuItem({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 17),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.white70, size: 20),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontFamily: 'Poppins',
+                ),
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.white38, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _card({required String? titulo, required List<Widget> filhos}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Cores.cartao,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Cores.borda),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (titulo != null) ...[
+            Text(
+              titulo,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontFamily: 'PoppinsSemi',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+          ...filhos,
+        ],
       ),
     );
   }
@@ -268,495 +480,6 @@ class _PerfilAdmState extends State<PerfilAdm> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildTopoConfig() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        GestureDetector(
-          onTap: () {},
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Cores.cartao,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Cores.borda),
-            ),
-            child: const Icon(
-              Icons.settings_outlined,
-              color: Colors.white70,
-              size: 20,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCabecalho(Map<String, dynamic> e) {
-    final nome = (e['nome'] as String?) ?? 'Estabelecimento';
-    final categoria = (e['categoria'] as String?) ?? '';
-    final nota = (e['mediaAvaliacoes'] as num?)?.toDouble();
-    final fotoUrl = urlFotoEstabelecimento(e['fotoPath'] as String?);
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: fotoUrl != null
-              ? Image.network(
-                  fotoUrl,
-                  width: 64,
-                  height: 64,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _logoPlaceholder(),
-                )
-              : _logoPlaceholder(),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                nome,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontFamily: 'PoppinsSemi',
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              if (categoria.isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Text(
-                  categoria,
-                  style: const TextStyle(
-                    color: Colors.white54,
-                    fontSize: 13,
-                    fontFamily: 'Poppins',
-                  ),
-                ),
-              ],
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  if (nota != null) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Cores.tag,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Cores.roxo.withOpacity(0.4)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.star,
-                            color: Cores.amarelo,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            nota.toStringAsFixed(1),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontFamily: 'PoppinsSemi',
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                  ],
-                  GestureDetector(
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Editar perfil ainda não está pronto.',
-                            style: TextStyle(fontFamily: 'Poppins'),
-                          ),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Cores.roxoBotao,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        'Editar perfil',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontFamily: 'PoppinsSemi',
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _logoPlaceholder() {
-    return Container(
-      width: 64,
-      height: 64,
-      decoration: BoxDecoration(
-        color: Cores.cartao,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: const Icon(Icons.storefront, color: Colors.white38),
-    );
-  }
-
-  Widget _buildCardContato(Map<String, dynamic> e) {
-    final rua = (e['rua'] as String?) ?? '';
-    final numero = (e['numero'] as String?) ?? '';
-    final bairro = (e['bairro'] as String?) ?? '';
-    final cidade = (e['cidade'] as String?) ?? '';
-    final estado = (e['estado'] as String?) ?? '';
-    final partesEndereco = <String>[
-      if (rua.isNotEmpty) (numero.isNotEmpty ? '$rua, $numero' : rua),
-      if (bairro.isNotEmpty) bairro,
-      if (cidade.isNotEmpty) (estado.isNotEmpty ? '$cidade - $estado' : cidade),
-    ];
-    final endereco = partesEndereco.isNotEmpty
-        ? partesEndereco.join(' - ')
-        : 'Endereço não informado';
-
-    final telefone = (e['telefone'] as String?)?.isNotEmpty == true
-        ? e['telefone'] as String
-        : 'Não informado';
-    final email = (Sessao.email?.isNotEmpty == true)
-        ? Sessao.email!
-        : 'Não informado';
-    final horario = (e['horarioFuncionamento'] as String?)?.isNotEmpty == true
-        ? e['horarioFuncionamento'] as String
-        : 'Não informado';
-
-    return _card(
-      titulo: null,
-      filhos: [
-        _linhaContato(Icons.location_on_outlined, endereco),
-        _linhaContato(Icons.phone_outlined, telefone),
-        _linhaContato(Icons.email_outlined, email),
-        _linhaContato(Icons.schedule_outlined, horario, ultima: true),
-      ],
-    );
-  }
-
-  Widget _linhaContato(IconData icone, String texto, {bool ultima = false}) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: ultima ? 0 : 14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icone, color: Cores.roxo, size: 18),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              texto,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 13,
-                fontFamily: 'Poppins',
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCardSobre(Map<String, dynamic> e) {
-    final sobre = (e['sobre'] as String?)?.isNotEmpty == true
-        ? e['sobre'] as String
-        : 'Nenhuma descrição cadastrada ainda.';
-
-    return _card(
-      titulo: 'Sobre',
-      filhos: [
-        Text(
-          sobre,
-          style: const TextStyle(
-            color: Colors.white60,
-            fontSize: 13,
-            fontFamily: 'Poppins',
-            height: 1.5,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCardMetricas() {
-    return _card(
-      titulo: null,
-      filhos: [
-        Row(
-          children: [
-            const Icon(Icons.trending_up, color: Cores.verde, size: 22),
-            const SizedBox(width: 12),
-            Text(
-              '$melhorias',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontFamily: 'PoppinsBold',
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Text(
-              'melhorias',
-              style: TextStyle(
-                color: Colors.white54,
-                fontSize: 13,
-                fontFamily: 'Poppins',
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCardCodigoEquipe() {
-    final codigo = codigoEquipe;
-    return _card(
-      titulo: 'Código da equipe',
-      filhos: [
-        Text(
-          'Compartilhe com quem vai administrar esse estabelecimento junto com você.',
-          style: const TextStyle(
-            color: Colors.white54,
-            fontSize: 12,
-            fontFamily: 'Poppins',
-            height: 1.4,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: Cores.campo,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  codigo ?? '—',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'PoppinsSemi',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1.5,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            GestureDetector(
-              onTap: codigo == null ? null : _copiarCodigo,
-              child: Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: codigoCopiado ? Cores.verdeFundo : Cores.roxoBotao,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  codigoCopiado ? Icons.check : Icons.copy,
-                  color: codigoCopiado ? Cores.verde : Colors.white,
-                  size: 20,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCardSolicitacoes() {
-    return _card(
-      titulo: 'Solicitações de entrada',
-      filhos: [
-        if (solicitacoes.isEmpty)
-          const Text(
-            'Nenhuma solicitação pendente.',
-            style: TextStyle(
-              color: Colors.white38,
-              fontSize: 13,
-              fontFamily: 'Poppins',
-            ),
-          )
-        else
-          for (final s in solicitacoes) _linhaSolicitacao(s),
-      ],
-    );
-  }
-
-  Widget _linhaSolicitacao(Map<String, dynamic> s) {
-    final id = (s['id'] as num).toInt();
-    final processando = _solicitacoesProcessando.contains(id);
-    final nome = (s['nomeUsuario'] as String?) ?? 'Usuário';
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Cores.campo,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            nome,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontFamily: 'PoppinsSemi',
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            (s['emailUsuario'] as String?) ?? '',
-            style: const TextStyle(
-              color: Colors.white54,
-              fontSize: 12,
-              fontFamily: 'Poppins',
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            formatarData(s['dataSolicitacao'] as String?),
-            style: const TextStyle(
-              color: Colors.white38,
-              fontSize: 11,
-              fontFamily: 'Poppins',
-            ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: processando
-                      ? null
-                      : () => _responderSolicitacao(id, false),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    side: const BorderSide(color: Colors.redAccent),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text(
-                    'Recusar',
-                    style: TextStyle(
-                      color: Colors.redAccent,
-                      fontFamily: 'PoppinsSemi',
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: processando
-                      ? null
-                      : () => _responderSolicitacao(id, true),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    backgroundColor: Cores.verdeFundo,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: processando
-                      ? const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Cores.verde,
-                          ),
-                        )
-                      : const Text(
-                          'Aceitar',
-                          style: TextStyle(
-                            color: Cores.verde,
-                            fontFamily: 'PoppinsSemi',
-                            fontSize: 12,
-                          ),
-                        ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _card({required String? titulo, required List<Widget> filhos}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Cores.cartao,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Cores.borda),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (titulo != null) ...[
-            Text(
-              titulo,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontFamily: 'PoppinsSemi',
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-          ],
-          ...filhos,
-        ],
       ),
     );
   }

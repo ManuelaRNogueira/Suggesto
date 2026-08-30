@@ -5,6 +5,7 @@ import 'formatacao.dart';
 import 'sessao.dart';
 import 'api.dart';
 import 'cartoesStatusAdm.dart';
+import 'solicitacoesEquipeAdm.dart';
 
 // Versão mobile, só de leitura, da tela de detalhes de estabelecimento do
 // desktop (Suggesto_DesktopReact/renderer/src/pages/DetalhesEstabelecimento.jsx)
@@ -80,6 +81,7 @@ class _DetalhesEstabelecimentoAdmState
     final ativo = e['ativo'] as bool?;
     final codigoEquipe = e['codigoAcesso'] as String?;
     final souDono = e['souDono'] as bool? ?? false;
+    final idEstabelecimento = (e['id'] as num?)?.toInt();
 
     return Scaffold(
       backgroundColor: Cores.fundo,
@@ -214,6 +216,12 @@ class _DetalhesEstabelecimentoAdmState
                         codigoEquipe.isNotEmpty) ...[
                       const SizedBox(height: 16),
                       _cardCodigoEquipe(codigoEquipe),
+                    ],
+                    if (souDono && idEstabelecimento != null) ...[
+                      const SizedBox(height: 16),
+                      SolicitacoesEquipeAdm(
+                        idEstabelecimento: idEstabelecimento,
+                      ),
                     ],
                     const SizedBox(height: 24),
                     const Text(
