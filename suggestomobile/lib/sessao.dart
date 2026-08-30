@@ -6,24 +6,27 @@ class Sessao {
   static String? nome;
   static String? email;
   static String? tipoUsuario;
-  static int? idGerenteEfetivo;
+
+  // Uma pessoa pode possuir um estabelecimento e ser só funcionária de outro
+  // ao mesmo tempo agora — não existe mais um "dono efetivo" fixo por sessão
+  // vindo do login. "Sou dona" é por estabelecimento (campo souDono, vindo da
+  // API); quem mostra o estabelecimento específico ajusta isso depois de
+  // buscá-lo (ver perfilAdm.dart).
+  static bool souDonoDoEstabelecimentoAtual = false;
 
   static bool get logado => idUsuario != null;
   static bool get ehAdministrador => tipoUsuario == 'Administrador';
-  static bool get ehPrincipal => logado && idUsuario == idGerenteEfetivo;
 
   static void definir({
     required int idUsuarioLogado,
     required String nomeLogado,
     required String emailLogado,
     required String tipoUsuarioLogado,
-    int? idGerenteEfetivoLogado,
   }) {
     idUsuario = idUsuarioLogado;
     nome = nomeLogado;
     email = emailLogado;
     tipoUsuario = tipoUsuarioLogado;
-    idGerenteEfetivo = idGerenteEfetivoLogado ?? idUsuarioLogado;
   }
 
   static void sair() {
@@ -31,6 +34,6 @@ class Sessao {
     nome = null;
     email = null;
     tipoUsuario = null;
-    idGerenteEfetivo = null;
+    souDonoDoEstabelecimentoAtual = false;
   }
 }

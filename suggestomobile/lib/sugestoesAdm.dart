@@ -49,7 +49,7 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
     });
     try {
       final resultados = await Future.wait([
-        buscarSugestoesAdmin(idGerente: Sessao.idGerenteEfetivo),
+        buscarSugestoesAdmin(idGerente: Sessao.idUsuario),
         buscarCategorias(null),
       ]);
       setState(() {

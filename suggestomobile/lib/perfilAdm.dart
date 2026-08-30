@@ -42,20 +42,24 @@ class _PerfilAdmState extends State<PerfilAdm> {
       erro = null;
     });
     try {
-      final idGerente = Sessao.idGerenteEfetivo;
+      final idGerente = Sessao.idUsuario;
       final estabs = await buscarEstabelecimentosAdmin(idGerente: idGerente);
       if (estabs.isEmpty) {
         setState(() => erro = 'Nenhum estabelecimento cadastrado.');
         return;
       }
       final idEstabelecimento = (estabs.first['id'] as num).toInt();
+      // "Sou dona" agora é por estabelecimento (campo souDono, vindo da API)
+      // — uma pessoa pode ser dona de um e só funcionária de outro.
+      Sessao.souDonoDoEstabelecimentoAtual =
+          (estabs.first['souDono'] as bool?) ?? false;
       final resultados = await Future.wait([
         buscarEstabelecimento(idEstabelecimento),
         buscarMetricasAdmin(idGerente: idGerente),
       ]);
 
       List<Map<String, dynamic>> pendentes = [];
-      if (Sessao.ehPrincipal && idGerente != null) {
+      if (Sessao.souDonoDoEstabelecimentoAtual && idGerente != null) {
         // Só o admin principal gerencia a equipe — o backend também confere
         // isso em aceitar/recusar, então evita a chamada extra pros demais.
         pendentes = (await buscarSolicitacoesAdmin(
@@ -91,7 +95,7 @@ class _PerfilAdmState extends State<PerfilAdm> {
   }
 
   Future<void> _responderSolicitacao(int id, bool aceitar) async {
-    final idGerente = Sessao.idGerenteEfetivo;
+    final idGerente = Sessao.idUsuario;
     if (idGerente == null) return;
     setState(() => _solicitacoesProcessando.add(id));
     try {
@@ -184,7 +188,7 @@ class _PerfilAdmState extends State<PerfilAdm> {
             _buildCardSobre(e),
             const SizedBox(height: 16),
             _buildCardMetricas(),
-            if (Sessao.ehPrincipal) ...[
+            if (Sessao.souDonoDoEstabelecimentoAtual) ...[
               const SizedBox(height: 16),
               _buildCardCodigoEquipe(),
               const SizedBox(height: 16),

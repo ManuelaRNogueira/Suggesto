@@ -94,7 +94,7 @@ Future<void> _vazio(String metodo, String caminho, {Map<String, dynamic>? corpo}
 // ── Autenticação ──────────────────────────────────────────────────────────
 
 // POST /api/login (AuthController.realizarAutenticacao) — retorna
-// { success, message, nome, idUsuario, tipoUsuario, idGerenteEfetivo }.
+// { success, message, nome, idUsuario, tipoUsuario }.
 Future<Map<String, dynamic>> login({required String email, required String senha}) {
   return _mapa('POST', '/login', corpo: {'email': email, 'senha': senha});
 }

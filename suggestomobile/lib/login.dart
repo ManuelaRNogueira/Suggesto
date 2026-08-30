@@ -67,7 +67,6 @@ class _LoginState extends State<Login> {
         nomeLogado: resultado['nome'] as String? ?? '',
         emailLogado: emailController.text.trim(),
         tipoUsuarioLogado: tipoUsuario ?? 'Cliente',
-        idGerenteEfetivoLogado: (resultado['idGerenteEfetivo'] as num?)?.toInt(),
       );
 
       Navigator.pushNamed(context, tipoUsuario == 'Administrador' ? '/inicioAdm' : '/home_cliente');

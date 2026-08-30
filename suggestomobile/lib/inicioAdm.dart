@@ -37,7 +37,7 @@ class _InicioAdmState extends State<InicioAdm> {
       erro = null;
     });
     try {
-      final idGerente = Sessao.idGerenteEfetivo;
+      final idGerente = Sessao.idUsuario;
       final resultados = await Future.wait([
         buscarMetricasAdmin(idGerente: idGerente),
         buscarEstabelecimentosAdmin(idGerente: idGerente),
