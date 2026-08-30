@@ -122,9 +122,9 @@ class _InicioAdmState extends State<InicioAdm> {
           children: [
             _buildCabecalho(),
             const SizedBox(height: 20),
-            _buildCartoesResumo(m),
-            const SizedBox(height: 24),
-            _buildStatusSugestoes(m),
+            _buildCartaoNovasSemana(m),
+            const SizedBox(height: 12),
+            _buildStatusCards(m),
             const SizedBox(height: 24),
             _buildSugestoesRecentes(),
           ],
@@ -159,47 +159,9 @@ class _InicioAdmState extends State<InicioAdm> {
     );
   }
 
-  Widget _buildCartoesResumo(Map<String, dynamic> m) {
-    final total = (m['totalSugestoes'] as num?)?.toInt() ?? 0;
-    final implementados = (m['implementados'] as num?)?.toInt() ?? 0;
-    final pendentes = (m['pendentes'] as num?)?.toInt() ?? 0;
-    final recusados = (m['recusados'] as num?)?.toInt() ?? 0;
-    final aproveitamento = total > 0
-        ? ((implementados / total) * 100).round()
-        : 0;
-
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: _cartaoResumo(
-              '${(m['novasSemana'] as num?)?.toInt() ?? 0}',
-              'Novas na semana',
-              Colors.white,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _cartaoResumo(
-              '$aproveitamento%',
-              'Aproveitamento',
-              Cores.verde,
-              subtitulo: '$pendentes pendentes · $recusados recusadas',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _cartaoResumo(
-    String valor,
-    String rotulo,
-    Color corValor, {
-    String? subtitulo,
-  }) {
+  Widget _buildCartaoNovasSemana(Map<String, dynamic> m) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Cores.cartao,
@@ -211,113 +173,121 @@ class _InicioAdmState extends State<InicioAdm> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            valor,
-            style: TextStyle(
-              color: corValor,
+            '${(m['novasSemana'] as num?)?.toInt() ?? 0}',
+            style: const TextStyle(
+              color: Colors.white,
               fontSize: 24,
               fontFamily: 'PoppinsBold',
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            rotulo,
-            style: const TextStyle(
+          const Text(
+            'Novas na semana',
+            style: TextStyle(
               color: Colors.white54,
               fontSize: 12,
               fontFamily: 'Poppins',
             ),
           ),
-          if (subtitulo != null) ...[
-            const SizedBox(height: 6),
-            Text(
-              subtitulo,
-              style: const TextStyle(
-                color: Colors.white38,
-                fontSize: 10,
-                fontFamily: 'Poppins',
-              ),
-            ),
-          ],
         ],
       ),
     );
   }
 
-  Widget _buildStatusSugestoes(Map<String, dynamic> m) {
-    final itens = [
-      _ItemStatus(
-        'Pendentes',
-        (m['pendentes'] as num?)?.toInt() ?? 0,
-        Icons.schedule,
-        Cores.amarelo,
-      ),
-      _ItemStatus(
-        'Implementados',
-        (m['implementados'] as num?)?.toInt() ?? 0,
-        Icons.check_circle,
-        Cores.verde,
-      ),
-      _ItemStatus(
-        'Recusados',
-        (m['recusados'] as num?)?.toInt() ?? 0,
-        Icons.cancel,
-        Cores.vermelho,
-      ),
-    ];
+  // Três cards por status — mesmo modelo do painel admin no desktop
+  // (.ini-kpi em Inicio.jsx/Inicio.css): barrinha colorida no topo, rótulo,
+  // número grande na cor do status e "% do total" embaixo.
+  Widget _buildStatusCards(Map<String, dynamic> m) {
+    final total = (m['totalSugestoes'] as num?)?.toInt() ?? 0;
+    final pendentes = (m['pendentes'] as num?)?.toInt() ?? 0;
+    final implementados = (m['implementados'] as num?)?.toInt() ?? 0;
+    final recusados = (m['recusados'] as num?)?.toInt() ?? 0;
+    double pct(int qtd) => total > 0 ? (qtd / total) * 100 : 0;
 
+    return Row(
+      children: [
+        Expanded(
+          child: _cartaoStatus(
+            'Pendente',
+            pendentes,
+            pct(pendentes),
+            Cores.amarelo,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _cartaoStatus(
+            'Implementado',
+            implementados,
+            pct(implementados),
+            Cores.verde,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _cartaoStatus(
+            'Recusado',
+            recusados,
+            pct(recusados),
+            Cores.vermelho,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _cartaoStatus(
+    String rotulo,
+    int quantidade,
+    double percentual,
+    Color cor,
+  ) {
     return Container(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
       decoration: BoxDecoration(
         color: Cores.cartao,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Cores.borda),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 14, 16, 4),
-            child: Text(
-              'Status das Sugestões',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontFamily: 'PoppinsSemi',
-                fontWeight: FontWeight.w600,
-              ),
+          Container(
+            width: 22,
+            height: 3,
+            decoration: BoxDecoration(
+              color: cor,
+              borderRadius: BorderRadius.circular(2),
             ),
           ),
-          for (final item in itens) _linhaStatus(item),
-          const SizedBox(height: 6),
-        ],
-      ),
-    );
-  }
-
-  Widget _linhaStatus(_ItemStatus item) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          Icon(item.icone, color: item.cor, size: 18),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              item.rotulo,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontFamily: 'Poppins',
-              ),
-            ),
-          ),
+          const SizedBox(height: 10),
           Text(
-            '${item.quantidade}',
+            rotulo,
             style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontFamily: 'PoppinsSemi',
-              fontWeight: FontWeight.w600,
+              color: Colors.white54,
+              fontSize: 11,
+              fontFamily: 'Poppins',
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '$quantidade',
+            style: TextStyle(
+              color: cor,
+              fontSize: 22,
+              fontFamily: 'PoppinsBold',
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${percentual.toStringAsFixed(1)}% do total',
+            style: const TextStyle(
+              color: Colors.white38,
+              fontSize: 10,
+              fontFamily: 'Poppins',
             ),
           ),
         ],
@@ -490,14 +460,6 @@ class _InicioAdmState extends State<InicioAdm> {
       ),
     );
   }
-}
-
-class _ItemStatus {
-  final String rotulo;
-  final int quantidade;
-  final IconData icone;
-  final Color cor;
-  _ItemStatus(this.rotulo, this.quantidade, this.icone, this.cor);
 }
 
 class _Aba {
