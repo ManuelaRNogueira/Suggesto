@@ -3,7 +3,6 @@ import 'cores.dart';
 import 'sessao.dart';
 import 'api.dart';
 import 'cartoesStatusAdm.dart';
-import 'detalhesEstabelecimentoAdm.dart';
 
 // Perfil pessoal do administrador — mesma estrutura do Perfil do mobile
 // cliente (perfilClie.dart: foto, nome, e-mail, menu, sair), mas com dados
@@ -125,12 +124,10 @@ class _PerfilAdmState extends State<PerfilAdm> {
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildTopoConfig(),
-            const SizedBox(height: 12),
             _buildCabecalho(u),
             const SizedBox(height: 20),
             _buildCardContato(u),
@@ -145,28 +142,6 @@ class _PerfilAdmState extends State<PerfilAdm> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildTopoConfig() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: Cores.cartao,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Cores.borda),
-          ),
-          child: const Icon(
-            Icons.settings_outlined,
-            color: Colors.white70,
-            size: 20,
-          ),
-        ),
-      ],
     );
   }
 
@@ -415,8 +390,8 @@ class _PerfilAdmState extends State<PerfilAdm> {
 
   // Versão simples do card "Estabelecimentos vinculados" do perfil do
   // desktop (Perfil.jsx): só a contagem e o nome de cada local — sem foto,
-  // categoria ou endereço. Tocar no nome ainda abre a tela de detalhes já
-  // existente no mobile ADM.
+  // categoria, endereço ou qualquer ação. É só informativo aqui; os
+  // detalhes de cada estabelecimento ficam na tela de Estabelecimentos.
   Widget _buildEstabelecimentosVinculados() {
     final total = estabelecimentosVinculados.length;
 
@@ -478,33 +453,23 @@ class _PerfilAdmState extends State<PerfilAdm> {
     bool ultima = false,
   }) {
     final nome = (e['nome'] as String?) ?? 'Estabelecimento';
-    return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => DetalhesEstabelecimentoAdm(estabelecimento: e),
-        ),
-      ),
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: EdgeInsets.only(bottom: ultima ? 0 : 12),
-        child: Row(
-          children: [
-            const Icon(Icons.storefront, color: Cores.roxo, size: 18),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                nome,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontFamily: 'Poppins',
-                ),
+    return Padding(
+      padding: EdgeInsets.only(bottom: ultima ? 0 : 12),
+      child: Row(
+        children: [
+          const Icon(Icons.storefront, color: Cores.roxo, size: 18),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              nome,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontFamily: 'Poppins',
               ),
             ),
-            const Icon(Icons.chevron_right, color: Colors.white38, size: 18),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

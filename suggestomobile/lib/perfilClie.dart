@@ -15,8 +15,16 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
   Map<String, dynamic>? usuario;
 
   final List<Map<String, dynamic>> _menuItems = [
-    {'icon': Icons.bookmark_outlined, 'label': 'Locais Salvos', 'route': '/locais_salvos'},
-    {'icon': Icons.chat_bubble_outline, 'label': 'Minhas Sugestões', 'route': '/minhasSugestoes'},
+    {
+      'icon': Icons.bookmark_outlined,
+      'label': 'Locais Salvos',
+      'route': '/locais_salvos',
+    },
+    {
+      'icon': Icons.chat_bubble_outline,
+      'label': 'Minhas Sugestões',
+      'route': '/minhasSugestoes',
+    },
     {'icon': Icons.person_outline, 'label': 'Sobre Nós', 'route': '/sobrenos'},
     {'icon': Icons.person_outline, 'label': 'O Suggesto', 'route': '/suggesto'},
   ];
@@ -46,19 +54,16 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF12061E),
-      body: Column(
-        children: [
-          _buildTopBar(),
-          Expanded(child: _corpo()),
-        ],
-      ),
+      body: SafeArea(child: _corpo()),
       bottomNavigationBar: barraNavegacao(),
     );
   }
 
   Widget _corpo() {
     if (carregando) {
-      return const Center(child: CircularProgressIndicator(color: Color(0xFF9B59D0)));
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFF9B59D0)),
+      );
     }
     if (erro != null) {
       return Center(
@@ -67,11 +72,25 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(erro!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent, fontSize: 13, fontFamily: 'Poppins')),
+              Text(
+                erro!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.redAccent,
+                  fontSize: 13,
+                  fontFamily: 'Poppins',
+                ),
+              ),
               const SizedBox(height: 12),
               TextButton(
                 onPressed: _carregar,
-                child: const Text('Tentar de novo', style: TextStyle(color: Color(0xFF9B59D0), fontFamily: 'Poppins')),
+                child: const Text(
+                  'Tentar de novo',
+                  style: TextStyle(
+                    color: Color(0xFF9B59D0),
+                    fontFamily: 'Poppins',
+                  ),
+                ),
               ),
             ],
           ),
@@ -82,11 +101,13 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
       color: const Color(0xFF9B59D0),
       onRefresh: _carregar,
       child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 12),
+            SizedBox(height: 20),
             _buildPerfilHeader(),
             SizedBox(height: 32),
             _buildMenuList(),
@@ -97,37 +118,6 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
             SizedBox(height: 32),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildTopBar() {
-    return SafeArea(
-      bottom: false,
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            _buildIconButton(Icons.settings_outlined, onTap: () {}),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildIconButton(IconData icon, {required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: Color(0xFF1E0E32),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Color(0xFF2A1A4A), width: 1),
-        ),
-        child: Icon(icon, color: Colors.white70, size: 20),
       ),
     );
   }
@@ -168,7 +158,11 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
                   alignment: Alignment.center,
                   child: Text(
                     _iniciaisPerfil((usuario?['nome'] as String?) ?? ''),
-                    style: TextStyle(color: Colors.white70, fontSize: 26, fontFamily: 'PoppinsBold'),
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 26,
+                      fontFamily: 'PoppinsBold',
+                    ),
                   ),
                 );
                 if (fotoUrl == null) return iniciaisWidget;
@@ -184,18 +178,24 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text((usuario?['nome'] as String?) ?? '—', style: TextStyle(
-                color: const Color.fromARGB(207, 255, 255, 255),
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'PoppinsBold',
-              )),
+              Text(
+                (usuario?['nome'] as String?) ?? '—',
+                style: TextStyle(
+                  color: const Color.fromARGB(207, 255, 255, 255),
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'PoppinsBold',
+                ),
+              ),
               SizedBox(height: 2),
-              Text((usuario?['email'] as String?) ?? '', style: TextStyle(
-                color: Colors.white.withOpacity(0.45),
-                fontSize: 13,
-                fontFamily: 'Poppins',
-              )),
+              Text(
+                (usuario?['email'] as String?) ?? '',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.45),
+                  fontSize: 13,
+                  fontFamily: 'Poppins',
+                ),
+              ),
               SizedBox(height: 8),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -207,12 +207,15 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text((usuario?['nivelNome'] as String?) ?? 'Bronze', style: TextStyle(
-                      color: const Color.fromARGB(208, 255, 255, 255),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'Poppins',
-                    )),
+                    Text(
+                      (usuario?['nivelNome'] as String?) ?? 'Bronze',
+                      style: TextStyle(
+                        color: const Color.fromARGB(208, 255, 255, 255),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
                     SizedBox(width: 5),
                     Text('🏅', style: TextStyle(fontSize: 13)),
                   ],
@@ -250,7 +253,12 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
                   },
                 ),
                 if (!isLast)
-                  Divider(height: 1, color: Colors.white.withOpacity(0.06), indent: 20, endIndent: 20),
+                  Divider(
+                    height: 1,
+                    color: Colors.white.withOpacity(0.06),
+                    indent: 20,
+                    endIndent: 20,
+                  ),
               ],
             );
           }),
@@ -259,7 +267,11 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
     );
   }
 
-  Widget _buildMenuItem({required IconData icon, required String label, required VoidCallback onTap}) {
+  Widget _buildMenuItem({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -270,12 +282,15 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
             Icon(icon, color: Colors.white70, size: 20),
             SizedBox(width: 14),
             Expanded(
-              child: Text(label, style: TextStyle(
-                color: const Color.fromARGB(199, 255, 255, 255),
-                fontSize: 15,
-                fontFamily: 'Poppins',
-               /* fontWeight: FontWeight.w500,*/
-              )),
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: const Color.fromARGB(199, 255, 255, 255),
+                  fontSize: 15,
+                  fontFamily: 'Poppins',
+                  /* fontWeight: FontWeight.w500,*/
+                ),
+              ),
             ),
             Icon(Icons.chevron_right, color: Colors.white38, size: 20),
           ],
@@ -291,7 +306,10 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
         return AlertDialog(
           backgroundColor: Color(0xFF12061E),
           title: Text("Sair da conta", style: TextStyle(color: Colors.white)),
-          content: Text("Tem certeza que deseja sair da sua conta?", style: TextStyle(color: Colors.white70)),
+          content: Text(
+            "Tem certeza que deseja sair da sua conta?",
+            style: TextStyle(color: Colors.white70),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
@@ -330,12 +348,15 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
             children: [
               Icon(Icons.logout, color: Colors.redAccent, size: 18),
               SizedBox(width: 8),
-              Text('Sair da conta', style: TextStyle(
-                color: Colors.redAccent,
-                fontSize: 14,
-                fontFamily: 'PoppinsSemi',
-                fontWeight: FontWeight.w600,
-              )),
+              Text(
+                'Sair da conta',
+                style: TextStyle(
+                  color: Colors.redAccent,
+                  fontSize: 14,
+                  fontFamily: 'PoppinsSemi',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ),
         ),
