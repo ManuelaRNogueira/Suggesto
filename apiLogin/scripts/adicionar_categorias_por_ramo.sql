@@ -1,12 +1,4 @@
--- Adiciona as categorias de sugestão novas, específicas de cada ramo de
--- estabelecimento (ver js/categoriasPorRamo.js / lib/categoriasPorRamo.dart —
--- é lá que se decide quais categorias aparecem pra qual ramo; aqui só cria as
--- linhas na tabela). Puramente aditivo: não mexe nas 8 categorias que já
--- existem (ids 1-8) nem no que já foi respondido/salvo antes.
---
--- Como rodar:
---   mysql -h 143.106.241.4 -u cl204225 -p cl204225 < adicionar_categorias_por_ramo.sql
--- ou cole no phpMyAdmin / MySQL Workbench conectado nesse banco.
+
 
 INSERT INTO categoria (nome_categoria) VALUES ('Limpeza');
 INSERT INTO categoria (nome_categoria) VALUES ('Qualidade da comida');
@@ -28,6 +20,3 @@ INSERT INTO categoria (nome_categoria) VALUES ('Transparência');
 INSERT INTO categoria (nome_categoria) VALUES ('Internet/Wi-Fi');
 INSERT INTO categoria (nome_categoria) VALUES ('Cuidado com os animais');
 INSERT INTO categoria (nome_categoria) VALUES ('Prazo de entrega');
-
--- Confira o resultado:
---   SELECT * FROM categoria ORDER BY id_categoria;
