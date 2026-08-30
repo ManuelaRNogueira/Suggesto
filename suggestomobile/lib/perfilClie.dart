@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'api.dart';
 import 'sessao.dart';
+import 'editarPerfil.dart';
 
 class PerfilCliPage extends StatefulWidget {
   const PerfilCliPage({super.key});
@@ -109,6 +110,8 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
           children: [
             SizedBox(height: 20),
             _buildPerfilHeader(),
+            SizedBox(height: 14),
+            _buildBotaoEditarPerfil(),
             SizedBox(height: 32),
             _buildMenuList(),
             /*SizedBox(height: 32),
@@ -117,6 +120,49 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
             _buildSairButton(),
             SizedBox(height: 32),
           ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _abrirEdicao() async {
+    if (usuario == null) return;
+    final atualizado = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(builder: (_) => EditarPerfilPage(usuario: usuario!)),
+    );
+    if (atualizado != null && mounted) {
+      setState(() => usuario = atualizado);
+    }
+  }
+
+  Widget _buildBotaoEditarPerfil() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20),
+      child: GestureDetector(
+        onTap: _abrirEdicao,
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: Color(0xFF1E0E32),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: Color(0xFF2A1A4A)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.edit, color: Color(0xFF9B59D0), size: 14),
+              SizedBox(width: 8),
+              Text(
+                'Editar perfil',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 13,
+                  fontFamily: 'PoppinsSemi',
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -136,42 +182,65 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Color(0xFF9B59D0), width: 2.5),
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0xFF9B59D0).withOpacity(0.3),
-                  blurRadius: 12,
-                  spreadRadius: 2,
+          GestureDetector(
+            onTap: _abrirEdicao,
+            child: Stack(
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Color(0xFF9B59D0), width: 2.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0xFF9B59D0).withOpacity(0.3),
+                        blurRadius: 12,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: () {
+                      final fotoUrl = urlFotoUsuario(
+                        usuario?['fotoUrl'] as String?,
+                      );
+                      final iniciaisWidget = Container(
+                        color: Color(0xFF2A1A4A),
+                        alignment: Alignment.center,
+                        child: Text(
+                          _iniciaisPerfil((usuario?['nome'] as String?) ?? ''),
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 26,
+                            fontFamily: 'PoppinsBold',
+                          ),
+                        ),
+                      );
+                      if (fotoUrl == null) return iniciaisWidget;
+                      return Image.network(
+                        fotoUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => iniciaisWidget,
+                      );
+                    }(),
+                  ),
+                ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 26,
+                    height: 26,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color(0xFF9B59D0),
+                      border: Border.all(color: Color(0xFF12061E), width: 2),
+                    ),
+                    child: Icon(Icons.camera_alt, color: Colors.white, size: 12),
+                  ),
                 ),
               ],
-            ),
-            child: ClipOval(
-              child: () {
-                final fotoUrl = urlFotoUsuario(usuario?['fotoUrl'] as String?);
-                final iniciaisWidget = Container(
-                  color: Color(0xFF2A1A4A),
-                  alignment: Alignment.center,
-                  child: Text(
-                    _iniciaisPerfil((usuario?['nome'] as String?) ?? ''),
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 26,
-                      fontFamily: 'PoppinsBold',
-                    ),
-                  ),
-                );
-                if (fotoUrl == null) return iniciaisWidget;
-                return Image.network(
-                  fotoUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => iniciaisWidget,
-                );
-              }(),
             ),
           ),
           SizedBox(width: 18),

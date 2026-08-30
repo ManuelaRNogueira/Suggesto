@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'formatacao.dart';
 
 // Camada de acesso à API — porte do que já existe em
@@ -358,11 +360,13 @@ Future<List<dynamic>> buscarConquistas(int id) {
 
 // PUT /api/usuarios/{id} — só aceita multipart/form-data, mesmo sem foto
 // (é assim que o UsuarioController espera, igual ao site em perfilCli.js).
+// fotoBytes já vem recortada (ver recorteImagem.dart) — sempre PNG.
 Future<Map<String, dynamic>> atualizarUsuario(
   int id, {
   String? nome,
   String? telefone,
   String? cidade,
+  Uint8List? fotoBytes,
 }) async {
   final requisicao = http.MultipartRequest(
     'PUT',
@@ -371,6 +375,16 @@ Future<Map<String, dynamic>> atualizarUsuario(
   if (nome != null) requisicao.fields['nome'] = nome;
   if (telefone != null) requisicao.fields['telefone'] = telefone;
   if (cidade != null) requisicao.fields['cidade'] = cidade;
+  if (fotoBytes != null) {
+    requisicao.files.add(
+      http.MultipartFile.fromBytes(
+        'foto',
+        fotoBytes,
+        filename: 'foto_perfil.png',
+        contentType: MediaType('image', 'png'),
+      ),
+    );
+  }
 
   http.StreamedResponse enviada;
   try {
