@@ -80,7 +80,6 @@ async function entrarSuggesto() {
             localStorage.setItem("nomeUsuario", resultado.nome);
             localStorage.setItem("tipoUsuario", resultado.tipoUsuario);
             localStorage.setItem("emailUsuario", dadosLogin.email);
-            localStorage.setItem("idGerenteEfetivo", resultado.idGerenteEfetivo ?? resultado.idUsuario);
 
             // 2. REDIRECIONAMENTO DINÂMICO
             if (modoEquipe) {

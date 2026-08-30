@@ -36,17 +36,21 @@ function montarConta() {
 let codigoAtual = "";
 
 async function carregar() {
-  if (!admSouPrincipal()) {
-    document.getElementById("resumoSub").textContent = "Consulta rápida";
-    document.getElementById("somenteVisualizacao").hidden = false;
-    return;
-  }
-
   try {
-    const [estabelecimentos, solicitacoes] = await Promise.all([
-      admBuscarEstabelecimentos(),
-      admBuscarSolicitacoes(),
-    ]);
+    // "Sou principal" agora é por estabelecimento (campo souDono, vindo da
+    // API) — uma pessoa pode ser dona de um e só funcionária de outro. Isso
+    // aqui é "sou dona de pelo menos um", que é o que já bastava para esta
+    // página (gerenciar convites/pedidos é coisa de dono).
+    const estabelecimentos = await admBuscarEstabelecimentos();
+    const souPrincipalDeAlgo = estabelecimentos.some((e) => e.souDono);
+
+    if (!souPrincipalDeAlgo) {
+      document.getElementById("resumoSub").textContent = "Consulta rápida";
+      document.getElementById("somenteVisualizacao").hidden = false;
+      return;
+    }
+
+    const solicitacoes = await admBuscarSolicitacoes();
 
     document.getElementById("resumoSub").textContent =
       `${estabelecimentos.length} ${estabelecimentos.length === 1 ? "estabelecimento" : "estabelecimentos"}`;
@@ -63,9 +67,10 @@ async function carregar() {
 }
 
 function renderarCodigo(estabelecimentos) {
-  // Um gerente pode ter mais de um estabelecimento — mostra o código do
-  // primeiro, igual o resto do painel faz por padrão (ver inicioAdm.js).
-  const principal = estabelecimentos[0];
+  // Mostra o código do primeiro estabelecimento que essa pessoa realmente
+  // possui (a lista agora também traz os de que ela só é funcionária, e
+  // esses não têm código dela pra compartilhar).
+  const principal = estabelecimentos.find((e) => e.souDono);
   codigoAtual = principal?.codigoAcesso || "";
   document.getElementById("codigoValor").textContent = codigoAtual || "—";
 }

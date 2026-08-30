@@ -3,14 +3,12 @@
 
 const ADM_API_BASE = window.API_BASE;
 
+// Uma pessoa pode ser dona de estabelecimento(s) e funcionária de outro(s) ao
+// mesmo tempo agora — não existe mais um "dono efetivo" fixo por sessão (ver
+// admin.js: idGerente() no desktop, mesma mudança). Os endpoints resolvem o
+// portfólio inteiro a partir do próprio idUsuario.
 function admIdGerente() {
-  return localStorage.getItem("idGerenteEfetivo") || localStorage.getItem("idUsuario");
-}
-
-// Mesma derivação do desktop (admin.js: souPrincipal()) — não é um campo,
-// é "esse usuário é o dono do estabelecimento que ele está vendo".
-function admSouPrincipal() {
-  return localStorage.getItem("idUsuario") === admIdGerente();
+  return localStorage.getItem("idUsuario");
 }
 
 function admVerificarSessao() {

@@ -471,7 +471,6 @@ async function finalizarCadastroEstabelecimento(botao, textoOriginal, nomeRespon
         localStorage.setItem("nomeUsuario", nomeResponsavel);
         localStorage.setItem("tipoUsuario", "Administrador");
         localStorage.setItem("emailUsuario", emailResponsavel);
-        localStorage.setItem("idGerenteEfetivo", idUsuarioCriado);
 
         document.getElementById("codigoEstabelecimento").textContent = estabelecimentoSalvo.codigoAcesso;
 
