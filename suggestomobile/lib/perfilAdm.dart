@@ -3,7 +3,6 @@ import 'cores.dart';
 import 'sessao.dart';
 import 'api.dart';
 import 'cartoesStatusAdm.dart';
-import 'cartaoEstabelecimentoAdm.dart';
 import 'detalhesEstabelecimentoAdm.dart';
 
 // Perfil pessoal do administrador — mesma estrutura do Perfil do mobile
@@ -414,29 +413,45 @@ class _PerfilAdmState extends State<PerfilAdm> {
     );
   }
 
-  // Todos os estabelecimentos vinculados à conta — dono ou equipe — pra
-  // acesso rápido aos detalhes de cada um a partir do Perfil.
+  // Versão simples do card "Estabelecimentos vinculados" do perfil do
+  // desktop (Perfil.jsx): só a contagem e o nome de cada local — sem foto,
+  // categoria ou endereço. Tocar no nome ainda abre a tela de detalhes já
+  // existente no mobile ADM.
   Widget _buildEstabelecimentosVinculados() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Estabelecimentos vinculados',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontFamily: 'PoppinsSemi',
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 2),
-        const Text(
-          'Locais vinculados à sua conta de administrador.',
-          style: TextStyle(
-            color: Colors.white38,
-            fontSize: 12,
-            fontFamily: 'Poppins',
-          ),
+    final total = estabelecimentosVinculados.length;
+
+    return _card(
+      titulo: null,
+      filhos: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Estabelecimentos vinculados',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontFamily: 'PoppinsSemi',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: Cores.tag,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '$total',
+                style: const TextStyle(
+                  color: Cores.roxo,
+                  fontSize: 12,
+                  fontFamily: 'PoppinsSemi',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
         if (estabelecimentosVinculados.isEmpty)
@@ -449,18 +464,48 @@ class _PerfilAdmState extends State<PerfilAdm> {
             ),
           )
         else
-          for (final e in estabelecimentosVinculados)
-            cartaoEstabelecimentoAdm(
-              e,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) =>
-                      DetalhesEstabelecimentoAdm(estabelecimento: e),
+          for (var i = 0; i < estabelecimentosVinculados.length; i++)
+            _linhaEstabelecimentoVinculado(
+              estabelecimentosVinculados[i],
+              ultima: i == estabelecimentosVinculados.length - 1,
+            ),
+      ],
+    );
+  }
+
+  Widget _linhaEstabelecimentoVinculado(
+    Map<String, dynamic> e, {
+    bool ultima = false,
+  }) {
+    final nome = (e['nome'] as String?) ?? 'Estabelecimento';
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DetalhesEstabelecimentoAdm(estabelecimento: e),
+        ),
+      ),
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: EdgeInsets.only(bottom: ultima ? 0 : 12),
+        child: Row(
+          children: [
+            const Icon(Icons.storefront, color: Cores.roxo, size: 18),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                nome,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontFamily: 'Poppins',
                 ),
               ),
             ),
-      ],
+            const Icon(Icons.chevron_right, color: Colors.white38, size: 18),
+          ],
+        ),
+      ),
     );
   }
 
