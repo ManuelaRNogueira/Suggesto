@@ -206,10 +206,6 @@ export default function Perfil() {
             <dt>Administradores</dt>
             <dd className="adm-num">{metricas.totalAdmins ?? 0}</dd>
           </div>
-          <div>
-            <dt>Clientes</dt>
-            <dd className="adm-num">{metricas.totalUsuarios ?? 0}</dd>
-          </div>
         </dl>
       </section>
 
