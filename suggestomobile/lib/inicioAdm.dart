@@ -324,7 +324,6 @@ class _InicioAdmState extends State<InicioAdm> {
           for (final s in sugestoesRecentes)
             cartaoSugestaoAdm(
               sugestao: s,
-              mostrarEstabelecimento: true,
               onTap: () async {
                 await Navigator.push(
                   context,
