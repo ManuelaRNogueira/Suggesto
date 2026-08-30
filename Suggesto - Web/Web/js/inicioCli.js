@@ -20,6 +20,7 @@ function obterIdUsuario() {
 document.addEventListener("DOMContentLoaded", () => {
   carregarDadosUsuario();
   iniciarSecoesDeLocais();
+  gerarChipsCategoria("filtrosRapidos", "filtro-chip");
 });
 
 function abrirSugestao() {

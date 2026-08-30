@@ -374,12 +374,8 @@
       </div>
 
       <!-- FILTROS RÁPIDOS -->
-      <div class="filtros-rapidos">
+      <div class="filtros-rapidos" id="filtrosRapidos">
         <button class="filtro-chip filtro-chip-ativo" onclick="filtrarCategoria(this, 'todos')">Todos</button>
-        <button class="filtro-chip" onclick="filtrarCategoria(this, 'restaurante')">Restaurantes</button>
-        <button class="filtro-chip" onclick="filtrarCategoria(this, 'cafe')">Cafés</button>
-        <button class="filtro-chip" onclick="filtrarCategoria(this, 'academia')">Academias</button>
-        <button class="filtro-chip" onclick="filtrarCategoria(this, 'outro')">Outros</button>
       </div>
 
       <!-- GRADE DE LOCAIS -->
@@ -480,6 +476,7 @@
   </div>
 
   <script src="js/config.js"></script>
+  <script src="js/avaliacoesUtils.js"></script>
   <script src="js/horarioUtils.js"></script>
   <script src="js/localCard.js"></script>
   <script src="js/locaisSalvosCli.js"></script>

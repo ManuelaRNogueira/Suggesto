@@ -4,8 +4,9 @@
 // quebrado em Locais Salvos). Carregado antes do script de cada página, que
 // só passa as opções específicas (estado de favorito, callbacks de clique).
 //
-// Depende de calcularStatusEstabelecimento (ver js/horarioUtils.js), já
-// carregado nas duas páginas antes deste arquivo.
+// Depende de calcularStatusEstabelecimento (ver js/horarioUtils.js) e de
+// slugCategoriaEstabelecimento (ver js/avaliacoesUtils.js), já carregados
+// nas duas páginas antes deste arquivo.
 
 const PLACEHOLDER_ESTABELECIMENTO = "imagens/placeholder-local.png";
 
@@ -88,8 +89,9 @@ function criarCardEstabelecimento(estab, opcoes = {}) {
   const card = document.createElement("div");
   card.className = "local-card";
 
-  const categoriaCard = estab.categoria ? estab.categoria.toLowerCase() : "outros";
-  card.dataset.categoria = categoriaCard;
+  // Slug oficial (ver CATEGORIAS_OFICIAIS em avaliacoesUtils.js) — não o
+  // texto cru, que varia de acentuação/barra e não bate com os filtros.
+  card.dataset.categoria = slugCategoriaEstabelecimento(estab.categoria);
 
   const nomeCerto = estab.nome || "Nome Indisponível";
   card.dataset.nome = nomeCerto;

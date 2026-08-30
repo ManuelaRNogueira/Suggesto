@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   carregarDadosUsuario();
   carregarLocaisSalvos();
+  gerarChipsCategoria('filtrosRapidos', 'filtro-chip');
 });
 
 function carregarDadosUsuario() {

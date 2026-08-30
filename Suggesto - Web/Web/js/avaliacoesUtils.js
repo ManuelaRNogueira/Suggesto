@@ -85,6 +85,24 @@ function slugCategoriaEstabelecimento(categoria) {
   return encontrada ? encontrada.slug : "outro";
 }
 
+// Gera um chip por categoria oficial dentro do container informado, depois
+// do "Todos"/"Todas as categorias" que já vem fixo no HTML. Usado por
+// inicioCli.js, locaisSalvosCli.js e sugestoesCli.js — assim as três nunca
+// ficam com uma lista de categorias desatualizada em relação à oficial.
+function gerarChipsCategoria(containerId, classeChip) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  CATEGORIAS_OFICIAIS.forEach((cat) => {
+    const botao = document.createElement("button");
+    botao.type = "button";
+    botao.className = classeChip;
+    botao.textContent = cat.label;
+    botao.onclick = () => filtrarCategoria(botao, cat.slug);
+    container.appendChild(botao);
+  });
+}
+
 function rotuloCategoriaAvaliacao(sugestao) {
   if (sugestao?.categoria?.nomeCategoria) return sugestao.categoria.nomeCategoria;
   return "Geral";

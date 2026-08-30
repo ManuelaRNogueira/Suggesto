@@ -11,6 +11,7 @@ let filtrosAtuais = {
 document.addEventListener("DOMContentLoaded", () => {
   carregarDadosUsuario();
   carregarSugestoesDoUsuario();
+  gerarChipsCategoria("filtrosCategorias", "chip chip-cat");
 
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") carregarSugestoesDoUsuario();
