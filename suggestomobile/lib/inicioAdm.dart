@@ -4,6 +4,7 @@ import 'sessao.dart';
 import 'api.dart';
 import 'detalhesSugestaoAdm.dart';
 import 'cartaoSugestaoAdm.dart';
+import 'cartoesStatusAdm.dart';
 
 // Início do painel administrativo — busca em GET /api/admin/metricas e
 // GET /api/admin/estabelecimentos (ver AdminController no backend).
@@ -194,103 +195,12 @@ class _InicioAdmState extends State<InicioAdm> {
     );
   }
 
-  // Três cards por status — mesmo modelo do painel admin no desktop
-  // (.ini-kpi em Inicio.jsx/Inicio.css): barrinha colorida no topo, rótulo,
-  // número grande na cor do status e "% do total" embaixo.
   Widget _buildStatusCards(Map<String, dynamic> m) {
-    final total = (m['totalSugestoes'] as num?)?.toInt() ?? 0;
-    final pendentes = (m['pendentes'] as num?)?.toInt() ?? 0;
-    final implementados = (m['implementados'] as num?)?.toInt() ?? 0;
-    final recusados = (m['recusados'] as num?)?.toInt() ?? 0;
-    double pct(int qtd) => total > 0 ? (qtd / total) * 100 : 0;
-
-    return Row(
-      children: [
-        Expanded(
-          child: _cartaoStatus(
-            'Pendente',
-            pendentes,
-            pct(pendentes),
-            Cores.amarelo,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _cartaoStatus(
-            'Implementado',
-            implementados,
-            pct(implementados),
-            Cores.verde,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _cartaoStatus(
-            'Recusado',
-            recusados,
-            pct(recusados),
-            Cores.vermelho,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _cartaoStatus(
-    String rotulo,
-    int quantidade,
-    double percentual,
-    Color cor,
-  ) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
-      decoration: BoxDecoration(
-        color: Cores.cartao,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Cores.borda),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 22,
-            height: 3,
-            decoration: BoxDecoration(
-              color: cor,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            rotulo,
-            style: const TextStyle(
-              color: Colors.white54,
-              fontSize: 11,
-              fontFamily: 'Poppins',
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            '$quantidade',
-            style: TextStyle(
-              color: cor,
-              fontSize: 22,
-              fontFamily: 'PoppinsBold',
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${percentual.toStringAsFixed(1)}% do total',
-            style: const TextStyle(
-              color: Colors.white38,
-              fontSize: 10,
-              fontFamily: 'Poppins',
-            ),
-          ),
-        ],
-      ),
+    return cartoesStatusAdm(
+      total: (m['totalSugestoes'] as num?)?.toInt() ?? 0,
+      pendentes: (m['pendentes'] as num?)?.toInt() ?? 0,
+      implementados: (m['implementados'] as num?)?.toInt() ?? 0,
+      recusados: (m['recusados'] as num?)?.toInt() ?? 0,
     );
   }
 

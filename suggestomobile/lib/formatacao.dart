@@ -38,6 +38,16 @@ String formatarDataHora(String? iso) {
   return '$dd/$mm/${data.year} | $hh:$min';
 }
 
+// O campo "ativo" do estabelecimento vem do banco como tinyint — a API
+// devolve às vezes 1/0 (num), às vezes true/false (bool), dependendo do
+// endpoint. Normaliza pros dois casos pra não quebrar o cast no Flutter Web.
+bool? paraBool(dynamic valor) {
+  if (valor == null) return null;
+  if (valor is bool) return valor;
+  if (valor is num) return valor != 0;
+  return null;
+}
+
 // Mesmo formato usado no card de estabelecimento do painel admin no desktop
 // (Dashboard.jsx/CardEstab): "Rua, Número - Bairro (Cidade/Estado)".
 String formatarEndereco(Map<String, dynamic> estabelecimento) {

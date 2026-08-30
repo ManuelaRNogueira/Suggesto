@@ -48,7 +48,11 @@ class _EstabelecimentosAdmState extends State<EstabelecimentosAdm> {
           for (var i = 0; i < basicos.length; i++)
             {
               ...detalhes[i],
-              'ativo': (basicos[i] as Map<String, dynamic>)['ativo'],
+              'id': (basicos[i] as Map<String, dynamic>)['id'],
+              'ativo': paraBool((basicos[i] as Map<String, dynamic>)['ativo']),
+              'codigoAcesso':
+                  (basicos[i] as Map<String, dynamic>)['codigoAcesso'],
+              'souDono': (basicos[i] as Map<String, dynamic>)['souDono'],
             },
         ];
       });

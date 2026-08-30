@@ -26,7 +26,11 @@ class ApiException implements Exception {
 // ── Base HTTP — os métodos abaixo só existem pra não repetir o mesmo
 //    try/catch e leitura de erro em cada chamada ──────────────────────────
 
-Future<http.Response> _enviar(String metodo, String caminho, {Map<String, dynamic>? corpo}) async {
+Future<http.Response> _enviar(
+  String metodo,
+  String caminho, {
+  Map<String, dynamic>? corpo,
+}) async {
   try {
     final uri = Uri.parse('$apiBase$caminho');
     switch (metodo) {
@@ -34,11 +38,19 @@ Future<http.Response> _enviar(String metodo, String caminho, {Map<String, dynami
         return await http.get(uri).timeout(const Duration(seconds: 15));
       case 'POST':
         return await http
-            .post(uri, headers: {'Content-Type': 'application/json'}, body: jsonEncode(corpo ?? {}))
+            .post(
+              uri,
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode(corpo ?? {}),
+            )
             .timeout(const Duration(seconds: 15));
       case 'PATCH':
         return await http
-            .patch(uri, headers: {'Content-Type': 'application/json'}, body: jsonEncode(corpo ?? {}))
+            .patch(
+              uri,
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode(corpo ?? {}),
+            )
             .timeout(const Duration(seconds: 15));
       case 'DELETE':
         return await http.delete(uri).timeout(const Duration(seconds: 15));
@@ -47,7 +59,9 @@ Future<http.Response> _enviar(String metodo, String caminho, {Map<String, dynami
     }
   } catch (e) {
     if (e is ArgumentError) rethrow;
-    throw ApiException('Não foi possível conectar ao servidor. Verifique sua internet.');
+    throw ApiException(
+      'Não foi possível conectar ao servidor. Verifique sua internet.',
+    );
   }
 }
 
@@ -64,7 +78,11 @@ String _mensagemDeErro(http.Response resposta) {
   return 'Erro ${resposta.statusCode}.';
 }
 
-Future<Map<String, dynamic>> _mapa(String metodo, String caminho, {Map<String, dynamic>? corpo}) async {
+Future<Map<String, dynamic>> _mapa(
+  String metodo,
+  String caminho, {
+  Map<String, dynamic>? corpo,
+}) async {
   final resposta = await _enviar(metodo, caminho, corpo: corpo);
   if (resposta.statusCode < 200 || resposta.statusCode >= 300) {
     throw ApiException(_mensagemDeErro(resposta));
@@ -74,7 +92,11 @@ Future<Map<String, dynamic>> _mapa(String metodo, String caminho, {Map<String, d
   return decodificado is Map<String, dynamic> ? decodificado : {};
 }
 
-Future<List<dynamic>> _lista(String metodo, String caminho, {Map<String, dynamic>? corpo}) async {
+Future<List<dynamic>> _lista(
+  String metodo,
+  String caminho, {
+  Map<String, dynamic>? corpo,
+}) async {
   final resposta = await _enviar(metodo, caminho, corpo: corpo);
   if (resposta.statusCode < 200 || resposta.statusCode >= 300) {
     throw ApiException(_mensagemDeErro(resposta));
@@ -84,7 +106,11 @@ Future<List<dynamic>> _lista(String metodo, String caminho, {Map<String, dynamic
   return decodificado is List ? decodificado : [];
 }
 
-Future<void> _vazio(String metodo, String caminho, {Map<String, dynamic>? corpo}) async {
+Future<void> _vazio(
+  String metodo,
+  String caminho, {
+  Map<String, dynamic>? corpo,
+}) async {
   final resposta = await _enviar(metodo, caminho, corpo: corpo);
   if (resposta.statusCode < 200 || resposta.statusCode >= 300) {
     throw ApiException(_mensagemDeErro(resposta));
@@ -95,7 +121,10 @@ Future<void> _vazio(String metodo, String caminho, {Map<String, dynamic>? corpo}
 
 // POST /api/login (AuthController.realizarAutenticacao) — retorna
 // { success, message, nome, idUsuario, tipoUsuario }.
-Future<Map<String, dynamic>> login({required String email, required String senha}) {
+Future<Map<String, dynamic>> login({
+  required String email,
+  required String senha,
+}) {
   return _mapa('POST', '/login', corpo: {'email': email, 'senha': senha});
 }
 
@@ -112,24 +141,35 @@ Future<Map<String, dynamic>> cadastrar({
   String? cidade,
   String? estado,
 }) {
-  return _mapa('POST', '/cadastro', corpo: {
-    'nome': nome,
-    'username': username,
-    'email': email,
-    'senha': senha,
-    'tipoUsuario': tipoUsuario,
-    if (telefone != null && telefone.isNotEmpty) 'telefone': telefone,
-    if (cep != null && cep.isNotEmpty) 'cep': cep,
-    if (cidade != null && cidade.isNotEmpty) 'cidade': cidade,
-    if (estado != null && estado.isNotEmpty) 'estado': estado,
-  });
+  return _mapa(
+    'POST',
+    '/cadastro',
+    corpo: {
+      'nome': nome,
+      'username': username,
+      'email': email,
+      'senha': senha,
+      'tipoUsuario': tipoUsuario,
+      if (telefone != null && telefone.isNotEmpty) 'telefone': telefone,
+      if (cep != null && cep.isNotEmpty) 'cep': cep,
+      if (cidade != null && cidade.isNotEmpty) 'cidade': cidade,
+      if (estado != null && estado.isNotEmpty) 'estado': estado,
+    },
+  );
 }
 
 // POST /api/estabelecimentos/entrar (EstabelecimentoController) — não entra
 // direto: cria uma SolicitacaoEquipe que o administrador principal aprova
 // depois (ver Solicitações no painel admin do desktop).
-Future<Map<String, dynamic>> entrarNaEquipe({required int usuarioId, required String codigo}) {
-  return _mapa('POST', '/estabelecimentos/entrar', corpo: {'usuarioId': usuarioId, 'codigo': codigo});
+Future<Map<String, dynamic>> entrarNaEquipe({
+  required int usuarioId,
+  required String codigo,
+}) {
+  return _mapa(
+    'POST',
+    '/estabelecimentos/entrar',
+    corpo: {'usuarioId': usuarioId, 'codigo': codigo},
+  );
 }
 
 // GET /api/estabelecimentos/solicitacoes?idGerente= — pedidos de entrada
@@ -141,21 +181,41 @@ Future<List<dynamic>> buscarSolicitacoesAdmin({required int idGerente}) {
 
 // POST /api/estabelecimentos/solicitacoes/{id}/aceitar — vincula o usuário
 // ao estabelecimento e apaga a solicitação. 403 se idGerente não for dono.
-Future<Map<String, dynamic>> aceitarSolicitacao(int id, {required int idGerente}) {
-  return _mapa('POST', '/estabelecimentos/solicitacoes/$id/aceitar', corpo: {'idGerente': idGerente});
+Future<Map<String, dynamic>> aceitarSolicitacao(
+  int id, {
+  required int idGerente,
+}) {
+  return _mapa(
+    'POST',
+    '/estabelecimentos/solicitacoes/$id/aceitar',
+    corpo: {'idGerente': idGerente},
+  );
 }
 
 // POST /api/estabelecimentos/solicitacoes/{id}/recusar — só apaga a solicitação.
-Future<Map<String, dynamic>> recusarSolicitacao(int id, {required int idGerente}) {
-  return _mapa('POST', '/estabelecimentos/solicitacoes/$id/recusar', corpo: {'idGerente': idGerente});
+Future<Map<String, dynamic>> recusarSolicitacao(
+  int id, {
+  required int idGerente,
+}) {
+  return _mapa(
+    'POST',
+    '/estabelecimentos/solicitacoes/$id/recusar',
+    corpo: {'idGerente': idGerente},
+  );
 }
 
 // ── Painel do administrador ─────────────────────────────────────────────
 
 // GET /api/admin/metricas — números pra tela Início e Estatísticas do admin.
-Future<Map<String, dynamic>> buscarMetricasAdmin({int? idGerente, int meses = 6}) {
+Future<Map<String, dynamic>> buscarMetricasAdmin({
+  int? idGerente,
+  int meses = 6,
+  int? idEstabelecimento,
+}) {
   final params = <String>['meses=$meses'];
   if (idGerente != null) params.add('idGerente=$idGerente');
+  if (idEstabelecimento != null)
+    params.add('idEstabelecimento=$idEstabelecimento');
   return _mapa('GET', '/admin/metricas?${params.join('&')}');
 }
 
@@ -177,8 +237,16 @@ Future<Map<String, dynamic>> atualizarStatusAvaliacao(int id, String status) {
 }
 
 // PATCH /api/avaliacoes/{id}/resposta — admin responde a uma sugestão.
-Future<Map<String, dynamic>> responderAvaliacao(int id, {required int idAdmin, required String resposta}) {
-  return _mapa('PATCH', '/avaliacoes/$id/resposta', corpo: {'idAdmin': idAdmin, 'resposta': resposta});
+Future<Map<String, dynamic>> responderAvaliacao(
+  int id, {
+  required int idAdmin,
+  required String resposta,
+}) {
+  return _mapa(
+    'PATCH',
+    '/avaliacoes/$id/resposta',
+    corpo: {'idAdmin': idAdmin, 'resposta': resposta},
+  );
 }
 
 // ── Estabelecimentos (navegação do cliente) ─────────────────────────────
@@ -232,14 +300,18 @@ Future<void> criarAvaliacao({
   required String comentario,
   String tipo = 'sugestao',
 }) {
-  return _vazio('POST', '/avaliacoes', corpo: {
-    'idUsuario': idUsuario,
-    'idEstabelecimento': idEstabelecimento,
-    'idCategoria': idCategoria,
-    'nota': nota,
-    'comentario': comentario,
-    'tipo': tipo,
-  });
+  return _vazio(
+    'POST',
+    '/avaliacoes',
+    corpo: {
+      'idUsuario': idUsuario,
+      'idEstabelecimento': idEstabelecimento,
+      'idCategoria': idCategoria,
+      'nota': nota,
+      'comentario': comentario,
+      'tipo': tipo,
+    },
+  );
 }
 
 // DELETE /api/avaliacoes/{id}?idUsuario= — só enquanto estiver pendente.
@@ -261,8 +333,16 @@ Future<List<dynamic>> buscarConquistas(int id) {
 
 // PUT /api/usuarios/{id} — só aceita multipart/form-data, mesmo sem foto
 // (é assim que o UsuarioController espera, igual ao site em perfilCli.js).
-Future<Map<String, dynamic>> atualizarUsuario(int id, {String? nome, String? telefone, String? cidade}) async {
-  final requisicao = http.MultipartRequest('PUT', Uri.parse('$apiBase/usuarios/$id'));
+Future<Map<String, dynamic>> atualizarUsuario(
+  int id, {
+  String? nome,
+  String? telefone,
+  String? cidade,
+}) async {
+  final requisicao = http.MultipartRequest(
+    'PUT',
+    Uri.parse('$apiBase/usuarios/$id'),
+  );
   if (nome != null) requisicao.fields['nome'] = nome;
   if (telefone != null) requisicao.fields['telefone'] = telefone;
   if (cidade != null) requisicao.fields['cidade'] = cidade;
@@ -271,7 +351,9 @@ Future<Map<String, dynamic>> atualizarUsuario(int id, {String? nome, String? tel
   try {
     enviada = await requisicao.send().timeout(const Duration(seconds: 15));
   } catch (_) {
-    throw ApiException('Não foi possível conectar ao servidor. Verifique sua internet.');
+    throw ApiException(
+      'Não foi possível conectar ao servidor. Verifique sua internet.',
+    );
   }
   final resposta = await http.Response.fromStream(enviada);
   if (resposta.statusCode < 200 || resposta.statusCode >= 300) {
@@ -289,12 +371,22 @@ Future<List<dynamic>> buscarLocaisSalvos(int usuarioId) {
 }
 
 // POST /api/locais-salvos — idempotente, não dá erro se já estava salvo.
-Future<void> salvarLocal({required int usuarioId, required int estabelecimentoId}) {
-  return _vazio('POST', '/locais-salvos', corpo: {'usuarioId': usuarioId, 'estabelecimentoId': estabelecimentoId});
+Future<void> salvarLocal({
+  required int usuarioId,
+  required int estabelecimentoId,
+}) {
+  return _vazio(
+    'POST',
+    '/locais-salvos',
+    corpo: {'usuarioId': usuarioId, 'estabelecimentoId': estabelecimentoId},
+  );
 }
 
 // DELETE /api/locais-salvos/{usuarioId}/{estabelecimentoId}
-Future<void> removerLocalSalvo({required int usuarioId, required int estabelecimentoId}) {
+Future<void> removerLocalSalvo({
+  required int usuarioId,
+  required int estabelecimentoId,
+}) {
   return _vazio('DELETE', '/locais-salvos/$usuarioId/$estabelecimentoId');
 }
 
@@ -311,8 +403,15 @@ Future<List<dynamic>> buscarResgates(int idUsuario) {
 }
 
 // POST /api/resgates — o backend confere e debita os pontos; aqui só manda o pedido.
-Future<Map<String, dynamic>> resgatar({required int usuarioId, required int recompensaId}) {
-  return _mapa('POST', '/resgates', corpo: {'usuarioId': usuarioId, 'recompensaId': recompensaId});
+Future<Map<String, dynamic>> resgatar({
+  required int usuarioId,
+  required int recompensaId,
+}) {
+  return _mapa(
+    'POST',
+    '/resgates',
+    corpo: {'usuarioId': usuarioId, 'recompensaId': recompensaId},
+  );
 }
 
 // ── CEP (ViaCEP) ─────────────────────────────────────────────────────────
