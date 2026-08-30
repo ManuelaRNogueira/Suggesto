@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'cores.dart';
-import 'formatacao.dart';
 import 'sessao.dart';
 import 'api.dart';
 import 'detalhesEstabelecimentoAdm.dart';
+import 'cartaoEstabelecimentoAdm.dart';
 
 // Lista dos estabelecimentos do administrador — versão mobile, só de
 // leitura, da seção equivalente do desktop (Dashboard.jsx, rota
@@ -37,25 +37,10 @@ class _EstabelecimentosAdmState extends State<EstabelecimentosAdm> {
       erro = null;
     });
     try {
-      final basicos = await buscarEstabelecimentosAdmin(
+      final lista = await buscarEstabelecimentosVinculados(
         idGerente: Sessao.idUsuario,
       );
-      final detalhes = await Future.wait(
-        basicos.map((b) => buscarEstabelecimento((b['id'] as num).toInt())),
-      );
-      setState(() {
-        estabelecimentos = [
-          for (var i = 0; i < basicos.length; i++)
-            {
-              ...detalhes[i],
-              'id': (basicos[i] as Map<String, dynamic>)['id'],
-              'ativo': paraBool((basicos[i] as Map<String, dynamic>)['ativo']),
-              'codigoAcesso':
-                  (basicos[i] as Map<String, dynamic>)['codigoAcesso'],
-              'souDono': (basicos[i] as Map<String, dynamic>)['souDono'],
-            },
-        ];
-      });
+      setState(() => estabelecimentos = lista);
     } on ApiException catch (e) {
       setState(() => erro = e.mensagem);
     } finally {
@@ -158,127 +143,11 @@ class _EstabelecimentosAdmState extends State<EstabelecimentosAdm> {
         ),
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
         itemCount: estabelecimentos.length,
-        itemBuilder: (context, i) =>
-            _cartaoEstabelecimento(estabelecimentos[i]),
-      ),
-    );
-  }
-
-  Widget _cartaoEstabelecimento(Map<String, dynamic> e) {
-    final nome = (e['nome'] as String?) ?? 'Estabelecimento';
-    final categoria = (e['categoria'] as String?) ?? '';
-    final fotoUrl = urlFotoEstabelecimento(e['fotoPath'] as String?);
-    final endereco = formatarEndereco(e);
-    final ativo = e['ativo'] as bool?;
-
-    return GestureDetector(
-      onTap: () => _abrirDetalhes(e),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 14),
-        decoration: BoxDecoration(
-          color: Cores.cartao,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Cores.borda),
-        ),
-        clipBehavior: Clip.hardEdge,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: double.infinity,
-              height: 120,
-              child: fotoUrl != null
-                  ? Image.network(
-                      fotoUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => _placeholderFoto(),
-                    )
-                  : _placeholderFoto(),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      if (categoria.isNotEmpty)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Cores.tag,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            categoria,
-                            style: const TextStyle(
-                              color: Cores.roxo,
-                              fontSize: 12,
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      if (ativo == false)
-                        Text(
-                          'Inativo',
-                          style: TextStyle(
-                            color: Colors.redAccent.withOpacity(0.8),
-                            fontSize: 11,
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    nome,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontFamily: 'PoppinsSemi',
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(
-                        Icons.location_on_outlined,
-                        color: Colors.white38,
-                        size: 14,
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          endereco,
-                          style: const TextStyle(
-                            color: Colors.white54,
-                            fontSize: 12,
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
+        itemBuilder: (context, i) => cartaoEstabelecimentoAdm(
+          estabelecimentos[i],
+          onTap: () => _abrirDetalhes(estabelecimentos[i]),
         ),
       ),
-    );
-  }
-
-  Widget _placeholderFoto() {
-    return Container(
-      color: Cores.borda,
-      child: const Icon(Icons.storefront, color: Colors.white38, size: 32),
     );
   }
 

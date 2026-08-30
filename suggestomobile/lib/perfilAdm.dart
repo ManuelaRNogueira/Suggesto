@@ -2,13 +2,19 @@ import 'package:flutter/material.dart';
 import 'cores.dart';
 import 'sessao.dart';
 import 'api.dart';
+import 'cartoesStatusAdm.dart';
+import 'cartaoEstabelecimentoAdm.dart';
+import 'detalhesEstabelecimentoAdm.dart';
 
 // Perfil pessoal do administrador — mesma estrutura do Perfil do mobile
 // cliente (perfilClie.dart: foto, nome, e-mail, menu, sair), mas com dados
 // do próprio usuário logado (GET /api/usuarios/{id}) em vez de um
-// estabelecimento. As informações de estabelecimento (código da equipe,
-// solicitações, métricas) agora vivem na tela de detalhes de cada local
-// (ver detalhesEstabelecimentoAdm.dart), já que um admin pode ter vários.
+// estabelecimento. Código da equipe e solicitações de entrada continuam na
+// tela de detalhes de cada local (ver detalhesEstabelecimentoAdm.dart), já
+// que um admin pode ter vários — aqui entra só a visão geral (métricas
+// somadas de todos os estabelecimentos, GET /api/admin/metricas sem filtro
+// de idEstabelecimento, mesma fonte da tela Início) e a lista de
+// estabelecimentos vinculados à conta.
 class PerfilAdm extends StatefulWidget {
   const PerfilAdm({super.key});
 
@@ -22,6 +28,8 @@ class _PerfilAdmState extends State<PerfilAdm> {
   bool carregando = true;
   String? erro;
   Map<String, dynamic>? usuario;
+  Map<String, dynamic>? metricasGerais;
+  List<Map<String, dynamic>> estabelecimentosVinculados = [];
 
   final List<Map<String, dynamic>> _menuItems = [
     {'icon': Icons.info_outline, 'label': 'Sobre Nós', 'route': '/sobrenos'},
@@ -49,8 +57,17 @@ class _PerfilAdmState extends State<PerfilAdm> {
         setState(() => erro = 'Sessão inválida. Faça login novamente.');
         return;
       }
-      final dados = await buscarUsuario(idUsuario);
-      setState(() => usuario = dados);
+      final resultados = await Future.wait([
+        buscarUsuario(idUsuario),
+        buscarMetricasAdmin(idGerente: idUsuario),
+        buscarEstabelecimentosVinculados(idGerente: idUsuario),
+      ]);
+      setState(() {
+        usuario = resultados[0] as Map<String, dynamic>;
+        metricasGerais = resultados[1] as Map<String, dynamic>;
+        estabelecimentosVinculados =
+            resultados[2] as List<Map<String, dynamic>>;
+      });
     } on ApiException catch (e) {
       setState(() => erro = e.mensagem);
     } finally {
@@ -118,6 +135,10 @@ class _PerfilAdmState extends State<PerfilAdm> {
             _buildCabecalho(u),
             const SizedBox(height: 20),
             _buildCardContato(u),
+            const SizedBox(height: 24),
+            _buildVisaoGeral(),
+            const SizedBox(height: 24),
+            _buildEstabelecimentosVinculados(),
             const SizedBox(height: 16),
             _buildMenuList(),
             const SizedBox(height: 16),
@@ -317,6 +338,129 @@ class _PerfilAdmState extends State<PerfilAdm> {
           ),
         ],
       ),
+    );
+  }
+
+  // Resumo geral da atuação do admin — soma de todos os estabelecimentos
+  // vinculados a ele (mesma fonte da tela Início, só que sem filtrar por
+  // idEstabelecimento), não de um local específico.
+  Widget _buildVisaoGeral() {
+    final m = metricasGerais;
+    final total = (m?['totalSugestoes'] as num?)?.toInt() ?? 0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Visão geral',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontFamily: 'PoppinsSemi',
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 2),
+        const Text(
+          'Sugestões recebidas em todos os seus estabelecimentos.',
+          style: TextStyle(
+            color: Colors.white38,
+            fontSize: 12,
+            fontFamily: 'Poppins',
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Cores.cartao,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Cores.borda),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '$total',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontFamily: 'PoppinsBold',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Sugestões recebidas',
+                style: TextStyle(
+                  color: Colors.white54,
+                  fontSize: 12,
+                  fontFamily: 'Poppins',
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        cartoesStatusAdm(
+          total: total,
+          pendentes: (m?['pendentes'] as num?)?.toInt() ?? 0,
+          implementados: (m?['implementados'] as num?)?.toInt() ?? 0,
+          recusados: (m?['recusados'] as num?)?.toInt() ?? 0,
+        ),
+      ],
+    );
+  }
+
+  // Todos os estabelecimentos vinculados à conta — dono ou equipe — pra
+  // acesso rápido aos detalhes de cada um a partir do Perfil.
+  Widget _buildEstabelecimentosVinculados() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Estabelecimentos vinculados',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontFamily: 'PoppinsSemi',
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 2),
+        const Text(
+          'Locais vinculados à sua conta de administrador.',
+          style: TextStyle(
+            color: Colors.white38,
+            fontSize: 12,
+            fontFamily: 'Poppins',
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (estabelecimentosVinculados.isEmpty)
+          const Text(
+            'Nenhum estabelecimento vinculado.',
+            style: TextStyle(
+              color: Colors.white38,
+              fontSize: 13,
+              fontFamily: 'Poppins',
+            ),
+          )
+        else
+          for (final e in estabelecimentosVinculados)
+            cartaoEstabelecimentoAdm(
+              e,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      DetalhesEstabelecimentoAdm(estabelecimento: e),
+                ),
+              ),
+            ),
+      ],
     );
   }
 

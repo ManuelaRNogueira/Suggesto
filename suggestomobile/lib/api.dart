@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'formatacao.dart';
 
 // Camada de acesso à API — porte do que já existe em
 // "Suggesto - Web/Web/js/config.js" e nas outras plataformas (Suggesto_DesktopReact/renderer/src/api/admin.js).
@@ -259,6 +260,30 @@ Future<List<dynamic>> buscarEstabelecimentos() {
 // GET /api/estabelecimentos/{id} — detalhe de um local.
 Future<Map<String, dynamic>> buscarEstabelecimento(int id) {
   return _mapa('GET', '/estabelecimentos/$id');
+}
+
+// Combina GET /api/admin/estabelecimentos (quais são, ativo/codigoAcesso/
+// souDono) com GET /api/estabelecimentos/{id} (foto e endereço completos)
+// pra cada um — usado tanto na lista de Estabelecimentos do admin quanto no
+// resumo de "Estabelecimentos vinculados" do Perfil, pra não duplicar essa
+// junção nos dois lugares.
+Future<List<Map<String, dynamic>>> buscarEstabelecimentosVinculados({
+  int? idGerente,
+}) async {
+  final basicos = await buscarEstabelecimentosAdmin(idGerente: idGerente);
+  final detalhes = await Future.wait(
+    basicos.map((b) => buscarEstabelecimento((b['id'] as num).toInt())),
+  );
+  return [
+    for (var i = 0; i < basicos.length; i++)
+      {
+        ...detalhes[i],
+        'id': (basicos[i] as Map<String, dynamic>)['id'],
+        'ativo': paraBool((basicos[i] as Map<String, dynamic>)['ativo']),
+        'codigoAcesso': (basicos[i] as Map<String, dynamic>)['codigoAcesso'],
+        'souDono': (basicos[i] as Map<String, dynamic>)['souDono'],
+      },
+  ];
 }
 
 // GET /api/estabelecimentos/recomendados?idUsuario= — mesma cidade do usuário.
