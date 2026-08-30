@@ -47,9 +47,11 @@ class _InicioAdmState extends State<InicioAdm> {
 
       setState(() {
         metricas = m;
-        sugestoesRecentes = ((m['sugestoesRecentes'] as List<dynamic>?) ?? []).cast<Map<String, dynamic>>();
+        sugestoesRecentes = ((m['sugestoesRecentes'] as List<dynamic>?) ?? [])
+            .cast<Map<String, dynamic>>();
         if (estabs.length == 1) {
-          nomeEstabelecimento = estabs.first['nome']?.toString() ?? 'Painel administrativo';
+          nomeEstabelecimento =
+              estabs.first['nome']?.toString() ?? 'Painel administrativo';
         } else if (estabs.length > 1) {
           nomeEstabelecimento = '${estabs.length} estabelecimentos';
         } else {
@@ -83,9 +85,23 @@ class _InicioAdmState extends State<InicioAdm> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(erro!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent, fontSize: 13, fontFamily: 'Poppins')),
+              Text(
+                erro!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.redAccent,
+                  fontSize: 13,
+                  fontFamily: 'Poppins',
+                ),
+              ),
               const SizedBox(height: 12),
-              TextButton(onPressed: _carregar, child: const Text('Tentar de novo', style: TextStyle(color: Cores.roxo, fontFamily: 'Poppins'))),
+              TextButton(
+                onPressed: _carregar,
+                child: const Text(
+                  'Tentar de novo',
+                  style: TextStyle(color: Cores.roxo, fontFamily: 'Poppins'),
+                ),
+              ),
             ],
           ),
         ),
@@ -97,7 +113,9 @@ class _InicioAdmState extends State<InicioAdm> {
       color: Cores.roxo,
       onRefresh: _carregar,
       child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -144,22 +162,41 @@ class _InicioAdmState extends State<InicioAdm> {
   Widget _buildCartoesResumo(Map<String, dynamic> m) {
     final total = (m['totalSugestoes'] as num?)?.toInt() ?? 0;
     final implementados = (m['implementados'] as num?)?.toInt() ?? 0;
-    final aproveitamento = total > 0 ? ((implementados / total) * 100).round() : 0;
+    final pendentes = (m['pendentes'] as num?)?.toInt() ?? 0;
+    final recusados = (m['recusados'] as num?)?.toInt() ?? 0;
+    final aproveitamento = total > 0
+        ? ((implementados / total) * 100).round()
+        : 0;
 
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(
-          child: _cartaoResumo('${(m['novasSemana'] as num?)?.toInt() ?? 0}', 'Novas na semana', Colors.white),
+          child: _cartaoResumo(
+            '${(m['novasSemana'] as num?)?.toInt() ?? 0}',
+            'Novas na semana',
+            Colors.white,
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _cartaoResumo('$aproveitamento%', 'Aproveitamento', Cores.verde),
+          child: _cartaoResumo(
+            '$aproveitamento%',
+            'Aproveitamento',
+            Cores.verde,
+            subtitulo: '$pendentes pendentes · $recusados recusadas',
+          ),
         ),
       ],
     );
   }
 
-  Widget _cartaoResumo(String valor, String rotulo, Color corValor) {
+  Widget _cartaoResumo(
+    String valor,
+    String rotulo,
+    Color corValor, {
+    String? subtitulo,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -169,6 +206,7 @@ class _InicioAdmState extends State<InicioAdm> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             valor,
@@ -188,6 +226,17 @@ class _InicioAdmState extends State<InicioAdm> {
               fontFamily: 'Poppins',
             ),
           ),
+          if (subtitulo != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              subtitulo,
+              style: const TextStyle(
+                color: Colors.white38,
+                fontSize: 10,
+                fontFamily: 'Poppins',
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -195,9 +244,24 @@ class _InicioAdmState extends State<InicioAdm> {
 
   Widget _buildStatusSugestoes(Map<String, dynamic> m) {
     final itens = [
-      _ItemStatus('Pendentes', (m['pendentes'] as num?)?.toInt() ?? 0, Icons.schedule, Cores.amarelo),
-      _ItemStatus('Implementados', (m['implementados'] as num?)?.toInt() ?? 0, Icons.check_circle, Cores.verde),
-      _ItemStatus('Recusados', (m['recusados'] as num?)?.toInt() ?? 0, Icons.cancel, Cores.vermelho),
+      _ItemStatus(
+        'Pendentes',
+        (m['pendentes'] as num?)?.toInt() ?? 0,
+        Icons.schedule,
+        Cores.amarelo,
+      ),
+      _ItemStatus(
+        'Implementados',
+        (m['implementados'] as num?)?.toInt() ?? 0,
+        Icons.check_circle,
+        Cores.verde,
+      ),
+      _ItemStatus(
+        'Recusados',
+        (m['recusados'] as num?)?.toInt() ?? 0,
+        Icons.cancel,
+        Cores.vermelho,
+      ),
     ];
 
     return Container(
@@ -278,7 +342,11 @@ class _InicioAdmState extends State<InicioAdm> {
             padding: EdgeInsets.symmetric(vertical: 12),
             child: Text(
               'Nenhuma sugestão ainda.',
-              style: TextStyle(color: Colors.white38, fontSize: 13, fontFamily: 'Poppins'),
+              style: TextStyle(
+                color: Colors.white38,
+                fontSize: 13,
+                fontFamily: 'Poppins',
+              ),
             ),
           )
         else
@@ -333,7 +401,7 @@ class _InicioAdmState extends State<InicioAdm> {
             ),
             const SizedBox(height: 3),
             Text(
-              'Categoria: ${s['categoria'] ?? 'Sem categoria'}',
+              _metaSugestao(s),
               style: const TextStyle(
                 color: Colors.white54,
                 fontSize: 12,
@@ -344,6 +412,18 @@ class _InicioAdmState extends State<InicioAdm> {
         ),
       ),
     );
+  }
+
+  // Categoria · estabelecimento · autor numa linha só — mesmo formato usado
+  // na tela Início do admin no desktop (ini-recente-meta em Inicio.jsx).
+  String _metaSugestao(Map<String, dynamic> s) {
+    final partes = [
+      (s['categoria'] as String?) ?? 'Sem categoria',
+      if ((s['estabelecimento'] as String?)?.isNotEmpty == true)
+        s['estabelecimento'] as String,
+      if ((s['autor'] as String?)?.isNotEmpty == true) s['autor'] as String,
+    ];
+    return partes.join(' · ');
   }
 
   Widget _buildBarraNavegacao() {
