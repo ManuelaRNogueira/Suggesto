@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:suggestomobile/cadastro.dart';
+import 'package:suggestomobile/estabelecimentosAdm.dart';
 import 'package:suggestomobile/infoLocal.dart';
 import 'package:suggestomobile/inicialcli.dart';
 //import 'package:suggestomobile/inicialcli.dart';
@@ -25,17 +26,14 @@ class MyApp extends StatelessWidget {
 
   // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {  
+  Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Suggesto',
-      theme: ThemeData(
-        
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
+      theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.deepPurple)),
 
-      initialRoute: '/login', 
-      
+      initialRoute: '/login',
+
       routes: {
         '/login': (context) => Login(),
         '/cadastro': (context) => Cadastro(),
@@ -43,12 +41,13 @@ class MyApp extends StatelessWidget {
         '/home_cliente': (context) => HomePage(),
         '/inicioAdm': (context) => InicioAdm(),
         '/sugestoesAdm': (context) => SugestoesAdm(),
+        '/estabelecimentosAdm': (context) => const EstabelecimentosAdm(),
         '/perfil': (context) => PerfilCliPage(),
         '/perfilAdm': (context) => const PerfilAdm(),
         '/sugerir': (context) => SugerirPage(),
         '/locais_salvos': (context) => LocaisSalvosPage(),
         '/loja': (context) => LojasPontosPage(),
-        '/info_local': (context) => InfoLocalPage(local: {},),
+        '/info_local': (context) => InfoLocalPage(local: {}),
         '/sobrenos': (context) => Sobrenos(),
         '/suggesto': (context) => Suggesto(),
         '/minhasSugestoes': (context) => MinhasSugestoes(),
@@ -56,4 +55,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-

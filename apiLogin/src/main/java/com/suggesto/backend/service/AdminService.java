@@ -277,6 +277,7 @@ public class AdminService {
         item.put("dataResposta", a.getDataResposta());
         item.put("estabelecimento", a.getEstabelecimento() != null ? a.getEstabelecimento().getNome() : null);
         item.put("estabelecimentoId", a.getEstabelecimento() != null ? a.getEstabelecimento().getIdEstabelecimento() : null);
+        item.put("estabelecimentoFotoPath", a.getEstabelecimento() != null ? a.getEstabelecimento().getFotoPath() : null);
         return item;
     }
 

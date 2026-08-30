@@ -12,6 +12,7 @@ build/
 
 # Bloquear pastas de arquivos da API Java
 apiLogin/target/
+apiLogin/bin/
 target/
 .mvn/
 .metadata/

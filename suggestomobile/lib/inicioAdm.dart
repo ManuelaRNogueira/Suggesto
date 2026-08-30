@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'cores.dart';
-import 'statusSugestao.dart';
-import 'formatacao.dart';
 import 'sessao.dart';
 import 'api.dart';
 import 'detalhesSugestaoAdm.dart';
+import 'cartaoSugestaoAdm.dart';
+import 'cartoesStatusAdm.dart';
 
 // Início do painel administrativo — busca em GET /api/admin/metricas e
 // GET /api/admin/estabelecimentos (ver AdminController no backend).
@@ -47,9 +47,11 @@ class _InicioAdmState extends State<InicioAdm> {
 
       setState(() {
         metricas = m;
-        sugestoesRecentes = ((m['sugestoesRecentes'] as List<dynamic>?) ?? []).cast<Map<String, dynamic>>();
+        sugestoesRecentes = ((m['sugestoesRecentes'] as List<dynamic>?) ?? [])
+            .cast<Map<String, dynamic>>();
         if (estabs.length == 1) {
-          nomeEstabelecimento = estabs.first['nome']?.toString() ?? 'Painel administrativo';
+          nomeEstabelecimento =
+              estabs.first['nome']?.toString() ?? 'Painel administrativo';
         } else if (estabs.length > 1) {
           nomeEstabelecimento = '${estabs.length} estabelecimentos';
         } else {
@@ -83,9 +85,23 @@ class _InicioAdmState extends State<InicioAdm> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(erro!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent, fontSize: 13, fontFamily: 'Poppins')),
+              Text(
+                erro!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.redAccent,
+                  fontSize: 13,
+                  fontFamily: 'Poppins',
+                ),
+              ),
               const SizedBox(height: 12),
-              TextButton(onPressed: _carregar, child: const Text('Tentar de novo', style: TextStyle(color: Cores.roxo, fontFamily: 'Poppins'))),
+              TextButton(
+                onPressed: _carregar,
+                child: const Text(
+                  'Tentar de novo',
+                  style: TextStyle(color: Cores.roxo, fontFamily: 'Poppins'),
+                ),
+              ),
             ],
           ),
         ),
@@ -97,16 +113,18 @@ class _InicioAdmState extends State<InicioAdm> {
       color: Cores.roxo,
       onRefresh: _carregar,
       child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildCabecalho(),
             const SizedBox(height: 20),
-            _buildCartoesResumo(m),
-            const SizedBox(height: 24),
-            _buildStatusSugestoes(m),
+            _buildCartaoNovasSemana(m),
+            const SizedBox(height: 12),
+            _buildStatusCards(m),
             const SizedBox(height: 24),
             _buildSugestoesRecentes(),
           ],
@@ -141,26 +159,9 @@ class _InicioAdmState extends State<InicioAdm> {
     );
   }
 
-  Widget _buildCartoesResumo(Map<String, dynamic> m) {
-    final total = (m['totalSugestoes'] as num?)?.toInt() ?? 0;
-    final implementados = (m['implementados'] as num?)?.toInt() ?? 0;
-    final aproveitamento = total > 0 ? ((implementados / total) * 100).round() : 0;
-
-    return Row(
-      children: [
-        Expanded(
-          child: _cartaoResumo('${(m['novasSemana'] as num?)?.toInt() ?? 0}', 'Novas na semana', Colors.white),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _cartaoResumo('$aproveitamento%', 'Aproveitamento', Cores.verde),
-        ),
-      ],
-    );
-  }
-
-  Widget _cartaoResumo(String valor, String rotulo, Color corValor) {
+  Widget _buildCartaoNovasSemana(Map<String, dynamic> m) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Cores.cartao,
@@ -169,20 +170,21 @@ class _InicioAdmState extends State<InicioAdm> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            valor,
-            style: TextStyle(
-              color: corValor,
+            '${(m['novasSemana'] as num?)?.toInt() ?? 0}',
+            style: const TextStyle(
+              color: Colors.white,
               fontSize: 24,
               fontFamily: 'PoppinsBold',
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            rotulo,
-            style: const TextStyle(
+          const Text(
+            'Novas na semana',
+            style: TextStyle(
               color: Colors.white54,
               fontSize: 12,
               fontFamily: 'Poppins',
@@ -193,69 +195,12 @@ class _InicioAdmState extends State<InicioAdm> {
     );
   }
 
-  Widget _buildStatusSugestoes(Map<String, dynamic> m) {
-    final itens = [
-      _ItemStatus('Pendentes', (m['pendentes'] as num?)?.toInt() ?? 0, Icons.schedule, Cores.amarelo),
-      _ItemStatus('Implementados', (m['implementados'] as num?)?.toInt() ?? 0, Icons.check_circle, Cores.verde),
-      _ItemStatus('Recusados', (m['recusados'] as num?)?.toInt() ?? 0, Icons.cancel, Cores.vermelho),
-    ];
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Cores.cartao,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Cores.borda),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 14, 16, 4),
-            child: Text(
-              'Status das Sugestões',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontFamily: 'PoppinsSemi',
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          for (final item in itens) _linhaStatus(item),
-          const SizedBox(height: 6),
-        ],
-      ),
-    );
-  }
-
-  Widget _linhaStatus(_ItemStatus item) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          Icon(item.icone, color: item.cor, size: 18),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              item.rotulo,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontFamily: 'Poppins',
-              ),
-            ),
-          ),
-          Text(
-            '${item.quantidade}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontFamily: 'PoppinsSemi',
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
+  Widget _buildStatusCards(Map<String, dynamic> m) {
+    return cartoesStatusAdm(
+      total: (m['totalSugestoes'] as num?)?.toInt() ?? 0,
+      pendentes: (m['pendentes'] as num?)?.toInt() ?? 0,
+      implementados: (m['implementados'] as num?)?.toInt() ?? 0,
+      recusados: (m['recusados'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -278,71 +223,28 @@ class _InicioAdmState extends State<InicioAdm> {
             padding: EdgeInsets.symmetric(vertical: 12),
             child: Text(
               'Nenhuma sugestão ainda.',
-              style: TextStyle(color: Colors.white38, fontSize: 13, fontFamily: 'Poppins'),
-            ),
-          )
-        else
-          for (final s in sugestoesRecentes) _cartaoSugestao(s),
-      ],
-    );
-  }
-
-  Widget _cartaoSugestao(Map<String, dynamic> s) {
-    return GestureDetector(
-      onTap: () async {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => DetalhesSugestaoAdm(sugestao: s)),
-        );
-        setState(() {});
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Cores.cartao,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Cores.borda),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                pillStatus((s['statusUi'] as String?) ?? 'pendente'),
-                Text(
-                  formatarData(s['dataAvaliacao'] as String?),
-                  style: const TextStyle(
-                    color: Colors.white38,
-                    fontSize: 11,
-                    fontFamily: 'Poppins',
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              tituloSugestao(s['comentario'] as String?),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontFamily: 'PoppinsSemi',
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              'Categoria: ${s['categoria'] ?? 'Sem categoria'}',
-              style: const TextStyle(
-                color: Colors.white54,
-                fontSize: 12,
+              style: TextStyle(
+                color: Colors.white38,
+                fontSize: 13,
                 fontFamily: 'Poppins',
               ),
             ),
-          ],
-        ),
-      ),
+          )
+        else
+          for (final s in sugestoesRecentes)
+            cartaoSugestaoAdm(
+              sugestao: s,
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => DetalhesSugestaoAdm(sugestao: s),
+                  ),
+                );
+                setState(() {});
+              },
+            ),
+      ],
     );
   }
 
@@ -350,6 +252,7 @@ class _InicioAdmState extends State<InicioAdm> {
     final abas = [
       _Aba('Início', Icons.home_filled, '/inicioAdm'),
       _Aba('Sugestões', Icons.forum, '/sugestoesAdm'),
+      _Aba('Locais', Icons.storefront, '/estabelecimentosAdm'),
       _Aba('Perfil', Icons.person, '/perfilAdm'),
     ];
 
@@ -408,14 +311,6 @@ class _InicioAdmState extends State<InicioAdm> {
       ),
     );
   }
-}
-
-class _ItemStatus {
-  final String rotulo;
-  final int quantidade;
-  final IconData icone;
-  final Color cor;
-  _ItemStatus(this.rotulo, this.quantidade, this.icone, this.cor);
 }
 
 class _Aba {

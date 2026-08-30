@@ -19,7 +19,6 @@ class DetalhesSugestaoAdm extends StatefulWidget {
 }
 
 class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
-  int paginaAtual = 1;
   bool trocandoStatus = false;
   String? erro;
 
@@ -48,7 +47,9 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
   Widget build(BuildContext context) {
     final s = widget.sugestao;
     final statusAtual = (s['statusUi'] as String?) ?? 'pendente';
-    final outrosStatus = _statusDisponiveis.where((st) => st != statusAtual).toList();
+    final outrosStatus = _statusDisponiveis
+        .where((st) => st != statusAtual)
+        .toList();
     final nota = (s['nota'] as num?)?.toInt();
 
     return Scaffold(
@@ -56,39 +57,45 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
       body: SafeArea(
         child: Column(
           children: [
+            _buildTopoVoltar(),
+            const SizedBox(height: 12),
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 12, 20, 8),
-              child: Row(
-                children: [
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Detalhes da Sugestão',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontFamily: 'PoppinsSemi',
+                    fontWeight: FontWeight.w600,
                   ),
-                  const Text(
-                    'Detalhes da Sugestão',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontFamily: 'PoppinsSemi',
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    _cartaoEstabelecimento(s),
+                    const SizedBox(height: 16),
                     _seloStatus(statusAtual),
                     const SizedBox(height: 20),
                     _cartaoDetalhe(s, nota),
                     const SizedBox(height: 24),
                     if (erro != null) ...[
-                      Text(erro!, style: const TextStyle(color: Colors.redAccent, fontSize: 13, fontFamily: 'Poppins')),
+                      Text(
+                        erro!,
+                        style: const TextStyle(
+                          color: Colors.redAccent,
+                          fontSize: 13,
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
                       const SizedBox(height: 14),
                     ],
                     if (trocandoStatus)
@@ -102,7 +109,93 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBarraNavegacao(),
+    );
+  }
+
+  // Seta de voltar isolada, mesmo padrão de sobrenos.dart/suggesto.dart —
+  // essa tela é um detalhe, sem Bottom Navigation.
+  Widget _buildTopoVoltar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E0E32),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF2A1A4A)),
+              ),
+              child: const Icon(
+                Icons.arrow_back,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Card do estabelecimento — identifica de onde veio o feedback antes do
+  // card de detalhes. Foto e nome reais, vindos da própria sugestão
+  // (estabelecimento/estabelecimentoFotoPath, AdminService.resumirSugestao).
+  Widget _cartaoEstabelecimento(Map<String, dynamic> s) {
+    final nome = (s['estabelecimento'] as String?) ?? 'Estabelecimento';
+    final fotoUrl = urlFotoEstabelecimento(
+      s['estabelecimentoFotoPath'] as String?,
+    );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Cores.cartao,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Cores.borda),
+      ),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: SizedBox(
+              width: 44,
+              height: 44,
+              child: fotoUrl != null
+                  ? Image.network(
+                      fotoUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) =>
+                          _placeholderEstabelecimento(),
+                    )
+                  : _placeholderEstabelecimento(),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              nome,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontFamily: 'PoppinsSemi',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _placeholderEstabelecimento() {
+    return Container(
+      color: Cores.tag,
+      child: const Icon(Icons.storefront, color: Colors.white38, size: 22),
     );
   }
 
@@ -110,7 +203,10 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
     final estilo = estiloDoStatus(status);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(color: estilo.corFundo, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(
+        color: estilo.corFundo,
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -118,7 +214,12 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
           const SizedBox(width: 6),
           Text(
             descricaoDoStatus(status),
-            style: TextStyle(color: estilo.cor, fontSize: 13, fontWeight: FontWeight.w600, fontFamily: 'Poppins'),
+            style: TextStyle(
+              color: estilo.cor,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              fontFamily: 'Poppins',
+            ),
           ),
         ],
       ),
@@ -161,31 +262,55 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
           ],
           const SizedBox(height: 12),
           Text(
-            (s['comentario'] as String?)?.trim().isNotEmpty == true ? s['comentario'] : 'Sem descrição.',
-            style: const TextStyle(color: Colors.white70, fontSize: 13, fontFamily: 'Poppins', height: 1.5),
+            (s['comentario'] as String?)?.trim().isNotEmpty == true
+                ? s['comentario']
+                : 'Sem descrição.',
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 13,
+              fontFamily: 'Poppins',
+              height: 1.5,
+            ),
           ),
           const SizedBox(height: 14),
           Text(
             'Categoria: ${s['categoria'] ?? 'Sem categoria'}',
-            style: const TextStyle(color: Colors.white54, fontSize: 12, fontFamily: 'Poppins'),
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 12,
+              fontFamily: 'Poppins',
+            ),
           ),
-          if (s['resposta'] != null && (s['resposta'] as String).trim().isNotEmpty) ...[
+          if (s['resposta'] != null &&
+              (s['resposta'] as String).trim().isNotEmpty) ...[
             const SizedBox(height: 14),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: Cores.tag, borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(
+                color: Cores.tag,
+                borderRadius: BorderRadius.circular(10),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
                     'Resposta enviada',
-                    style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600, fontFamily: 'Poppins'),
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Poppins',
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     s['resposta'] as String,
-                    style: const TextStyle(color: Colors.white, fontSize: 12, fontFamily: 'Poppins'),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontFamily: 'Poppins',
+                    ),
                   ),
                 ],
               ),
@@ -201,19 +326,31 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
                 backgroundColor: Cores.tag,
                 child: Text(
                   _iniciais((s['autor'] as String?) ?? '?'),
-                  style: const TextStyle(color: Colors.white, fontSize: 11, fontFamily: 'PoppinsSemi'),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontFamily: 'PoppinsSemi',
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   (s['autor'] as String?) ?? 'Anônimo',
-                  style: const TextStyle(color: Colors.white70, fontSize: 12, fontFamily: 'Poppins'),
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                    fontFamily: 'Poppins',
+                  ),
                 ),
               ),
               Text(
                 formatarDataHora(s['dataAvaliacao'] as String?),
-                style: const TextStyle(color: Colors.white38, fontSize: 11, fontFamily: 'Poppins'),
+                style: const TextStyle(
+                  color: Colors.white38,
+                  fontSize: 11,
+                  fontFamily: 'Poppins',
+                ),
               ),
             ],
           ),
@@ -225,7 +362,9 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
   String _iniciais(String nome) {
     final partes = nome.trim().split(RegExp(r'\s+'));
     if (partes.isEmpty || partes.first.isEmpty) return '?';
-    final primeiras = partes.take(2).map((p) => p.isNotEmpty ? p[0].toUpperCase() : '');
+    final primeiras = partes
+        .take(2)
+        .map((p) => p.isNotEmpty ? p[0].toUpperCase() : '');
     return primeiras.join();
   }
 
@@ -251,7 +390,11 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
       icon: Icon(_iconeStatus(status), size: 16),
       label: Text(
         estilo.rotulo,
-        style: const TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w600),
+        style: const TextStyle(
+          fontFamily: 'Poppins',
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -266,75 +409,4 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
         return Icons.schedule;
     }
   }
-
-  Widget _buildBarraNavegacao() {
-    final abas = [
-      _Aba('Início', Icons.home_filled, '/inicioAdm'),
-      _Aba('Sugestões', Icons.forum, '/sugestoesAdm'),
-      _Aba('Estatísticas', Icons.bar_chart, null),
-      _Aba('Perfil', Icons.person, null),
-    ];
-
-    return Container(
-      decoration: const BoxDecoration(
-        color: Cores.fundo,
-        border: Border(top: BorderSide(color: Cores.cartao, width: 1)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 64,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              for (var i = 0; i < abas.length; i++) _itemNavegacao(abas[i], i),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _itemNavegacao(_Aba aba, int indice) {
-    final ativo = paginaAtual == indice;
-    return GestureDetector(
-      onTap: () {
-        setState(() => paginaAtual = indice);
-        if (aba.rota == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '${aba.rotulo} ainda não está pronto.',
-                style: const TextStyle(fontFamily: 'Poppins'),
-              ),
-            ),
-          );
-          return;
-        }
-        Navigator.pushNamed(context, aba.rota!);
-      },
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(aba.icone, color: ativo ? Colors.white : Colors.white54),
-          const SizedBox(height: 4),
-          Text(
-            aba.rotulo,
-            style: TextStyle(
-              color: ativo ? Colors.white : Colors.white54,
-              fontSize: 10,
-              fontFamily: 'Poppins',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Aba {
-  final String rotulo;
-  final IconData icone;
-  final String? rota;
-  _Aba(this.rotulo, this.icone, this.rota);
 }
