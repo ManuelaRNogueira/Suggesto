@@ -5,6 +5,7 @@ import com.suggesto.backend.model.Plano;
 import com.suggesto.backend.model.Usuario;
 import com.suggesto.backend.repository.AvaliacaoRepository;
 import com.suggesto.backend.repository.EstabelecimentoRepository;
+import com.suggesto.backend.repository.MembroEquipeRepository;
 import com.suggesto.backend.repository.PlanoRepository;
 import com.suggesto.backend.repository.UsuarioRepository;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,8 @@ class PlanoServiceTest {
     private AvaliacaoRepository avaliacaoRepository;
     @Mock
     private PlanoRepository planoRepository;
+    @Mock
+    private MembroEquipeRepository membroEquipeRepository;
 
     @InjectMocks
     private PlanoService planoService;
@@ -58,9 +61,10 @@ class PlanoServiceTest {
         Plano pro = plano("Pro", 3, 3);
 
         when(usuarioRepository.findById(10L)).thenReturn(Optional.of(usuario));
+        when(estabelecimentoRepository.existsByIdGerenteAndAtivo(10L, 1)).thenReturn(true);
         when(planoRepository.findByNome("Pro")).thenReturn(Optional.of(pro));
         when(estabelecimentoRepository.buscarPorGerenteAtivos(10L)).thenReturn(List.of(new Estabelecimento()));
-        when(usuarioRepository.countByEstabelecimento_IdGerente(10L)).thenReturn(1L);
+        when(membroEquipeRepository.countByEstabelecimento_IdGerente(10L)).thenReturn(1L);
 
         Plano resultado = planoService.trocarPlano(10L, "Pro");
 
@@ -70,17 +74,15 @@ class PlanoServiceTest {
     }
 
     @Test
-    void recusaQuemNaoEDono() {
+    void recusaQuemNaoPossuiEstabelecimento() {
         Usuario membro = dono(20L);
-        Estabelecimento estab = new Estabelecimento();
-        estab.setIdGerente(10L); // dono do estabelecimento é outro usuário
-        membro.setEstabelecimento(estab);
 
         when(usuarioRepository.findById(20L)).thenReturn(Optional.of(membro));
+        when(estabelecimentoRepository.existsByIdGerenteAndAtivo(20L, 1)).thenReturn(false);
 
         assertThatThrownBy(() -> planoService.trocarPlano(20L, "Pro"))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("administrador principal");
+                .hasMessageContaining("possui um estabelecimento");
 
         verify(usuarioRepository, never()).save(any());
     }
@@ -91,6 +93,7 @@ class PlanoServiceTest {
         Plano basico = plano("Básico", 1, 1);
 
         when(usuarioRepository.findById(10L)).thenReturn(Optional.of(usuario));
+        when(estabelecimentoRepository.existsByIdGerenteAndAtivo(10L, 1)).thenReturn(true);
         when(planoRepository.findByNome("Básico")).thenReturn(Optional.of(basico));
         when(estabelecimentoRepository.buscarPorGerenteAtivos(10L))
                 .thenReturn(List.of(new Estabelecimento(), new Estabelecimento(), new Estabelecimento()));
@@ -108,9 +111,10 @@ class PlanoServiceTest {
         Plano basico = plano("Básico", 1, 1);
 
         when(usuarioRepository.findById(10L)).thenReturn(Optional.of(usuario));
+        when(estabelecimentoRepository.existsByIdGerenteAndAtivo(10L, 1)).thenReturn(true);
         when(planoRepository.findByNome("Básico")).thenReturn(Optional.of(basico));
         when(estabelecimentoRepository.buscarPorGerenteAtivos(10L)).thenReturn(List.of(new Estabelecimento()));
-        when(usuarioRepository.countByEstabelecimento_IdGerente(10L)).thenReturn(2L);
+        when(membroEquipeRepository.countByEstabelecimento_IdGerente(10L)).thenReturn(2L);
 
         assertThatThrownBy(() -> planoService.trocarPlano(10L, "Básico"))
                 .isInstanceOf(IllegalStateException.class)
@@ -123,6 +127,7 @@ class PlanoServiceTest {
     void recusaPlanoInexistente() {
         Usuario usuario = dono(10L);
         when(usuarioRepository.findById(10L)).thenReturn(Optional.of(usuario));
+        when(estabelecimentoRepository.existsByIdGerenteAndAtivo(10L, 1)).thenReturn(true);
         when(planoRepository.findByNome("Inexistente")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> planoService.trocarPlano(10L, "Inexistente"))

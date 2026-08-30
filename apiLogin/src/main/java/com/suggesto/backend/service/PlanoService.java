@@ -5,6 +5,7 @@ import com.suggesto.backend.model.Plano;
 import com.suggesto.backend.model.Usuario;
 import com.suggesto.backend.repository.AvaliacaoRepository;
 import com.suggesto.backend.repository.EstabelecimentoRepository;
+import com.suggesto.backend.repository.MembroEquipeRepository;
 import com.suggesto.backend.repository.PlanoRepository;
 import com.suggesto.backend.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,28 +33,19 @@ public class PlanoService {
     @Autowired
     private PlanoRepository planoRepository;
 
-    // Limites efetivos de um usuário administrador. Membro de equipe herda os
-    // limites do dono do estabelecimento, não os da própria conta.
+    @Autowired
+    private MembroEquipeRepository membroEquipeRepository;
+
+    // Plano da própria conta. Posse e vínculo de equipe não são mais
+    // exclusivos entre si (uma pessoa pode ser dona de um estabelecimento e
+    // funcionária de outro ao mesmo tempo), então não existe mais "pegar o
+    // plano do dono de quem me convidou" — cada um só vê/gerencia o próprio.
     public Plano planoEfetivo(Long idUsuario) {
         if (idUsuario == null) {
             return null;
         }
         Usuario usuario = usuarioRepository.findById(idUsuario).orElse(null);
-        if (usuario == null) {
-            return null;
-        }
-
-        Long idDono = usuario.getEstabelecimento() != null
-                ? usuario.getEstabelecimento().getIdGerente()
-                : usuario.getId();
-
-        if (!idDono.equals(usuario.getId())) {
-            Usuario dono = usuarioRepository.findById(idDono).orElse(null);
-            if (dono != null) {
-                return dono.getPlano();
-            }
-        }
-        return usuario.getPlano();
+        return usuario == null ? null : usuario.getPlano();
     }
 
     public Long idDonoDoEstabelecimento(Estabelecimento estab) {
@@ -101,7 +93,7 @@ public class PlanoService {
         Integer limite = plano == null ? null : plano.getLimiteAdmins();
         if (limite == null) return;
 
-        long atuais = usuarioRepository.countByEstabelecimento_IdGerente(idGerente);
+        long atuais = membroEquipeRepository.countByEstabelecimento_IdGerente(idGerente);
         if (atuais >= limite) {
             throw new IllegalStateException(
                     "O plano " + plano.getNome() + " permite "
@@ -110,8 +102,8 @@ public class PlanoService {
         }
     }
 
-    // Troca o plano do administrador principal. Só ele pode trocar — membro de
-    // equipe segue os limites do dono, mas não decide o plano. Rebaixar para um
+    // Troca o plano de quem possui pelo menos um estabelecimento ativo — só
+    // esse tipo de conta tem um plano próprio pra trocar. Rebaixar para um
     // plano que não cabe no que já existe (mais estabelecimentos/admins do que o
     // novo limite permite) é bloqueado em vez de deixar o excesso "congelado".
     public Plano trocarPlano(Long idUsuario, String nomePlano) {
@@ -125,11 +117,8 @@ public class PlanoService {
         Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
 
-        Long idDono = usuario.getEstabelecimento() != null
-                ? usuario.getEstabelecimento().getIdGerente()
-                : usuario.getId();
-        if (!idDono.equals(usuario.getId())) {
-            throw new IllegalStateException("Apenas o administrador principal pode trocar o plano.");
+        if (!estabelecimentoRepository.existsByIdGerenteAndAtivo(idUsuario, 1)) {
+            throw new IllegalStateException("Apenas quem possui um estabelecimento pode trocar o plano.");
         }
 
         Plano novoPlano = planoRepository.findByNome(nomePlano.trim())
@@ -149,7 +138,7 @@ public class PlanoService {
 
         Integer limiteAdmins = novoPlano.getLimiteAdmins();
         if (limiteAdmins != null) {
-            long atuais = usuarioRepository.countByEstabelecimento_IdGerente(idUsuario);
+            long atuais = membroEquipeRepository.countByEstabelecimento_IdGerente(idUsuario);
             if (atuais > limiteAdmins) {
                 throw new IllegalStateException(
                         "O plano " + novoPlano.getNome() + " permite "

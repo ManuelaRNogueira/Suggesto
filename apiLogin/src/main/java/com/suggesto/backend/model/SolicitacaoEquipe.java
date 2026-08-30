@@ -14,8 +14,11 @@ public class SolicitacaoEquipe {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Unicidade agora é composta (usuario_id, estabelecimento_id) — uma pessoa
+    // pode ter pedidos pendentes para estabelecimentos diferentes ao mesmo
+    // tempo, só não dois pedidos para o mesmo (ver adicionar_membro_equipe.sql).
     @ManyToOne
-    @JoinColumn(name = "usuario_id", unique = true)
+    @JoinColumn(name = "usuario_id")
     private Usuario usuario;
 
     @ManyToOne

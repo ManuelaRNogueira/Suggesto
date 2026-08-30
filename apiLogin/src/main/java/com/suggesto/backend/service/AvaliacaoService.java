@@ -9,6 +9,7 @@ import com.suggesto.backend.model.Usuario;
 import com.suggesto.backend.repository.AvaliacaoRepository;
 import com.suggesto.backend.repository.CategoriaRepository;
 import com.suggesto.backend.repository.EstabelecimentoRepository;
+import com.suggesto.backend.repository.MembroEquipeRepository;
 import com.suggesto.backend.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,9 @@ public class AvaliacaoService {
 
     @Autowired
     private EstabelecimentoRepository estabelecimentoRepository;
+
+    @Autowired
+    private MembroEquipeRepository membroEquipeRepository;
 
     @Autowired
     private CategoriaRepository categoriaRepository;
@@ -114,8 +118,8 @@ public class AvaliacaoService {
                 .orElseThrow(() -> new IllegalArgumentException("Administrador não encontrado."));
 
         boolean ehGerente = alvo.getIdGerente() == idAdmin;
-        boolean ehDaEquipe = admin.getEstabelecimento() != null
-                && admin.getEstabelecimento().getIdEstabelecimento() == alvo.getIdEstabelecimento();
+        boolean ehDaEquipe = membroEquipeRepository
+                .existsByUsuario_IdAndEstabelecimento_IdEstabelecimento(idAdmin, alvo.getIdEstabelecimento());
 
         if (!ehGerente && !ehDaEquipe) {
             throw new SecurityException("Você não faz parte da equipe deste estabelecimento.");

@@ -1,10 +1,12 @@
 package com.suggesto.backend.controller;
 
 import com.suggesto.backend.model.Estabelecimento;
+import com.suggesto.backend.model.MembroEquipe;
 import com.suggesto.backend.model.SolicitacaoEquipe;
 import com.suggesto.backend.model.TipoUsuario;
 import com.suggesto.backend.model.Usuario;
 import com.suggesto.backend.repository.EstabelecimentoRepository;
+import com.suggesto.backend.repository.MembroEquipeRepository;
 import com.suggesto.backend.repository.SolicitacaoEquipeRepository;
 import com.suggesto.backend.repository.UsuarioRepository;
 import com.suggesto.backend.service.CloudinaryService;
@@ -36,6 +38,9 @@ public class EstabelecimentoController {
 
     @Autowired
     private SolicitacaoEquipeRepository solicitacaoRepository;
+
+    @Autowired
+    private MembroEquipeRepository membroEquipeRepository;
 
     @Autowired
     private com.suggesto.backend.service.PlanoService planoService;
@@ -134,11 +139,11 @@ public class EstabelecimentoController {
             // Uma conta já existente vinculada como responsável (fluxo "já tenho
             // conta") vira Administrador na hora, já que é ela que vai gerenciar o painel.
             usuarioRepository.findById(salvo.getIdGerente()).ifPresent(dono -> {
-                dono.setEstabelecimento(salvo);
+                membroEquipeRepository.save(new MembroEquipe(dono, salvo));
                 if (dono.getTipoUsuario() != TipoUsuario.Administrador) {
                     dono.setTipoUsuario(TipoUsuario.Administrador);
+                    usuarioRepository.save(dono);
                 }
-                usuarioRepository.save(dono);
             });
 
             return ResponseEntity.ok(salvo);
@@ -182,27 +187,6 @@ public class EstabelecimentoController {
                 ));
             }
 
-            if (repository.existsByIdGerenteAndAtivo(usuario.getId(), 1)) {
-                return ResponseEntity.badRequest().body(Map.of(
-                        "success", false,
-                        "message", "Você já é o administrador principal de um estabelecimento e não pode entrar na equipe de outro."
-                ));
-            }
-
-            if (usuario.getEstabelecimento() != null) {
-                return ResponseEntity.badRequest().body(Map.of(
-                        "success", false,
-                        "message", "Você já faz parte de um estabelecimento."
-                ));
-            }
-
-            if (solicitacaoRepository.findByUsuario_Id(usuario.getId()).isPresent()) {
-                return ResponseEntity.badRequest().body(Map.of(
-                        "success", false,
-                        "message", "Você já tem uma solicitação pendente. Aguarde o administrador responder."
-                ));
-            }
-
             Optional<Estabelecimento> estabOpt = repository.findByCodigoAcessoAndAtivo(codigo.trim().toUpperCase());
             if (estabOpt.isEmpty()) {
                 return ResponseEntity.status(404).body(Map.of(
@@ -212,6 +196,22 @@ public class EstabelecimentoController {
             }
 
             Estabelecimento estabelecimento = estabOpt.get();
+
+            if (membroEquipeRepository.existsByUsuario_IdAndEstabelecimento_IdEstabelecimento(
+                    usuario.getId(), estabelecimento.getIdEstabelecimento())) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "Você já faz parte da equipe deste estabelecimento."
+                ));
+            }
+
+            if (solicitacaoRepository.findByUsuario_IdAndEstabelecimento_IdEstabelecimento(
+                    usuario.getId(), estabelecimento.getIdEstabelecimento()).isPresent()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "Você já tem uma solicitação pendente para este estabelecimento. Aguarde o administrador responder."
+                ));
+            }
 
             SolicitacaoEquipe solicitacao = new SolicitacaoEquipe();
             solicitacao.setUsuario(usuario);
@@ -302,9 +302,7 @@ public class EstabelecimentoController {
 
             if (aceitar) {
                 planoService.validarNovoAdmin(idGerente);
-                Usuario usuario = solicitacao.getUsuario();
-                usuario.setEstabelecimento(solicitacao.getEstabelecimento());
-                usuarioRepository.save(usuario);
+                membroEquipeRepository.save(new MembroEquipe(solicitacao.getUsuario(), solicitacao.getEstabelecimento()));
             }
 
             solicitacaoRepository.delete(solicitacao);
@@ -341,6 +339,24 @@ public class EstabelecimentoController {
             return ResponseEntity.ok(lista);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Erro ao buscar estabelecimento: " + e.getMessage());
+        }
+    }
+
+    // Portfólio completo de uma pessoa: os que ela possui + os de que é
+    // funcionária, sem distinção (todo dono também tem uma linha de vínculo
+    // com o próprio estabelecimento — ver MembroEquipe). Diferente de
+    // /gerente/{id}, que só traz os que a pessoa possui.
+    @GetMapping("/minhas/{idUsuario}")
+    public ResponseEntity<?> buscarMinhas(@PathVariable Long idUsuario) {
+        try {
+            List<Estabelecimento> lista = membroEquipeRepository.findByUsuario_Id(idUsuario).stream()
+                    .map(MembroEquipe::getEstabelecimento)
+                    .filter(e -> e.getAtivo() != null && e.getAtivo() == 1)
+                    .distinct()
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(lista);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao buscar estabelecimentos: " + e.getMessage());
         }
     }
 
@@ -483,17 +499,14 @@ public class EstabelecimentoController {
                 ));
             }
 
-            Usuario usuario = usuarioRepository.findById(idUsuario).orElse(null);
-            if (usuario == null || usuario.getEstabelecimento() == null
-                    || usuario.getEstabelecimento().getIdEstabelecimento() != id) {
+            if (!membroEquipeRepository.existsByUsuario_IdAndEstabelecimento_IdEstabelecimento(idUsuario, id)) {
                 return ResponseEntity.badRequest().body(Map.of(
                         "success", false,
                         "message", "Esse administrador não faz parte da equipe deste estabelecimento."
                 ));
             }
 
-            usuario.setEstabelecimento(null);
-            usuarioRepository.save(usuario);
+            membroEquipeRepository.deleteByUsuario_IdAndEstabelecimento_IdEstabelecimento(idUsuario, id);
 
             return ResponseEntity.ok(Map.of("success", true));
         } catch (Exception e) {

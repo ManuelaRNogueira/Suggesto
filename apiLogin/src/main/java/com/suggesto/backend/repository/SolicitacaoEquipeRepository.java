@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface SolicitacaoEquipeRepository extends JpaRepository<SolicitacaoEquipe, Long> {
 
-    Optional<SolicitacaoEquipe> findByUsuario_Id(Long usuarioId);
+    Optional<SolicitacaoEquipe> findByUsuario_IdAndEstabelecimento_IdEstabelecimento(Long usuarioId, Long estabelecimentoId);
 
     List<SolicitacaoEquipe> findByEstabelecimento_IdGerenteOrderByDataSolicitacaoAsc(Long idGerente);
 }

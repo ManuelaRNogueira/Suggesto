@@ -2,10 +2,12 @@ package com.suggesto.backend.service;
 
 import com.suggesto.backend.model.Avaliacao;
 import com.suggesto.backend.model.Estabelecimento;
+import com.suggesto.backend.model.MembroEquipe;
 import com.suggesto.backend.model.TipoUsuario;
 import com.suggesto.backend.model.Usuario;
 import com.suggesto.backend.repository.AvaliacaoRepository;
 import com.suggesto.backend.repository.EstabelecimentoRepository;
+import com.suggesto.backend.repository.MembroEquipeRepository;
 import com.suggesto.backend.repository.ResgateRepository;
 import com.suggesto.backend.repository.UsuarioRepository;
 import com.suggesto.backend.util.NivelUtil;
@@ -42,13 +44,16 @@ public class AdminService {
     @Autowired
     private ResgateRepository resgateRepository;
 
-    public Map<String, Object> obterMetricas(Long idGerente, Integer meses) {
-        return obterMetricas(idGerente, meses, null);
+    @Autowired
+    private MembroEquipeRepository membroEquipeRepository;
+
+    public Map<String, Object> obterMetricas(Long idUsuario, Integer meses) {
+        return obterMetricas(idUsuario, meses, null);
     }
 
-    public Map<String, Object> obterMetricas(Long idGerente, Integer meses, Long idEstabelecimento) {
+    public Map<String, Object> obterMetricas(Long idUsuario, Integer meses, Long idEstabelecimento) {
         int janela = (meses == null) ? MESES_PADRAO : Math.max(1, Math.min(meses, MESES_MAXIMO));
-        List<Estabelecimento> estabelecimentos = resolverEstabelecimentos(idGerente);
+        List<Estabelecimento> estabelecimentos = resolverEstabelecimentos(idUsuario);
 
         if (idEstabelecimento != null) {
             estabelecimentos = estabelecimentos.stream()
@@ -60,7 +65,7 @@ public class AdminService {
                 .map(Estabelecimento::getIdEstabelecimento)
                 .collect(Collectors.toList());
 
-        List<Avaliacao> sugestoes = buscarSugestoesPorEstabelecimentos(idGerente, ids);
+        List<Avaliacao> sugestoes = buscarSugestoesPorEstabelecimentos(idUsuario, ids);
 
         // Semana atual = da segunda-feira 00:00 até agora, não os últimos 7 dias corridos.
         LocalDateTime inicioSemanaAtual = LocalDate.now().with(DayOfWeek.MONDAY).atStartOfDay();
@@ -84,9 +89,14 @@ public class AdminService {
             porCategoria.merge(classificarTipo(a.getTipo()), 1, Integer::sum);
         }
 
-        long totalAdmins = idGerente == null
+        // Total de administradores no(s) estabelecimento(s) em vista — não só os
+        // que eu possuo, também os que eu integro como funcionária.
+        long totalAdmins = idUsuario == null
                 ? usuarioRepository.countByTipoUsuario(TipoUsuario.Administrador)
-                : usuarioRepository.countByEstabelecimento_IdGerente(idGerente);
+                : membroEquipeRepository.findByEstabelecimento_IdEstabelecimentoIn(ids).stream()
+                        .map(m -> m.getUsuario().getId())
+                        .distinct()
+                        .count();
 
         Map<String, Object> metricas = new LinkedHashMap<>();
         metricas.put("totalUsuarios", usuarioRepository.countByTipoUsuario(TipoUsuario.Cliente));
@@ -110,23 +120,23 @@ public class AdminService {
         return metricas;
     }
 
-    public List<Map<String, Object>> listarSugestoes(Long idGerente) {
-        List<Estabelecimento> estabelecimentos = resolverEstabelecimentos(idGerente);
+    public List<Map<String, Object>> listarSugestoes(Long idUsuario) {
+        List<Estabelecimento> estabelecimentos = resolverEstabelecimentos(idUsuario);
         List<Long> ids = estabelecimentos.stream()
                 .map(Estabelecimento::getIdEstabelecimento)
                 .collect(Collectors.toList());
 
-        List<Avaliacao> sugestoes = buscarSugestoesPorEstabelecimentos(idGerente, ids);
+        List<Avaliacao> sugestoes = buscarSugestoesPorEstabelecimentos(idUsuario, ids);
 
         return sugestoes.stream().map(this::resumirSugestao).collect(Collectors.toList());
     }
 
-    // Só busca todas as avaliações do sistema quando não há filtro de gerente nenhum.
-    // Quando há um idGerente (ou um estabelecimento específico selecionado) mas a lista de
+    // Só busca todas as avaliações do sistema quando não há filtro nenhum.
+    // Quando há um idUsuario (ou um estabelecimento específico selecionado) mas a lista de
     // estabelecimentos resultante está vazia, o resultado tem que ser vazio também —
-    // nunca deve "vazar" sugestões de outros donos.
-    private List<Avaliacao> buscarSugestoesPorEstabelecimentos(Long idGerente, List<Long> ids) {
-        if (idGerente == null) {
+    // nunca deve "vazar" sugestões de outros donos/equipes.
+    private List<Avaliacao> buscarSugestoesPorEstabelecimentos(Long idUsuario, List<Long> ids) {
+        if (idUsuario == null) {
             return avaliacaoRepository.findAllByOrderByDataAvaliacaoDesc();
         }
         if (ids.isEmpty()) {
@@ -135,20 +145,33 @@ public class AdminService {
         return avaliacaoRepository.findByEstabelecimentoIdEstabelecimentoInOrderByDataAvaliacaoDesc(ids);
     }
 
-    public List<Map<String, Object>> listarUsuarios(Long idGerente) {
-        List<Usuario> usuarios = idGerente == null
-                ? usuarioRepository.findAllByOrderByNomeAsc()
-                : usuarioRepository.findByEstabelecimento_IdGerenteOrderByNomeAsc(idGerente);
+    // Uma pessoa em duas equipes aparece duas vezes aqui, uma por
+    // estabelecimento — é o comportamento correto agora que os vínculos não
+    // são mais exclusivos entre si.
+    public List<Map<String, Object>> listarUsuarios(Long idUsuario) {
+        if (idUsuario == null) {
+            return usuarioRepository.findAllByOrderByNomeAsc().stream()
+                    .map(this::resumirUsuarioBasico)
+                    .collect(Collectors.toList());
+        }
 
-        return usuarios.stream()
-                .map(this::resumirUsuario)
+        List<Long> estabIds = membroEquipeRepository.findByUsuario_Id(idUsuario).stream()
+                .map(m -> m.getEstabelecimento().getIdEstabelecimento())
+                .collect(Collectors.toList());
+        if (estabIds.isEmpty()) {
+            return List.of();
+        }
+
+        return membroEquipeRepository.findByEstabelecimento_IdEstabelecimentoIn(estabIds).stream()
+                .sorted(Comparator.comparing(m -> m.getUsuario().getNome() == null ? "" : m.getUsuario().getNome()))
+                .map(this::resumirMembro)
                 .collect(Collectors.toList());
     }
 
-    public List<Map<String, Object>> listarEstabelecimentos(Long idGerente) {
+    public List<Map<String, Object>> listarEstabelecimentos(Long idUsuario) {
         // Aqui devolvemos ativos e inativos: o painel mostra a tag de situação.
         // As métricas continuam contando só os ativos.
-        return resolverEstabelecimentosIncluindoInativos(idGerente).stream()
+        return resolverEstabelecimentosIncluindoInativos(idUsuario).stream()
                 .map(e -> {
                     Map<String, Object> item = new LinkedHashMap<>();
                     item.put("id", e.getIdEstabelecimento());
@@ -157,27 +180,36 @@ public class AdminService {
                     item.put("categoria", e.getCategoria());
                     item.put("ativo", e.getAtivo());
                     item.put("codigoAcesso", e.getCodigoAcesso());
-                    // CORREÇÃO: Ajustado de countByEstabelecimento_IdEstabelecimento para countByEstabelecimentoIdEstabelecimento
+                    item.put("idGerente", e.getIdGerente());
+                    item.put("souDono", idUsuario != null && e.getIdGerente() == idUsuario);
                     item.put("totalSugestoes", avaliacaoRepository.countByEstabelecimentoIdEstabelecimento(e.getIdEstabelecimento()));
                     return item;
                 })
                 .collect(Collectors.toList());
     }
 
-    private List<Estabelecimento> resolverEstabelecimentos(Long idGerente) {
-        if (idGerente == null) {
+    // Todos os estabelecimentos ativos de que esta pessoa participa — como
+    // dona ou como funcionária, sem distinção (todo dono também tem uma linha
+    // de vínculo com o próprio estabelecimento).
+    private List<Estabelecimento> resolverEstabelecimentos(Long idUsuario) {
+        if (idUsuario == null) {
             return estabelecimentoRepository.buscarTodosAtivos();
         }
-        // Nunca cair para "todos os estabelecimentos" aqui: um gerente sem locais
-        // vinculados deve ver uma lista vazia, não os locais de outros donos.
-        return estabelecimentoRepository.buscarPorGerenteAtivos(idGerente);
+        return membroEquipeRepository.findByUsuario_Id(idUsuario).stream()
+                .map(MembroEquipe::getEstabelecimento)
+                .filter(e -> e.getAtivo() != null && e.getAtivo() == 1)
+                .distinct()
+                .collect(Collectors.toList());
     }
 
-    private List<Estabelecimento> resolverEstabelecimentosIncluindoInativos(Long idGerente) {
-        if (idGerente == null) {
+    private List<Estabelecimento> resolverEstabelecimentosIncluindoInativos(Long idUsuario) {
+        if (idUsuario == null) {
             return estabelecimentoRepository.findAll();
         }
-        return estabelecimentoRepository.findByIdGerente(idGerente);
+        return membroEquipeRepository.findByUsuario_Id(idUsuario).stream()
+                .map(MembroEquipe::getEstabelecimento)
+                .distinct()
+                .collect(Collectors.toList());
     }
 
     private String classificarTipo(String tipo) {
@@ -248,7 +280,7 @@ public class AdminService {
         return item;
     }
 
-    private Map<String, Object> resumirUsuario(Usuario u) {
+    private Map<String, Object> resumirUsuarioBasico(Usuario u) {
         Map<String, Object> item = new LinkedHashMap<>();
         item.put("id", u.getId());
         item.put("nome", u.getNome());
@@ -259,9 +291,18 @@ public class AdminService {
         item.put("cargo", u.getCargo());
         item.put("pontos", u.getPontos());
         item.put("plano", u.getPlano() != null ? u.getPlano().getNome() : null);
-        item.put("principal", u.getEstabelecimento() != null && u.getEstabelecimento().getIdGerente() == u.getId());
-        item.put("estabelecimentoId", u.getEstabelecimento() != null ? u.getEstabelecimento().getIdEstabelecimento() : null);
-        item.put("estabelecimentoNome", u.getEstabelecimento() != null ? u.getEstabelecimento().getNome() : null);
+        return item;
+    }
+
+    // Uma linha por vínculo (usuário + estabelecimento), não uma por usuário —
+    // é o que permite a mesma pessoa aparecer em mais de uma equipe.
+    private Map<String, Object> resumirMembro(MembroEquipe m) {
+        Usuario u = m.getUsuario();
+        Estabelecimento e = m.getEstabelecimento();
+        Map<String, Object> item = resumirUsuarioBasico(u);
+        item.put("principal", e != null && e.getIdGerente() == u.getId());
+        item.put("estabelecimentoId", e != null ? e.getIdEstabelecimento() : null);
+        item.put("estabelecimentoNome", e != null ? e.getNome() : null);
         return item;
     }
 }

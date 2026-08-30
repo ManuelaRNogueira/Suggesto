@@ -239,17 +239,12 @@ public class AuthController {
                         ));
                     }
 
-                    Long idGerenteEfetivo = usuario.getEstabelecimento() != null
-                            ? usuario.getEstabelecimento().getIdGerente()
-                            : usuario.getId();
-
                     return ResponseEntity.ok(Map.of(
                             "success", true,
                             "message", "Login autorizado",
                             "nome", usuario.getNome() != null ? usuario.getNome() : "Usuário",
                             "idUsuario", usuario.getId(),
-                            "tipoUsuario", usuario.getTipoUsuario().name(),
-                            "idGerenteEfetivo", idGerenteEfetivo
+                            "tipoUsuario", usuario.getTipoUsuario().name()
                     ));
                 }
             }

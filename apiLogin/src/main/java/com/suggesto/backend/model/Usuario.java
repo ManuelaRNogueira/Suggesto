@@ -62,9 +62,9 @@ public class Usuario {
     @JoinColumn(name = "plano_id")
     private Plano plano;
 
-    @ManyToOne
-    @JoinColumn(name = "estabelecimento_id")
-    private Estabelecimento estabelecimento;
+    // O vínculo com estabelecimentos (dono e/ou funcionária de vários) agora
+    // vive em MembroEquipe — uma pessoa não tem mais um único estabelecimento
+    // fixo aqui (ver adicionar_membro_equipe.sql).
 
     public Long getId() {
         return id;

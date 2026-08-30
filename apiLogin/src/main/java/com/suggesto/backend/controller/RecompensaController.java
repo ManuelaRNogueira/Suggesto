@@ -2,8 +2,8 @@ package com.suggesto.backend.controller;
 
 import com.suggesto.backend.model.Estabelecimento;
 import com.suggesto.backend.model.Recompensa;
-import com.suggesto.backend.model.Usuario;
 import com.suggesto.backend.repository.EstabelecimentoRepository;
+import com.suggesto.backend.repository.MembroEquipeRepository;
 import com.suggesto.backend.repository.RecompensaRepository;
 import com.suggesto.backend.repository.UsuarioRepository;
 import com.suggesto.backend.service.CloudinaryService;
@@ -30,6 +30,9 @@ public class RecompensaController {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private MembroEquipeRepository membroEquipeRepository;
 
     @Autowired
     private CloudinaryService cloudinaryService;
@@ -117,12 +120,12 @@ public class RecompensaController {
 
             // Mesma regra de quem pode agir sobre o estabelecimento usada em
             // AvaliacaoService.responder: o gerente ou alguém da equipe dele.
-            Usuario solicitante = usuarioRepository.findById(idSolicitante)
+            usuarioRepository.findById(idSolicitante)
                     .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
 
             boolean ehGerente = dono.getIdGerente() == idSolicitante;
-            boolean ehDaEquipe = solicitante.getEstabelecimento() != null
-                    && solicitante.getEstabelecimento().getIdEstabelecimento() == dono.getIdEstabelecimento();
+            boolean ehDaEquipe = membroEquipeRepository
+                    .existsByUsuario_IdAndEstabelecimento_IdEstabelecimento(idSolicitante, dono.getIdEstabelecimento());
 
             if (!ehGerente && !ehDaEquipe) {
                 return ResponseEntity.status(403).body(Map.of(

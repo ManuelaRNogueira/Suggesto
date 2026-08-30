@@ -32,7 +32,4 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
         long countByTipoUsuario(TipoUsuario tipoUsuario);
         List<Usuario> findAllByOrderByNomeAsc();
-
-        long countByEstabelecimento_IdGerente(Long idGerente);
-        List<Usuario> findByEstabelecimento_IdGerenteOrderByNomeAsc(Long idGerente);
 }
