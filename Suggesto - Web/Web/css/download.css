@@ -19,7 +19,7 @@
 
 .download-hero-titulo {
   font-family: var(--fonte-titulo);
-  font-size: clamp(40px, 4vw, 72px);
+  font-size: clamp(28px, 9vw, 72px);
   font-weight: 800;
   line-height: 1.1;
   letter-spacing: -2px;
@@ -27,7 +27,7 @@
 }
 
 .titulo-roxo{
-  font-size: clamp(40px, 4vw, 72px);
+  font-size: clamp(28px, 9vw, 72px);
 }
 
 .download-hero-sub {
@@ -530,14 +530,14 @@
 }
 
 @media (max-width: 768px) {
-  .download-hero { padding: calc(var(--altura-nav) + 48px) 24px 48px; }
-  .verificacao-secao { padding: 0 24px 60px; }
-  .verificacao-card { padding: 32px 24px; }
+  .download-hero { padding: calc(var(--altura-nav) + 48px) 28px 48px; }
+  .verificacao-secao { padding: 0 28px 60px; }
+  .verificacao-card { padding: 32px 28px; }
   .download-opcoes { grid-template-columns: 1fr; }
-  .app-funcionalidades { padding: 60px 24px 80px; }
+  .app-funcionalidades { padding: 60px 28px 80px; }
   .app-func-grade { grid-template-columns: 1fr; }
-  .instalacao { padding: 0 24px 80px; }
-  .cta-final { padding: 80px 24px; }
+  .instalacao { padding: 0 28px 80px; }
+  .cta-final { padding: 80px 28px; }
   .cta-acoes { flex-direction: column; width: 100%; }
   .cta-acoes .botao { width: 100%; justify-content: center; }
   .aviso-restrito { flex-direction: column; text-align: center; }
