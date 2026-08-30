@@ -168,26 +168,28 @@ class _InicioAdmState extends State<InicioAdm> {
         ? ((implementados / total) * 100).round()
         : 0;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(
-          child: _cartaoResumo(
-            '${(m['novasSemana'] as num?)?.toInt() ?? 0}',
-            'Novas na semana',
-            Colors.white,
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: _cartaoResumo(
+              '${(m['novasSemana'] as num?)?.toInt() ?? 0}',
+              'Novas na semana',
+              Colors.white,
+            ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _cartaoResumo(
-            '$aproveitamento%',
-            'Aproveitamento',
-            Cores.verde,
-            subtitulo: '$pendentes pendentes · $recusados recusadas',
+          const SizedBox(width: 12),
+          Expanded(
+            child: _cartaoResumo(
+              '$aproveitamento%',
+              'Aproveitamento',
+              Cores.verde,
+              subtitulo: '$pendentes pendentes · $recusados recusadas',
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
