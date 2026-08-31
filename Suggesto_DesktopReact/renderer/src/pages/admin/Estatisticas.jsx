@@ -39,6 +39,14 @@ export default function Estatisticas() {
   }, [sugestoes]);
   const multiplosEstabelecimentos = estabelecimentosDisponiveis.length > 1;
 
+  // Busca as métricas e as sugestões ao mesmo tempo (Promise.all) e guarda
+  // tudo sob uma bandeira chamada "vivo". Se o admin trocar de mês, mudar o
+  // filtro ou sair dessa tela antes da resposta voltar do servidor, essa
+  // bandeira já vai ter caído — e a gente não tenta mais atualizar uma tela
+  // que não existe mais, evitando uma "atualização fantasma". É como não
+  // atender o telefone de um pedido depois que o cliente já foi embora do
+  // restaurante: o "return () => { vivo = false }" no final é o aviso de
+  // que a tela foi fechada.
   useEffect(() => {
     let vivo = true;
     setCarregando(true);
@@ -67,6 +75,11 @@ export default function Estatisticas() {
 
   const porMes = metricas?.sugestoesPorMes || [];
 
+  // Monta o resumo que alimenta os cartões de KPI lá no topo da tela. É um
+  // useMemo porque esses cálculos só precisam rodar de novo quando os dados
+  // (métricas, sugestões, meses) realmente mudam — não a cada vez que a tela
+  // é redesenhada por qualquer outro motivo, tipo o mouse passando por cima
+  // de um botão.
   const resumo = useMemo(() => {
     if (!metricas) return null;
     const total = metricas.totalSugestoes || 0;
@@ -75,9 +88,18 @@ export default function Estatisticas() {
     const noPeriodo = porMes.reduce((acc, m) => acc + (m.total || 0), 0);
     const mesAtual = porMes.at(-1)?.total ?? 0;
     const mesAnterior = porMes.at(-2)?.total ?? 0;
+    // Compara o mês mais recente com o anterior pra saber se o número de
+    // sugestões está subindo ou caindo — tipo comparar a conta de luz desse
+    // mês com a do mês passado. Só faz essa comparação se existir um mês
+    // anterior com valor maior que zero; senão seria dividir por zero, que
+    // não dá pra fazer, então o resultado fica "null" (sem comparação).
     const variacao =
       mesAnterior > 0 ? ((mesAtual - mesAnterior) / mesAnterior) * 100 : null;
 
+    // Nota média: soma a nota de cada sugestão avaliada e divide pela
+    // quantidade de sugestões que realmente receberam nota (as sem nota nem
+    // entram na conta). Se ninguém avaliou nada ainda, devolve "null" em vez
+    // de tentar dividir por zero.
     const comNota = sugestoesFiltradas.filter((s) => typeof s.nota === "number");
     const notaMedia = comNota.length
       ? comNota.reduce((acc, s) => acc + s.nota, 0) / comNota.length
@@ -97,6 +119,10 @@ export default function Estatisticas() {
 
   // O backend chama esse mapa de "porCategoria", mas ele agrupa por tipo de post
   // (Sugestão / Crítica / Elogio) — ver AdminService.classificarTipo.
+  // Daqui pra baixo: soma quantos posts existem de cada tipo, ordena do que
+  // tem mais pro que tem menos, transforma cada quantidade em porcentagem do
+  // total (é o que vira o tamanho da fatia na rosca) e vai dando a cada tipo
+  // uma cor da paleta, na ordem.
   const porTipo = useMemo(() => {
     const mapa = metricas?.porCategoria || {};
     const total = Object.values(mapa).reduce((a, b) => a + b, 0);
@@ -112,6 +138,10 @@ export default function Estatisticas() {
 
   // Áreas do feedback (Atendimento, Higiene, Ambiente...), contadas a partir da
   // própria lista de sugestões, que já traz a categoria de cada uma.
+  // O cálculo é simples: pra cada sugestão, soma 1 na "gaveta" da categoria
+  // dela; no final ordena da categoria mais citada pra menos citada e
+  // transforma cada contagem em porcentagem do total, pra desenhar as barras
+  // do tamanho certo.
   const porArea = useMemo(() => {
     const mapa = {};
     sugestoesFiltradas.forEach((s) => {
@@ -128,6 +158,11 @@ export default function Estatisticas() {
       }));
   }, [sugestoesFiltradas]);
 
+  // Ranking das 5 sugestões com a melhor nota. Ordena da nota mais alta pra
+  // mais baixa; quando duas sugestões empatam na nota, desempata pela mais
+  // recente das duas — como decidir um empate de prova olhando quem entregou
+  // a resposta por último. useMemo aqui evita refazer essa ordenação toda
+  // vez que a tela redesenha — só recalcula se a lista de sugestões mudar.
   const melhorAvaliadas = useMemo(
     () =>
       sugestoesFiltradas
@@ -378,22 +413,39 @@ function Kpi({ rotulo, valor, sufixo, nota, cor }) {
   );
 }
 
-// Curva acumulada montada a partir de sugestoesPorMes — dado real.
+// Gráfico de linha com a curva "acumulada": em vez de mostrar quanto chegou
+// em cada mês isoladamente (isso já tem no gráfico de barras logo acima),
+// mostra o total que já se juntou até aquele mês — como um cofrinho que só
+// enche, nunca esvazia. Também não usa biblioteca pronta: calculamos as
+// coordenadas na mão e desenhamos ligando ponto a ponto, igual conectar os
+// pontinhos numa folha de papel quadriculado.
 function Acumulado({ dados }) {
   const L = 560;
   const A = 150;
   const pad = 18;
 
+  // "soma" vai guardando o total corrido: a cada mês, soma o que chegou
+  // naquele mês ao que já tinha se acumulado até o mês anterior. É por isso
+  // que essa curva só sobe (ou fica no mesmo lugar) — ela nunca desce.
   let soma = 0;
   const acumulado = dados.map((m) => (soma += m.total || 0));
   const maior = Math.max(1, ...acumulado);
 
+  // Converte cada valor acumulado numa posição (x, y) dentro do desenho:
+  // x anda da esquerda pra direita conforme os meses passam, e y sobe quanto
+  // maior for o valor acumulado em relação ao maior valor da série (por isso
+  // dividir pelo "maior" no cálculo) — é a mesma ideia de marcar pontos num
+  // papel milimetrado antes de traçar a linha com uma régua.
   const pontos = acumulado.map((v, i) => ({
     x: pad + (i / (acumulado.length - 1)) * (L - pad * 2),
     y: A - pad - (v / maior) * (A - pad * 2),
     v,
   }));
 
+  // Junta os pontos numa única linha (o contorno da curva) e depois fecha
+  // essa linha numa forma preenchida — a "área" sombreada por baixo dela —
+  // descendo até a base do gráfico e voltando. É como passar um lápis de
+  // cor por baixo de uma linha que já foi desenhada.
   const linha = pontos.map((p) => `${p.x} ${p.y}`).join(" L ");
   const area = `M ${pontos[0].x} ${A - pad} L ${linha} L ${pontos.at(-1).x} ${A - pad} Z`;
 
@@ -467,6 +519,11 @@ function Areas({ dados }) {
 function Rosca({ dados, total }) {
   const R = 46;
   const circ = 2 * Math.PI * R;
+  // "acumulado" vai guardando quanto do contorno do círculo já foi pintado
+  // pelas fatias anteriores. É o que desloca o início de cada fatia nova pra
+  // logo depois de onde a anterior terminou (o "strokeDashoffset" lá embaixo)
+  // — como um ponteiro de relógio que vai girando e marcando por onde já
+  // passou, pra fatia seguinte saber onde começar.
   let acumulado = 0;
 
   return (

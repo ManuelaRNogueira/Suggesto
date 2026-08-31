@@ -1,12 +1,17 @@
-// Camada de acesso à API administrativa.
-// Porte do js/admApi.js do projeto web para o desktop.
+// Camada de acesso à API do painel administrativo (a versão desktop/Electron
+// do que já existe no site, em "js/admApi.js"). É por aqui que o painel
+// descobre quais estabelecimentos a pessoa administra, confere plano e
+// permissão antes de liberar uma ação, e conversa com o resto do back-end
+// (sugestões, usuários, equipe, planos...).
 
 // Por padrão aponta para o backend hospedado no Render. Para rodar contra o
 // backend local, defina VITE_API_BASE=http://localhost:8080/api antes do build/dev.
 export const API_BASE = import.meta.env.VITE_API_BASE || "https://suggesto-api.onrender.com/api";
 
-// A foto vem como URL completa quando foi para o Cloudinary, ou só como nome do
-// arquivo quando caiu no fallback de disco local. Aceita os dois formatos.
+// Monta a URL da foto pra exibir na tela. Ela pode chegar de duas formas: já
+// como um link pronto (quando foi parar no Cloudinary) ou só o nome cru do
+// arquivo (quando caiu no fallback de guardar no disco do próprio servidor)
+// — essa função reconhece os dois casos e devolve sempre algo exibível.
 export function urlFoto(fotoPath) {
   const nome = fotoPath ? String(fotoPath).trim() : "";
   if (!nome) return null;
@@ -15,23 +20,29 @@ export function urlFoto(fotoPath) {
   return `${API_BASE.replace("/api", "")}/uploads/${limpo}`;
 }
 
-// Uma pessoa pode ser dona de estabelecimento(s) e funcionária de outro(s) ao
-// mesmo tempo agora — não existe mais um "dono efetivo" fixo por sessão. Os
-// endpoints resolvem o portfólio inteiro (posse + vínculos) a partir do
-// próprio idUsuario, então é isso que sempre mandamos como "idGerente".
+// Hoje em dia uma pessoa pode ser dona de um estabelecimento e, ao mesmo
+// tempo, funcionária de outro — não dá mais pra falar em "o dono da sessão"
+// como se fosse uma coisa só. Quem resolve isso é o próprio back-end: a
+// partir do idUsuario, ele monta o portfólio inteiro (o que a pessoa
+// possui + onde ela trabalha). Por isso é sempre o idUsuario que mandamos
+// como "idGerente" nas chamadas abaixo.
 export function idGerente() {
   return localStorage.getItem("idUsuario");
 }
 
-// "Sou principal" virou uma propriedade por estabelecimento (campo souDono
-// de cada item de buscarEstabelecimentos/buscarMinhasEstabelecimentos), não
-// mais um flag único de sessão. Isto aqui resolve "sou dona de PELO MENOS
-// um" — usado só para esconder/mostrar telas como Plano e Solicitações.
+// "Ser dona" não é mais um flag único de sessão, é uma propriedade de CADA
+// estabelecimento (o campo souDono que vem em buscarEstabelecimentos /
+// buscarMinhasEstabelecimentos). Essa função só responde uma pergunta mais
+// simples — "essa pessoa é dona de PELO MENOS um lugar?" — usada pra
+// decidir se mostra telas como Plano e Solicitações no menu.
 export async function possuoAlgumEstabelecimento() {
   const estabs = await buscarEstabelecimentos();
   return (estabs || []).some((e) => e.souDono);
 }
 
+// Monta a query string colando o idGerente automaticamente (pra não
+// esquecer em nenhuma chamada) e, se vierem, os parâmetros extras — filtra
+// undefined/null pra não mandar "idEstabelecimento=undefined" pro servidor.
 function queryGerente(extra = {}) {
   const params = new URLSearchParams();
   const id = idGerente();
@@ -43,6 +54,10 @@ function queryGerente(extra = {}) {
   return texto ? `?${texto}` : "";
 }
 
+// A "telefonista" central deste arquivo: toda função abaixo que fala com o
+// servidor passa por aqui. Faz o fetch, confere se deu certo e, se não deu,
+// já lança um erro com a mensagem certa — assim cada função de API não
+// precisa repetir esse try/catch inteiro.
 async function fetchJson(url, opcoes = {}) {
   const resposta = await fetch(url, opcoes);
   if (!resposta.ok) {
@@ -53,6 +68,10 @@ async function fetchJson(url, opcoes = {}) {
   return resposta.json();
 }
 
+// Números gerais e listas que alimentam as telas do painel: métricas
+// (gráficos/estatísticas), sugestões recebidas, usuários e os
+// estabelecimentos do gerente logado — todas já filtradas pelo idGerente
+// (ver queryGerente acima).
 export function buscarMetricas(meses, idEstabelecimento) {
   return fetchJson(`${API_BASE}/admin/metricas${queryGerente({ meses, idEstabelecimento })}`);
 }
@@ -70,13 +89,16 @@ export function buscarEstabelecimentos() {
 }
 
 // Portfólio completo de quem está logado: os estabelecimentos que possui +
-// os de que é funcionária, sem distinção — diferente de "estabelecimentos
-// que eu possuo" (usado em Solicitações, que é só-dono de propósito).
+// os de que é funcionária, tudo junto sem distinção — diferente de
+// "estabelecimentos que eu possuo" (usado em Solicitações, que é só-dono
+// de propósito, porque só o dono pode aprovar pedido de entrada na equipe).
 export function buscarMinhasEstabelecimentos() {
   const idUsuario = localStorage.getItem("idUsuario");
   return fetchJson(`${API_BASE}/estabelecimentos/minhas/${idUsuario}`);
 }
 
+// Desativa (não apaga) um estabelecimento. O back-end confere pelo
+// idSolicitante se quem está pedindo realmente pode fazer isso.
 export function desativarEstabelecimento(id) {
   const idSolicitante = localStorage.getItem("idUsuario");
   return fetchJson(
@@ -89,9 +111,13 @@ export function buscarUsuario(id) {
   return fetchJson(`${API_BASE}/usuarios/${id}`);
 }
 
-// Só o administrador principal do estabelecimento consegue remover alguém da
-// equipe, e só com o código de acesso do local como confirmação (mesma regra
-// já usada na edição do estabelecimento — ver ModalEditarEstabelecimento.jsx).
+// Remover alguém da equipe é uma ação séria, então tem duas travas: só o
+// administrador principal do estabelecimento pode fazer isso, e só
+// funciona se ele também digitar o código de acesso do local como
+// confirmação — a mesma regra usada pra editar o estabelecimento (ver
+// ModalEditarEstabelecimento.jsx). Por isso essa função não usa o
+// fetchJson genérico: precisa ler o corpo da resposta mesmo quando dá erro,
+// pra mostrar a mensagem exata que o servidor mandou (ex: "código errado").
 export async function removerAdministrador(idEstabelecimento, idUsuario, codigoConfirmacao) {
   const idSolicitante = localStorage.getItem("idUsuario");
   const url =
@@ -105,7 +131,10 @@ export async function removerAdministrador(idEstabelecimento, idUsuario, codigoC
   return dados;
 }
 
-// Limites do plano do admin logado — usado para esconder o que o plano não inclui.
+// ── Planos ────────────────────────────────────────────────────────────────
+// Limites do plano do admin logado (quantos estabelecimentos, quanta
+// equipe etc. ele pode ter) — usado pra esconder na tela o que o plano
+// atual não inclui.
 export function buscarMeuPlano() {
   const id = localStorage.getItem("idUsuario");
   return fetchJson(`${API_BASE}/planos/meu?idUsuario=${id}`);
@@ -116,8 +145,10 @@ export function listarPlanos() {
   return fetchJson(`${API_BASE}/planos`);
 }
 
-// Só o administrador principal pode trocar; o backend recusa quem não é dono
-// e bloqueia a troca se o que já existe não couber no plano novo.
+// Trocar de plano também é coisa só de dono principal — o app nem deveria
+// deixar chegar até aqui se não for, mas o back-end confere de novo do
+// lado dele e recusa a troca se o que a pessoa já tem hoje (mais
+// estabelecimentos, mais gente na equipe...) não couber no plano novo.
 export function trocarPlano(nomePlano) {
   const id = localStorage.getItem("idUsuario");
   return fetchJson(`${API_BASE}/planos/meu`, {
@@ -127,6 +158,11 @@ export function trocarPlano(nomePlano) {
   });
 }
 
+// ── Pedidos de entrada na equipe ────────────────────────────────────────
+// Quando alguém usa o código de acesso de um estabelecimento pra pedir
+// entrada (ver mobile), o pedido fica pendente até o dono principal
+// aceitar ou recusar por aqui — buscarSolicitacoes lista o que está
+// esperando resposta.
 export function buscarSolicitacoes() {
   return fetchJson(`${API_BASE}/estabelecimentos/solicitacoes${queryGerente()}`);
 }
@@ -147,6 +183,9 @@ export function recusarSolicitacao(id) {
   });
 }
 
+// ── Sugestões ────────────────────────────────────────────────────────────
+// Muda o status de uma sugestão recebida, ou grava a resposta que o admin
+// escreveu pra ela.
 export function atualizarStatusSugestao(id, status) {
   return fetchJson(`${API_BASE}/avaliacoes/${id}/status`, {
     method: "PATCH",
@@ -163,7 +202,9 @@ export function responderSugestao(id, { idAdmin, resposta }) {
   });
 }
 
-// PUT /api/usuarios/{id} aceita apenas nome, telefone, cidade e foto.
+// O endpoint espera multipart/form-data (por isso o FormData em vez de
+// JSON), mas essa função só manda os campos de texto — o painel desktop
+// não tem tela de trocar a foto do usuário por aqui, só nome/telefone/cidade.
 export function atualizarPerfil(id, { nome, telefone, cidade }) {
   const corpo = new FormData();
   if (nome !== undefined) corpo.append("nome", nome);
@@ -173,7 +214,12 @@ export function atualizarPerfil(id, { nome, telefone, cidade }) {
 }
 
 // ── Formatação ────────────────────────────────────────────────────────────
+// Daqui pra baixo não é mais sobre falar com o servidor — são só ajudantes
+// pra deixar o que vem da API bonito na tela (iniciais pro avatar, data
+// relativa tipo "há 2h", nome do status, título da sugestão).
 
+// Pega até duas iniciais do nome pra usar como avatar quando não tem foto
+// (ex: "Maria Silva" → "MS").
 export function iniciais(nome) {
   if (!nome) return "—";
   return nome
@@ -184,6 +230,8 @@ export function iniciais(nome) {
     .join("");
 }
 
+// Transforma uma data ISO em algo mais fácil de ler de relance: "agora",
+// "há 3h", "há 2d", e só cai pra data cheia (dd/mm/aaaa) depois de uma semana.
 export function formatarData(iso) {
   if (!iso) return "—";
   const data = new Date(iso);
@@ -196,6 +244,8 @@ export function formatarData(iso) {
   return data.toLocaleDateString("pt-BR");
 }
 
+// Os três status possíveis de uma sugestão, com o rótulo em português pra
+// mostrar na tela e o valor cru que a API espera receber.
 export const STATUS = [
   { id: "pendente", label: "Pendente", envia: "pendente" },
   { id: "implementado", label: "Implementado", envia: "implementado" },
@@ -206,8 +256,10 @@ export function labelStatus(statusUi) {
   return STATUS.find((s) => s.id === statusUi)?.label || "Pendente";
 }
 
-// A sugestão não tem campo de título no banco — só comentário.
-// Usamos a primeira frase como título e guardamos o resto como detalhe.
+// A sugestão não tem campo de título no banco — só comentário. Aqui a
+// gente "inventa" um título pegando o começo do comentário (até 90
+// caracteres, com "…" se cortar no meio), só pra tela ter algo curto pra
+// mostrar antes de abrir o texto completo.
 export function tituloSugestao(comentario) {
   if (!comentario || !comentario.trim()) return "Sugestão sem descrição";
   const limpo = comentario.trim().replace(/\s+/g, " ");
