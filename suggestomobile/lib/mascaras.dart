@@ -5,6 +5,9 @@ import 'package:flutter/services.dart';
 
 String _somenteDigitos(String texto) => texto.replaceAll(RegExp(r'\D'), '');
 
+// Enquanto a pessoa digita o telefone, a gente vai "moldando" os números
+// automaticamente — parêntese, espaço, traço — como um carimbo que
+// empurra a pontuação certa a cada número novo digitado.
 class TelefoneFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(

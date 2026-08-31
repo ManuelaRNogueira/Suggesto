@@ -31,6 +31,10 @@ class _RecorteImagemPageState extends State<RecorteImagemPage> {
   final GlobalKey _boundaryKey = GlobalKey();
   bool _processando = false;
 
+  // Em vez de calcular matematicamente qual pedaço da foto foi selecionado,
+  // a gente tira uma espécie de "print" exato do que está aparecendo dentro
+  // do quadradinho de recorte na tela — como uma captura de tela só daquela
+  // área.
   Future<void> _confirmar() async {
     setState(() => _processando = true);
     try {

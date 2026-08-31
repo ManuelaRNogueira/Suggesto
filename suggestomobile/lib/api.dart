@@ -26,8 +26,10 @@ class ApiException implements Exception {
   String toString() => mensagem;
 }
 
-// ── Base HTTP — os métodos abaixo só existem pra não repetir o mesmo
-//    try/catch e leitura de erro em cada chamada ──────────────────────────
+// Essa função é a "telefonista" central do app: toda conversa com o
+// servidor passa por aqui, que decide o tipo de pedido (buscar, salvar,
+// apagar) e já trata erro de um jeito parecido, pra não repetir esse
+// código em cada tela.
 
 Future<http.Response> _enviar(
   String metodo,
@@ -358,9 +360,9 @@ Future<List<dynamic>> buscarConquistas(int id) {
   return _lista('GET', '/usuarios/$id/conquistas');
 }
 
-// PUT /api/usuarios/{id} — só aceita multipart/form-data, mesmo sem foto
-// (é assim que o UsuarioController espera, igual ao site em perfilCli.js).
-// fotoBytes já vem recortada (ver recorteImagem.dart) — sempre PNG.
+// Diferente de mandar só texto, aqui a foto vai "dentro de um envelope"
+// especial (multipart), porque imagem não cabe dentro de uma mensagem de
+// texto comum como o resto dos dados do perfil.
 Future<Map<String, dynamic>> atualizarUsuario(
   int id, {
   String? nome,

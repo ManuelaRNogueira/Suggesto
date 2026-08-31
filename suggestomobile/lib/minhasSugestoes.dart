@@ -34,6 +34,10 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
       lista.sort((a, b) {
         final dataA = DateTime.tryParse(a['dataAvaliacao'] as String? ?? '');
         final dataB = DateTime.tryParse(b['dataAvaliacao'] as String? ?? '');
+        // Quando duas sugestões estão sendo comparadas pra ordenar e uma delas
+        // não tem data, a gente decide na mão pra onde ela vai na lista, em vez
+        // de deixar o sistema chutar — senão a ordem podia bagunçar sem a gente
+        // perceber.
         if (dataA == null && dataB == null) return 0;
         if (dataA == null) return 1;
         if (dataB == null) return -1;

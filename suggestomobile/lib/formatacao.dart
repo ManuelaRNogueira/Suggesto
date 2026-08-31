@@ -12,9 +12,10 @@ String tituloSugestao(String? comentario) {
 }
 
 // "2026-08-14T10:00:00Z" -> "há 2h" / "há 3d" / "14/08/2026".
-// O backend manda esses horários em UTC ("Z" no final, ver JacksonConfig no
-// backend) — sem o .toLocal(), DateTime.now().difference(...) compara o
-// relógio local com um instante UTC e mostra a hora errada.
+// O servidor sempre manda a data no horário de Greenwich (UTC) — tipo o
+// horário "de fábrica". Aqui a gente converte pro horário local do
+// celular antes de mostrar, senão a hora apareceria errada pra quem está
+// usando o app.
 String formatarData(String? iso) {
   if (iso == null || iso.isEmpty) return '—';
   final data = DateTime.tryParse(iso)?.toLocal();

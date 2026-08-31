@@ -68,9 +68,10 @@ const Map<String, List<String>> categoriasPorRamo = {
 // Usado pro ramo "Outro" e pra qualquer ramo ainda não configurado acima.
 const List<String> categoriasPadrao = ['Atendimento', 'Qualidade do produto', 'Preço', 'Estrutura', 'Ambiente', 'Outro'];
 
-// Recebe a lista completa de categorias vinda de buscarCategorias() e o ramo
-// do estabelecimento (local['categoria']), e devolve só as categorias certas
-// pra esse ramo, na ordem definida acima.
+// Pega a lista de categorias que veio do servidor e cruza com a lista de
+// categorias esperadas pra esse tipo de estabelecimento, mostrando só
+// quem está nas duas listas — e na ordem da lista de referência, não a
+// do servidor.
 List<Map<String, dynamic>> filtrarCategoriasPorRamo(
   List<Map<String, dynamic>> disponiveis,
   String? ramo,
