@@ -175,6 +175,9 @@ public class AvaliacaoService {
         return status.trim().toUpperCase(Locale.ROOT);
     }
 
+    // Os pontos só são creditados no momento exato em que a sugestão passa de
+    // "pendente" pra "aceita" — é um carimbo que só é dado uma vez. Editar a
+    // sugestão depois não credita pontos de novo.
     private boolean deveCreditarPontos(String statusAnterior, String statusNovo) {
         if (!isStatusAceito(statusNovo)) {
             return false;

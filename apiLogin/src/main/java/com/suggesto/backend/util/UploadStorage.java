@@ -47,6 +47,9 @@ public class UploadStorage {
         return diretorioUploads().resolve(nomeArquivo);
     }
 
+    // Trava de segurança: impede que alguém tente salvar um arquivo fora da
+    // pasta de uploads usando ".." no nome do arquivo — tipo tentar sair de
+    // uma gaveta pra outra sem permissão.
     public static String normalizarNomeArquivo(String nomeArquivo) {
         String limpo = StringUtils.cleanPath(nomeArquivo);
         if (limpo.contains("..")) {

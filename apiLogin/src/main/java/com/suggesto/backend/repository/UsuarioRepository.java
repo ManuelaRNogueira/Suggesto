@@ -26,6 +26,10 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     @Query("UPDATE Usuario u SET u.pontos = u.pontos + :valor WHERE u.id = :id")
     int creditarPontos(@Param("id") Long id, @Param("valor") int valor);
 
+    // Isso funciona como um caixa de banco: só deixa sacar (descontar pontos)
+    // se o saldo for suficiente, e checa o saldo e desconta numa única batida —
+    // assim, mesmo que duas pessoas tentem resgatar ao mesmo tempo, ninguém
+    // fica no negativo.
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Usuario u SET u.pontos = u.pontos - :custo WHERE u.id = :id AND u.pontos >= :custo")
     int debitarPontos(@Param("id") Long id, @Param("custo") int custo);

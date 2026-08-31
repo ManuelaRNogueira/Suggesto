@@ -8,6 +8,10 @@ public final class DocumentoValidator {
     private DocumentoValidator() {
     }
 
+    // Mesma ideia de um código de barras: cada número do CPF/CNPJ "pesa" um
+    // valor diferente numa conta, e o resultado tem que bater com os últimos
+    // dígitos do documento. Se a pessoa errar ou inventar um número, essa
+    // conta não fecha e o sistema recusa.
     public static boolean isCpfValido(String cpf) {
         String d = somenteDigitos(cpf);
         if (d.length() != 11 || todosIguais(d)) {

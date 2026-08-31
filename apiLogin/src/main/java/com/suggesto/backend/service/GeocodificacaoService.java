@@ -28,10 +28,10 @@ public class GeocodificacaoService {
             .build();
     private final ObjectMapper mapper = new ObjectMapper();
 
-    // Retorna {lat, lng} ou null se não conseguir localizar o endereço.
-    // Tenta rua+número primeiro; se não achar, tenta só a rua (o bairro não
-    // entra na busca — nome cadastrado no banco nem sempre bate com o do OSM
-    // pra aquele trecho, e isso fazia a busca falhar mesmo com rua/cidade certos).
+    // Primeiro pergunta o endereço completo (rua + número) pro serviço de
+    // mapas. Se ele não souber responder, tenta de novo só com o nome da rua —
+    // como perguntar "onde fica a Rua X, 500" e, se ninguém souber, perguntar
+    // só "Rua X".
     public double[] geocodificar(String rua, String numero, String cidade, String estado) {
         if (rua == null || rua.isBlank() || cidade == null || cidade.isBlank()) {
             return null;

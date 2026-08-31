@@ -27,9 +27,15 @@ public class AuthController {
     @Autowired
     private PlanoRepository planoRepository;
 
+    // A senha passa por um "moedor" de mão única (BCrypt): dá pra transformar
+    // a senha original nesse resultado embaralhado, mas é impossível fazer o
+    // caminho contrário. Por isso, pra logar, a gente não "descriptografa"
+    // nada — passa a senha digitada pelo mesmo moedor de novo e compara os
+    // dois resultados.
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    // DDD (11-99) + celular (9 dígitos, iniciando em 9) ou fixo (8 dígitos, iniciando em 2-5)
+    // Esse padrão confere se o telefone digitado tem o formato de um número
+    // brasileiro de verdade: DDD válido + celular (9 dígitos) ou fixo (8).
     private static final Pattern TELEFONE_PATTERN = Pattern.compile("^[1-9][1-9](?:9\\d{8}|[2-5]\\d{7})$");
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[\\w.%+-]+@[\\w.-]+\\.[A-Za-z]{2,}$");
     private static final Pattern USERNAME_PATTERN = Pattern.compile("^[a-zA-Z0-9._]{3,30}$");

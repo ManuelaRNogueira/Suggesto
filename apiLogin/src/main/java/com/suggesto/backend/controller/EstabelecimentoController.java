@@ -57,6 +57,10 @@ public class EstabelecimentoController {
     private static final String ALFABETO_CODIGO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final SecureRandom RANDOM = new SecureRandom();
 
+    // É como sortear um número de rifa: gera um código aleatório e checa na
+    // hora se ele já não existe no banco — se existir, sorteia outro. E
+    // letras/números fáceis de confundir na digitação (0/O, 1/I) já ficam de
+    // fora do sorteio.
     private String gerarCodigoAcessoUnico() {
         String codigo;
         do {

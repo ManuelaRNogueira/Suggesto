@@ -76,6 +76,9 @@ public class AdminService {
         int novasSemana = 0;
         Map<String, Integer> porCategoria = new LinkedHashMap<>();
 
+        // Pensa numa mesa de correio: em vez de separar as cartas numa pilha e só
+        // depois contar cada pilha, aqui já vamos separando (pendente, aceita,
+        // recusada) e contando ao mesmo tempo, numa única passada pelas sugestões.
         for (Avaliacao a : sugestoes) {
             String grupo = classificarStatus(a.getStatus());
             switch (grupo) {
@@ -235,6 +238,9 @@ public class AdminService {
         return "pendente";
     }
 
+    // Monta um histórico mês a mês, tipo folhear as últimas páginas de uma
+    // agenda: pega o mês atual, volta um, volta outro, até completar os
+    // últimos meses que a gente quer mostrar.
     private List<Map<String, Object>> calcularSugestoesPorMes(List<Avaliacao> sugestoes, int meses) {
         List<Map<String, Object>> resultado = new ArrayList<>();
         LocalDateTime agora = LocalDateTime.now();
