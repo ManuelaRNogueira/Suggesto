@@ -16,11 +16,16 @@ public class ResgateController {
     @Autowired
     private ResgateService resgateService;
 
+    // Histórico de resgates do cliente: todas as recompensas que ele já trocou
+    // por pontos, pra tela "Meus Resgates".
     @GetMapping("/usuario/{idUsuario}")
     public ResponseEntity<?> listarPorUsuario(@PathVariable Long idUsuario) {
         return ResponseEntity.ok(resgateService.listarPorUsuario(idUsuario));
     }
 
+    // O cliente trocando os pontos acumulados por uma recompensa. Quem confere
+    // se ele tem pontos suficientes e desconta o saldo é o resgateService — aqui
+    // só garante que os dois IDs vieram no corpo da requisição antes de repassar.
     @PostMapping
     public ResponseEntity<?> resgatar(@RequestBody Map<String, Long> dados) {
         try {

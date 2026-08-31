@@ -45,6 +45,12 @@ public class GeocodificacaoService {
         return consultar(String.format("%s, %s, %s", rua, cidade, estado));
     }
 
+    // Faz a pergunta pro Nominatim de fato: limpa a pontuação do endereço,
+    // monta a URL de busca e lê a primeira resposta que ele mandar de volta.
+    // Qualquer problema no meio do caminho (sem internet, resposta estranha,
+    // endereço que ele não reconhece) é tratado devolvendo null em vez de
+    // travar o cadastro do estabelecimento — coordenadas são um "extra", não
+    // podem impedir o cadastro de dar certo.
     private double[] consultar(String enderecoTexto) {
         try {
             // Pontuação em nomes como "Princesa D'Oeste" pode impedir o

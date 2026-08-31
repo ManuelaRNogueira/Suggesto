@@ -48,12 +48,17 @@ public class PlanoService {
         return usuario == null ? null : usuario.getPlano();
     }
 
+    // Quem administra o estabelecimento — é dessa pessoa que puxamos o plano,
+    // não do estabelecimento em si (o plano é da conta, não do local).
     public Long idDonoDoEstabelecimento(Estabelecimento estab) {
         return estab == null ? null : estab.getIdGerente();
     }
 
     // ── Checagens usadas pelos endpoints ─────────────────────────────────────
 
+    // Freio de mão antes de deixar cadastrar mais um estabelecimento: conta
+    // quantos esse gerente já tem ativos e compara com o limite do plano dele.
+    // Sem plano, ou sem limite definido no plano, libera geral.
     public void validarNovoEstabelecimento(Long idGerente) {
         Plano plano = planoEfetivo(idGerente);
         Integer limite = plano == null ? null : plano.getLimiteEstabelecimentos();
@@ -68,6 +73,10 @@ public class PlanoService {
         }
     }
 
+    // Mesma ideia de limite, mas contando só as avaliações recebidas neste mês
+    // (a partir do dia 1 às 00h) — o contador "zera" sozinho a cada mês porque
+    // sempre recontamos a partir do início do mês atual, sem guardar um total
+    // acumulado em lugar nenhum.
     public void validarNovoFeedback(Estabelecimento estab) {
         Plano plano = planoEfetivo(idDonoDoEstabelecimento(estab));
         Integer limite = plano == null ? null : plano.getLimiteFeedbacksMes();
@@ -88,6 +97,8 @@ public class PlanoService {
         }
     }
 
+    // Trava quantos administradores/funcionários podem entrar na equipe do
+    // estabelecimento, de acordo com o limite do plano do dono.
     public void validarNovoAdmin(Long idGerente) {
         Plano plano = planoEfetivo(idGerente);
         Integer limite = plano == null ? null : plano.getLimiteAdmins();

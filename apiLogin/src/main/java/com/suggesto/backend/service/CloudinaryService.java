@@ -25,6 +25,7 @@ public class CloudinaryService {
         this.cloudinary = cloudinary;
     }
 
+    // Diz se as credenciais do Cloudinary foram configuradas nas variáveis de ambiente.
     public boolean configurado() {
         return cloudName != null && !cloudName.isBlank();
     }
@@ -56,6 +57,9 @@ public class CloudinaryService {
         return (String) resultado.get("secure_url");
     }
 
+    // Plano B quando o Cloudinary não está configurado: guarda o arquivo
+    // direto no disco do próprio servidor, só pra não travar o desenvolvimento
+    // antes de configurar a conta.
     private String salvarLocal(MultipartFile arquivo, String nomeArquivo) throws IOException {
         UploadStorage.garantirDiretorio();
         Path caminho = UploadStorage.resolverArquivo(nomeArquivo);

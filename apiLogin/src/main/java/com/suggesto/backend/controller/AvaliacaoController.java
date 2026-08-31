@@ -30,6 +30,10 @@ public class AvaliacaoController {
         return avaliacaoRepository.findByEstabelecimentoId(id);
     }
 
+    // Recebe uma avaliação/sugestão nova feita pelo cliente sobre um
+    // estabelecimento. Toda a parte de validar, salvar e dar pontos por isso
+    // fica dentro do avaliacaoService — o controller só entrega o pacote e
+    // devolve "deu certo" ou o motivo do erro.
     @PostMapping
     public ResponseEntity<?> receberAvaliacao(@RequestBody AvaliacaoRequestDTO dto) {
         try {
@@ -65,6 +69,8 @@ public class AvaliacaoController {
         }
     }
 
+    // Tela "Minhas Sugestões" do cliente: todas as avaliações que ele mesmo
+    // já enviou, pra acompanhar o status de cada uma.
     @GetMapping("/usuario/{usuarioId}")
     public ResponseEntity<List<Avaliacao>> listarPorUsuario(@PathVariable Long usuarioId) {
         try {
@@ -76,6 +82,11 @@ public class AvaliacaoController {
         }
     }
 
+    // O estabelecimento respondendo publicamente a uma sugestão do cliente,
+    // tipo responder uma avaliação numa loja online. idAdmin identifica quem
+    // está respondendo, e é o avaliacaoService quem confere se essa pessoa
+    // realmente tem permissão pra falar por aquele estabelecimento (daí o
+    // 403 no catch de SecurityException logo abaixo).
     @PatchMapping("/{id}/resposta")
     public ResponseEntity<?> responder(
             @PathVariable("id") Long id,
@@ -128,6 +139,8 @@ public class AvaliacaoController {
         }
     }
 
+    // Estabelecimento marcando o andamento de uma sugestão (ex.: "pendente" →
+    // "implementada" ou "recusada"), pro cliente acompanhar na tela dele.
     @PatchMapping("/{id}/status")
     public ResponseEntity<?> atualizarStatus(
             @PathVariable("id") Long id,

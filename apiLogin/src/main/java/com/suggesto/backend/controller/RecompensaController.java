@@ -37,11 +37,15 @@ public class RecompensaController {
     @Autowired
     private CloudinaryService cloudinaryService;
 
+    // Todas as recompensas de todos os estabelecimentos, sem filtro — usado
+    // em telas mais gerais (ex.: vitrine de recompensas do app).
     @GetMapping
     public ResponseEntity<List<Recompensa>> listarTodas() {
         return ResponseEntity.ok(recompensaRepository.findAll());
     }
 
+    // Recompensas de um estabelecimento específico, da mais barata pra mais
+    // cara em pontos — é o que aparece na tela de resgate daquele lugar.
     @GetMapping("/estabelecimento/{idEstabelecimento}")
     public ResponseEntity<List<Recompensa>> listarPorEstabelecimento(
             @PathVariable("idEstabelecimento") Long idEstabelecimento) {
@@ -50,6 +54,10 @@ public class RecompensaController {
         );
     }
 
+    // Estabelecimento cadastrando uma recompensa nova pro programa de pontos.
+    // custoPontos e estabelecimentoId chegam como texto ou número dependendo
+    // de como o front manda, por isso o parseInt/parseLong próprios lá embaixo
+    // em vez de confiar no Jackson pra converter direto.
     @PostMapping
     public ResponseEntity<?> cadastrar(@RequestBody Map<String, Object> dados) {
         try {
@@ -148,6 +156,8 @@ public class RecompensaController {
         }
     }
 
+    // Remove a recompensa por completo do catálogo (não é um "desativar",
+    // some mesmo do banco).
     @DeleteMapping("/{id}")
     public ResponseEntity<?> excluir(@PathVariable("id") Long id) {
         if (!recompensaRepository.existsById(id)) {

@@ -40,6 +40,9 @@ public class AuthController {
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[\\w.%+-]+@[\\w.-]+\\.[A-Za-z]{2,}$");
     private static final Pattern USERNAME_PATTERN = Pattern.compile("^[a-zA-Z0-9._]{3,30}$");
 
+    // Tira tudo que não é dígito e, se sobrar um número com DDI do Brasil (55)
+    // na frente, tira o DDI também — assim "+55 11 91234-5678" e "11912345678"
+    // caem no mesmo formato antes de checar contra o padrão.
     private boolean isTelefoneValido(String telefone) {
         String digitos = telefone.replaceAll("\\D", "");
         if (digitos.length() > 11 && digitos.startsWith("55")) {
@@ -48,16 +51,26 @@ public class AuthController {
         return TELEFONE_PATTERN.matcher(digitos).matches();
     }
 
+    // Login usado pelo app do cliente comum — aceita qualquer tipo de usuário.
     @PostMapping("/login")
     public ResponseEntity<?> loginGeral(@RequestBody Map<String, String> dados) {
         return realizarAutenticacao(dados, false);
     }
 
+    // Login do painel administrativo — mesma verificação de e-mail/senha, mas
+    // aqui barra quem não é Administrador (ver realizarAutenticacao).
     @PostMapping("/login/admin")
     public ResponseEntity<?> loginAdmin(@RequestBody Map<String, String> dados) {
         return realizarAutenticacao(dados, true);
     }
 
+    // Cadastro de conta nova (cliente ou administrador de estabelecimento).
+    // É uma cascata de validações que vai checando um campo de cada vez e
+    // devolvendo 400 assim que algo não bate — e-mail com formato válido e
+    // ainda não usado, username no padrão certo e livre, telefone (se
+    // informado) num formato brasileiro válido e não repetido. Se for
+    // cadastro de Administrador, ainda valida CPF e associa (ou cria) o plano
+    // escolhido.
     @PostMapping("/cadastro")
     public ResponseEntity<?> cadastrarUsuario(@RequestBody Map<String, Object> dados) {
         try {
@@ -210,6 +223,12 @@ public class AuthController {
         });
     }
 
+    // Lógica de fato do login, compartilhada pelas duas rotas acima. Busca o
+    // usuário pelo e-mail, confere a senha com o BCrypt (ver comentário do
+    // passwordEncoder) e, se exigirAdmin for true (rota /login/admin), ainda
+    // bloqueia quem não é do tipo Administrador com 403. Por segurança, e-mail
+    // não encontrado e senha errada caem na mesma mensagem genérica — não dá
+    // pra alguém de fora descobrir se um e-mail existe ou não no sistema.
     private ResponseEntity<?> realizarAutenticacao(Map<String, String> dados, boolean exigirAdmin) {
         try {
             String email = dados.get("email");

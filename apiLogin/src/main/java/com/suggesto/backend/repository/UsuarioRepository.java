@@ -10,6 +10,9 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
+// Aqui é onde a gente busca, salva e atualiza os usuários no banco de dados —
+// login, cadastro, pontos de fidelidade, tudo que envolve a tabela de
+// usuários passa por aqui.
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     Optional<Usuario> findByEmail(String email);
@@ -22,6 +25,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     boolean existsByTelefone(String telefone);
 
+    // Soma pontos na conta do usuário direto no banco (ex: um bônus ou um
+    // ajuste), sem precisar carregar o usuário inteiro pra depois salvar de novo.
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Usuario u SET u.pontos = u.pontos + :valor WHERE u.id = :id")
     int creditarPontos(@Param("id") Long id, @Param("valor") int valor);

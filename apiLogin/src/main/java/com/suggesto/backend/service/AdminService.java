@@ -47,10 +47,15 @@ public class AdminService {
     @Autowired
     private MembroEquipeRepository membroEquipeRepository;
 
+    // Atalho: métricas de todos os estabelecimentos da pessoa, sem filtrar um em especial.
     public Map<String, Object> obterMetricas(Long idUsuario, Integer meses) {
         return obterMetricas(idUsuario, meses, null);
     }
 
+    // Monta o resumo que alimenta o dashboard do admin: quantas sugestões
+    // estão pendentes/aceitas/recusadas, quantas chegaram nesta semana,
+    // quantas de cada categoria e o histórico mês a mês — tudo calculado na
+    // hora em cima das avaliações, sem nada pré-somado guardado no banco.
     public Map<String, Object> obterMetricas(Long idUsuario, Integer meses, Long idEstabelecimento) {
         int janela = (meses == null) ? MESES_PADRAO : Math.max(1, Math.min(meses, MESES_MAXIMO));
         List<Estabelecimento> estabelecimentos = resolverEstabelecimentos(idUsuario);
@@ -123,6 +128,7 @@ public class AdminService {
         return metricas;
     }
 
+    // Lista completa das sugestões (sem paginação), já resumidas no formato que o painel usa.
     public List<Map<String, Object>> listarSugestoes(Long idUsuario) {
         List<Estabelecimento> estabelecimentos = resolverEstabelecimentos(idUsuario);
         List<Long> ids = estabelecimentos.stream()
@@ -205,6 +211,8 @@ public class AdminService {
                 .collect(Collectors.toList());
     }
 
+    // Igual ao resolverEstabelecimentos, mas sem descartar os desativados —
+    // usado só na tela de listagem, que precisa mostrar a etiqueta "inativo".
     private List<Estabelecimento> resolverEstabelecimentosIncluindoInativos(Long idUsuario) {
         if (idUsuario == null) {
             return estabelecimentoRepository.findAll();
@@ -215,6 +223,8 @@ public class AdminService {
                 .collect(Collectors.toList());
     }
 
+    // Deixa o tipo apresentável pra tela (ex: "sugestao" vira "Sugestão");
+    // qualquer tipo que não reconhece, devolve do jeito que veio.
     private String classificarTipo(String tipo) {
         if (tipo == null || tipo.isBlank()) {
             return "Outro";
@@ -228,6 +238,8 @@ public class AdminService {
         };
     }
 
+    // Agrupa os vários textos de status que podem estar salvos no banco em só
+    // três baldes: pendente, implementado ou recusado.
     private String classificarStatus(String status) {
         if (status == null || status.isBlank()) {
             return "pendente";

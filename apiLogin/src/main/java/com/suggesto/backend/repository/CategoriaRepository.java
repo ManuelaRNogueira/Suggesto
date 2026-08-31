@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+// Repositório das categorias usadas nas sugestões (ex: Atendimento, Preço,
+// Ambiente) — usado pra classificar e filtrar os feedbacks.
 @Repository
 public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
 

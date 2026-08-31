@@ -78,12 +78,14 @@ public class ResgateService {
         return resposta;
     }
 
+    // Histórico de resgates do cliente, do mais recente pro mais antigo.
     public List<Map<String, Object>> listarPorUsuario(Long usuarioId) {
         return resgateRepository.findByUsuario_IdOrderByDataResgateDesc(usuarioId).stream()
                 .map(this::resumirResgate)
                 .collect(Collectors.toList());
     }
 
+    // Empacota um resgate no formato enxuto que a tela de histórico usa pra exibir.
     private Map<String, Object> resumirResgate(Resgate r) {
         Map<String, Object> item = new LinkedHashMap<>();
         item.put("id", r.getId());

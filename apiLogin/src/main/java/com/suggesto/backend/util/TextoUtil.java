@@ -32,6 +32,8 @@ public final class TextoUtil {
         return !na.isEmpty() && na.equals(normalizarParaComparacao(b));
     }
 
+    // Tira acento, baixa a caixa e junta espaço duplicado — deixa o texto "cru"
+    // só pra fins de comparação, sem mexer no que de fato fica salvo no banco.
     public static String normalizarParaComparacao(String texto) {
         if (texto == null) {
             return "";
@@ -67,6 +69,10 @@ public final class TextoUtil {
         return mesmoTexto(semUf(a), semUf(b));
     }
 
+    // Deixa cada palavra com a inicial maiúscula, tipo nome próprio, mas
+    // mantém conectivos como "de", "da", "do" em minúsculo quando não são a
+    // primeira palavra — assim "sao jose do rio preto" fica
+    // "Sao Jose do Rio Preto", não "Sao Jose Do Rio Preto".
     public static String capitalizarNomeProprio(String texto) {
         if (texto == null) {
             return null;

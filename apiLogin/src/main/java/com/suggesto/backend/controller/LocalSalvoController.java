@@ -33,6 +33,10 @@ public class LocalSalvoController {
     @Autowired
     private com.suggesto.backend.service.AvaliacaoService avaliacaoService;
 
+    // Cliente favoritando um estabelecimento (tipo salvar um post pra ver
+    // depois). Confere se usuário e estabelecimento existem de verdade antes
+    // de salvar, e se já estava salvo antes, não duplica — só avisa que já
+    // estava lá.
     @PostMapping
     public ResponseEntity<?> salvar(@RequestBody Map<String, Long> dados) {
         try {
@@ -87,6 +91,7 @@ public class LocalSalvoController {
         }
     }
 
+    // Desfavoritar: tira o estabelecimento da lista de salvos do usuário.
     @DeleteMapping("/{usuarioId}/{estabelecimentoId}")
     @Transactional
     public ResponseEntity<?> deletar(
@@ -117,6 +122,9 @@ public class LocalSalvoController {
         ));
     }
 
+    // Tela "Locais Salvos": busca os IDs salvos e depois monta a lista completa
+    // dos estabelecimentos correspondentes (não guarda o estabelecimento
+    // inteiro na tabela de salvos, só a referência).
     @GetMapping("/usuario/{usuarioId}")
     public ResponseEntity<?> listarPorUsuario(@PathVariable Long usuarioId) {
         try {

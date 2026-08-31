@@ -18,12 +18,17 @@ import java.nio.file.Path;
 
 
 
+// Configura como a API entrega os arquivos que foram enviados por upload
+// (fotos de perfil, de estabelecimento etc.) — sem isso, o link salvo no
+// banco não abriria a imagem de verdade.
 @Configuration
 
 public class WebConfig implements WebMvcConfigurer {
 
 
 
+    // Garante que a pasta de uploads existe e liga a URL "/uploads/**" na
+    // pasta real do disco onde os arquivos ficam salvos.
     @Override
 
     public void addResourceHandlers(ResourceHandlerRegistry registry) {

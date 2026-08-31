@@ -32,6 +32,11 @@ public class ConquistaService {
     @Autowired
     private ResgateRepository resgateRepository;
 
+    // Aqui a gente não guarda "conquista desbloqueada" em lugar nenhum — toda
+    // vez que a tela pede, comparamos os números atuais do usuário (quantas
+    // sugestões enviou, quantas foram aprovadas, quantos locais salvou,
+    // quantos resgates fez, quantos pontos tem) com a meta de cada selo. Se
+    // já bateu ou passou da meta, o selo aparece desbloqueado.
     public List<Map<String, Object>> listarPorUsuario(Long idUsuario) {
         Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
@@ -78,6 +83,8 @@ public class ConquistaService {
         return conquistas;
     }
 
+    // Monta o "card" de uma conquista: trava o progresso no teto da meta (não
+    // deixa mostrar mais que 100%) e já calcula sozinho se ela foi desbloqueada.
     private Map<String, Object> montar(String id, String nome, String icone,
                                        String descricao, long progresso, long meta) {
         Map<String, Object> item = new LinkedHashMap<>();

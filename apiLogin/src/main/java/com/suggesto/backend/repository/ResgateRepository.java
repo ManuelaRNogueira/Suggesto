@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
+// Repositório dos resgates de recompensa feitos pelos clientes (quando
+// trocam pontos acumulados por um prêmio).
 public interface ResgateRepository extends JpaRepository<Resgate, Long> {
 
     long countByUsuario_Id(Long usuarioId);

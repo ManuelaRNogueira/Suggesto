@@ -49,6 +49,9 @@ public class AvaliacaoService {
     @Autowired
     private PlanoService planoService;
 
+    // Cria uma nova sugestão/crítica/elogio. Se não veio um usuário logado
+    // (alguém dando feedback sem estar cadastrado), usa a conta "convidado"
+    // padrão do sistema pra não deixar a avaliação sem dono.
     @Transactional
     public void registrarNovaAvaliacao(AvaliacaoRequestDTO dto) {
         Usuario usuario = dto.getIdUsuario() != null
@@ -79,6 +82,8 @@ public class AvaliacaoService {
         avaliacaoRepository.save(avaliacao);
     }
 
+    // Muda o status da sugestão (pendente → aceita/recusada) e, se essa
+    // mudança for a primeira vez que ela vira "aceita", credita os pontos pro autor.
     @Transactional
     public Avaliacao atualizarStatus(Long idAvaliacao, String novoStatus) {
         Avaliacao avaliacao = avaliacaoRepository.findById(idAvaliacao)

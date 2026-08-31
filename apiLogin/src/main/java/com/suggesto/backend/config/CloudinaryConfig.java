@@ -6,6 +6,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+// Configura a conexão com o Cloudinary, o serviço externo onde ficam
+// guardadas as imagens (fotos de perfil, de estabelecimento etc.) em vez de
+// salvar tudo no próprio servidor.
 @Configuration
 public class CloudinaryConfig {
 

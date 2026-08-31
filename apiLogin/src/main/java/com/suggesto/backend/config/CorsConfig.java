@@ -7,6 +7,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
+// Libera o site e o app pra conversar com essa API mesmo rodando em
+// endereços diferentes — sem isso o navegador bloquearia a comunicação por
+// segurança (política de CORS).
 @Configuration
 public class CorsConfig {
 

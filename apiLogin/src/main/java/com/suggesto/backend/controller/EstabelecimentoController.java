@@ -73,6 +73,8 @@ public class EstabelecimentoController {
         return codigo;
     }
 
+    // Tela de detalhes de um estabelecimento. Antes de devolver, calcula a nota
+    // média das avaliações na hora (o campo não fica salvo pronto no banco).
     @GetMapping("/{id}")
     public ResponseEntity<?> buscarPorId(@PathVariable Long id) {
         try {
@@ -87,6 +89,13 @@ public class EstabelecimentoController {
         }
     }
 
+    // Cadastro de um estabelecimento novo por um administrador. É multipart
+    // porque pode vir uma foto de capa junto com os dados. Confere CNPJ válido
+    // e ainda não usado, confere se o plano do administrador ainda tem vaga
+    // pra mais um estabelecimento, gera um código de acesso único (pra
+    // convidar a equipe depois) e tenta geocodificar o endereço pra aparecer
+    // em "perto de você". No fim, o próprio administrador já vira membro da
+    // equipe do estabelecimento que acabou de criar.
     @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<?> cadastrar(
             @RequestPart("estabelecimento") Estabelecimento novoEstabelecimento,
@@ -111,7 +120,9 @@ public class EstabelecimentoController {
             novoEstabelecimento.setDataCadastro(java.time.LocalDateTime.now());
 
             if (arquivo != null && !arquivo.isEmpty()) {
-                // CORREÇÃO: Limpa o nome do arquivo ORIGINAL antes de gerar o caminho e salvar
+                // Limpa o nome original do arquivo (tira espaço, acento, caractere
+                // esquisito) antes de usar como nome final — evita problema de URL
+                // ou de sistema de arquivo com nomes "sujos".
                 String nomeLimpo = UploadStorage.normalizarNomeArquivo(arquivo.getOriginalFilename());
                 String nomeArquivo = System.currentTimeMillis() + "_" + nomeLimpo;
 
@@ -160,6 +171,11 @@ public class EstabelecimentoController {
         }
     }
 
+    // Um administrador tentando entrar na equipe de um estabelecimento usando
+    // o código de acesso (tipo o código de convite de um grupo). Não entra
+    // direto: cria uma solicitação pendente, que o administrador principal
+    // daquele estabelecimento precisa aceitar (ver aceitarSolicitacao mais
+    // abaixo). Só quem já é Administrador de alguma conta pode solicitar.
     @PostMapping("/entrar")
     public ResponseEntity<?> entrarComCodigo(@RequestBody Map<String, Object> dados) {
         try {
@@ -243,6 +259,9 @@ public class EstabelecimentoController {
         }
     }
 
+    // Pedidos pendentes de entrada na equipe, pro administrador principal ver
+    // e decidir aceitar ou recusar. Sem idGerente não tem quem responder, então
+    // devolve lista vazia em vez de trazer tudo de todo mundo.
     @GetMapping("/solicitacoes")
     public ResponseEntity<?> listarSolicitacoes(@RequestParam(value = "idGerente", required = false) Long idGerente) {
         if (idGerente == null) {
@@ -267,16 +286,26 @@ public class EstabelecimentoController {
         return ResponseEntity.ok(lista);
     }
 
+    // Administrador principal aprova o pedido: quem solicitou vira membro
+    // oficial da equipe.
     @PostMapping("/solicitacoes/{id}/aceitar")
     public ResponseEntity<?> aceitarSolicitacao(@PathVariable Long id, @RequestBody Map<String, Object> dados) {
         return resolverSolicitacao(id, dados, true);
     }
 
+    // Administrador principal recusa o pedido: a solicitação é só apagada,
+    // ninguém entra na equipe.
     @PostMapping("/solicitacoes/{id}/recusar")
     public ResponseEntity<?> recusarSolicitacao(@PathVariable Long id, @RequestBody Map<String, Object> dados) {
         return resolverSolicitacao(id, dados, false);
     }
 
+    // Lógica comum de aceitar/recusar. Confere que quem está respondendo (o
+    // idGerente do corpo da requisição) é de fato o dono do estabelecimento
+    // alvo da solicitação — senão qualquer um poderia aceitar gente na equipe
+    // de outro estabelecimento. Aceitar também passa pelo limite de
+    // administradores do plano, por isso o catch de IllegalStateException logo
+    // abaixo.
     private ResponseEntity<?> resolverSolicitacao(Long id, Map<String, Object> dados, boolean aceitar) {
         try {
             Object idGerenteObj = dados.get("idGerente");
@@ -336,6 +365,8 @@ public class EstabelecimentoController {
         }
     }
 
+    // Os estabelecimentos que essa pessoa possui (é a administradora
+    // principal), não os que ela só ajuda a gerenciar como equipe.
     @GetMapping("/gerente/{id}")
     public ResponseEntity<?> buscarPorGerente(@PathVariable Long id) {
         try {
@@ -364,6 +395,8 @@ public class EstabelecimentoController {
         }
     }
 
+    // Troca só a foto de capa do estabelecimento (sem mexer no resto dos
+    // dados). Só o administrador principal (idGerente) pode fazer isso.
     @PostMapping("/{id}/foto")
     public ResponseEntity<?> uploadFoto(
             @PathVariable Long id,
@@ -376,7 +409,8 @@ public class EstabelecimentoController {
                 return ResponseEntity.status(403).body("Apenas o administrador principal pode editar este estabelecimento.");
             }
 
-            // CORREÇÃO: Limpa o nome do arquivo ORIGINAL aqui também
+            // Mesma limpeza de nome de arquivo do cadastro, pra não salvar um
+            // nome "sujo" vindo do arquivo original.
             String nomeLimpo = UploadStorage.normalizarNomeArquivo(arquivo.getOriginalFilename());
             String nomeArquivo = "estabelecimento_" + id + "_" + nomeLimpo;
 
@@ -390,6 +424,12 @@ public class EstabelecimentoController {
         }
     }
 
+    // Edição completa dos dados do estabelecimento pelo administrador
+    // principal. Além do idSolicitante, exige o codigoConfirmacao (o mesmo
+    // código de acesso da equipe) como uma segunda trava antes de aceitar a
+    // mudança — evita edição feita com uma sessão "roubada" ou id adivinhado.
+    // Se rua/número/cidade/estado mudaram, refaz a geocodificação (ver
+    // comentário mais abaixo).
     @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
     public ResponseEntity<?> atualizar(
             @PathVariable Long id,
@@ -469,6 +509,10 @@ public class EstabelecimentoController {
         }
     }
 
+    // Administrador principal expulsando alguém da equipe. Também protegido
+    // pelo codigoConfirmacao (como no atualizar acima) e não deixa a pessoa
+    // se auto-remover — o principal não pode ficar sem acesso ao próprio
+    // estabelecimento por acidente.
     @DeleteMapping("/{id}/administradores/{idUsuario}")
     public ResponseEntity<?> removerAdministrador(
             @PathVariable Long id,
@@ -521,6 +565,9 @@ public class EstabelecimentoController {
         }
     }
 
+    // Não é uma exclusão de verdade: só marca ativo = 0 (soft delete). O
+    // estabelecimento e todo o histórico ligado a ele (avaliações, resgates...)
+    // continuam no banco, só somem das listagens que filtram por ativos.
     @DeleteMapping("/{id}")
     public ResponseEntity<?> inativarEstabelecimento(
             @PathVariable Long id,
@@ -582,6 +629,8 @@ public class EstabelecimentoController {
         ));
     }
 
+    // Lista geral de estabelecimentos ativos (ex.: busca/exploração no app),
+    // já com a média de avaliações calculada pra cada um.
     @GetMapping
     public ResponseEntity<List<Estabelecimento>> listarTodos() {
         try {
@@ -593,6 +642,8 @@ public class EstabelecimentoController {
         }
     }
 
+    // Igual ao /gerente/{id} de cima, mas sem tratamento de erro — usado onde
+    // já se sabe que o id é válido.
     @GetMapping("/usuario/{idGerente}")
     public ResponseEntity<List<Estabelecimento>> listarPorAdmin(@PathVariable Long idGerente) {
         return ResponseEntity.ok(repository.buscarPorGerenteAtivos(idGerente));

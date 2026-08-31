@@ -85,6 +85,10 @@ public class UsuarioController {
         }
     }
 
+    // Dados do perfil do usuário (nome, foto, pontos, nível, plano...) pra tela
+    // de perfil. A montagem da resposta fica no montarRespostaUsuario logo
+    // abaixo, que já cuida de campos nulos e busca os totais (locais salvos,
+    // sugestões, resgates) de outras tabelas.
     @GetMapping("/{id}")
     public ResponseEntity<?> buscarPorId(@PathVariable Long id) {
         try {
@@ -107,6 +111,8 @@ public class UsuarioController {
         }
     }
 
+    // Lista as conquistas (tipo medalhas/badges) que o usuário já desbloqueou,
+    // pra tela de perfil/gamificação.
     @GetMapping("/{id}/conquistas")
     public ResponseEntity<?> listarConquistas(@PathVariable Long id) {
         try {
@@ -119,6 +125,11 @@ public class UsuarioController {
         }
     }
 
+    // Edição de perfil. É multipart (não JSON comum) porque pode vir uma foto
+    // nova junto. Cada campo só é alterado se vier preenchido na requisição —
+    // não manda telefone/cidade e o valor antigo continua intacto; manda vazio
+    // de propósito e o campo é limpo. A validação de tipo/tamanho da foto fica
+    // em salvarFotoPerfil, logo abaixo.
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> atualizar(
             @PathVariable Long id,
@@ -169,6 +180,9 @@ public class UsuarioController {
         }
     }
 
+    // Confere se o arquivo é mesmo uma imagem de um formato aceito e se não
+    // passa de 5 MB antes de mandar pro Cloudinary — barato de checar aqui,
+    // evita gastar upload com um arquivo que ia ser rejeitado de qualquer jeito.
     private String salvarFotoPerfil(Long usuarioId, MultipartFile arquivo) throws Exception {
         String contentType = arquivo.getContentType();
         if (contentType == null || !TIPOS_IMAGEM_PERMITIDOS.contains(contentType.toLowerCase())) {

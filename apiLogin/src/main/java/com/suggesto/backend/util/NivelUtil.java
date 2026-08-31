@@ -12,6 +12,8 @@ public final class NivelUtil {
     private NivelUtil() {
     }
 
+    // Cartão fidelidade: olha quantos pontos a pessoa tem e diz em qual faixa
+    // ela está, checando do topo (Platina) pra baixo até achar onde ela se encaixa.
     public static String idNivel(Integer pontos) {
         int p = pontos == null ? 0 : Math.max(0, pontos);
         if (p >= MIN_PLATINA) return "platina";
@@ -20,6 +22,7 @@ public final class NivelUtil {
         return "bronze";
     }
 
+    // Mesma faixa de idNivel, só que devolvendo o nome bonito pra mostrar na tela.
     public static String nomeNivel(Integer pontos) {
         return switch (idNivel(pontos)) {
             case "platina" -> "Platina";
