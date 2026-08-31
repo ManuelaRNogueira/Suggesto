@@ -6,6 +6,7 @@ import 'localCardCliente.dart';
 import 'qrScanner.dart';
 import 'sugerir.dart';
 import 'escolherEstabelecimento.dart';
+import 'geoUtils.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -19,6 +20,17 @@ class _HomePageState extends State<HomePage> {
   String? erro;
   List<Map<String, dynamic>> locais = [];
   Set<int> locaisSalvosIds = {};
+
+  // "Perto de você" — carrega separado da lista principal (mesmo fluxo do
+  // site em inicioCli.js): a Home não trava esperando a permissão de
+  // localização, "Descubra Novos Locais" já aparece com tudo, e essa seção
+  // vem depois, quando a localização (ou o fallback por cidade) resolver.
+  bool carregandoPertoDeVoce = true;
+  bool localizacaoDisponivel = false;
+  String? cidadeRecomendada;
+  List<Map<String, dynamic>> pertoDeVoce = [];
+  Map<int, double> distanciasPertoDeVoce = {};
+  Set<int> idsPertoDeVoce = {};
 
   // Busca inline no lugar do botão da lupa — sem navegar pra outra tela.
   bool _pesquisando = false;
@@ -43,7 +55,13 @@ class _HomePageState extends State<HomePage> {
   // Mesma lógica que existia na tela "Achar um estabelecimento": separa o
   // nome por palavras e compara pelo início de cada uma.
   List<Map<String, dynamic>> get _locaisExibidos {
-    Iterable<Map<String, dynamic>> resultado = locais;
+    // Um estabelecimento nunca aparece nas duas seções — quem já está em
+    // "Perto de você" sai daqui.
+    Iterable<Map<String, dynamic>> resultado = locais.where(
+      (local) => !idsPertoDeVoce.contains(
+        (local['idEstabelecimento'] as num?)?.toInt(),
+      ),
+    );
     if (_categoriasSelecionadas.isNotEmpty) {
       resultado = resultado.where(
         (local) => _categoriasSelecionadas.contains(
@@ -179,6 +197,71 @@ class _HomePageState extends State<HomePage> {
     } finally {
       if (mounted) setState(() => carregando = false);
     }
+    // Não espera a localização pra liberar a tela — "Descubra Novos Locais"
+    // já mostra tudo, "Perto de você" some por cima quando resolver.
+    _carregarPertoDeVoce();
+  }
+
+  // Tenta a localização real do dispositivo primeiro; se não conseguir
+  // (permissão negada, GPS desligado, sem coordenadas cadastradas), cai pra
+  // recomendação por cidade do perfil — mesmo comportamento do site.
+  Future<void> _carregarPertoDeVoce() async {
+    setState(() => carregandoPertoDeVoce = true);
+
+    final posicao = await obterLocalizacaoUsuario();
+
+    List<Map<String, dynamic>> proximos = [];
+    final distancias = <int, double>{};
+    String? cidade;
+
+    if (posicao != null) {
+      final comDistancia = <MapEntry<Map<String, dynamic>, double>>[];
+      for (final estab in locais) {
+        final lat = (estab['lat'] as num?)?.toDouble();
+        final lng = (estab['lng'] as num?)?.toDouble();
+        if (lat == null || lng == null) continue;
+        final distancia = calcularDistanciaKm(
+          posicao.latitude,
+          posicao.longitude,
+          lat,
+          lng,
+        );
+        if (distancia <= raioPertoKm) {
+          comDistancia.add(MapEntry(estab, distancia));
+        }
+      }
+      comDistancia.sort((a, b) => a.value.compareTo(b.value));
+      proximos = comDistancia.map((e) => e.key).toList();
+      for (final entrada in comDistancia) {
+        final id = (entrada.key['idEstabelecimento'] as num?)?.toInt();
+        if (id != null) distancias[id] = entrada.value;
+      }
+    } else {
+      final idUsuario = Sessao.idUsuario;
+      if (idUsuario != null) {
+        try {
+          final dados = await buscarRecomendados(idUsuario);
+          final lista = (dados['estabelecimentos'] as List<dynamic>?) ?? [];
+          proximos = lista.cast<Map<String, dynamic>>();
+          cidade = dados['cidade'] as String?;
+        } on ApiException {
+          proximos = [];
+        }
+      }
+    }
+
+    if (!mounted) return;
+    setState(() {
+      pertoDeVoce = proximos.take(6).toList();
+      distanciasPertoDeVoce = distancias;
+      idsPertoDeVoce = pertoDeVoce
+          .map((e) => (e['idEstabelecimento'] as num?)?.toInt())
+          .whereType<int>()
+          .toSet();
+      cidadeRecomendada = cidade;
+      localizacaoDisponivel = posicao != null;
+      carregandoPertoDeVoce = false;
+    });
   }
 
   // Mesmas chamadas que infoLocal.dart já usa pro botão de favorito lá —
@@ -253,6 +336,13 @@ class _HomePageState extends State<HomePage> {
               // Botão "Solicitar algo"
               _buildSolicitarAlgo(),*/
               const SizedBox(height: 24),
+
+              // "Perto de você" — só aparece depois de carregar a lista
+              // principal, já que depende dela pra calcular distância.
+              if (!carregando && erro == null) ...[
+                _buildPertoDeVoce(),
+                const SizedBox(height: 24),
+              ],
 
               // Título + filtro
               _buildDescubraHeader(),
@@ -758,7 +848,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   // ─────────────────────────────────────────────────────────────────
-  Widget _buildLocalCard(Map<String, dynamic> local) {
+  Widget _buildLocalCard(Map<String, dynamic> local, {double? distanciaKm}) {
     final idEstabelecimento = (local['idEstabelecimento'] as num?)?.toInt();
     final salvo =
         idEstabelecimento != null &&
@@ -767,6 +857,7 @@ class _HomePageState extends State<HomePage> {
     return cardEstabelecimentoCliente(
       local: local,
       salvo: salvo,
+      distanciaKm: distanciaKm,
       onTap: () {
         Navigator.push(
           context,
@@ -776,6 +867,88 @@ class _HomePageState extends State<HomePage> {
       onToggleFavorito: idEstabelecimento == null
           ? null
           : () => _alternarFavorito(idEstabelecimento),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // "Perto de você" — raio real (com localização) ou recomendação por
+  // cidade (fallback), nunca as duas coisas ao mesmo tempo. Segue mostrando
+  // a seção mesmo vazia, com uma mensagem explicando o motivo (mesmo padrão
+  // do site).
+  Widget _buildPertoDeVoce() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              const Text(
+                'Perto de você',
+                style: TextStyle(
+                  color: Color.fromARGB(171, 255, 255, 255),
+                  fontSize: 18,
+                  fontFamily: 'PoppinsBold',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              if (!localizacaoDisponivel &&
+                  cidadeRecomendada != null &&
+                  cidadeRecomendada!.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '· $cidadeRecomendada',
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white38,
+                      fontSize: 13,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (carregandoPertoDeVoce)
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              'Buscando locais perto de você…',
+              style: TextStyle(color: Colors.white38, fontFamily: 'Poppins'),
+            ),
+          )
+        else if (pertoDeVoce.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              localizacaoDisponivel
+                  ? 'Nenhum estabelecimento a menos de ${raioPertoKm.toInt()} km de você.'
+                  : 'Permita o acesso à localização ou preencha seu endereço no perfil para recomendarmos os melhores locais perto de você.',
+              style: const TextStyle(
+                color: Colors.white38,
+                fontSize: 13,
+                fontFamily: 'Poppins',
+              ),
+            ),
+          )
+        else
+          Column(
+            children: pertoDeVoce
+                .map(
+                  (local) => _buildLocalCard(
+                    local,
+                    distanciaKm:
+                        distanciasPertoDeVoce[(local['idEstabelecimento']
+                                as num?)
+                            ?.toInt()],
+                  ),
+                )
+                .toList(),
+          ),
+      ],
     );
   }
 

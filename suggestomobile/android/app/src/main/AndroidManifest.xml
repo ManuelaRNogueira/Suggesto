@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Usadas por "Perto de você" na Home do cliente (ver geoUtils.dart /
+         pacote geolocator), pra mostrar os estabelecimentos mais próximos. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <application
         android:label="suggestomobile"
         android:name="${applicationName}"

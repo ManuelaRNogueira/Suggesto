@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'cores.dart';
 import 'api.dart';
+import 'geoUtils.dart';
 
 // Card de estabelecimento da visão do cliente — usado na Home
 // (inicialcli.dart) e em Locais Salvos (locaisSalvos.dart). Uma
@@ -12,11 +13,21 @@ Widget cardEstabelecimentoCliente({
   required VoidCallback onTap,
   required bool salvo,
   VoidCallback? onToggleFavorito,
+  // Distância real até o usuário, em km — some ao endereço (ex: "· 1,2 km"),
+  // igual ao card do site (localCard.js). Só é passada em "Perto de você",
+  // onde a distância é uma medida real por coordenadas.
+  double? distanciaKm,
 }) {
   final fotoUrl = urlFotoEstabelecimento(local['fotoPath'] as String?);
   final cidade = (local['cidade'] as String?) ?? '';
   final bairro = (local['bairro'] as String?) ?? '';
-  final localizacao = [bairro, cidade].where((s) => s.isNotEmpty).join(', ');
+  var localizacao = [bairro, cidade].where((s) => s.isNotEmpty).join(', ');
+  if (distanciaKm != null) {
+    final distanciaTexto = formatarDistancia(distanciaKm);
+    localizacao = localizacao.isEmpty
+        ? distanciaTexto
+        : '$localizacao · $distanciaTexto';
+  }
   final nota = (local['mediaAvaliacoes'] as num?)?.toStringAsFixed(1) ?? '—';
 
   return GestureDetector(
@@ -107,7 +118,10 @@ Widget cardEstabelecimentoCliente({
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFF3A1A6A),
                         borderRadius: BorderRadius.circular(6),
@@ -124,14 +138,21 @@ Widget cardEstabelecimentoCliente({
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFF2D5A27),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.star, color: Color(0xFF4CAF50), size: 12),
+                              const Icon(
+                                Icons.star,
+                                color: Color(0xFF4CAF50),
+                                size: 12,
+                              ),
                               const SizedBox(width: 2),
                               Text(
                                 nota,

@@ -28,6 +28,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>O Suggesto usa a câmera para escanear o QR Code dos estabelecimentos.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>O Suggesto usa sua localização para mostrar os estabelecimentos mais próximos de você.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
