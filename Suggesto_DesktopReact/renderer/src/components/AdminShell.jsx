@@ -27,6 +27,10 @@ const NAV = [
 // Único plano pago que já libera tudo — é o que vale mostrar como "próximo passo".
 const PLANO_SUGERIDO = "Pro";
 
+// Antes de mostrar cada item do menu, o sistema confere se o plano
+// contratado libera aquele recurso — se não liberar, o item aparece
+// bloqueado, como um prato riscado no cardápio porque não está disponível
+// no seu plano.
 function bloqueadoPorPlano(item, plano) {
   if (!plano) return false;
   if (item.recurso && plano[item.recurso] === false) return true;

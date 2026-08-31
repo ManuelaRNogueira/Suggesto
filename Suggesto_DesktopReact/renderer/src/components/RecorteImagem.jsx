@@ -97,8 +97,9 @@ export default function RecorteImagem({ arquivo, urlImagem, aspect = 1, redondo 
   );
 }
 
-// Recorta a imagem via canvas usando a área (em pixels) que o react-easy-crop
-// devolve em onCropComplete — receita padrão da documentação da lib.
+// Recorta a foto igual quando a gente recorta uma parte de uma imagem com
+// tesoura: pega só o pedaço selecionado e "cola" numa tela em branco do
+// tamanho certo, pra virar o novo arquivo da foto.
 function recortarParaBlob(urlImagem, area, aspect) {
   return new Promise((resolve, reject) => {
     const img = new Image();

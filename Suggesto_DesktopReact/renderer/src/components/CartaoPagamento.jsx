@@ -36,6 +36,10 @@ function aplicarMascaraValidade(valor) {
   return v;
 }
 
+// Esse é o mesmo truque que máquinas de cartão usam pra desconfiar de um
+// número digitado errado antes mesmo de consultar o banco: pega os
+// números de trás pra frente, dobra um número sim, um não, e soma tudo.
+// Se o total não for múltiplo de 10, o número está errado.
 function validarLuhn(numero) {
   const n = numero.replace(/\D/g, "");
   if (n.length < 13) return false;

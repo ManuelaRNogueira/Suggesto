@@ -461,7 +461,9 @@ function Areas({ dados }) {
   );
 }
 
-// Rosca desenhada com stroke-dasharray, sem biblioteca.
+// Não usamos nenhuma biblioteca pronta de gráfico — esse desenho de
+// "rosca" é feito igual alguém desenharia com compasso: calcula o tamanho
+// do círculo e pinta só o pedaço proporcional a cada porcentagem.
 function Rosca({ dados, total }) {
   const R = 46;
   const circ = 2 * Math.PI * R;
