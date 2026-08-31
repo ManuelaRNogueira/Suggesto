@@ -183,7 +183,10 @@ function montarConsultaGeocodificacao(incluirNumero) {
   return normalizarTextoGeocodificacao(dadosEstab.endereco);
 }
 
-// Segunda tentativa: procura a rua e a cidade sem exigir um número mapeado.
+// O serviço de mapas gratuito só aceita perguntas num ritmo devagar,
+// então esperamos um pouquinho mais de 1 segundo antes de tentar de novo
+// com um endereço mais simples — como esperar sua vez numa fila de
+// atendimento grátis.
 async function buscarSemNumero() {
   try {
     await new Promise(resolve => setTimeout(resolve, 1100));

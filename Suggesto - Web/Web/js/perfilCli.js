@@ -507,9 +507,10 @@ async function atualizarPreviaFotoSelecionada(event) {
         return;
     }
 
-    // salvarEdicao() lê o arquivo direto de editFotoFile.files[0], então troca
-    // o arquivo do próprio input pelo já recortado (em vez de guardar numa
-    // variável à parte).
+    // O campo de escolher arquivo normalmente não deixa a gente trocar o
+    // arquivo depois que a pessoa já selecionou — como um envelope lacrado.
+    // Pra colocar a foto já cortada no lugar da original, usamos um recurso
+    // do navegador feito exatamente pra "abrir esse envelope" com segurança.
     const dt = new DataTransfer();
     dt.items.add(recortado);
     input.files = dt.files;

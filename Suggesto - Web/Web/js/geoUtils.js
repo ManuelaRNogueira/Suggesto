@@ -6,7 +6,9 @@
 // Raio considerado "perto de você", em km. Único lugar pra mudar esse valor.
 const RAIO_PERTO_KM = 5;
 
-// Distância em linha reta entre duas coordenadas (fórmula de Haversine).
+// Essa conta calcula a distância entre dois pontos como se a Terra fosse
+// uma bola (que é o que ela é), não como se fosse um mapa totalmente
+// plano — por isso usa seno e cosseno em vez de só régua e Pitágoras.
 function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;

@@ -36,6 +36,10 @@ document.querySelectorAll('.form input').forEach(elemento => {
     elemento.addEventListener('input', () => elemento.classList.remove('input-erro'));
 });
 
+// Confere se o telefone digitado tem o formato de um número brasileiro de
+// verdade (DDD + celular de 9 dígitos ou fixo de 8), e o CEP já busca a
+// cidade automaticamente — se não achar cidade nenhuma, é sinal de que o
+// CEP não existe.
 function isTelefoneValido(telefone) {
     let digitos = telefone.replace(/\D/g, '');
     if (digitos.length > 11 && digitos.startsWith('55')) {

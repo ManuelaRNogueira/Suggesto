@@ -8,6 +8,9 @@ const PONTOS_NIVEIS = [
   { id: "platina", nome: "Platina", min: 15001, max: null }
 ];
 
+// Funciona como um cartão fidelidade com carimbos: primeiro descobre em
+// qual faixa de pontos a pessoa está (bronze, prata, ouro...), depois
+// calcula quanto falta pra encher essa faixa e passar pra próxima.
 function calcularNivel(pontos) {
   const pts = Math.max(0, Number(pontos) || 0);
 

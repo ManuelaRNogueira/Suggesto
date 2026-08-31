@@ -424,6 +424,8 @@ function mostrarToast(mensagem) {
   setTimeout(() => toast.classList.remove("visivel"), 3200);
 }
 
+// O número do saldo "corre" do valor antigo até o novo desacelerando no
+// final — como um carro que freia suavemente em vez de parar de repente.
 function animarContador(el, de, ate, duracao) {
   const inicio = performance.now();
   function passo(agora) {

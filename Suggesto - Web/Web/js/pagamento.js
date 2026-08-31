@@ -268,7 +268,9 @@ function detectarBandeira(numero) {
    VALIDAÇÕES
 ========================================================= */
 
-// Algoritmo de Luhn — confere se o número do cartão é plausível
+// Mesmo truque das maquininhas de cartão: pega os números de trás pra
+// frente, dobra um número sim um não, soma tudo. Se não for múltiplo de
+// 10, o cartão digitado está errado — sem nem precisar consultar o banco.
 function validarLuhn(numero) {
   const n = numero.replace(/\D/g, '');
   if (n.length < 13) return false;
@@ -306,6 +308,9 @@ function validarValidade(texto) {
   return ultimoDia >= hoje;
 }
 
+// Mesma ideia de um código de barras: cada número do CPF "pesa" um valor
+// diferente numa conta, e o resultado tem que bater com os 2 últimos
+// dígitos.
 function validarCpf(texto) {
   const cpf = texto.replace(/\D/g, '');
 
@@ -353,7 +358,9 @@ function limparErro(campo, valido) {
    CARTÃO VISUAL — preenchimento em tempo real
 ========================================================= */
 
-// Desenha o número no cartão, animando apenas os dígitos novos
+// Só "pinta" de novo os números que acabaram de ser digitados, comparando
+// com o que já estava na tela antes — como destacar só a palavra nova que
+// alguém acabou de escrever, sem grifar a frase inteira de novo.
 function pintarNumeroCartao(valor) {
   const digitos = valor.replace(/\D/g, '');
   const bandeira = detectarBandeira(digitos);
@@ -623,8 +630,10 @@ function irParaCadastro() {
    PIX — QR Code e código fictícios
 ========================================================= */
 
-// Gera um padrão visual parecido com um QR Code.
-// Não codifica informação alguma: é apenas decorativo.
+// Essa tela é só uma demonstração — não é um QR code de pagamento real.
+// Os quadradinhos "aleatórios" vêm de uma fórmula que sempre começa do
+// mesmo número, tipo um dado viciado que cai sempre na mesma sequência.
+// Assim o desenho fica sempre igual, só pra mostrar a ideia da tela.
 function desenharQrFalso() {
   const canvas = $('pixQr');
   if (!canvas) return;
