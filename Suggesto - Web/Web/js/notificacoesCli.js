@@ -13,6 +13,15 @@ function obterIdUsuario() {
   return Number.isFinite(id) && id > 0 ? id : null;
 }
 
+// Escapa texto vindo da API antes de jogar no HTML, igual ao admEscapar do
+// painel admin (js/admApi.js) - impede XSS armazenado em nome, comentario e
+// resposta que o usuario digita.
+function escapeHtml(texto) {
+  const div = document.createElement("div");
+  div.textContent = texto ?? "";
+  return div.innerHTML;
+}
+
 function normalizarTexto(valor) {
   return (valor || "")
     .toLowerCase()
@@ -100,8 +109,8 @@ function renderizarEstabelecimentos(usuario, estabelecimentos) {
     card.innerHTML = `
       <div class="notif-card-icone"><i class="fas fa-store"></i></div>
       <div class="notif-card-corpo">
-        <span class="notif-card-titulo">${estab.nome}</span>
-        <span class="notif-card-sub">${estab.categoria || ""} · Novo em ${cidade}</span>
+        <span class="notif-card-titulo">${escapeHtml(estab.nome)}</span>
+        <span class="notif-card-sub">${escapeHtml(estab.categoria || "")} · Novo em ${escapeHtml(cidade)}</span>
       </div>
       <span class="notif-card-tempo">${tempoRelativo(estab.dataCadastro)}</span>
     `;
@@ -134,8 +143,8 @@ function renderizarRecompensas(recompensas) {
     card.innerHTML = `
       <div class="notif-card-icone"><i class="fas fa-gift"></i></div>
       <div class="notif-card-corpo">
-        <span class="notif-card-titulo">${rec.nome}</span>
-        <span class="notif-card-sub">${nomeEstab} · ${rec.custoPontos} pontos</span>
+        <span class="notif-card-titulo">${escapeHtml(rec.nome)}</span>
+        <span class="notif-card-sub">${escapeHtml(nomeEstab)} · ${rec.custoPontos} pontos</span>
       </div>
       <span class="notif-card-tempo">${tempoRelativo(rec.dataCadastro)}</span>
     `;
@@ -168,8 +177,8 @@ function renderizarRespostas(avaliacoes) {
     card.innerHTML = `
       <div class="notif-card-icone"><i class="fas fa-reply"></i></div>
       <div class="notif-card-corpo">
-        <span class="notif-card-titulo">${nomeEstab} respondeu sua sugestão</span>
-        <span class="notif-card-texto">${av.resposta}</span>
+        <span class="notif-card-titulo">${escapeHtml(nomeEstab)} respondeu sua sugestão</span>
+        <span class="notif-card-texto">${escapeHtml(av.resposta)}</span>
       </div>
       <span class="notif-card-tempo">${tempoRelativo(av.dataResposta)}</span>
     `;

@@ -18,6 +18,15 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+// Escapa texto vindo da API antes de jogar no HTML, igual ao admEscapar do
+// painel admin (js/admApi.js) - impede XSS armazenado em nome, comentario e
+// resposta que o usuario digita.
+function escapeHtml(texto) {
+  const div = document.createElement("div");
+  div.textContent = texto ?? "";
+  return div.innerHTML;
+}
+
 async function carregarSugestoesDoUsuario() {
   const idUsuario = localStorage.getItem("idUsuario");
   if (!idUsuario) {
@@ -220,9 +229,9 @@ function renderizarLista(sugestoes) {
                 <div class="card-corpo">
                     <div class="card-topo">
                         <div class="card-esquerda">
-                            <div class="card-avatar">${letrasAvatar}</div>
+                            <div class="card-avatar">${escapeHtml(letrasAvatar)}</div>
                             <div>
-                                <h3 class="card-estabelecimento">${nomeLoja}</h3>
+                                <h3 class="card-estabelecimento">${escapeHtml(nomeLoja)}</h3>
                                 <p class="card-data"><i class="fas fa-calendar-alt"></i> ${dataFormatada}</p>
                             </div>
                         </div>
@@ -240,21 +249,21 @@ function renderizarLista(sugestoes) {
 
                     <div class="card-tags">
                         <span class="tag ${classeTagCategoria(nomeCategoria)}">
-                            ${labelTipo} · ${nomeCategoria}
+                            ${labelTipo} · ${escapeHtml(nomeCategoria)}
                         </span>
                         <div class="card-estrelas">
                             ${gerarEstrelas(sugestao.nota)}
                         </div>
                     </div>
 
-                    <p class="card-texto">${sugestao.comentario}</p>
+                    <p class="card-texto">${escapeHtml(sugestao.comentario)}</p>
 
                     ${sugestao.resposta ? `
                     <div class="card-resposta">
                         <span class="card-resposta-rotulo">
-                            <i class="fas fa-reply"></i> Resposta de ${nomeLoja}
+                            <i class="fas fa-reply"></i> Resposta de ${escapeHtml(nomeLoja)}
                         </span>
-                        <p class="card-resposta-texto">${sugestao.resposta}</p>
+                        <p class="card-resposta-texto">${escapeHtml(sugestao.resposta)}</p>
                     </div>` : ""}
                 </div>
             </div>
