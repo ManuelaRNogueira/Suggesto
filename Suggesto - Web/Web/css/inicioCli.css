@@ -332,49 +332,6 @@ body {
   object-fit: contain;
 }
 
-
-/* ===== FAIXA SOLICITAR ===== */
-.solicitar-faixa {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 24px;
-  background: rgba(245, 158, 11, 0.08);
-  border: 1px solid rgba(245, 158, 11, 0.2);
-  border-radius: 16px;
-  cursor: pointer;
-  transition: var(--animacao);
-}
-.solicitar-faixa:hover {
-  background: rgba(245, 158, 11, 0.12);
-  border-color: rgba(245, 158, 11, 0.35);
-}
-
-.solicitar-esquerda {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.solicitar-icone {
-  width: 42px; height: 42px;
-  border-radius: 10px;
-  background: rgba(245, 158, 11, 0.15);
-  color: var(--cor-laranja);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px;
-}
-.solicitar-titulo {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--cor-texto);
-}
-.solicitar-sub {
-  font-size: 13px;
-  color: var(--cor-texto-fraco);
-  margin-top: 2px;
-}
-.solicitar-seta { color: var(--cor-texto-muito-fraco); font-size: 14px; }
-
 /* ===== SEÇÃO DE LOCAIS ===== */
 .locais-secao { display: flex; flex-direction: column; gap: 16px; }
 

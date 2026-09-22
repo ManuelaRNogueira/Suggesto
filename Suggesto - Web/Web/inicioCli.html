@@ -462,20 +462,6 @@
   </div>
       </section>
 
-      <!-- SOLICITAR ALGO -->
-      <!--<section class="solicitar-faixa" onclick="abrirSolicitacao()">
-        <div class="solicitar-esquerda">
-          <div class="solicitar-icone">
-            <i class="fas fa-bell"></i>
-          </div>
-          <div>
-            <p class="solicitar-titulo">Solicitar algo</p>
-            <p class="solicitar-sub">Peça melhorias, produtos ou serviços</p>
-          </div>
-        </div>
-        <i class="fas fa-chevron-right solicitar-seta"></i>
-      </section>-->
-
       <!-- PERTO DE VOCÊ (mesma cidade do cliente) -->
       <section class="locais-secao" id="recomendadosSecao" style="display: none">
         <div class="locais-topo">
@@ -522,47 +508,6 @@
         </div>
       </section>
     </main>
-
-    <!-- MODAL DE SOLICITAÇÃO -->
-    <div class="modal-fundo" id="modalSolicitacao">
-      <div class="modal">
-        <div class="modal-topo">
-          <h3 class="modal-titulo">Solicitar algo</h3>
-          <button
-            class="modal-fechar"
-            onclick="fecharModal('modalSolicitacao')"
-          >
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        <p class="modal-sub">
-          Peça algo que gostaria de ver no seu estabelecimento favorito
-        </p>
-
-        <div class="campo-grupo">
-          <label class="campo-label">Estabelecimento</label>
-          <select class="campo-input">
-            <option>Big Jack Hamburgueria</option>
-            <option>PanoBianco Academia</option>
-            <option>Café do Centro</option>
-            <option>Cantina Italiana</option>
-          </select>
-        </div>
-
-        <div class="campo-grupo">
-          <label class="campo-label">O que você quer solicitar?</label>
-          <textarea
-            class="campo-input campo-textarea"
-            placeholder="Ex: Gostaria que tivessem opção vegetariana no cardápio..."
-          ></textarea>
-        </div>
-
-        <button class="botao-modal" onclick="enviarSolicitacao()">
-          <i class="fas fa-bell"></i>
-          Enviar solicitação
-        </button>
-      </div>
-    </div>
 
     <!-- TOAST DE CONFIRMAÇÃO -->
     <div class="toast" id="toast">
