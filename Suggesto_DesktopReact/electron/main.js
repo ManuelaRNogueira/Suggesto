@@ -12,7 +12,6 @@ const createLoginWindow = () => {
         autoHideMenuBar: true,
         icon: path.join(__dirname, '../renderer/public/img/logoBalao.png'),
         webPreferences: {
-            preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
             nodeIntegration: true,
             webSecurity: false,

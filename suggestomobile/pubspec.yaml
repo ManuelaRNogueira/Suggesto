@@ -38,10 +38,6 @@ dependencies:
   http_parser: ^4.0.2
   image_picker: ^1.1.2
   geolocator: ^13.0.0
-
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
   mobile_scanner: ^7.4.0
 
 dev_dependencies:
@@ -73,10 +69,6 @@ flutter:
     - assets/images/iconefacebook.png
     - assets/images/escritalogo.png
     - assets/images/balaologo.png
-    - assets/images/iconefacebook.png
-    - assets/images/iconefacebook.png
-    - assets/images/iconefacebook.png
-    - assets/images/iconefacebook.png
     - assets/images/diogo.jpg
     - assets/images/gabrielG.jpg
     - assets/images/manuela.jpg
@@ -91,7 +83,6 @@ flutter:
     - assets/images/zara.jpg
     - assets/images/carrefour.png
     - assets/images/manapoke.jpg
-    - assets/images/panobianco.png
     - assets/images/bk.jpg
     - assets/images/cafeteria.jpg
     - assets/images/cotil.jpg
