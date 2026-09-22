@@ -86,7 +86,7 @@ flutter:
     - assets/images/starbucks.png
     - assets/images/youcom.png
     - assets/images/mcColosso.png
-    - assets/images/mcFritas.png
+    - assets/images/mcfritas.png
     - assets/images/cocobambu.png
     - assets/images/zara.jpg
     - assets/images/carrefour.png
@@ -116,7 +116,7 @@ flutter:
   #         style: italic
     - family: PoppinsBold
       fonts:
-        - asset: assets/fonts/Poppins-bold.ttf
+        - asset: assets/fonts/Poppins-Bold.ttf
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
     - family: Poppins
