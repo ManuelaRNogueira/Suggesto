@@ -535,10 +535,6 @@ function abrirModalSair() {
   document.getElementById("modalSaida")?.classList.add("aberto");
 }
 
-function fecharModalSaida(id) {
-  document.getElementById(id)?.classList.remove("aberto");
-}
-
 function confirmarSair() {
   localStorage.clear();
   window.location.href = "login.html";

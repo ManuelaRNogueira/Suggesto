@@ -255,11 +255,6 @@ function atualizarContador() {
   if (el) el.textContent = total;
 }
 
-function abrirSugestaoLocal(nomeLocal) {
-  document.getElementById('modalLocalNome').textContent = nomeLocal;
-  abrirModal('modalSugestao');
-}
-
 function enviarSugestao() {
   const textarea = document.querySelector('#modalSugestao .campo-textarea');
   if (!textarea.value.trim()) {

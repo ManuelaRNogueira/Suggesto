@@ -95,9 +95,6 @@ function assinarPlano(nomePlano) {
   window.location.href = "pagamento.html";
 }
 
-function abrirCadastroAdm() {
-  window.location.href = "cadastroAdm.html";
-}
 function abrirCadastro() {
   window.location.href = "cadastro.html";
 }
