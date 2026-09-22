@@ -443,18 +443,6 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') fecharModal();
 });
 
-function enviarSugestao() {
-  const textarea = document.getElementById('textSugestao');
-  if (!textarea.value.trim()) {
-    textarea.style.borderColor = 'rgba(248,113,113,0.6)';
-    setTimeout(() => textarea.style.borderColor = '', 1800);
-    return;
-  }
-  fecharModal();
-  textarea.value = '';
-  mostrarToast('Sugestão enviada com sucesso!');
-}
-
 
 // ── TOAST ────────────────────────────────────────────────────────────
 function mostrarToast(msg, tipo = 'sucesso') {
