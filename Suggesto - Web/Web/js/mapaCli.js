@@ -87,7 +87,6 @@ function preencherDados() {
   document.getElementById('telefoneEstab').textContent  = dadosEstab.telefone || 'Não informado';
   document.getElementById('notaEstab').textContent      = dadosEstab.nota || '—';
   document.getElementById('totalAvaliacoes').textContent = `(${dadosEstab.avaliacoes} avaliações)`;
-  document.getElementById('modalSubtitulo').textContent = dadosEstab.nome;
   document.title = `${dadosEstab.nome} — Suggesto`;
 
   // Logo
@@ -410,15 +409,6 @@ function verificarStatus() {
 }
 
 
-// ── MODAL SUGESTÃO ───────────────────────────────────────────────────
-function abrirSugestao() {
-  document.getElementById('modalSugestao').classList.add('aberto');
-}
-
-function fecharModal() {
-  document.getElementById('modalSugestao').classList.remove('aberto');
-}
-
 // ── MODAL SAIR ────────────────────────────────────────────────────────
 function abrirModalSair() {
   document.getElementById('modalSair')?.classList.add('aberto');
@@ -432,16 +422,6 @@ function confirmarSair() {
   localStorage.clear();
   window.location.href = 'login.html';
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('modalSugestao').addEventListener('click', e => {
-    if (e.target === document.getElementById('modalSugestao')) fecharModal();
-  });
-});
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') fecharModal();
-});
 
 
 // ── TOAST ────────────────────────────────────────────────────────────

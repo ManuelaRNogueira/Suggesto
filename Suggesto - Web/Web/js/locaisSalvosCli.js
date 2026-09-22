@@ -255,18 +255,6 @@ function atualizarContador() {
   if (el) el.textContent = total;
 }
 
-function enviarSugestao() {
-  const textarea = document.querySelector('#modalSugestao .campo-textarea');
-  if (!textarea.value.trim()) {
-    textarea.style.borderColor = 'rgba(239,68,68,0.5)';
-    setTimeout(() => textarea.style.borderColor = '', 1500);
-    return;
-  }
-  fecharModal('modalSugestao');
-  textarea.value = '';
-  mostrarToast('Sugestão enviada com sucesso!');
-}
-
 function abrirModal(id) {
   document.getElementById(id).classList.add('aberto');
 }
