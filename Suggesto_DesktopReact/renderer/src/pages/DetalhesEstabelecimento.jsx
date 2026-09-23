@@ -123,7 +123,7 @@ function DetalhesEstabelecimento() {
       const r = await fetch(`${API_BASE}/avaliacoes/${idAvaliacao}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, idAdmin: meuId }),
       });
       if (!r.ok) {
         const err = await r.json();

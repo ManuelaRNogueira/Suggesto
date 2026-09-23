@@ -250,7 +250,11 @@ Future<List<dynamic>> buscarEstabelecimentosAdmin({int? idGerente}) {
 // Muda o status de uma sugestão (ex: pendente → respondida), na tela de
 // Detalhes da sugestão.
 Future<Map<String, dynamic>> atualizarStatusAvaliacao(int id, String status) {
-  return _mapa('PATCH', '/avaliacoes/$id/status', corpo: {'status': status});
+  return _mapa(
+    'PATCH',
+    '/avaliacoes/$id/status',
+    corpo: {'status': status, 'idAdmin': Sessao.idUsuario},
+  );
 }
 
 // Admin escreve uma resposta pra sugestão que o cliente mandou.

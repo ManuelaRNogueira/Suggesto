@@ -192,7 +192,7 @@ export function atualizarStatusSugestao(id, status) {
   return fetchJson(`${API_BASE}/avaliacoes/${id}/status`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status, idAdmin: idGerente() }),
   });
 }
 

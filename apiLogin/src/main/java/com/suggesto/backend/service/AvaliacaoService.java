@@ -84,10 +84,12 @@ public class AvaliacaoService {
 
     // Muda o status da sugestão (pendente → aceita/recusada) e, se essa
     // mudança for a primeira vez que ela vira "aceita", credita os pontos pro autor.
+    // Só a equipe do próprio estabelecimento pode mudar, igual ao responder().
     @Transactional
-    public Avaliacao atualizarStatus(Long idAvaliacao, String novoStatus) {
+    public Avaliacao atualizarStatus(Long idAvaliacao, String novoStatus, Long idAdmin) {
         Avaliacao avaliacao = avaliacaoRepository.findById(idAvaliacao)
                 .orElseThrow(() -> new RuntimeException("Sugestão não encontrada."));
+        exigirEquipeDoEstabelecimento(avaliacao, idAdmin);
 
         String statusAnterior = avaliacao.getStatus();
         String statusNormalizado = normalizarStatus(novoStatus);
@@ -114,21 +116,10 @@ public class AvaliacaoService {
         Avaliacao avaliacao = avaliacaoRepository.findById(idAvaliacao)
                 .orElseThrow(() -> new IllegalArgumentException("Sugestão não encontrada."));
 
-        Estabelecimento alvo = avaliacao.getEstabelecimento();
-        if (alvo == null) {
-            throw new IllegalArgumentException("Sugestão sem estabelecimento vinculado.");
-        }
+        exigirEquipeDoEstabelecimento(avaliacao, idAdmin);
 
         Usuario admin = usuarioRepository.findById(idAdmin)
                 .orElseThrow(() -> new IllegalArgumentException("Administrador não encontrado."));
-
-        boolean ehGerente = alvo.getIdGerente() == idAdmin;
-        boolean ehDaEquipe = membroEquipeRepository
-                .existsByUsuario_IdAndEstabelecimento_IdEstabelecimento(idAdmin, alvo.getIdEstabelecimento());
-
-        if (!ehGerente && !ehDaEquipe) {
-            throw new SecurityException("Você não faz parte da equipe deste estabelecimento.");
-        }
 
         avaliacao.setResposta(texto.trim());
         avaliacao.setDataResposta(LocalDateTime.now());
@@ -160,6 +151,27 @@ public class AvaliacaoService {
         }
 
         avaliacaoRepository.delete(avaliacao);
+    }
+
+    // Sem login de verdade ainda, confiamos no idAdmin que o painel manda — é
+    // mitigação: barra quem mexe em sugestão de outro estabelecimento por engano
+    // ou por curiosidade, mas não quem forja o id de propósito.
+    private void exigirEquipeDoEstabelecimento(Avaliacao avaliacao, Long idAdmin) {
+        Estabelecimento alvo = avaliacao.getEstabelecimento();
+        if (alvo == null) {
+            throw new IllegalArgumentException("Sugestão sem estabelecimento vinculado.");
+        }
+        if (idAdmin == null) {
+            throw new SecurityException("Informe quem está alterando a sugestão.");
+        }
+
+        boolean ehGerente = alvo.getIdGerente() == idAdmin;
+        boolean ehDaEquipe = membroEquipeRepository
+                .existsByUsuario_IdAndEstabelecimento_IdEstabelecimento(idAdmin, alvo.getIdEstabelecimento());
+
+        if (!ehGerente && !ehDaEquipe) {
+            throw new SecurityException("Você não faz parte da equipe deste estabelecimento.");
+        }
     }
 
     private boolean isStatusPendente(String status) {

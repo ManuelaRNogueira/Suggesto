@@ -141,24 +141,28 @@ public class AvaliacaoController {
 
     // Estabelecimento marcando o andamento de uma sugestão (ex.: "pendente" →
     // "implementada" ou "recusada"), pro cliente acompanhar na tela dele.
+    // idAdmin diz quem está mudando; o service confere se é da equipe (403 se não).
     @PatchMapping("/{id}/status")
     public ResponseEntity<?> atualizarStatus(
             @PathVariable("id") Long id,
-            @RequestBody Map<String, String> body) {
+            @RequestBody Map<String, Object> body) {
         try {
-            String status = body.get("status");
+            String status = body.get("status") == null ? null : body.get("status").toString();
             if (status == null || status.isBlank()) {
                 return ResponseEntity.badRequest().body(Map.of(
                         "success", false,
                         "message", "Campo status é obrigatório."
                 ));
             }
-            Avaliacao atualizada = avaliacaoService.atualizarStatus(id, status);
+            Long idAdmin = body.get("idAdmin") == null ? null : Long.valueOf(body.get("idAdmin").toString());
+            Avaliacao atualizada = avaliacaoService.atualizarStatus(id, status, idAdmin);
             return ResponseEntity.ok(Map.of(
                     "success", true,
                     "message", "Status atualizado.",
                     "avaliacao", atualizada
             ));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(Map.of("success", false, "message", e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
         } catch (Exception e) {

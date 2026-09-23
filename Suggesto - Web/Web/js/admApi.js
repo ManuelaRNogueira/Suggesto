@@ -96,7 +96,7 @@ async function admBuscarSugestoes() {
 }
 
 async function admAtualizarStatusSugestao(id, status) {
-  return admPatchJson(`${ADM_API_BASE}/avaliacoes/${id}/status`, { status });
+  return admPatchJson(`${ADM_API_BASE}/avaliacoes/${id}/status`, { status, idAdmin: admIdGerente() });
 }
 
 async function admResponderSugestao(id, { idAdmin, resposta }) {
