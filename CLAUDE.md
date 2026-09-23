@@ -4,3 +4,17 @@
 - Mensagens de commit devem ser curtas e simples, no estilo humano do histórico do projeto (ex: "validação de telefone", "estilo minhas sugestoes"), não um changelog técnico em bullet points.
 - Nunca adicione "Co-Authored-By: Claude" (ou qualquer menção à IA) nas mensagens de commit. Os commits devem aparecer só com a autoria da Manuela.
 - Se a alteração for arriscada, destrutiva ou o escopo não estiver claro, avise antes de commitar/enviar em vez de seguir automaticamente.
+
+## Agent skills
+
+### Issue tracker
+
+Issues vivem como arquivos markdown em `.scratch/<feature>/` neste repo. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Os cinco papéis canônicos, com os nomes padrão. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: um `CONTEXT.md` na raiz + `docs/adr/`. See `docs/agents/domain.md`.
