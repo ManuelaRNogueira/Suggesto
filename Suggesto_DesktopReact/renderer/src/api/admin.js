@@ -107,8 +107,10 @@ export function desativarEstabelecimento(id) {
   );
 }
 
+// idSolicitante = quem está logado. O back-end só devolve e-mail/telefone
+// quando ele bate com o id do perfil pedido.
 export function buscarUsuario(id) {
-  return fetchJson(`${API_BASE}/usuarios/${id}`);
+  return fetchJson(`${API_BASE}/usuarios/${id}?idSolicitante=${encodeURIComponent(idGerente())}`);
 }
 
 // Remover alguém da equipe é uma ação séria, então tem duas travas: só o
@@ -210,7 +212,10 @@ export function atualizarPerfil(id, { nome, telefone, cidade }) {
   if (nome !== undefined) corpo.append("nome", nome);
   if (telefone !== undefined) corpo.append("telefone", telefone);
   if (cidade !== undefined) corpo.append("cidade", cidade);
-  return fetchJson(`${API_BASE}/usuarios/${id}`, { method: "PUT", body: corpo });
+  return fetchJson(`${API_BASE}/usuarios/${id}?idSolicitante=${encodeURIComponent(idGerente())}`, {
+    method: "PUT",
+    body: corpo,
+  });
 }
 
 // ── Formatação ────────────────────────────────────────────────────────────

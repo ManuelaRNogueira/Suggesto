@@ -21,6 +21,10 @@ public class Usuario {
     @Column(name = "Username", unique = true, length = 30)
     private String username;
 
+    // Dados pessoais nunca saem junto da entidade (ela vai embutida em toda
+    // avaliação pública). Quem precisa deles é o próprio dono, e esse caminho
+    // passa pelo UsuarioController, que monta a resposta à mão.
+    @JsonIgnore
     @Column(name = "Email")
     private String email;
 
@@ -35,9 +39,11 @@ public class Usuario {
     @Column(name = "Cargo")
     private String cargo;
 
+    @JsonIgnore
     @Column(name = "CPF")
     private String cpf;
 
+    @JsonIgnore
     @Column(name = "Telefone")
     private String telefone;
 
@@ -46,6 +52,7 @@ public class Usuario {
 
     // Cidade e estado do cliente vêm do CEP (mesma fonte usada no cadastro do
     // estabelecimento), para a busca por proximidade casar as duas pontas.
+    @JsonIgnore
     @Column(name = "CEP", length = 9)
     private String cep;
 

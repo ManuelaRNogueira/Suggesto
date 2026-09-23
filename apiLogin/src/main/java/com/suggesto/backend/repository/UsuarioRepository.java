@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
 import java.util.Optional;
 
 // Aqui é onde a gente busca, salva e atualiza os usuários no banco de dados —
@@ -40,5 +39,4 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     int debitarPontos(@Param("id") Long id, @Param("custo") int custo);
 
         long countByTipoUsuario(TipoUsuario tipoUsuario);
-        List<Usuario> findAllByOrderByNomeAsc();
 }

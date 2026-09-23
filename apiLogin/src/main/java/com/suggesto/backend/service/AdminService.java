@@ -157,11 +157,11 @@ public class AdminService {
     // Uma pessoa em duas equipes aparece duas vezes aqui, uma por
     // estabelecimento — é o comportamento correto agora que os vínculos não
     // são mais exclusivos entre si.
+    // Sem idUsuario não tem de quem é a equipe, então não devolve ninguém — antes
+    // devolvia e-mail e telefone de todos os usuários do sistema pra qualquer um.
     public List<Map<String, Object>> listarUsuarios(Long idUsuario) {
         if (idUsuario == null) {
-            return usuarioRepository.findAllByOrderByNomeAsc().stream()
-                    .map(this::resumirUsuarioBasico)
-                    .collect(Collectors.toList());
+            return List.of();
         }
 
         List<Long> estabIds = membroEquipeRepository.findByUsuario_Id(idUsuario).stream()

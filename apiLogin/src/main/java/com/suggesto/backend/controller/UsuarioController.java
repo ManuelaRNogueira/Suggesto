@@ -88,9 +88,12 @@ public class UsuarioController {
     // Dados do perfil do usuário (nome, foto, pontos, nível, plano...) pra tela
     // de perfil. A montagem da resposta fica no montarRespostaUsuario logo
     // abaixo, que já cuida de campos nulos e busca os totais (locais salvos,
-    // sugestões, resgates) de outras tabelas.
+    // sugestões, resgates) de outras tabelas. E-mail, telefone e CEP só vêm
+    // quando quem pede (idSolicitante) é o próprio dono do perfil.
     @GetMapping("/{id}")
-    public ResponseEntity<?> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<?> buscarPorId(
+            @PathVariable Long id,
+            @RequestParam(value = "idSolicitante", required = false) Long idSolicitante) {
         try {
             Optional<Usuario> usuarioOpt = repository.findById(id);
 
@@ -101,7 +104,7 @@ public class UsuarioController {
                 ));
             }
 
-            return ResponseEntity.ok(montarRespostaUsuario(usuarioOpt.get()));
+            return ResponseEntity.ok(montarRespostaUsuario(usuarioOpt.get(), id.equals(idSolicitante)));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
@@ -133,6 +136,7 @@ public class UsuarioController {
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> atualizar(
             @PathVariable Long id,
+            @RequestParam(value = "idSolicitante", required = false) Long idSolicitante,
             @RequestParam(value = "nome", required = false) String nome,
             @RequestParam(value = "telefone", required = false) String telefone,
             @RequestParam(value = "cidade", required = false) String cidade,
@@ -165,7 +169,7 @@ public class UsuarioController {
 
             repository.save(usuario);
 
-            return ResponseEntity.ok(montarRespostaUsuario(usuario));
+            return ResponseEntity.ok(montarRespostaUsuario(usuario, id.equals(idSolicitante)));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "success", false,
@@ -201,14 +205,18 @@ public class UsuarioController {
         return cloudinaryService.upload(arquivo, "usuarios", nomeArquivo);
     }
 
-    private Map<String, Object> montarRespostaUsuario(Usuario usuario) {
+    // Sem login de verdade ainda, o "dono" é quem manda o próprio id em
+    // idSolicitante — mitigação pra não entregar dados pessoais a qualquer um.
+    private Map<String, Object> montarRespostaUsuario(Usuario usuario, boolean ehDono) {
         Map<String, Object> resposta = new HashMap<>();
         resposta.put("id", usuario.getId());
         resposta.put("nome", usuario.getNome() != null ? usuario.getNome() : "");
-        resposta.put("email", usuario.getEmail() != null ? usuario.getEmail() : "");
-        resposta.put("telefone", usuario.getTelefone() != null ? usuario.getTelefone() : "");
+        if (ehDono) {
+            resposta.put("email", usuario.getEmail() != null ? usuario.getEmail() : "");
+            resposta.put("telefone", usuario.getTelefone() != null ? usuario.getTelefone() : "");
+            resposta.put("cep", usuario.getCep() != null ? usuario.getCep() : "");
+        }
         resposta.put("cidade", usuario.getCidade() != null ? usuario.getCidade() : "");
-        resposta.put("cep", usuario.getCep() != null ? usuario.getCep() : "");
         resposta.put("estado", usuario.getEstado() != null ? usuario.getEstado() : "");
         resposta.put("fotoUrl", formatarFotoUrl(usuario.getFotoUrl()));
         resposta.put("tipoUsuario", usuario.getTipoUsuario() != null ? usuario.getTipoUsuario().name() : "");

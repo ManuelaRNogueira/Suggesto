@@ -92,7 +92,7 @@ async function carregarDadosUsuario() {
     }
 
     try {
-        const resposta = await fetch(`${API_BASE}/usuarios/${idUsuario}`);
+        const resposta = await fetch(`${API_BASE}/usuarios/${idUsuario}?idSolicitante=${idUsuario}`);
 
         if (resposta.status === 404) {
             logout();
@@ -606,7 +606,7 @@ async function salvarEdicao() {
     }
 
     try {
-        const resposta = await fetch(`${API_BASE}/usuarios/${idUsuario}`, {
+        const resposta = await fetch(`${API_BASE}/usuarios/${idUsuario}?idSolicitante=${idUsuario}`, {
             method: "PUT",
             body: formData
         });

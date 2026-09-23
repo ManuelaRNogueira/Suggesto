@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'formatacao.dart';
+import 'sessao.dart';
 
 // Camada de acesso à API — porte do que já existe em
 // "Suggesto - Web/Web/js/config.js" e nas outras plataformas (Suggesto_DesktopReact/renderer/src/api/admin.js).
@@ -368,9 +369,10 @@ Future<void> excluirAvaliacao(int id, int idUsuario) {
 // Dados da tela de Perfil: informações básicas do usuário, conquistas
 // (badges) e a edição do perfil (nome, telefone, cidade, foto).
 
-// Dados do usuário pra tela de Perfil.
+// Dados do usuário pra tela de Perfil. idSolicitante = quem está logado: o
+// back-end só devolve e-mail/telefone quando ele bate com o id do perfil.
 Future<Map<String, dynamic>> buscarUsuario(int id) {
-  return _mapa('GET', '/usuarios/$id');
+  return _mapa('GET', '/usuarios/$id?idSolicitante=${Sessao.idUsuario}');
 }
 
 // Conquistas (badges) que o usuário já desbloqueou.
@@ -390,7 +392,7 @@ Future<Map<String, dynamic>> atualizarUsuario(
 }) async {
   final requisicao = http.MultipartRequest(
     'PUT',
-    Uri.parse('$apiBase/usuarios/$id'),
+    Uri.parse('$apiBase/usuarios/$id?idSolicitante=${Sessao.idUsuario}'),
   );
   if (nome != null) requisicao.fields['nome'] = nome;
   if (telefone != null) requisicao.fields['telefone'] = telefone;
