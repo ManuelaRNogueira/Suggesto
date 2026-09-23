@@ -1,5 +1,8 @@
 package com.suggesto.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -32,8 +35,17 @@ public class Estabelecimento {
     @Column(name = "id_gerente", nullable = false)
     private long idGerente;
 
+    // É a chave da equipe: serve pra entrar nela e pra confirmar edição e
+    // remoção de administradores. Por isso não sai no JSON por padrão (o
+    // estabelecimento vai embutido em avaliação, recompensa, local salvo...);
+    // o controller chama revelarCodigoAcesso() quando quem pede é o dono.
+    @JsonIgnore
     @Column(name = "codigo_acesso", unique = true, length = 12)
     private String codigoAcesso;
+
+    @JsonIgnore
+    @Transient
+    private boolean codigoAcessoRevelado;
 
     @Column(name = "cep", nullable = false, length = 9)
     private String cep;
@@ -87,6 +99,16 @@ public class Estabelecimento {
 
     @Transient
     private Long totalAvaliacoes;
+
+    public void revelarCodigoAcesso() {
+        this.codigoAcessoRevelado = true;
+    }
+
+    @JsonProperty("codigoAcesso")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public String codigoAcessoParaJson() {
+        return codigoAcessoRevelado ? codigoAcesso : null;
+    }
 
     
     public String getFotoPath() {

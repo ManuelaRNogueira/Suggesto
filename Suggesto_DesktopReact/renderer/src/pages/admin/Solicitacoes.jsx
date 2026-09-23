@@ -32,7 +32,7 @@ export default function Solicitacoes() {
 
     let vivo = true;
     Promise.all([
-      fetch(`${API_BASE}/estabelecimentos/gerente/${gerente}`).then((r) => r.json()),
+      fetch(`${API_BASE}/estabelecimentos/gerente/${gerente}?idSolicitante=${gerente}`).then((r) => r.json()),
       buscarSolicitacoes(),
     ])
       .then(([estabs, pedidos]) => {

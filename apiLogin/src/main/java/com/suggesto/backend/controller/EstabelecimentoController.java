@@ -161,6 +161,8 @@ public class EstabelecimentoController {
                 }
             });
 
+            // Quem acabou de criar é o dono: precisa ver o código pra convidar a equipe.
+            salvo.revelarCodigoAcesso();
             return ResponseEntity.ok(salvo);
 
         } catch (IllegalStateException e) {
@@ -366,11 +368,17 @@ public class EstabelecimentoController {
     }
 
     // Os estabelecimentos que essa pessoa possui (é a administradora
-    // principal), não os que ela só ajuda a gerenciar como equipe.
+    // principal), não os que ela só ajuda a gerenciar como equipe. O código
+    // de acesso só vem quando quem pede (idSolicitante) é esse mesmo gerente.
     @GetMapping("/gerente/{id}")
-    public ResponseEntity<?> buscarPorGerente(@PathVariable Long id) {
+    public ResponseEntity<?> buscarPorGerente(
+            @PathVariable Long id,
+            @RequestParam(value = "idSolicitante", required = false) Long idSolicitante) {
         try {
             List<Estabelecimento> lista = repository.buscarPorGerenteAtivos(id);
+            if (id.equals(idSolicitante)) {
+                lista.forEach(Estabelecimento::revelarCodigoAcesso);
+            }
             return ResponseEntity.ok(lista);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Erro ao buscar estabelecimento: " + e.getMessage());

@@ -188,9 +188,13 @@ public class AdminService {
                     item.put("cidade", e.getCidade());
                     item.put("categoria", e.getCategoria());
                     item.put("ativo", e.getAtivo());
-                    item.put("codigoAcesso", e.getCodigoAcesso());
+                    boolean souDono = idUsuario != null && e.getIdGerente() == idUsuario;
+                    // Código de acesso só pro dono — funcionário não convida ninguém.
+                    if (souDono) {
+                        item.put("codigoAcesso", e.getCodigoAcesso());
+                    }
                     item.put("idGerente", e.getIdGerente());
-                    item.put("souDono", idUsuario != null && e.getIdGerente() == idUsuario);
+                    item.put("souDono", souDono);
                     item.put("totalSugestoes", avaliacaoRepository.countByEstabelecimentoIdEstabelecimento(e.getIdEstabelecimento()));
                     return item;
                 })
