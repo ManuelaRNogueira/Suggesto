@@ -45,7 +45,7 @@ public class ConquistaService {
         long aprovadas = avaliacaoRepository.contarAprovadasPorUsuario(idUsuario);
         long salvos = localSalvoRepository.countByUsuarioId(idUsuario);
         long resgates = resgateRepository.countByUsuario_Id(idUsuario);
-        int pontos = usuario.getPontos();
+        int pontos = usuario.getPontosAcumulados(); // selos de nível seguem o acumulado, não o saldo
 
         List<Map<String, Object>> conquistas = new ArrayList<>();
 

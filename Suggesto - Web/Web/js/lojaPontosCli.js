@@ -2,6 +2,9 @@ const API_BASE = window.API_BASE;
 const PLACEHOLDER_ESTABELECIMENTO = "imagens/placeholder-local.png";
 
 let saldoAtual = 0;
+// O nível vem do que a pessoa já ganhou na vida, não do saldo — resgatar
+// gasta saldo mas não derruba de nível.
+let pontosAcumulados = 0;
 let resgateAtual = { id: null, nome: "", custo: 0 };
 let recompensasCache = [];
 
@@ -63,6 +66,7 @@ async function carregarDadosUsuario() {
 
     const usuario = await resposta.json();
     saldoAtual = Number(usuario.pontos) || 0;
+    pontosAcumulados = Number(usuario.pontosAcumulados ?? usuario.pontos) || 0;
 
     if (usuario.nome) {
       localStorage.setItem("nomeUsuario", usuario.nome);
@@ -119,7 +123,7 @@ function resolverUrlFotoUsuario(fotoUrl) {
 }
 
 function atualizarPainelSaldo(pontos) {
-  const prog = calcularProgressoNivel(pontos);
+  const prog = calcularProgressoNivel(pontosAcumulados);
   aplicarTemaNivel(prog.atual.id);
 
   const elSaldo = document.getElementById("saldoPontos");

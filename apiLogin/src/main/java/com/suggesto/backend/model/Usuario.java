@@ -65,6 +65,12 @@ public class Usuario {
     @Column(name = "pontos", nullable = false)
     private Integer pontos = 0;
 
+    // Tudo que a pessoa já ganhou na vida, sem descontar resgates. É o que
+    // define o nível: gastar pontos na loja não pode rebaixar ninguém.
+    // Nulo só em contas antigas até o MigracaoPontosAcumulados preencher.
+    @Column(name = "pontos_acumulados")
+    private Integer pontosAcumulados = 0;
+
     @ManyToOne
     @JoinColumn(name = "plano_id")
     private Plano plano;
@@ -193,15 +199,23 @@ public class Usuario {
         this.pontos = pontos != null ? Math.max(0, pontos) : 0;
     }
 
-    // Derivados dos pontos — não persistidos, mas serializados no JSON para o
-    // front não precisar recalcular a régua de níveis em cada tela.
+    public Integer getPontosAcumulados() {
+        return pontosAcumulados != null ? pontosAcumulados : getPontos();
+    }
+
+    public void setPontosAcumulados(Integer pontosAcumulados) {
+        this.pontosAcumulados = pontosAcumulados;
+    }
+
+    // Derivados dos pontos acumulados — não persistidos, mas serializados no
+    // JSON para o front não precisar recalcular a régua de níveis em cada tela.
     @Transient
     public String getNivel() {
-        return NivelUtil.idNivel(getPontos());
+        return NivelUtil.idNivel(getPontosAcumulados());
     }
 
     @Transient
     public String getNivelNome() {
-        return NivelUtil.nomeNivel(getPontos());
+        return NivelUtil.nomeNivel(getPontosAcumulados());
     }
 }

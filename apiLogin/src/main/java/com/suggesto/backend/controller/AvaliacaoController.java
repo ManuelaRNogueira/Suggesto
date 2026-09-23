@@ -59,7 +59,7 @@ public class AvaliacaoController {
         try {
             List<Avaliacao> destaques = avaliacaoRepository.findAllByOrderByDataAvaliacaoDesc().stream()
                     .filter(a -> a.getUsuario() != null
-                            && NivelUtil.prioridade(a.getUsuario().getPontos()) >= 3)
+                            && NivelUtil.prioridade(a.getUsuario().getPontosAcumulados()) >= 3)
                     .limit(6)
                     .collect(Collectors.toList());
             return ResponseEntity.ok(destaques);

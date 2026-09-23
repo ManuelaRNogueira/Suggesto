@@ -255,6 +255,8 @@ function preencherPerfil(usuario) {
     const totalSalvos = Number(usuario.totalLocaisSalvos) || 0;
     const totalSugestoes = Number(usuario.totalSugestoes) || 0;
     const pontos = Number(usuario.pontos) || 0;
+    // Nível sai do acumulado: gastar pontos na loja não rebaixa ninguém.
+    const pontosAcumulados = Number(usuario.pontosAcumulados ?? usuario.pontos) || 0;
 
     setTexto("sidebarNome", nome);
     definirAvatarElemento("sidebarAvatar", fotoUrl, iniciais);
@@ -266,7 +268,7 @@ function preencherPerfil(usuario) {
     const heroPlanoWrap = document.getElementById("heroPlanoWrap");
     const heroPlanoNome = document.getElementById("heroPlanoNome");
     const heroBadge = document.getElementById("heroPlano");
-    const nivelAtual = calcularNivel(pontos).atual;
+    const nivelAtual = calcularNivel(pontosAcumulados).atual;
     if (heroPlanoWrap && heroPlanoNome) {
         heroPlanoNome.textContent = nivelAtual.nome;
         if (heroBadge) heroBadge.className = `nivel-badge ${classeNivel(nivelAtual.id)}`;
@@ -283,7 +285,7 @@ function preencherPerfil(usuario) {
     setTexto("statSugestoes", totalSugestoes);
     setTexto("statPontos", formatarPontos(pontos));
 
-    aplicarNivelPerfil(pontos);
+    aplicarNivelPerfil(pontosAcumulados);
 }
 
 async function carregarAtividadeRecente(idUsuario) {

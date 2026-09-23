@@ -286,7 +286,7 @@ public class AdminService {
         item.put("autor", a.getUsuario() != null ? a.getUsuario().getNome() : null);
         item.put("autorId", a.getUsuario() != null ? a.getUsuario().getId() : null);
         // Nível do autor: define a prioridade de resposta e o selo mostrado na fila.
-        Integer pontosAutor = a.getUsuario() != null ? a.getUsuario().getPontos() : 0;
+        Integer pontosAutor = a.getUsuario() != null ? a.getUsuario().getPontosAcumulados() : 0;
         item.put("nivelAutor", NivelUtil.idNivel(pontosAutor));
         item.put("nivelAutorNome", NivelUtil.nomeNivel(pontosAutor));
         item.put("prioridade", NivelUtil.prioridade(pontosAutor));

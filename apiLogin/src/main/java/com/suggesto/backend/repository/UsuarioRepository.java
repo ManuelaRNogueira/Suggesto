@@ -26,8 +26,12 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     // Soma pontos na conta do usuário direto no banco (ex: um bônus ou um
     // ajuste), sem precisar carregar o usuário inteiro pra depois salvar de novo.
+    // Sobe o saldo e o acumulado juntos; o debitarPontos abaixo só mexe no saldo.
+    // O acumulado vem primeiro no SET: o MySQL aplica da esquerda pra direita, e
+    // o COALESCE precisa ler o saldo de antes do crédito.
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("UPDATE Usuario u SET u.pontos = u.pontos + :valor WHERE u.id = :id")
+    @Query("UPDATE Usuario u SET u.pontosAcumulados = COALESCE(u.pontosAcumulados, u.pontos) + :valor, "
+            + "u.pontos = u.pontos + :valor WHERE u.id = :id")
     int creditarPontos(@Param("id") Long id, @Param("valor") int valor);
 
     // Isso funciona como um caixa de banco: só deixa sacar (descontar pontos)
