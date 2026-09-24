@@ -258,6 +258,14 @@ function renderizarLista(sugestoes) {
 
                     <p class="card-texto">${escapeHtml(sugestao.comentario)}</p>
 
+                    ${sugestao.motivoRecusa ? `
+                    <div class="card-resposta">
+                        <span class="card-resposta-rotulo">
+                            <i class="fas fa-ban"></i> Motivo da recusa
+                        </span>
+                        <p class="card-resposta-texto">${escapeHtml(sugestao.motivoRecusa)}</p>
+                    </div>` : ""}
+
                     ${sugestao.resposta ? `
                     <div class="card-resposta">
                         <span class="card-resposta-rotulo">

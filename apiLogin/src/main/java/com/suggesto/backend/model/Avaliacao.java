@@ -49,6 +49,33 @@ public class Avaliacao {
     @JoinColumn(name = "id_estabelecimento")
     private Estabelecimento estabelecimento;
 
+    // Recusar exige um motivo, que fica público junto da sugestão (o cliente e
+    // quem visita a página veem por que foi recusada). Volta a nulo se a
+    // sugestão for reaberta.
+    @Column(name = "motivo_recusa", columnDefinition = "TEXT")
+    private String motivoRecusa;
+
+    // Quando o status mudou pela última vez (implementada, recusada ou
+    // reaberta). Serve pra medir em quanto tempo o estabelecimento reage.
+    @Column(name = "data_decisao")
+    private LocalDateTime dataDecisao;
+
+    public String getMotivoRecusa() {
+        return motivoRecusa;
+    }
+
+    public void setMotivoRecusa(String motivoRecusa) {
+        this.motivoRecusa = motivoRecusa;
+    }
+
+    public LocalDateTime getDataDecisao() {
+        return dataDecisao;
+    }
+
+    public void setDataDecisao(LocalDateTime dataDecisao) {
+        this.dataDecisao = dataDecisao;
+    }
+
     public Estabelecimento getEstabelecimento() {
         return estabelecimento;
     }

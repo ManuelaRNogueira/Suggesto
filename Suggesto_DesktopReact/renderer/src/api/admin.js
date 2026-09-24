@@ -187,12 +187,12 @@ export function recusarSolicitacao(id) {
 
 // ── Sugestões ────────────────────────────────────────────────────────────
 // Muda o status de uma sugestão recebida, ou grava a resposta que o admin
-// escreveu pra ela.
-export function atualizarStatusSugestao(id, status) {
+// escreveu pra ela. Recusar exige motivo (mínimo 10 caracteres, a API confere).
+export function atualizarStatusSugestao(id, status, motivo) {
   return fetchJson(`${API_BASE}/avaliacoes/${id}/status`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status, idAdmin: idGerente() }),
+    body: JSON.stringify({ status, idAdmin: idGerente(), motivo }),
   });
 }
 

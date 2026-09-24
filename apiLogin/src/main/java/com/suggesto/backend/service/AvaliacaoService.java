@@ -30,6 +30,7 @@ public class AvaliacaoService {
             "aceita", "aceito", "resolvida", "resolvido", "implementado", "implementada"
     );
     private static final Set<String> STATUS_RECUSADOS = Set.of("recusada", "recusado");
+    private static final int MIN_MOTIVO_RECUSA = 10;
 
     @Autowired
     private AvaliacaoRepository avaliacaoRepository;
@@ -82,20 +83,49 @@ public class AvaliacaoService {
         avaliacaoRepository.save(avaliacao);
     }
 
-    // Muda o status da sugestão (pendente → aceita/recusada) e, se essa
-    // mudança for a primeira vez que ela vira "aceita", credita os pontos pro autor.
-    // Só a equipe do próprio estabelecimento pode mudar, igual ao responder().
+    // Muda o status da sugestão. Só a equipe do próprio estabelecimento pode
+    // mudar, igual ao responder(), e só por estes caminhos:
+    //   pendente → aceita (credita os pontos do autor; é final)
+    //   pendente → recusada (exige motivo, que fica público)
+    //   recusada → pendente (reabre e apaga o motivo)
+    // Qualquer mudança aceita grava a data de decisão.
     @Transactional
-    public Avaliacao atualizarStatus(Long idAvaliacao, String novoStatus, Long idAdmin) {
+    public Avaliacao atualizarStatus(Long idAvaliacao, String novoStatus, Long idAdmin, String motivo) {
         Avaliacao avaliacao = avaliacaoRepository.findById(idAvaliacao)
                 .orElseThrow(() -> new RuntimeException("Sugestão não encontrada."));
         exigirEquipeDoEstabelecimento(avaliacao, idAdmin);
 
-        String statusAnterior = avaliacao.getStatus();
         String statusNormalizado = normalizarStatus(novoStatus);
-        avaliacao.setStatus(statusNormalizado);
+        boolean vaiAceitar = isStatusAceito(statusNormalizado);
+        boolean vaiRecusar = isStatusRecusado(statusNormalizado);
+        boolean vaiReabrir = "PENDENTE".equals(statusNormalizado);
+        if (!vaiAceitar && !vaiRecusar && !vaiReabrir) {
+            throw new IllegalArgumentException("Status inválido: " + novoStatus + ".");
+        }
 
-        if (deveCreditarPontos(statusAnterior, statusNormalizado)) {
+        String anterior = avaliacao.getStatus();
+        boolean permitido = isStatusPendente(anterior) ? !vaiReabrir : isStatusRecusado(anterior) && vaiReabrir;
+        if (!permitido) {
+            throw new IllegalStateException(isStatusAceito(anterior)
+                    ? "Sugestão já aceita não muda mais de status."
+                    : "Não dá pra mudar essa sugestão de \"" + anterior + "\" para \"" + novoStatus + "\".");
+        }
+
+        if (vaiRecusar) {
+            String motivoLimpo = motivo == null ? "" : motivo.trim();
+            if (motivoLimpo.length() < MIN_MOTIVO_RECUSA) {
+                throw new IllegalArgumentException(
+                        "Explique o motivo da recusa (pelo menos " + MIN_MOTIVO_RECUSA + " caracteres).");
+            }
+            avaliacao.setMotivoRecusa(motivoLimpo);
+        } else {
+            avaliacao.setMotivoRecusa(null);
+        }
+
+        avaliacao.setStatus(statusNormalizado);
+        avaliacao.setDataDecisao(LocalDateTime.now());
+
+        if (vaiAceitar) {
             Usuario autor = avaliacao.getUsuario();
             if (autor != null && autor.getId() != null) {
                 usuarioRepository.creditarPontos(autor.getId(), PONTOS_SUGESTAO_ACEITA);
@@ -190,16 +220,6 @@ public class AvaliacaoService {
             throw new IllegalArgumentException("Status inválido.");
         }
         return status.trim().toUpperCase(Locale.ROOT);
-    }
-
-    // Os pontos só são creditados no momento exato em que a sugestão passa de
-    // "pendente" pra "aceita" — é um carimbo que só é dado uma vez. Editar a
-    // sugestão depois não credita pontos de novo.
-    private boolean deveCreditarPontos(String statusAnterior, String statusNovo) {
-        if (!isStatusAceito(statusNovo)) {
-            return false;
-        }
-        return !isStatusAceito(statusAnterior);
     }
 
     private boolean isStatusAceito(String status) {

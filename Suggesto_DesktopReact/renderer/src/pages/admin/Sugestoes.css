@@ -223,6 +223,20 @@
   border-top: 1px solid var(--borda);
 }
 
+/* Motivo da recusa: mesmo desenho da resposta, é texto público também. */
+.sug-motivo {
+  margin-top: 13px;
+  padding-top: 13px;
+  border-top: 1px solid var(--borda);
+}
+
+.sug-motivo-contador {
+  margin-right: auto;
+  align-self: center;
+  font-size: .72rem;
+  opacity: .7;
+}
+
 .sug-resposta-topo {
   display: flex;
   align-items: center;

@@ -55,6 +55,9 @@ function DetalhesEstabelecimento() {
   const [respondendoId, setRespondendoId] = useState(null);
   const [textoResposta, setTextoResposta] = useState('');
   const [enviandoResposta, setEnviandoResposta] = useState(false);
+  // Recusar pede motivo (mínimo 10 caracteres, mesma regra da API).
+  const [recusandoId, setRecusandoId] = useState(null);
+  const [motivoRecusa, setMotivoRecusa] = useState('');
 
   const meuId = localStorage.getItem('idUsuario');
   const souPrincipal = !!estab && String(meuId) === String(estab.idGerente);
@@ -93,6 +96,7 @@ function DetalhesEstabelecimento() {
                   resposta: av.resposta || null,
                   respondidoPor: av.respondidoPor || null,
                   dataResposta: av.dataResposta || null,
+                  motivoRecusa: av.motivoRecusa || null,
                   data: av.dataAvaliacao
                     ? av.dataAvaliacao.split('T')[0]
                     : new Date().toISOString().split('T')[0]
@@ -118,12 +122,12 @@ function DetalhesEstabelecimento() {
     buscarDados();
   }, [id]);
 
-  const atualizarStatus = async (idAvaliacao, status) => {
+  const atualizarStatus = async (idAvaliacao, status, motivo) => {
     try {
       const r = await fetch(`${API_BASE}/avaliacoes/${idAvaliacao}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, idAdmin: meuId }),
+        body: JSON.stringify({ status, idAdmin: meuId, motivo }),
       });
       if (!r.ok) {
         const err = await r.json();
@@ -131,9 +135,12 @@ function DetalhesEstabelecimento() {
       }
       setSugestoes((prev) =>
         prev.map((s) =>
-          s.id === idAvaliacao ? { ...s, status: status.toLowerCase() } : s
+          s.id === idAvaliacao
+            ? { ...s, status: status.toLowerCase(), motivoRecusa: motivo ? motivo.trim() : null }
+            : s
         )
       );
+      setRecusandoId(null);
     } catch (e) {
       console.error(e);
       avisar(e.message || 'Não foi possível atualizar a sugestão.');
@@ -403,6 +410,42 @@ function DetalhesEstabelecimento() {
                   <span className="card-status-tag">{s.status}</span>
                 </div>
 
+                {s.motivoRecusa && (
+                  <div className="card-resposta">
+                    <div className="card-resposta-topo">
+                      <span className="card-resposta-rotulo">Motivo da recusa</span>
+                    </div>
+                    <p className="card-resposta-texto">{s.motivoRecusa}</p>
+                  </div>
+                )}
+
+                {recusandoId === s.id && (
+                  <div className="card-resposta-form">
+                    <textarea
+                      className="card-resposta-campo"
+                      placeholder="Por que esta sugestão foi recusada? O cliente e quem visita a página vão ver."
+                      value={motivoRecusa}
+                      onChange={(e) => setMotivoRecusa(e.target.value)}
+                      rows={3}
+                      autoFocus
+                    />
+                    <div className="card-resposta-acoes">
+                      <button type="button" className="btn-responder" onClick={() => setRecusandoId(null)}>
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-recusar"
+                        onClick={() => atualizarStatus(s.id, 'RECUSADA', motivoRecusa)}
+                        disabled={motivoRecusa.trim().length < 10}
+                        title={motivoRecusa.trim().length < 10 ? 'Mínimo de 10 caracteres' : undefined}
+                      >
+                        Recusar sugestão
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {s.resposta && respondendoId !== s.id && (
                   <div className="card-resposta">
                     <div className="card-resposta-topo">
@@ -466,7 +509,7 @@ function DetalhesEstabelecimento() {
                       Responder
                     </button>
                   )}
-                  {!statusAceito(s.status) && s.status !== 'recusada' && s.status !== 'recusado' && (
+                  {!statusAceito(s.status) && s.status !== 'recusada' && s.status !== 'recusado' && recusandoId !== s.id && (
                     <>
                       <button
                         type="button"
@@ -478,7 +521,7 @@ function DetalhesEstabelecimento() {
                       <button
                         type="button"
                         className="btn-recusar"
-                        onClick={() => atualizarStatus(s.id, 'RECUSADA')}
+                        onClick={() => { setRecusandoId(s.id); setMotivoRecusa(''); }}
                       >
                         Recusar
                       </button>

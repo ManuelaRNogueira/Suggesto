@@ -40,6 +40,14 @@ class AvaliacaoServiceTest {
     @InjectMocks
     private AvaliacaoService avaliacaoService;
 
+    private static final String MOTIVO = "Já temos esse prato no cardápio de almoço.";
+
+    private Avaliacao sugestao(String status) {
+        Avaliacao a = sugestaoPendente();
+        a.setStatus(status);
+        return a;
+    }
+
     private Avaliacao sugestaoPendente() {
         Estabelecimento estab = new Estabelecimento();
         estab.setIdEstabelecimento(ID_ESTAB);
@@ -59,20 +67,20 @@ class AvaliacaoServiceTest {
     @Test
     void gerenteMudaStatus() {
         sugestaoPendente();
-        assertThat(avaliacaoService.atualizarStatus(1L, "recusado", ID_GERENTE).getStatus()).isEqualTo("RECUSADO");
+        assertThat(avaliacaoService.atualizarStatus(1L, "recusado", ID_GERENTE, MOTIVO).getStatus()).isEqualTo("RECUSADO");
     }
 
     @Test
     void membroDaEquipeMudaStatus() {
         sugestaoPendente();
         when(membroEquipeRepository.existsByUsuario_IdAndEstabelecimento_IdEstabelecimento(20L, ID_ESTAB)).thenReturn(true);
-        assertThat(avaliacaoService.atualizarStatus(1L, "recusado", 20L).getStatus()).isEqualTo("RECUSADO");
+        assertThat(avaliacaoService.atualizarStatus(1L, "recusado", 20L, MOTIVO).getStatus()).isEqualTo("RECUSADO");
     }
 
     @Test
     void quemNaoEDaEquipeNaoMudaStatusNemCreditaPontos() {
         sugestaoPendente();
-        assertThatThrownBy(() -> avaliacaoService.atualizarStatus(1L, "implementado", 99L))
+        assertThatThrownBy(() -> avaliacaoService.atualizarStatus(1L, "implementado", 99L, null))
                 .isInstanceOf(SecurityException.class);
         verify(avaliacaoRepository, never()).save(any());
         verify(usuarioRepository, never()).creditarPontos(anyLong(), anyInt());
@@ -81,8 +89,97 @@ class AvaliacaoServiceTest {
     @Test
     void semIdAdminNaoMudaStatus() {
         sugestaoPendente();
-        assertThatThrownBy(() -> avaliacaoService.atualizarStatus(1L, "recusado", null))
+        assertThatThrownBy(() -> avaliacaoService.atualizarStatus(1L, "recusado", null, MOTIVO))
                 .isInstanceOf(SecurityException.class);
         verify(avaliacaoRepository, never()).save(any());
+    }
+
+    // ── Recusa com motivo ─────────────────────────────────────────────────
+
+    @Test
+    void recusarSemMotivoNaoMudaNada() {
+        Avaliacao a = sugestaoPendente();
+        assertThatThrownBy(() -> avaliacaoService.atualizarStatus(1L, "recusado", ID_GERENTE, null))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThat(a.getStatus()).isEqualTo("pendente");
+        verify(avaliacaoRepository, never()).save(any());
+    }
+
+    @Test
+    void recusarComMotivoCurtoNaoMudaNada() {
+        Avaliacao a = sugestaoPendente();
+        // 9 caracteres depois de tirar os espaços das pontas
+        assertThatThrownBy(() -> avaliacaoService.atualizarStatus(1L, "recusado", ID_GERENTE, "   não dá.   "))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThat(a.getStatus()).isEqualTo("pendente");
+        verify(avaliacaoRepository, never()).save(any());
+    }
+
+    @Test
+    void recusarComMotivoGravaMotivoSemEspacosEDataDeDecisao() {
+        sugestaoPendente();
+        Avaliacao r = avaliacaoService.atualizarStatus(1L, "recusado", ID_GERENTE, "  " + MOTIVO + "  ");
+        assertThat(r.getStatus()).isEqualTo("RECUSADO");
+        assertThat(r.getMotivoRecusa()).isEqualTo(MOTIVO);
+        assertThat(r.getDataDecisao()).isNotNull();
+    }
+
+    @Test
+    void implementarGravaDataDeDecisaoECreditaPontos() {
+        sugestaoPendente();
+        Avaliacao r = avaliacaoService.atualizarStatus(1L, "implementado", ID_GERENTE, null);
+        assertThat(r.getStatus()).isEqualTo("IMPLEMENTADO");
+        assertThat(r.getDataDecisao()).isNotNull();
+        verify(usuarioRepository).creditarPontos(50L, 500);
+    }
+
+    @Test
+    void reabrirRecusadaApagaMotivoEGravaDataDeDecisao() {
+        Avaliacao a = sugestao("RECUSADO");
+        a.setMotivoRecusa(MOTIVO);
+        Avaliacao r = avaliacaoService.atualizarStatus(1L, "pendente", ID_GERENTE, null);
+        assertThat(r.getStatus()).isEqualTo("PENDENTE");
+        assertThat(r.getMotivoRecusa()).isNull();
+        assertThat(r.getDataDecisao()).isNotNull();
+    }
+
+    @Test
+    void implementadoEFinal() {
+        sugestao("IMPLEMENTADO");
+        assertThatThrownBy(() -> avaliacaoService.atualizarStatus(1L, "recusado", ID_GERENTE, MOTIVO))
+                .isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> avaliacaoService.atualizarStatus(1L, "pendente", ID_GERENTE, null))
+                .isInstanceOf(IllegalStateException.class);
+        verify(avaliacaoRepository, never()).save(any());
+    }
+
+    @Test
+    void recusadaNaoVaiDiretoParaImplementado() {
+        sugestao("RECUSADO");
+        assertThatThrownBy(() -> avaliacaoService.atualizarStatus(1L, "implementado", ID_GERENTE, null))
+                .isInstanceOf(IllegalStateException.class);
+        verify(usuarioRepository, never()).creditarPontos(anyLong(), anyInt());
+    }
+
+    @Test
+    void pendenteNaoVaiParaPendente() {
+        sugestaoPendente();
+        assertThatThrownBy(() -> avaliacaoService.atualizarStatus(1L, "pendente", ID_GERENTE, null))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void statusDesconhecidoERecusado() {
+        sugestaoPendente();
+        assertThatThrownBy(() -> avaliacaoService.atualizarStatus(1L, "respondida", ID_GERENTE, null))
+                .isInstanceOf(IllegalArgumentException.class);
+        verify(avaliacaoRepository, never()).save(any());
+    }
+
+    // Os valores antigos gravados no banco ("aceita", "recusada"...) continuam valendo.
+    @Test
+    void statusAntigoRecusadaPodeSerReaberto() {
+        sugestao("recusada");
+        assertThat(avaliacaoService.atualizarStatus(1L, "pendente", ID_GERENTE, null).getStatus()).isEqualTo("PENDENTE");
     }
 }

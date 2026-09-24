@@ -16,6 +16,8 @@ import {
 import "./Sugestoes.css";
 
 const POR_PAGINA = 12;
+// Espelha a regra da API (AvaliacaoService): recusar exige esse mínimo.
+const MIN_MOTIVO_RECUSA = 10;
 
 // Transições oferecidas em cada estado. Estado final não oferece ação.
 const ACOES = {
@@ -142,24 +144,33 @@ export default function Sugestoes() {
     paginaAtual * POR_PAGINA,
   );
 
-  const mudarStatus = async (sugestao, novo) => {
-    const anterior = { status: sugestao.status, statusUi: sugestao.statusUi };
+  // Devolve true se deu certo, pro cartão saber se fecha o campo de motivo.
+  const mudarStatus = async (sugestao, novo, motivo) => {
+    const anterior = {
+      status: sugestao.status,
+      statusUi: sugestao.statusUi,
+      motivoRecusa: sugestao.motivoRecusa,
+    };
     setSalvando(sugestao.id);
     // atualização otimista — a lista responde na hora
     setSugestoes((prev) =>
       prev.map((s) =>
-        s.id === sugestao.id ? { ...s, status: novo, statusUi: novo } : s,
+        s.id === sugestao.id
+          ? { ...s, status: novo, statusUi: novo, motivoRecusa: novo === "recusado" ? motivo.trim() : null }
+          : s,
       ),
     );
     try {
-      await atualizarStatusSugestao(sugestao.id, novo);
+      await atualizarStatusSugestao(sugestao.id, novo, motivo);
       setAviso({ tipo: "ok", texto: `Marcada como "${labelStatus(novo)}".` });
+      return true;
     } catch (e) {
       // desfaz se a API recusar
       setSugestoes((prev) =>
         prev.map((s) => (s.id === sugestao.id ? { ...s, ...anterior } : s)),
       );
       setAviso({ tipo: "erro", texto: `Não foi possível atualizar: ${e.message}` });
+      return false;
     } finally {
       setSalvando(null);
     }
@@ -457,6 +468,24 @@ function Cartao({
   mostrarEstabelecimento,
 }) {
   const acoes = ACOES[sugestao.statusUi] || [];
+  // Recusar abre um campo de motivo no próprio cartão: o motivo é obrigatório
+  // e aparece pro cliente e na página pública do estabelecimento.
+  const [recusando, setRecusando] = useState(false);
+  const [motivo, setMotivo] = useState("");
+  const motivoValido = motivo.trim().length >= MIN_MOTIVO_RECUSA;
+
+  const clicarAcao = (destino) => {
+    if (destino === "recusado") {
+      setRecusando(true);
+      setMotivo("");
+    } else {
+      onMudar(sugestao, destino);
+    }
+  };
+
+  const confirmarRecusa = async () => {
+    if (await onMudar(sugestao, "recusado", motivo)) setRecusando(false);
+  };
 
   return (
     <li className={`sug-card st-${sugestao.statusUi}`}>
@@ -553,7 +582,48 @@ function Cartao({
         </div>
       )}
 
-      {(acoes.length > 0 || (!sugestao.resposta && !respondendo)) && (
+      {sugestao.statusUi === "recusado" && sugestao.motivoRecusa && (
+        <div className="sug-motivo">
+          <span className="sug-resposta-rotulo">Motivo da recusa</span>
+          <p className="sug-resposta-texto">{sugestao.motivoRecusa}</p>
+        </div>
+      )}
+
+      {recusando && (
+        <div className="sug-resposta-form">
+          <textarea
+            className="sug-resposta-campo"
+            placeholder="Por que esta sugestão foi recusada? O cliente e quem visita a página vão ver."
+            value={motivo}
+            onChange={(e) => setMotivo(e.target.value)}
+            rows={3}
+            autoFocus
+          />
+          <div className="sug-resposta-acoes">
+            <span className="sug-motivo-contador">
+              {motivoValido ? "" : `Mínimo de ${MIN_MOTIVO_RECUSA} caracteres`}
+            </span>
+            <button
+              type="button"
+              className="adm-btn"
+              onClick={() => setRecusando(false)}
+              disabled={salvando}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="adm-btn adm-btn-cor st-recusado"
+              onClick={confirmarRecusa}
+              disabled={salvando || !motivoValido}
+            >
+              {salvando ? "Recusando…" : "Recusar sugestão"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!recusando && (acoes.length > 0 || (!sugestao.resposta && !respondendo)) && (
         <div className="sug-card-acoes">
           {!sugestao.resposta && !respondendo && (
             <button
@@ -571,7 +641,7 @@ function Cartao({
               type="button"
               className={`adm-btn adm-btn-cor st-${destino}`}
               disabled={salvando}
-              onClick={() => onMudar(sugestao, destino)}
+              onClick={() => clicarAcao(destino)}
             >
               <Icone
                 d={

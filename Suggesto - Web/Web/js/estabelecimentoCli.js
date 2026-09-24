@@ -327,6 +327,14 @@ function renderizarCardSugestao(a) {
 
       <p class="sug-texto">${escapeHtml(a.comentario || '')}</p>
 
+      ${a.motivoRecusa ? `
+        <div class="sug-resposta">
+          <span class="sug-resposta-rotulo">
+            <i class="fas fa-ban"></i> Motivo da recusa
+          </span>
+          <p class="sug-resposta-texto">${escapeHtml(a.motivoRecusa)}</p>
+        </div>` : ''}
+
       ${a.resposta ? `
         <div class="sug-resposta">
           <span class="sug-resposta-rotulo">
