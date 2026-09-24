@@ -58,6 +58,7 @@ function DetalhesEstabelecimento() {
   // Recusar pede motivo (mínimo 10 caracteres, mesma regra da API).
   const [recusandoId, setRecusandoId] = useState(null);
   const [motivoRecusa, setMotivoRecusa] = useState('');
+  const [enviandoRecusa, setEnviandoRecusa] = useState(false);
 
   const meuId = localStorage.getItem('idUsuario');
   const souPrincipal = !!estab && String(meuId) === String(estab.idGerente);
@@ -123,6 +124,7 @@ function DetalhesEstabelecimento() {
   }, [id]);
 
   const atualizarStatus = async (idAvaliacao, status, motivo) => {
+    if (motivo) setEnviandoRecusa(true);
     try {
       const r = await fetch(`${API_BASE}/avaliacoes/${idAvaliacao}/status`, {
         method: 'PATCH',
@@ -140,10 +142,14 @@ function DetalhesEstabelecimento() {
             : s
         )
       );
-      setRecusandoId(null);
+      // Só fecha o campo de motivo do próprio cartão — aceitar outro cartão
+      // não pode apagar um motivo que está sendo digitado.
+      setRecusandoId((atual) => (atual === idAvaliacao ? null : atual));
     } catch (e) {
       console.error(e);
       avisar(e.message || 'Não foi possível atualizar a sugestão.');
+    } finally {
+      if (motivo) setEnviandoRecusa(false);
     }
   };
 
@@ -437,10 +443,10 @@ function DetalhesEstabelecimento() {
                         type="button"
                         className="btn-recusar"
                         onClick={() => atualizarStatus(s.id, 'RECUSADA', motivoRecusa)}
-                        disabled={motivoRecusa.trim().length < 10}
+                        disabled={enviandoRecusa || motivoRecusa.trim().length < 10}
                         title={motivoRecusa.trim().length < 10 ? 'Mínimo de 10 caracteres' : undefined}
                       >
-                        Recusar sugestão
+                        {enviandoRecusa ? 'Recusando…' : 'Recusar sugestão'}
                       </button>
                     </div>
                   </div>
