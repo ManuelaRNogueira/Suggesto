@@ -4,11 +4,15 @@
 
 **Blocked by:** 04
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] A rota de check-in aceita coordenadas no lugar do token e confirma se a distância (Haversine) for de no máximo 200 m, com método LOCALIZACAO
-- [ ] Longe demais é recusado com mensagem que diz a distância aproximada
-- [ ] Estabelecimento sem coordenadas recusa o check-in por localização com mensagem específica
-- [ ] A página de avaliação do site oferece "Estou aqui" quando não veio token pela URL
-- [ ] Permissão de localização negada ou indisponível mostra uma mensagem sugerindo o QR
-- [ ] Testes cobrem dentro e fora do raio e estabelecimento sem coordenadas
+- [x] A rota de check-in aceita coordenadas no lugar do token e confirma se a distância (Haversine) for de no máximo 200 m, com método LOCALIZACAO
+- [x] Longe demais é recusado com mensagem que diz a distância aproximada
+- [x] Estabelecimento sem coordenadas recusa o check-in por localização com mensagem específica
+- [x] A página de avaliação do site oferece "Estou aqui" quando não veio token pela URL
+- [x] Permissão de localização negada ou indisponível mostra uma mensagem sugerindo o QR
+- [x] Testes cobrem dentro e fora do raio e estabelecimento sem coordenadas
+
+## Comments
+
+- Mesma rota do QR (`POST /api/estabelecimentos/{id}/checkin`): sem `token`, usa `lat`/`lng`. A distância na mensagem é arredondada de 10 em 10 m (ou em km com uma casa). Na página, o botão "Estou aqui" aparece sempre que não veio token pela URL, inclusive para quem chega pela busca. A posição é pedida sem cache e com alta precisão. Geolocalização só funciona em HTTPS (o Render é) ou em localhost.

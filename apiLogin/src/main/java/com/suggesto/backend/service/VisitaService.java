@@ -20,6 +20,8 @@ import java.time.LocalDateTime;
 public class VisitaService {
 
     public static final Duration JANELA = Duration.ofHours(24);
+    // Folga pro erro do geocoding (Nominatim) e do GPS do celular.
+    public static final double RAIO_CHECKIN_METROS = 200;
 
     @Autowired
     private VisitaRepository visitaRepository;
@@ -46,6 +48,43 @@ public class VisitaService {
         }
 
         return visitaAbertaOuNova(usuario, estab, Visita.QR);
+    }
+
+    // Check-in pela localização do aparelho, pra quem não tem o QR por perto.
+    // É o método mais fraco (dá pra falsificar o GPS), por isso fica gravado.
+    @Transactional
+    public Visita checkinPorLocalizacao(Long idUsuario, Long idEstabelecimento, Double lat, Double lng) {
+        Usuario usuario = buscarUsuario(idUsuario);
+        Estabelecimento estab = buscarEstabelecimento(idEstabelecimento);
+
+        if (lat == null || lng == null) {
+            throw new IllegalArgumentException("Não recebemos sua localização. Tente de novo ou use o QR do local.");
+        }
+        if (estab.getLat() == null || estab.getLng() == null) {
+            throw new IllegalArgumentException(
+                    "Este estabelecimento ainda não tem a localização cadastrada. Use o QR de check-in do local.");
+        }
+
+        double distancia = distanciaEmMetros(lat, lng, estab.getLat(), estab.getLng());
+        if (distancia > RAIO_CHECKIN_METROS) {
+            String aproximada = distancia < 1000
+                    ? Math.round(distancia / 10) * 10 + " m"
+                    : String.format(java.util.Locale.forLanguageTag("pt-BR"), "%.1f km", distancia / 1000);
+            throw new IllegalArgumentException("Você está a cerca de " + aproximada
+                    + " do estabelecimento. Pra confirmar a visita é preciso estar a até "
+                    + (int) RAIO_CHECKIN_METROS + " m, ou usar o QR do local.");
+        }
+
+        return visitaAbertaOuNova(usuario, estab, Visita.LOCALIZACAO);
+    }
+
+    // Haversine, a mesma conta do "perto de você" da web e do mobile.
+    static double distanciaEmMetros(double lat1, double lng1, double lat2, double lng2) {
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLng = Math.toRadians(lng2 - lng1);
+        double a = Math.pow(Math.sin(dLat / 2), 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) * Math.pow(Math.sin(dLng / 2), 2);
+        return 6371000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
     // Confere a visita que veio junto da avaliação. As mensagens dizem o que

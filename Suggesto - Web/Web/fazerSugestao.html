@@ -120,6 +120,14 @@ body {
 }
 .visita-aviso.erro { color: #fbbf24; }
 .visita-aviso[hidden] { display: none; }
+.btn-estou-aqui {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin: -8px 0 16px; padding: 6px 14px; border-radius: 999px;
+  background: rgba(74,222,128,.1); border: 1px solid rgba(74,222,128,.35);
+  color: #4ade80; font-size: .78rem; font-weight: 600; cursor: pointer;
+}
+.btn-estou-aqui:disabled { opacity: .6; cursor: wait; }
+.btn-estou-aqui[hidden] { display: none; }
 .hero-titulo {
   font-family: var(--font-head);
   font-size: clamp(1.8rem, 5vw, 2.6rem);
@@ -321,6 +329,7 @@ textarea:focus { border-color: var(--purple-glow); background: rgba(167,139,250,
       <span id="nome-estab">Estabelecimento</span>
     </div>
     <span id="visita-aviso" class="visita-aviso" hidden></span>
+    <button type="button" id="btn-estou-aqui" class="btn-estou-aqui" onclick="checkinPorLocalizacao()" hidden>📍 Estou aqui: confirmar visita</button>
     <h1 class="hero-titulo">
       Sua opinião<br>
       <em>importa aqui.</em>
@@ -491,9 +500,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // O QR da mesa traz só o id (e o token t); o nome vem da API logo abaixo.
     if (idEstabUrl) {
-        iniciarFormulario(idEstabUrl, nomeEstabUrl || '');
         const token = params.get('t');
-        if (token) fazerCheckin(idEstabUrl, token);
+        iniciarFormulario(idEstabUrl, nomeEstabUrl || '', !token);
+        if (token) fazerCheckin(idEstabUrl, { token });
     } else {
         mostrarTelaDePesquisa();
     }
@@ -517,25 +526,53 @@ async function entrarComoConvidadoSeNecessario() {
     }
 }
 
-// Registra a visita (prova de que a pessoa está no local) pelo token do QR.
+// Registra a visita (prova de que a pessoa está no local) pelo token do QR
+// ({ token }) ou pela localização ({ lat, lng }). Devolve se deu certo.
 // Se falhar, a avaliação ainda sai, só que sem o selo "Visita confirmada".
-async function fazerCheckin(idEstabelecimento, token) {
-    const aviso = document.getElementById('visita-aviso');
+async function fazerCheckin(idEstabelecimento, prova) {
     try {
         const r = await fetch(`${window.API_BASE}/estabelecimentos/${idEstabelecimento}/checkin`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idUsuario: parseInt(localStorage.getItem('idUsuario')) || null, token }),
+            body: JSON.stringify({ idUsuario: parseInt(localStorage.getItem('idUsuario')) || null, ...prova }),
         });
         const dados = await r.json().catch(() => null);
         if (!r.ok) throw new Error(dados?.message || 'Não foi possível confirmar sua visita.');
         estado.idVisita = dados.idVisita;
-        aviso.textContent = '✓ Visita confirmada';
-        aviso.classList.remove('erro');
+        mostrarAvisoVisita('✓ Visita confirmada', false);
+        return true;
     } catch (err) {
-        aviso.textContent = err.message || 'Não foi possível confirmar sua visita.';
-        aviso.classList.add('erro');
+        mostrarAvisoVisita(err.message || 'Não foi possível confirmar sua visita.', true);
+        return false;
     }
+}
+
+function mostrarAvisoVisita(texto, erro) {
+    const aviso = document.getElementById('visita-aviso');
+    aviso.textContent = texto;
+    aviso.classList.toggle('erro', erro);
     aviso.hidden = false;
+}
+
+// "Estou aqui": sem QR, confirma a visita pela posição do aparelho. Pede a
+// posição na hora (sem cache), porque ela é a prova de que a pessoa está lá.
+async function checkinPorLocalizacao() {
+    const btn = document.getElementById('btn-estou-aqui');
+    btn.disabled = true;
+    try {
+        const pos = await new Promise((resolve, reject) => {
+            if (!navigator.geolocation) return reject({ code: 0 });
+            navigator.geolocation.getCurrentPosition(resolve, reject,
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+        });
+        const ok = await fazerCheckin(estado.idEstabelecimento,
+            { lat: pos.coords.latitude, lng: pos.coords.longitude });
+        btn.hidden = ok;
+    } catch (err) {
+        mostrarAvisoVisita(err.code === 1
+            ? 'Você não permitiu o acesso à localização. Permita nas configurações do navegador ou leia o QR de check-in do local.'
+            : 'Não conseguimos pegar sua localização. Tente de novo ou leia o QR de check-in do local.', true);
+    }
+    btn.disabled = false;
 }
 
 function mostrarNomeEstabelecimento(nome) {
@@ -552,8 +589,11 @@ function mostrarTelaDePesquisa() {
     carregarEstabelecimentos();
 }
 
-function iniciarFormulario(id, nome) {
+function iniciarFormulario(id, nome, oferecerLocalizacao = true) {
     estado.idEstabelecimento = id;
+    document.getElementById('btn-estou-aqui').hidden = !oferecerLocalizacao;
+    estado.idVisita = null; // visita é de um estabelecimento só
+    document.getElementById('visita-aviso').hidden = true;
     if (nome) mostrarNomeEstabelecimento(nome);
 
     document.getElementById('secao-pesquisa').style.display = 'none';

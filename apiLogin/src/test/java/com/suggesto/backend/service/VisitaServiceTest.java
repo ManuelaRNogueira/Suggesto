@@ -114,6 +114,44 @@ class VisitaServiceTest {
         verify(visitaRepository).save(any());
     }
 
+    // ── Check-in por localização ─────────────────────────────────────────
+
+    @Test
+    void localizacaoDentroDoRaioCriaVisitaPorLocalizacao() {
+        cenario();
+        estab.setLat(-22.5647);
+        estab.setLng(-47.4017);
+        // ~110 m ao norte
+        Visita v = visitaService.checkinPorLocalizacao(ID_USUARIO, ID_ESTAB, -22.5637, -47.4017);
+        assertThat(v.getMetodo()).isEqualTo(Visita.LOCALIZACAO);
+        verify(visitaRepository).save(v);
+    }
+
+    @Test
+    void localizacaoForaDoRaioDizADistancia() {
+        cenario();
+        estab.setLat(-22.5647);
+        estab.setLng(-47.4017);
+        // ~330 m ao norte
+        assertThatThrownBy(() -> visitaService.checkinPorLocalizacao(ID_USUARIO, ID_ESTAB, -22.5617, -47.4017))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("cerca de 330 m");
+        verify(visitaRepository, never()).save(any());
+    }
+
+    @Test
+    void estabelecimentoSemCoordenadasRecusaLocalizacao() {
+        cenario();
+        assertThatThrownBy(() -> visitaService.checkinPorLocalizacao(ID_USUARIO, ID_ESTAB, -22.5647, -47.4017))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("não tem a localização");
+        verify(visitaRepository, never()).save(any());
+    }
+
+    @Test
+    void distanciaHaversine() {
+        // 0,001° de latitude ≈ 111 m
+        assertThat(VisitaService.distanciaEmMetros(0, 0, 0.001, 0)).isBetween(110.0, 112.0);
+    }
+
     // ── Validar a visita na hora de avaliar ─────────────────────────────
 
     @Test

@@ -633,14 +633,17 @@ public class EstabelecimentoController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
-    // Check-in pelo QR da mesa: o site chama na chegada e guarda o id da visita
-    // pra mandar junto da avaliação. Ler o QR de novo devolve a mesma visita.
+    // Check-in: pelo token do QR da mesa ou, sem token, pela localização (lat/lng).
+    // O site guarda o id da visita pra mandar junto da avaliação. Repetir o
+    // check-in com uma visita aberta devolve a mesma.
     @PostMapping("/{id}/checkin")
     public ResponseEntity<?> checkin(@PathVariable Long id, @RequestBody Map<String, Object> body) {
         try {
             Long idUsuario = body.get("idUsuario") == null ? null : Long.valueOf(body.get("idUsuario").toString());
             String token = body.get("token") == null ? null : body.get("token").toString();
-            Visita visita = visitaService.checkinPorToken(idUsuario, id, token);
+            Visita visita = token != null
+                    ? visitaService.checkinPorToken(idUsuario, id, token)
+                    : visitaService.checkinPorLocalizacao(idUsuario, id, numero(body.get("lat")), numero(body.get("lng")));
             return ResponseEntity.ok(Map.of(
                     "success", true,
                     "idVisita", visita.getId(),
@@ -649,6 +652,10 @@ public class EstabelecimentoController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
         }
+    }
+
+    private static Double numero(Object valor) {
+        return valor == null ? null : Double.valueOf(valor.toString());
     }
 
     // Troca o código da equipe por um novo, pra quando o antigo vazou. O antigo
