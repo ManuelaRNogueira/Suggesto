@@ -6,6 +6,12 @@
 
 const POR_PAGINA = 12;
 
+// Vermelho (<50), amarelo (50-79) ou verde (80-100) — mesma faixa usada em
+// todas as telas que mostram Confiabilidade/Transparência.
+function corPontuacao(pontuacao) {
+  return pontuacao >= 80 ? "#4ade80" : pontuacao >= 50 ? "#fbbf24" : "#f87171";
+}
+
 // Transições oferecidas em cada estado. Estado final não oferece ação.
 const ACOES = {
   pendente: ["implementado", "recusado"],
@@ -253,7 +259,7 @@ function cartaoHtml(s) {
           <span class="sug-card-avatar">${admIniciais(s.autor)}</span>
           ${admEscapar(s.autor || "Autor desconhecido")}
           ${s.nivelAutor && s.nivelAutor !== "bronze" ? `<span class="sug-nivel nivel-${s.nivelAutor}">${admEscapar(s.nivelAutorNome || "")}</span>` : ""}
-          ${s.confiabilidadeAutor ? `<span class="sug-nivel" title="Confiabilidade: das avaliações com visita confirmada, quantas foram aceitas">${s.confiabilidadeAutor.pontuacao != null ? `Confiabilidade ${s.confiabilidadeAutor.pontuacao}` : admEscapar(s.confiabilidadeAutor.rotulo || "")}</span>` : ""}
+          ${s.confiabilidadeAutor ? `<span class="sug-nivel" title="Confiabilidade: das avaliações com visita confirmada, quantas foram aceitas" ${s.confiabilidadeAutor.pontuacao != null ? `style="color:${corPontuacao(s.confiabilidadeAutor.pontuacao)}"` : ""}>${s.confiabilidadeAutor.pontuacao != null ? `${s.confiabilidadeAutor.pontuacao}/100` : admEscapar(s.confiabilidadeAutor.rotulo || "")}</span>` : ""}
         </span>
         <span class="sug-card-sep">·</span>
         <span>${admEscapar(s.categoria || "Sem categoria")}</span>

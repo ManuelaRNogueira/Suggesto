@@ -609,15 +609,24 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     );
   }
 
+  // Vermelho (<50), amarelo (50-79) ou verde (80-100) — mesma faixa usada em
+  // todas as telas que mostram Confiabilidade/Transparência.
+  Color _corPontuacao(num pontuacao) {
+    if (pontuacao >= 80) return const Color(0xFF4ADE80);
+    if (pontuacao >= 50) return const Color(0xFFFBBF24);
+    return const Color(0xFFF87171);
+  }
+
   // Transparência (0-100): quanto o estabelecimento responde, recusa e a
   // agilidade nas respostas.
   Widget _buildCardTransparencia() {
     final pontuacao = _reputacao!['pontuacao'] as num?;
     final rotulo = _reputacao!['rotulo'] as String?;
+    final cor = pontuacao != null ? _corPontuacao(pontuacao) : Cores.roxo;
     final valor = pontuacao != null
         ? '$pontuacao/100 — responde, não recusa e reage rápido'
         : (rotulo ?? 'Sem dados suficientes');
-    return _cardSobreItem(Icons.verified_outlined, 'Transparência', valor, Cores.roxo);
+    return _cardSobreItem(Icons.verified_outlined, 'Transparência', valor, cor);
   }
 
   Widget _buildCardEndereco() {

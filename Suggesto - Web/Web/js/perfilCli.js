@@ -198,12 +198,21 @@ async function carregarConquistas(idUsuario) {
     }
 }
 
+// Vermelho (<50), amarelo (50-79) ou verde (80-100) — mesma faixa usada em
+// todas as telas que mostram Confiabilidade/Transparência.
+function corPontuacao(pontuacao) {
+    if (pontuacao >= 80) return "#4ade80";
+    if (pontuacao >= 50) return "#fbbf24";
+    return "#f87171";
+}
+
 // Confiabilidade (0-100): quantas das avaliações que o cliente fez com visita
 // confirmada foram aceitas. Calculada na hora pelo backend, não fica salva.
 async function carregarConfiabilidade(idUsuario) {
     const card = document.getElementById("cardConfiabilidade");
+    const nota = document.getElementById("confiabilidadeNota");
     const texto = document.getElementById("confiabilidadeTexto");
-    if (!card || !texto) return;
+    if (!card || !nota || !texto) return;
 
     try {
         const resposta = await fetch(`${API_BASE}/usuarios/${idUsuario}/reputacao`);
@@ -214,9 +223,12 @@ async function carregarConfiabilidade(idUsuario) {
 
         if (rep.pontuacao !== null && rep.pontuacao !== undefined) {
             const { aceitas, decididas } = rep.componentes || {};
+            nota.textContent = `${rep.pontuacao}/100`;
+            nota.style.color = corPontuacao(rep.pontuacao);
             texto.textContent =
-                `${rep.pontuacao}/100 — ${aceitas} de ${decididas} avaliações com visita confirmada foram aceitas.`;
+                `${aceitas} de ${decididas} avaliações com visita confirmada foram aceitas.`;
         } else {
+            nota.textContent = "";
             texto.textContent = rep.rotulo === "Novo"
                 ? "Novo — ainda faltam avaliações decididas com visita confirmada pra calcular sua pontuação."
                 : (rep.rotulo || "Sem dados suficientes ainda.");

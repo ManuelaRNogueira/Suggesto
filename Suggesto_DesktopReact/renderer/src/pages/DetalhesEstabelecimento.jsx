@@ -36,6 +36,14 @@ const SENT_CONFIG = {
   ruim:  { cor: '#f87171', corFundo: 'rgba(248,113,113,0.12)', label: 'Ruim',  icone: '↓' },
 };
 
+// Vermelho (<50), amarelo (50-79) ou verde (80-100) — mesma faixa usada em
+// todas as telas que mostram Confiabilidade/Transparência.
+function corPontuacao(pontuacao) {
+  if (pontuacao >= 80) return '#4ade80';
+  if (pontuacao >= 50) return '#fbbf24';
+  return '#f87171';
+}
+
 function formatarData(dataStr) {
   const d = new Date(dataStr + 'T00:00:00');
   if (isNaN(d)) return dataStr; 
@@ -283,8 +291,10 @@ function DetalhesEstabelecimento() {
               >
                 {reputacao.pontuacao != null ? (
                   <>
-                    {reputacao.pontuacao}
-                    <span className="media-geral-label">/ 100 Transparência</span>
+                    <span style={{ color: corPontuacao(reputacao.pontuacao) }}>
+                      {reputacao.pontuacao}/100
+                    </span>
+                    <span className="media-geral-label">Transparência</span>
                   </>
                 ) : (
                   <span className="media-geral-label">Transparência: {reputacao.rotulo}</span>

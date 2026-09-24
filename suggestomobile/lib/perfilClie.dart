@@ -305,6 +305,14 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
     );
   }
 
+  // Vermelho (<50), amarelo (50-79) ou verde (80-100) — mesma faixa usada em
+  // todas as telas que mostram Confiabilidade/Transparência.
+  Color _corPontuacao(num pontuacao) {
+    if (pontuacao >= 80) return const Color(0xFF4ADE80);
+    if (pontuacao >= 50) return const Color(0xFFFBBF24);
+    return const Color(0xFFF87171);
+  }
+
   // Confiabilidade (0-100): das avaliações que o cliente fez com visita
   // confirmada, quantas foram aceitas. Calculada na hora pelo backend.
   Widget _buildConfiabilidade() {
@@ -318,8 +326,7 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
     if (pontuacao != null) {
       final aceitas = componentes?['aceitas'];
       final decididas = componentes?['decididas'];
-      texto =
-          '$pontuacao/100 — $aceitas de $decididas avaliações com visita confirmada foram aceitas.';
+      texto = '$aceitas de $decididas avaliações com visita confirmada foram aceitas.';
     } else {
       texto = rotulo == 'Novo'
           ? 'Novo — ainda faltam avaliações decididas com visita confirmada pra calcular sua pontuação.'
@@ -339,13 +346,28 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Confiabilidade',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 15,
-                fontFamily: 'PoppinsSemi',
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Confiabilidade',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontFamily: 'PoppinsSemi',
+                  ),
+                ),
+                if (pontuacao != null)
+                  Text(
+                    '$pontuacao/100',
+                    style: TextStyle(
+                      color: _corPontuacao(pontuacao),
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'PoppinsSemi',
+                    ),
+                  ),
+              ],
             ),
             SizedBox(height: 6),
             Text(

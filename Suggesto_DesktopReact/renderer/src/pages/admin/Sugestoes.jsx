@@ -19,6 +19,14 @@ const POR_PAGINA = 12;
 // Espelha a regra da API (AvaliacaoService): recusar exige esse mínimo.
 const MIN_MOTIVO_RECUSA = 10;
 
+// Vermelho (<50), amarelo (50-79) ou verde (80-100) — mesma faixa usada em
+// todas as telas que mostram Confiabilidade/Transparência.
+function corPontuacao(pontuacao) {
+  if (pontuacao >= 80) return "#4ade80";
+  if (pontuacao >= 50) return "#fbbf24";
+  return "#f87171";
+}
+
 // Transições oferecidas em cada estado. Estado final não oferece ação.
 const ACOES = {
   pendente: ["implementado", "recusado"],
@@ -522,9 +530,14 @@ function Cartao({
             <span
               className="sug-nivel"
               title="Confiabilidade: das avaliações com visita confirmada, quantas foram aceitas"
+              style={
+                sugestao.confiabilidadeAutor.pontuacao != null
+                  ? { color: corPontuacao(sugestao.confiabilidadeAutor.pontuacao) }
+                  : undefined
+              }
             >
               {sugestao.confiabilidadeAutor.pontuacao != null
-                ? `Confiabilidade ${sugestao.confiabilidadeAutor.pontuacao}`
+                ? `${sugestao.confiabilidadeAutor.pontuacao}/100`
                 : sugestao.confiabilidadeAutor.rotulo}
             </span>
           )}

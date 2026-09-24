@@ -45,6 +45,14 @@ function montarEndereco(dados) {
   return partes.join(', ');
 }
 
+// Vermelho (<50), amarelo (50-79) ou verde (80-100) — mesma faixa usada em
+// todas as telas que mostram Confiabilidade/Transparência.
+function corPontuacao(pontuacao) {
+  if (pontuacao >= 80) return '#4ade80';
+  if (pontuacao >= 50) return '#fbbf24';
+  return '#f87171';
+}
+
 function escapeHtml(texto) {
   const div = document.createElement('div');
   div.textContent = texto ?? '';
@@ -131,10 +139,12 @@ async function carregarTransparencia(id) {
     const rep = await resposta.json();
 
     if (rep.pontuacao !== null && rep.pontuacao !== undefined) {
-      num.textContent = rep.pontuacao;
+      num.textContent = `${rep.pontuacao}/100`;
+      num.style.color = corPontuacao(rep.pontuacao);
       texto.textContent = 'Transparência (responde, não recusa e reage rápido)';
     } else {
       num.textContent = '—';
+      num.style.color = '';
       texto.textContent = `Transparência: ${rep.rotulo || 'sem dados suficientes'}`;
     }
     bloco.style.display = '';
