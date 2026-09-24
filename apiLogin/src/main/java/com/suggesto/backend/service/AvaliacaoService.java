@@ -6,6 +6,7 @@ import com.suggesto.backend.model.Avaliacao;
 import com.suggesto.backend.model.Categoria;
 import com.suggesto.backend.model.Estabelecimento;
 import com.suggesto.backend.model.Usuario;
+import com.suggesto.backend.model.Visita;
 import com.suggesto.backend.repository.AvaliacaoRepository;
 import com.suggesto.backend.repository.CategoriaRepository;
 import com.suggesto.backend.repository.EstabelecimentoRepository;
@@ -50,6 +51,9 @@ public class AvaliacaoService {
     @Autowired
     private PlanoService planoService;
 
+    @Autowired
+    private VisitaService visitaService;
+
     // Cria uma nova sugestão/crítica/elogio. Se não veio um usuário logado
     // (alguém dando feedback sem estar cadastrado), usa a conta "convidado"
     // padrão do sistema pra não deixar a avaliação sem dono.
@@ -70,6 +74,10 @@ public class AvaliacaoService {
         // O plano do estabelecimento pode limitar quantos feedbacks ele recebe por mês.
         planoService.validarNovoFeedback(est);
 
+        // Visita ainda é opcional (o mobile não manda); quando vem, tem que valer.
+        Visita visita = dto.getIdVisita() == null ? null
+                : visitaService.validarParaAvaliacao(dto.getIdVisita(), usuario.getId(), est.getIdEstabelecimento());
+
         Avaliacao avaliacao = new Avaliacao();
         avaliacao.setTipo(dto.getTipo());
         avaliacao.setNota(dto.getNota());
@@ -79,6 +87,10 @@ public class AvaliacaoService {
         avaliacao.setEstabelecimento(est);
         avaliacao.setCategoria(categoria);
         avaliacao.setUsuario(usuario);
+        if (visita != null) {
+            avaliacao.setVisita(visita);
+            avaliacao.setMetodoVisita(visita.getMetodo());
+        }
 
         avaliacaoRepository.save(avaliacao);
     }

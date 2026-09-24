@@ -60,6 +60,34 @@ public class Avaliacao {
     @Column(name = "data_decisao")
     private LocalDateTime dataDecisao;
 
+    // A visita (check-in) que liberou esta avaliação. Uma visita libera uma
+    // avaliação só, por isso o unique. Antigas e as sem check-in ficam nulas.
+    @JsonIgnore
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_visita", unique = true)
+    private Visita visita;
+
+    // Como a visita foi confirmada (QR/LOCALIZACAO), copiado da visita pra ir
+    // no JSON: é o que o site usa pro selo "Visita confirmada".
+    @Column(name = "metodo_visita", length = 20)
+    private String metodoVisita;
+
+    public Visita getVisita() {
+        return visita;
+    }
+
+    public void setVisita(Visita visita) {
+        this.visita = visita;
+    }
+
+    public String getMetodoVisita() {
+        return metodoVisita;
+    }
+
+    public void setMetodoVisita(String metodoVisita) {
+        this.metodoVisita = metodoVisita;
+    }
+
     public String getMotivoRecusa() {
         return motivoRecusa;
     }

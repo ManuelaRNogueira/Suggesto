@@ -24,6 +24,8 @@ public interface AvaliacaoRepository extends JpaRepository<Avaliacao, Long> {
 
     long countByUsuario_Id(Long usuarioId);
 
+    boolean existsByVisita_Id(Long idVisita);
+
     // Conta quantas sugestões de um usuário já foram aceitas — como o status é
     // digitado à mão em vários lugares do sistema, aqui a gente ignora
     // maiúscula/minúscula e aceita várias palavras que significam a mesma coisa

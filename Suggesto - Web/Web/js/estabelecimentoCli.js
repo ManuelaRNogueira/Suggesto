@@ -320,6 +320,7 @@ function renderizarCardSugestao(a) {
         <div class="sug-tags">
           <span class="sug-tipo sug-tipo-${tipoChave}">${escapeHtml(tipoLabel)}</span>
           <span class="sug-categoria">${escapeHtml(categoriaNome)}</span>
+          ${a.metodoVisita ? '<span class="sug-visita" title="O cliente fez check-in no local antes de avaliar"><i class="fas fa-circle-check"></i> Visita confirmada</span>' : ''}
         </div>
       </div>
 

@@ -114,6 +114,12 @@ body {
   font-size: .72rem; font-weight: 700;
   letter-spacing: .8px; text-transform: uppercase; color: var(--purple);
 }
+.visita-aviso {
+  display: block; font-size: .78rem; font-weight: 600;
+  margin: -8px 0 16px; color: #4ade80;
+}
+.visita-aviso.erro { color: #fbbf24; }
+.visita-aviso[hidden] { display: none; }
 .hero-titulo {
   font-family: var(--font-head);
   font-size: clamp(1.8rem, 5vw, 2.6rem);
@@ -314,6 +320,7 @@ textarea:focus { border-color: var(--purple-glow); background: rgba(167,139,250,
       <div class="estab-dot">E</div>
       <span id="nome-estab">Estabelecimento</span>
     </div>
+    <span id="visita-aviso" class="visita-aviso" hidden></span>
     <h1 class="hero-titulo">
       Sua opinião<br>
       <em>importa aqui.</em>
@@ -440,7 +447,7 @@ textarea:focus { border-color: var(--purple-glow); background: rgba(167,139,250,
 <script>
 const estado = { 
     tipo: null, categoria: null, idCategoria: null, 
-    nota: null, passoAtual: 1, idEstabelecimento: null 
+    nota: null, passoAtual: 1, idEstabelecimento: null, idVisita: null
 };
 let listaEstabelecimentos = [];
 
@@ -482,8 +489,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     await entrarComoConvidadoSeNecessario();
 
-    if (idEstabUrl && nomeEstabUrl) {
-        iniciarFormulario(idEstabUrl, nomeEstabUrl);
+    // O QR da mesa traz só o id (e o token t); o nome vem da API logo abaixo.
+    if (idEstabUrl) {
+        iniciarFormulario(idEstabUrl, nomeEstabUrl || '');
+        const token = params.get('t');
+        if (token) fazerCheckin(idEstabUrl, token);
     } else {
         mostrarTelaDePesquisa();
     }
@@ -507,6 +517,34 @@ async function entrarComoConvidadoSeNecessario() {
     }
 }
 
+// Registra a visita (prova de que a pessoa está no local) pelo token do QR.
+// Se falhar, a avaliação ainda sai, só que sem o selo "Visita confirmada".
+async function fazerCheckin(idEstabelecimento, token) {
+    const aviso = document.getElementById('visita-aviso');
+    try {
+        const r = await fetch(`${window.API_BASE}/estabelecimentos/${idEstabelecimento}/checkin`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idUsuario: parseInt(localStorage.getItem('idUsuario')) || null, token }),
+        });
+        const dados = await r.json().catch(() => null);
+        if (!r.ok) throw new Error(dados?.message || 'Não foi possível confirmar sua visita.');
+        estado.idVisita = dados.idVisita;
+        aviso.textContent = '✓ Visita confirmada';
+        aviso.classList.remove('erro');
+    } catch (err) {
+        aviso.textContent = err.message || 'Não foi possível confirmar sua visita.';
+        aviso.classList.add('erro');
+    }
+    aviso.hidden = false;
+}
+
+function mostrarNomeEstabelecimento(nome) {
+    document.getElementById('nome-estab').textContent = nome;
+    document.getElementById('nome-estab-suc').textContent = nome;
+    const dot = document.querySelector('.estab-dot');
+    if (dot) dot.textContent = nome.charAt(0).toUpperCase();
+}
+
 function mostrarTelaDePesquisa() {
     document.getElementById('form-card').style.display = 'none';
     document.querySelector('.hero').style.display = 'none';
@@ -516,11 +554,7 @@ function mostrarTelaDePesquisa() {
 
 function iniciarFormulario(id, nome) {
     estado.idEstabelecimento = id;
-    document.getElementById('nome-estab').textContent = nome;
-    document.getElementById('nome-estab-suc').textContent = nome;
-
-    const dot = document.querySelector('.estab-dot');
-    if (dot) dot.textContent = nome.charAt(0).toUpperCase();
+    if (nome) mostrarNomeEstabelecimento(nome);
 
     document.getElementById('secao-pesquisa').style.display = 'none';
     document.querySelector('.hero').style.display = 'block';
@@ -541,6 +575,7 @@ async function carregarCategoriasDoEstabelecimento(idEstabelecimento) {
     try {
         const est = await fetch(`${window.API_BASE}/estabelecimentos/${idEstabelecimento}`).then(r => r.json());
         tipoEstabelecimento = est?.categoria || '';
+        if (est?.nome && !new URLSearchParams(window.location.search).get('nome')) mostrarNomeEstabelecimento(est.nome);
     } catch (err) {
         console.error('Não foi possível identificar o tipo do estabelecimento:', err);
     }
@@ -681,7 +716,8 @@ async function enviar() {
     // Se por algum motivo entrarComoConvidadoSeNecessario() falhou (ex: API fora do
     // ar no load), idUsuario cai como null e o backend usa o convidado padrão.
     idCategoria: parseInt(estado.idCategoria) || 1,
-    nota: parseInt(estado.nota), comentario: msg, tipo: estado.tipo
+    nota: parseInt(estado.nota), comentario: msg, tipo: estado.tipo,
+    idVisita: estado.idVisita
   };
 
   try {

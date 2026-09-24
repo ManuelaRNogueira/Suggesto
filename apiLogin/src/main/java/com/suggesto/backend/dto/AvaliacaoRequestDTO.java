@@ -8,6 +8,8 @@ public class AvaliacaoRequestDTO {
     private Integer nota;
     private String comentario;
     private String tipo;
+    // Opcional até o ticket 07: a visita do check-in que libera esta avaliação.
+    private Long idVisita;
 
     public AvaliacaoRequestDTO() {
     }
@@ -58,5 +60,13 @@ public class AvaliacaoRequestDTO {
 
     public void setTipo(String tipo) {
         this.tipo = tipo;
+    }
+
+    public Long getIdVisita() {
+        return idVisita;
+    }
+
+    public void setIdVisita(Long idVisita) {
+        this.idVisita = idVisita;
     }
 }

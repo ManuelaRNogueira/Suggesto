@@ -1,8 +1,13 @@
 package com.suggesto.backend.service;
 
+import com.suggesto.backend.dto.AvaliacaoRequestDTO;
 import com.suggesto.backend.model.Avaliacao;
+import com.suggesto.backend.model.Categoria;
 import com.suggesto.backend.model.Estabelecimento;
 import com.suggesto.backend.model.Usuario;
+import com.suggesto.backend.model.Visita;
+import com.suggesto.backend.repository.CategoriaRepository;
+import com.suggesto.backend.repository.EstabelecimentoRepository;
 import com.suggesto.backend.repository.AvaliacaoRepository;
 import com.suggesto.backend.repository.MembroEquipeRepository;
 import com.suggesto.backend.repository.UsuarioRepository;
@@ -36,6 +41,15 @@ class AvaliacaoServiceTest {
     private MembroEquipeRepository membroEquipeRepository;
     @Mock
     private UsuarioRepository usuarioRepository;
+
+    @Mock
+    private EstabelecimentoRepository estabelecimentoRepository;
+    @Mock
+    private CategoriaRepository categoriaRepository;
+    @Mock
+    private PlanoService planoService;
+    @Mock
+    private VisitaService visitaService;
 
     @InjectMocks
     private AvaliacaoService avaliacaoService;
@@ -181,5 +195,68 @@ class AvaliacaoServiceTest {
     void statusAntigoRecusadaPodeSerReaberto() {
         sugestao("recusada");
         assertThat(avaliacaoService.atualizarStatus(1L, "pendente", ID_GERENTE, null).getStatus()).isEqualTo("PENDENTE");
+    }
+
+    // ── Enviar avaliação com visita (ainda opcional) ─────────────────────
+
+    private AvaliacaoRequestDTO novaAvaliacao(Long idVisita) {
+        Usuario autor = new Usuario();
+        autor.setId(50L);
+        Estabelecimento estab = new Estabelecimento();
+        estab.setIdEstabelecimento(ID_ESTAB);
+        when(usuarioRepository.findById(50L)).thenReturn(Optional.of(autor));
+        when(estabelecimentoRepository.findById(ID_ESTAB)).thenReturn(Optional.of(estab));
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(new Categoria()));
+
+        AvaliacaoRequestDTO dto = new AvaliacaoRequestDTO();
+        dto.setIdUsuario(50L);
+        dto.setIdEstabelecimento(ID_ESTAB);
+        dto.setIdCategoria(1L);
+        dto.setNota(5);
+        dto.setComentario("Muito bom");
+        dto.setTipo("elogio");
+        dto.setIdVisita(idVisita);
+        return dto;
+    }
+
+    @Test
+    void avaliacaoComVisitaValidaFicaVinculadaEComSelo() {
+        AvaliacaoRequestDTO dto = novaAvaliacao(9L);
+        Visita v = new Visita();
+        v.setId(9L);
+        v.setMetodo(Visita.QR);
+        when(visitaService.validarParaAvaliacao(9L, 50L, ID_ESTAB)).thenReturn(v);
+
+        avaliacaoService.registrarNovaAvaliacao(dto);
+
+        org.mockito.ArgumentCaptor<Avaliacao> salva = org.mockito.ArgumentCaptor.forClass(Avaliacao.class);
+        verify(avaliacaoRepository).save(salva.capture());
+        assertThat(salva.getValue().getVisita()).isSameAs(v);
+        assertThat(salva.getValue().getMetodoVisita()).isEqualTo(Visita.QR);
+    }
+
+    @Test
+    void avaliacaoComVisitaInvalidaNaoESalva() {
+        AvaliacaoRequestDTO dto = novaAvaliacao(9L);
+        when(visitaService.validarParaAvaliacao(9L, 50L, ID_ESTAB))
+                .thenThrow(new IllegalArgumentException("Sua visita expirou."));
+
+        assertThatThrownBy(() -> avaliacaoService.registrarNovaAvaliacao(dto))
+                .isInstanceOf(IllegalArgumentException.class);
+        verify(avaliacaoRepository, never()).save(any());
+    }
+
+    // Até o ticket 07, quem ainda não manda visita (mobile) continua avaliando.
+    @Test
+    void avaliacaoSemVisitaContinuaAceitaSemSelo() {
+        AvaliacaoRequestDTO dto = novaAvaliacao(null);
+
+        avaliacaoService.registrarNovaAvaliacao(dto);
+
+        org.mockito.ArgumentCaptor<Avaliacao> salva = org.mockito.ArgumentCaptor.forClass(Avaliacao.class);
+        verify(avaliacaoRepository).save(salva.capture());
+        assertThat(salva.getValue().getVisita()).isNull();
+        assertThat(salva.getValue().getMetodoVisita()).isNull();
+        verify(visitaService, never()).validarParaAvaliacao(any(), any(), any());
     }
 }

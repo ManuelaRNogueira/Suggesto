@@ -5,6 +5,7 @@ import com.suggesto.backend.model.MembroEquipe;
 import com.suggesto.backend.model.SolicitacaoEquipe;
 import com.suggesto.backend.model.TipoUsuario;
 import com.suggesto.backend.model.Usuario;
+import com.suggesto.backend.model.Visita;
 import com.suggesto.backend.repository.EstabelecimentoRepository;
 import com.suggesto.backend.repository.MembroEquipeRepository;
 import com.suggesto.backend.repository.SolicitacaoEquipeRepository;
@@ -50,6 +51,9 @@ public class EstabelecimentoController {
 
     @Autowired
     private CloudinaryService cloudinaryService;
+
+    @Autowired
+    private com.suggesto.backend.service.VisitaService visitaService;
 
     @Autowired
     private com.suggesto.backend.service.GeocodificacaoService geocodificacaoService;
@@ -627,6 +631,24 @@ public class EstabelecimentoController {
                     "tokenCheckin", estab.getTokenCheckin()
             ));
         }).orElse(ResponseEntity.notFound().build());
+    }
+
+    // Check-in pelo QR da mesa: o site chama na chegada e guarda o id da visita
+    // pra mandar junto da avaliação. Ler o QR de novo devolve a mesma visita.
+    @PostMapping("/{id}/checkin")
+    public ResponseEntity<?> checkin(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        try {
+            Long idUsuario = body.get("idUsuario") == null ? null : Long.valueOf(body.get("idUsuario").toString());
+            String token = body.get("token") == null ? null : body.get("token").toString();
+            Visita visita = visitaService.checkinPorToken(idUsuario, id, token);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "idVisita", visita.getId(),
+                    "expiraEm", visitaService.expiraEm(visita).toString()
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        }
     }
 
     // Troca o código da equipe por um novo, pra quando o antigo vazou. O antigo
