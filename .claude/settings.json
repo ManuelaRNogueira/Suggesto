@@ -1,0 +1,15 @@
+{
+  "extraKnownMarketplaces": {
+    "ponytail": {
+      "source": { "source": "github", "repo": "DietrichGebert/ponytail" }
+    },
+    "thedotmack": {
+      "source": { "source": "github", "repo": "thedotmack/claude-mem" }
+    }
+  },
+  "enabledPlugins": {
+    "ponytail@ponytail": true,
+    "claude-mem-cowork@thedotmack": true,
+    "mattpocock-skills@claude-plugins-official": true
+  }
+}
