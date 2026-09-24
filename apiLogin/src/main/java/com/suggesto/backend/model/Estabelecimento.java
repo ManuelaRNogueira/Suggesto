@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import jakarta.persistence.*;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 
 @Entity
@@ -38,14 +39,22 @@ public class Estabelecimento {
     // É a chave da equipe: serve pra entrar nela e pra confirmar edição e
     // remoção de administradores. Por isso não sai no JSON por padrão (o
     // estabelecimento vai embutido em avaliação, recompensa, local salvo...);
-    // o controller chama revelarCodigoAcesso() quando quem pede é o dono.
+    // o controller chama revelarDadosDoDono() quando quem pede é o dono.
     @JsonIgnore
     @Column(name = "codigo_acesso", unique = true, length = 12)
     private String codigoAcesso;
 
+    // Vai no QR de check-in impresso nas mesas: ler o QR prova que a pessoa
+    // esteve no local. É separado do codigoAcesso de propósito — o QR fica
+    // exposto ao público, e a chave da equipe nunca pode ficar. Mesma
+    // proteção de JSON do codigoAcesso.
+    @JsonIgnore
+    @Column(name = "token_checkin", length = 32)
+    private String tokenCheckin;
+
     @JsonIgnore
     @Transient
-    private boolean codigoAcessoRevelado;
+    private boolean dadosDoDonoRevelados;
 
     @Column(name = "cep", nullable = false, length = 9)
     private String cep;
@@ -100,14 +109,33 @@ public class Estabelecimento {
     @Transient
     private Long totalAvaliacoes;
 
-    public void revelarCodigoAcesso() {
-        this.codigoAcessoRevelado = true;
+    public void revelarDadosDoDono() {
+        this.dadosDoDonoRevelados = true;
     }
 
     @JsonProperty("codigoAcesso")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public String codigoAcessoParaJson() {
-        return codigoAcessoRevelado ? codigoAcesso : null;
+        return dadosDoDonoRevelados ? codigoAcesso : null;
+    }
+
+    @JsonProperty("tokenCheckin")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public String tokenCheckinParaJson() {
+        return dadosDoDonoRevelados ? tokenCheckin : null;
+    }
+
+    private static final String ALFABETO_TOKEN = "abcdefghijklmnopqrstuvwxyz0123456789";
+    private static final SecureRandom RANDOM_TOKEN = new SecureRandom();
+
+    // 16 caracteres de 36 possíveis: impossível de adivinhar e seguro pra ir
+    // numa URL sem precisar codificar nada.
+    public static String gerarTokenCheckin() {
+        StringBuilder token = new StringBuilder(16);
+        for (int i = 0; i < 16; i++) {
+            token.append(ALFABETO_TOKEN.charAt(RANDOM_TOKEN.nextInt(ALFABETO_TOKEN.length())));
+        }
+        return token.toString();
     }
 
     

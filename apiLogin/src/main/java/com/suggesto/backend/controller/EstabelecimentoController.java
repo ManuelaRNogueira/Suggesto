@@ -75,12 +75,19 @@ public class EstabelecimentoController {
 
     // Tela de detalhes de um estabelecimento. Antes de devolver, calcula a nota
     // média das avaliações na hora (o campo não fica salvo pronto no banco).
+    // Código da equipe e token do QR de check-in só vêm quando quem pede
+    // (idSolicitante) é o dono.
     @GetMapping("/{id}")
-    public ResponseEntity<?> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<?> buscarPorId(
+            @PathVariable Long id,
+            @RequestParam(value = "idSolicitante", required = false) Long idSolicitante) {
         try {
             return repository.findById(id)
                     .map(estab -> {
                         avaliacaoService.aplicarMediasDeAvaliacao(List.of(estab));
+                        if (idSolicitante != null && estab.getIdGerente() == idSolicitante) {
+                            estab.revelarDadosDoDono();
+                        }
                         return ResponseEntity.ok(estab);
                     })
                     .orElse(ResponseEntity.notFound().build());
@@ -117,6 +124,7 @@ public class EstabelecimentoController {
 
             novoEstabelecimento.setCidade(TextoUtil.normalizarCidade(novoEstabelecimento.getCidade()));
             novoEstabelecimento.setCodigoAcesso(gerarCodigoAcessoUnico());
+            novoEstabelecimento.setTokenCheckin(Estabelecimento.gerarTokenCheckin());
             novoEstabelecimento.setDataCadastro(java.time.LocalDateTime.now());
 
             if (arquivo != null && !arquivo.isEmpty()) {
@@ -162,7 +170,7 @@ public class EstabelecimentoController {
             });
 
             // Quem acabou de criar é o dono: precisa ver o código pra convidar a equipe.
-            salvo.revelarCodigoAcesso();
+            salvo.revelarDadosDoDono();
             return ResponseEntity.ok(salvo);
 
         } catch (IllegalStateException e) {
@@ -377,7 +385,7 @@ public class EstabelecimentoController {
         try {
             List<Estabelecimento> lista = repository.buscarPorGerenteAtivos(id);
             if (id.equals(idSolicitante)) {
-                lista.forEach(Estabelecimento::revelarCodigoAcesso);
+                lista.forEach(Estabelecimento::revelarDadosDoDono);
             }
             return ResponseEntity.ok(lista);
         } catch (Exception e) {
@@ -593,6 +601,30 @@ public class EstabelecimentoController {
             return ResponseEntity.ok(Map.of(
                     "success", true,
                     "message", "Estabelecimento desativado com sucesso."
+            ));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    // Troca o token do QR de check-in, pra quando a foto do QR vazou (alguém
+    // conseguiria "visitar" de casa). Os QRs já impressos param de confirmar
+    // visita na hora; o dono imprime os novos pelo painel.
+    @PostMapping("/{id}/token-checkin")
+    public ResponseEntity<?> gerarNovoTokenCheckin(
+            @PathVariable Long id,
+            @RequestParam("idSolicitante") Long idSolicitante) {
+        return repository.findById(id).map(estab -> {
+            if (estab.getIdGerente() != idSolicitante) {
+                return ResponseEntity.status(403).body(Map.of(
+                        "success", false,
+                        "message", "Apenas o administrador principal pode gerar um novo QR de check-in."
+                ));
+            }
+
+            estab.setTokenCheckin(Estabelecimento.gerarTokenCheckin());
+            repository.save(estab);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "tokenCheckin", estab.getTokenCheckin()
             ));
         }).orElse(ResponseEntity.notFound().build());
     }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import ModalEditarEstabelecimento from './ModalEditarEstabelecimento';
 import Icone, { IC } from '../components/Icones';
+import QrCheckin from '../components/QrCheckin';
 import { API_BASE, urlFoto } from '../api/admin';
 import { useAviso } from '../components/Aviso';
 import './DetalhesEstabelecimento.css';
@@ -66,7 +67,8 @@ function DetalhesEstabelecimento() {
   const buscarDados = async () => {
     try {
       // 1. Busca os dados do estabelecimento
-      const resEstab = await fetch(`${API_BASE}/estabelecimentos/${id}`);
+      // idSolicitante: se for o dono, a API devolve também o token do QR de check-in.
+      const resEstab = await fetch(`${API_BASE}/estabelecimentos/${id}?idSolicitante=${meuId}`);
       if (resEstab.ok) {
           setEstab(await resEstab.json());
       }
@@ -310,6 +312,13 @@ function DetalhesEstabelecimento() {
         </div>
       </header>
 
+      {souPrincipal && (
+        <QrCheckin
+          estab={estab}
+          onTokenAlterado={(tokenCheckin) => setEstab((atual) => ({ ...atual, tokenCheckin }))}
+        />
+      )}
+
       {/* ── Barra de filtros ────────────────────────────────────────────── */}
       <div className="barra-filtros">
         <div className="grupo-filtro">
@@ -544,7 +553,15 @@ function DetalhesEstabelecimento() {
         <ModalEditarEstabelecimento
           estab={estab}
           fecharModal={() => setEditando(false)}
-          aoSalvar={(atualizado) => setEstab(atualizado)}
+          // A edição devolve o estabelecimento sem os dados do dono: mantém o
+          // código e o token que já estavam na tela.
+          aoSalvar={(atualizado) =>
+            setEstab((atual) => ({
+              ...atualizado,
+              codigoAcesso: atual?.codigoAcesso,
+              tokenCheckin: atual?.tokenCheckin,
+            }))
+          }
         />
       )}
     </div>

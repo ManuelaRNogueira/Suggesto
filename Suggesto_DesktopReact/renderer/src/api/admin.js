@@ -8,6 +8,22 @@
 // backend local, defina VITE_API_BASE=http://localhost:8080/api antes do build/dev.
 export const API_BASE = import.meta.env.VITE_API_BASE || "https://suggesto-api.onrender.com/api";
 
+// Site público do cliente (sem hífen mesmo). É pra onde o QR de check-in
+// leva: a câmera do celular abre a página de avaliação já com a visita.
+export const SITE_URL = import.meta.env.VITE_SITE_URL || "https://suggestosite.onrender.com";
+
+export function urlCheckin(idEstabelecimento, tokenCheckin) {
+  return `${SITE_URL}/fazerSugestao.html?id=${idEstabelecimento}&t=${encodeURIComponent(tokenCheckin)}`;
+}
+
+// Troca o token do QR de check-in (só o dono). Os QRs impressos param de valer.
+export function gerarNovoTokenCheckin(idEstabelecimento) {
+  return fetchJson(
+    `${API_BASE}/estabelecimentos/${idEstabelecimento}/token-checkin?idSolicitante=${encodeURIComponent(idGerente())}`,
+    { method: "POST" },
+  );
+}
+
 // Monta a URL da foto pra exibir na tela. Ela pode chegar de duas formas: já
 // como um link pronto (quando foi parar no Cloudinary) ou só o nome cru do
 // arquivo (quando caiu no fallback de guardar no disco do próprio servidor)
