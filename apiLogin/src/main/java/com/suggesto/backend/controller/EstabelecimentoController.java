@@ -597,6 +597,30 @@ public class EstabelecimentoController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
+    // Troca o código da equipe por um novo, pra quando o antigo vazou. O antigo
+    // morre na hora: entrar na equipe e as confirmações de edição/remoção
+    // sempre comparam com o código salvo. Quem já é da equipe continua nela.
+    @PostMapping("/{id}/codigo-acesso")
+    public ResponseEntity<?> gerarNovoCodigoAcesso(
+            @PathVariable Long id,
+            @RequestParam("idSolicitante") Long idSolicitante) {
+        return repository.findById(id).map(estab -> {
+            if (estab.getIdGerente() != idSolicitante) {
+                return ResponseEntity.status(403).body(Map.of(
+                        "success", false,
+                        "message", "Apenas o administrador principal pode gerar um novo código."
+                ));
+            }
+
+            estab.setCodigoAcesso(gerarCodigoAcessoUnico());
+            repository.save(estab);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "codigoAcesso", estab.getCodigoAcesso()
+            ));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
     // Backfill único pros estabelecimentos cadastrados antes de lat/lng existir
     // — cadastro novo e edição de endereço já geocodificam sozinhos (ver
     // cadastrar/atualizar acima). Idempotente: só processa quem ainda não tem

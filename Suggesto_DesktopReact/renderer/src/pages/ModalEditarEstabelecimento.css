@@ -127,6 +127,55 @@
   margin: 6px 0 0;
 }
 
+/* Gerar novo código da equipe: confirmação no próprio lugar, como a remoção de admin. */
+.edit-codigo-confirmacao {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.edit-codigo-alerta {
+  background: rgba(248, 113, 113, .1);
+  border: 1px solid rgba(248, 113, 113, .3);
+  color: #fca5a5;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: .8rem;
+  margin: 0;
+}
+
+.edit-codigo-acoes {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-perigo {
+  background: rgba(248, 113, 113, .15);
+  border: 1px solid rgba(248, 113, 113, .4);
+  color: #f87171;
+  padding: 11px 22px;
+  border-radius: 11px;
+  font-size: .85rem;
+  font-weight: 600;
+  font-family: 'Inter', system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.btn-perigo:hover:not(:disabled) {
+  background: rgba(248, 113, 113, .25);
+}
+
+.btn-perigo:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.edit-codigo-novo {
+  font-size: .8rem;
+  color: #a0a0c0;
+  margin: 0 0 10px;
+}
+
 .edit-erro {
   background: rgba(248, 113, 113, .1);
   border: 1px solid rgba(248, 113, 113, .3);

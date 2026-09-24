@@ -65,6 +65,9 @@ export default function ModalEditarEstabelecimento({ estab, fecharModal, aoSalva
   const [confirmandoRemocaoId, setConfirmandoRemocaoId] = useState(null);
   const [codigoRemocao, setCodigoRemocao] = useState("");
   const [codigoConfirmacao, setCodigoConfirmacao] = useState("");
+  const [confirmandoNovoCodigo, setConfirmandoNovoCodigo] = useState(false);
+  const [gerandoCodigo, setGerandoCodigo] = useState(false);
+  const [novoCodigo, setNovoCodigo] = useState(null);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState(null);
 
@@ -223,6 +226,31 @@ export default function ModalEditarEstabelecimento({ estab, fecharModal, aoSalva
       avisar("Erro de comunicação com o servidor.");
     } finally {
       setRemovendoId(null);
+    }
+  };
+
+  // Troca o código da equipe. O antigo para de valer na hora, então quem ainda
+  // não entrou na equipe precisa receber o novo — daí a confirmação antes.
+  const gerarNovoCodigo = async () => {
+    setGerandoCodigo(true);
+    try {
+      const r = await fetch(
+        `${API_BASE}/estabelecimentos/${estab.idEstabelecimento}/codigo-acesso?idSolicitante=${meuId}`,
+        { method: "POST" },
+      );
+      const dados = await r.json().catch(() => null);
+      if (r.ok) {
+        setNovoCodigo(dados.codigoAcesso);
+        // O código antigo digitado na confirmação não vale mais.
+        setCodigoConfirmacao(dados.codigoAcesso);
+        setConfirmandoNovoCodigo(false);
+      } else {
+        avisar(dados?.message || "Erro ao gerar novo código.");
+      }
+    } catch {
+      avisar("Erro de comunicação com o servidor.");
+    } finally {
+      setGerandoCodigo(false);
     }
   };
 
@@ -411,6 +439,50 @@ export default function ModalEditarEstabelecimento({ estab, fecharModal, aoSalva
                   </li>
                 ))}
               </ul>
+            )}
+          </Campo>
+
+          <div className="modal-divider" />
+
+          <Campo label="Código da equipe">
+            {novoCodigo && (
+              <p className="edit-codigo-novo">
+                Novo código: <strong>{novoCodigo}</strong>. Passe esse para quem for entrar na equipe.
+              </p>
+            )}
+            {confirmandoNovoCodigo ? (
+              <div className="edit-codigo-confirmacao">
+                <p className="edit-codigo-alerta">
+                  O código atual para de funcionar na hora. Quem ainda não entrou na equipe
+                  vai precisar do novo código — quem já é da equipe continua nela.
+                </p>
+                <div className="edit-codigo-acoes">
+                  <button
+                    type="button"
+                    className="btn-cancelar"
+                    onClick={() => setConfirmandoNovoCodigo(false)}
+                    disabled={gerandoCodigo}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-perigo"
+                    onClick={gerarNovoCodigo}
+                    disabled={gerandoCodigo}
+                  >
+                    {gerandoCodigo ? "Gerando..." : "Sim, gerar novo código"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="btn-cancelar"
+                onClick={() => setConfirmandoNovoCodigo(true)}
+              >
+                Gerar novo código
+              </button>
             )}
           </Campo>
 
