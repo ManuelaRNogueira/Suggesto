@@ -33,6 +33,35 @@ String formatarDistancia(double km) {
   return '${km.toStringAsFixed(1).replaceAll('.', ',')} km';
 }
 
+// Posição pro check-in: precisa ser atual e precisa dizer o que deu errado,
+// porque o cliente tem que saber se é pra ligar o GPS, permitir ou usar o QR.
+Future<({Position? posicao, String? erro})> obterLocalizacaoParaCheckin() async {
+  try {
+    if (!await Geolocator.isLocationServiceEnabled()) {
+      return (posicao: null, erro: 'Ligue a localização do celular ou leia o QR de check-in do local.');
+    }
+    var permissao = await Geolocator.checkPermission();
+    if (permissao == LocationPermission.denied) {
+      permissao = await Geolocator.requestPermission();
+    }
+    if (permissao == LocationPermission.denied || permissao == LocationPermission.deniedForever) {
+      return (
+        posicao: null,
+        erro: 'Você não permitiu o acesso à localização. Permita nas configurações ou leia o QR de check-in do local.',
+      );
+    }
+    final posicao = await Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        timeLimit: Duration(seconds: 15),
+      ),
+    );
+    return (posicao: posicao, erro: null);
+  } catch (_) {
+    return (posicao: null, erro: 'Não conseguimos pegar sua localização. Tente de novo ou leia o QR do local.');
+  }
+}
+
 // Pede a localização atual do dispositivo. Nunca lança exceção — permissão
 // negada, GPS desligado, timeout ou qualquer outra falha tudo vira null, pra
 // quem chama só precisar tratar "tenho localização" vs "não tenho" (mesmo

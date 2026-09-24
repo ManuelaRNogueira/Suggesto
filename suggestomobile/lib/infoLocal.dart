@@ -457,6 +457,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
               ),
               _tagPequena(tipoInfo.$1, tipoInfo.$2),
               _tagPequena(categoriaNome, Cores.roxo),
+              if (a['metodoVisita'] != null) _tagPequena('✓ Visita confirmada', Cores.verde),
             ],
           ),
           if (comentario != null && comentario.isNotEmpty) ...[

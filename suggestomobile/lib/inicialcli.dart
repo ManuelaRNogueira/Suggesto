@@ -128,9 +128,11 @@ class _HomePageState extends State<HomePage> {
     }
 
     if (!mounted) return;
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => SugerirPage(local: local)));
+    // QR de check-in (gerado no desktop) leva o token em "t"; QR antigo não.
+    final token = Uri.tryParse(conteudo.trim())?.queryParameters['t'];
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => SugerirPage(local: local, tokenCheckin: token)),
+    );
   }
 
   int? _extrairIdEstabelecimento(String conteudo) {

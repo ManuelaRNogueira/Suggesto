@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'api.dart';
 import 'categoriasPorRamo.dart';
+import 'cores.dart';
+import 'geoUtils.dart';
 import 'sessao.dart';
 
 class SugerirPage extends StatefulWidget {
   final Map<String, dynamic>? local;
+  // Token do QR de check-in, quando a tela foi aberta pelo leitor.
+  final String? tokenCheckin;
 
-  const SugerirPage({super.key, this.local});
+  const SugerirPage({super.key, this.local, this.tokenCheckin});
 
   @override
   State<SugerirPage> createState() => _SugerirPageState();
@@ -24,11 +28,62 @@ class _SugerirPageState extends State<SugerirPage> {
   List<Map<String, dynamic>> categorias = [];
   bool carregandoCategorias = true;
 
+  // Visita (check-in) que vai junto da sugestão e dá o selo "Visita confirmada".
+  // Ainda opcional: sem ela a sugestão sai sem selo (obrigatória no ticket 07).
+  int? idVisita;
+  String? avisoVisita;
+  bool fazendoCheckin = false;
+
   @override
   void initState() {
     super.initState();
     texto.addListener(() => setState(() {}));
     _carregarCategorias();
+    if (widget.tokenCheckin != null && widget.tokenCheckin!.isNotEmpty) {
+      _checkin(token: widget.tokenCheckin);
+    }
+  }
+
+  // Com token confirma pelo QR; sem token pede o GPS.
+  Future<void> _checkin({String? token}) async {
+    final idEstabelecimento = (widget.local?['idEstabelecimento'] as num?)?.toInt();
+    if (idEstabelecimento == null || Sessao.idUsuario == null) return;
+    setState(() {
+      fazendoCheckin = true;
+      avisoVisita = null;
+    });
+
+    double? lat, lng;
+    if (token == null) {
+      final gps = await obterLocalizacaoParaCheckin();
+      if (gps.posicao == null) {
+        if (mounted) {
+          setState(() {
+            fazendoCheckin = false;
+            avisoVisita = gps.erro;
+          });
+        }
+        return;
+      }
+      lat = gps.posicao!.latitude;
+      lng = gps.posicao!.longitude;
+    }
+
+    try {
+      final visita = await fazerCheckin(
+        idUsuario: Sessao.idUsuario!,
+        idEstabelecimento: idEstabelecimento,
+        token: token,
+        lat: lat,
+        lng: lng,
+      );
+      if (!mounted) return;
+      setState(() => idVisita = (visita['idVisita'] as num?)?.toInt());
+    } on ApiException catch (e) {
+      if (mounted) setState(() => avisoVisita = e.mensagem);
+    } finally {
+      if (mounted) setState(() => fazendoCheckin = false);
+    }
   }
 
   Future<void> _carregarCategorias() async {
@@ -82,6 +137,7 @@ class _SugerirPageState extends State<SugerirPage> {
         idCategoria: idCategoriaSelecionada!,
         nota: notaSelecionada,
         comentario: texto.text.trim(),
+        idVisita: idVisita,
       );
 
       if (!mounted) return;
@@ -134,6 +190,8 @@ class _SugerirPageState extends State<SugerirPage> {
                 children: [
                   SizedBox(height: 8),
                   LocalInfo(local),
+                  SizedBox(height: 12),
+                  Visita(),
                   SizedBox(height: 20),
                   AreaTexto(),
                   SizedBox(height: 20),
@@ -224,6 +282,38 @@ class _SugerirPageState extends State<SugerirPage> {
           ),
         ],
       ),
+    );
+  }
+
+  // CHECK-IN: selo quando confirmada; senão o aviso e o botão de GPS.
+  Widget Visita() {
+    if (idVisita != null) {
+      return Row(children: [
+        Icon(Icons.check_circle, color: Cores.verde, size: 18),
+        SizedBox(width: 6),
+        Text('Visita confirmada', style: TextStyle(color: Cores.verde, fontFamily: 'PoppinsSemiBold', fontSize: 13)),
+      ]);
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (avisoVisita != null) ...[
+          Text(avisoVisita!, style: TextStyle(color: Cores.amarelo, fontFamily: 'Poppins', fontSize: 12.5)),
+          SizedBox(height: 8),
+        ],
+        OutlinedButton.icon(
+          onPressed: fazendoCheckin ? null : () => _checkin(),
+          icon: fazendoCheckin
+              ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Cores.verde))
+              : Icon(Icons.location_on, color: Cores.verde, size: 18),
+          label: Text('Estou aqui: confirmar visita',
+              style: TextStyle(color: Cores.verde, fontFamily: 'PoppinsSemiBold', fontSize: 13)),
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(color: Cores.verde.withOpacity(0.5)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+          ),
+        ),
+      ],
     );
   }
 

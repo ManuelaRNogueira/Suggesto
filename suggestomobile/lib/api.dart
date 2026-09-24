@@ -353,6 +353,7 @@ Future<void> criarAvaliacao({
   required int nota,
   required String comentario,
   String tipo = 'sugestao',
+  int? idVisita,
 }) {
   return _vazio(
     'POST',
@@ -364,7 +365,25 @@ Future<void> criarAvaliacao({
       'nota': nota,
       'comentario': comentario,
       'tipo': tipo,
+      'idVisita': idVisita,
     },
+  );
+}
+
+// Check-in (prova de que o cliente está no local): pelo token do QR ou, sem
+// token, pela posição do GPS. Devolve {idVisita, expiraEm}. Repetir com uma
+// visita aberta devolve a mesma.
+Future<Map<String, dynamic>> fazerCheckin({
+  required int idUsuario,
+  required int idEstabelecimento,
+  String? token,
+  double? lat,
+  double? lng,
+}) {
+  return _mapa(
+    'POST',
+    '/estabelecimentos/$idEstabelecimento/checkin',
+    corpo: {'idUsuario': idUsuario, 'token': token, 'lat': lat, 'lng': lng},
   );
 }
 
