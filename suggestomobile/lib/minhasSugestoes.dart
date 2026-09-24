@@ -109,6 +109,7 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
     required String? imagem,
     required String categoria,
     required String texto,
+    String? motivoRecusa,
     required String chaveStatus,
     required String tempo,
     required int nota,
@@ -222,6 +223,33 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
                     fontFamily: "Poppins",
                   ),
                 ),
+
+                // O estabelecimento é obrigado a dizer por que recusou.
+                if (motivoRecusa != null && motivoRecusa.isNotEmpty) ...[
+                  SizedBox(height: 10),
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.redAccent.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Motivo da recusa",
+                          style: TextStyle(color: Colors.redAccent, fontSize: 11, fontFamily: "PoppinsSemi"),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          motivoRecusa,
+                          style: TextStyle(color: Colors.white70, fontSize: 12, fontFamily: "Poppins"),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
 
                 SizedBox(height: 15),
 
@@ -349,6 +377,7 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
             imagem: urlFotoEstabelecimento(estabelecimento?['fotoPath'] as String?),
             categoria: (categoria?['nomeCategoria'] as String?) ?? 'Sem categoria',
             texto: (s['comentario'] as String?) ?? '',
+            motivoRecusa: s['motivoRecusa'] as String?,
             chaveStatus: _normalizarStatus(s['status'] as String?),
             tempo: formatarData(s['dataAvaliacao'] as String?),
             nota: (s['nota'] as num?)?.toInt() ?? 0,

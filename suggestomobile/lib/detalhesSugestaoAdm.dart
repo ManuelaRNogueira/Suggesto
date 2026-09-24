@@ -22,19 +22,27 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
   bool trocandoStatus = false;
   String? erro;
 
-  static const _statusDisponiveis = ['pendente', 'implementado', 'recusado'];
+  // Mesmas transições que a API aceita (e que o desktop e o site oferecem).
+  // Implementado é final.
+  static const _acoes = {
+    'pendente': ['implementado', 'recusado'],
+    'recusado': ['pendente'],
+  };
+  // Mesma regra da API (AvaliacaoService): recusar exige esse mínimo.
+  static const _minMotivoRecusa = 10;
 
-  Future<void> _mudarStatus(String novoStatus) async {
+  Future<void> _mudarStatus(String novoStatus, {String? motivo}) async {
     setState(() {
       trocandoStatus = true;
       erro = null;
     });
     try {
       final id = (widget.sugestao['id'] as num).toInt();
-      await atualizarStatusAvaliacao(id, novoStatus);
+      await atualizarStatusAvaliacao(id, novoStatus, motivo: motivo);
       setState(() {
         widget.sugestao['statusUi'] = novoStatus;
         widget.sugestao['status'] = novoStatus;
+        widget.sugestao['motivoRecusa'] = motivo?.trim();
       });
     } on ApiException catch (e) {
       setState(() => erro = e.mensagem);
@@ -47,9 +55,7 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
   Widget build(BuildContext context) {
     final s = widget.sugestao;
     final statusAtual = (s['statusUi'] as String?) ?? 'pendente';
-    final outrosStatus = _statusDisponiveis
-        .where((st) => st != statusAtual)
-        .toList();
+    final outrosStatus = _acoes[statusAtual] ?? const <String>[];
     final nota = (s['nota'] as num?)?.toInt();
 
     return Scaffold(
@@ -281,40 +287,15 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
               fontFamily: 'Poppins',
             ),
           ),
+          if (s['statusUi'] == 'recusado' &&
+              (s['motivoRecusa'] as String?)?.trim().isNotEmpty == true) ...[
+            const SizedBox(height: 14),
+            _caixaTexto('Motivo da recusa', s['motivoRecusa'] as String),
+          ],
           if (s['resposta'] != null &&
               (s['resposta'] as String).trim().isNotEmpty) ...[
             const SizedBox(height: 14),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Cores.tag,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Resposta enviada',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'Poppins',
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    s['resposta'] as String,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontFamily: 'Poppins',
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            _caixaTexto('Resposta enviada', s['resposta'] as String),
           ],
           const SizedBox(height: 16),
           const Divider(color: Cores.borda, height: 1),
@@ -359,6 +340,94 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
     );
   }
 
+  Widget _caixaTexto(String rotulo, String texto) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Cores.tag,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            rotulo,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              fontFamily: 'Poppins',
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            texto,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontFamily: 'Poppins',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Recusar pede o motivo antes: ele é obrigatório e fica público pro cliente.
+  Future<void> _recusarComMotivo() async {
+    final controller = TextEditingController();
+    final motivo = await showDialog<String>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final valido = controller.text.trim().length >= _minMotivoRecusa;
+          return AlertDialog(
+            backgroundColor: Cores.fundo,
+            title: const Text(
+              'Recusar sugestão',
+              style: TextStyle(color: Colors.white),
+            ),
+            content: TextField(
+              controller: controller,
+              autofocus: true,
+              maxLines: 4,
+              style: const TextStyle(color: Colors.white),
+              onChanged: (_) => setDialogState(() {}),
+              decoration: InputDecoration(
+                hintText:
+                    'Por que foi recusada? O cliente e quem visita a página vão ver.',
+                hintStyle: const TextStyle(color: Colors.white38),
+                helperText: valido
+                    ? null
+                    : 'Mínimo de $_minMotivoRecusa caracteres',
+                helperStyle: const TextStyle(color: Colors.white54),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: valido
+                    ? () => Navigator.pop(context, controller.text.trim())
+                    : null,
+                child: const Text(
+                  'Recusar',
+                  style: TextStyle(color: Colors.redAccent),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+    controller.dispose();
+    if (motivo == null) return;
+    await _mudarStatus('recusado', motivo: motivo);
+  }
+
   String _iniciais(String nome) {
     final partes = nome.trim().split(RegExp(r'\s+'));
     if (partes.isEmpty || partes.first.isEmpty) return '?';
@@ -380,7 +449,8 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
   Widget _botaoStatus(String status) {
     final estilo = estiloDoStatus(status);
     return OutlinedButton.icon(
-      onPressed: () => _mudarStatus(status),
+      onPressed: () =>
+          status == 'recusado' ? _recusarComMotivo() : _mudarStatus(status),
       style: OutlinedButton.styleFrom(
         foregroundColor: estilo.cor,
         side: BorderSide(color: estilo.cor.withOpacity(0.5)),

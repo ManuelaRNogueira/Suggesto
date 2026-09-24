@@ -95,8 +95,9 @@ async function admBuscarSugestoes() {
   return admFetchJson(`${ADM_API_BASE}/admin/sugestoes${admQueryGerente()}`);
 }
 
-async function admAtualizarStatusSugestao(id, status) {
-  return admPatchJson(`${ADM_API_BASE}/avaliacoes/${id}/status`, { status, idAdmin: admIdGerente() });
+// Recusar exige motivo (mínimo 10 caracteres, a API confere).
+async function admAtualizarStatusSugestao(id, status, motivo) {
+  return admPatchJson(`${ADM_API_BASE}/avaliacoes/${id}/status`, { status, idAdmin: admIdGerente(), motivo });
 }
 
 async function admResponderSugestao(id, { idAdmin, resposta }) {

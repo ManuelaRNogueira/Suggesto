@@ -247,13 +247,17 @@ Future<List<dynamic>> buscarEstabelecimentosAdmin({int? idGerente}) {
   return _lista('GET', '/admin/estabelecimentos$query');
 }
 
-// Muda o status de uma sugestão (ex: pendente → respondida), na tela de
-// Detalhes da sugestão.
-Future<Map<String, dynamic>> atualizarStatusAvaliacao(int id, String status) {
+// Muda o status de uma sugestão (ex: pendente → implementado), na tela de
+// Detalhes da sugestão. Recusar exige motivo (mínimo 10 caracteres, a API confere).
+Future<Map<String, dynamic>> atualizarStatusAvaliacao(
+  int id,
+  String status, {
+  String? motivo,
+}) {
   return _mapa(
     'PATCH',
     '/avaliacoes/$id/status',
-    corpo: {'status': status, 'idAdmin': Sessao.idUsuario},
+    corpo: {'status': status, 'idAdmin': Sessao.idUsuario, 'motivo': motivo},
   );
 }
 

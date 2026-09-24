@@ -32,6 +32,10 @@ let respondendoId = null;
 let textoResposta = "";
 let salvandoId = null;
 let enviandoRespostaId = null;
+// Recusar abre um campo de motivo no cartão (obrigatório, fica público).
+let recusandoId = null;
+let textoMotivo = "";
+const MIN_MOTIVO_RECUSA = 10; // mesma regra da API (AvaliacaoService)
 
 document.addEventListener("DOMContentLoaded", () => {
   if (!admVerificarSessao()) return;
@@ -231,6 +235,7 @@ function cartaoHtml(s) {
   const estaSalvando = salvandoId === s.id;
   const estaRespondendo = respondendoId === s.id;
   const estaEnviando = enviandoRespostaId === s.id;
+  const estaRecusando = recusandoId === s.id;
 
   return `
     <li class="sug-card st-${s.statusUi}">
@@ -268,6 +273,29 @@ function cartaoHtml(s) {
       }
 
       ${
+        s.statusUi === "recusado" && s.motivoRecusa
+          ? `<div class="sug-resposta">
+        <div class="sug-resposta-topo">
+          <span class="sug-resposta-rotulo">Motivo da recusa</span>
+        </div>
+        <p class="sug-resposta-texto">${admEscapar(s.motivoRecusa)}</p>
+      </div>`
+          : ""
+      }
+
+      ${
+        estaRecusando
+          ? `<div class="sug-resposta-form">
+        <textarea class="sug-resposta-campo" rows="3" placeholder="Por que esta sugestão foi recusada? O cliente e quem visita a página vão ver." oninput="textoMotivo = this.value" autofocus>${admEscapar(textoMotivo)}</textarea>
+        <div class="sug-resposta-acoes">
+          <button type="button" class="btn-acao" onclick="sugCancelarRecusa()" ${estaSalvando ? "disabled" : ""}>Cancelar</button>
+          <button type="button" class="btn-acao vermelho" onclick="sugConfirmarRecusa(${s.id})" ${estaSalvando ? "disabled" : ""}>${estaSalvando ? "Recusando…" : "Recusar sugestão"}</button>
+        </div>
+      </div>`
+          : ""
+      }
+
+      ${
         estaRespondendo
           ? `<div class="sug-resposta-form">
         <textarea class="sug-resposta-campo" rows="3" placeholder="Escreva a resposta que o cliente vai ver…" oninput="textoResposta = this.value" autofocus>${admEscapar(textoResposta)}</textarea>
@@ -280,13 +308,13 @@ function cartaoHtml(s) {
       }
 
       ${
-        acoes.length > 0 || (!s.resposta && !estaRespondendo)
+        !estaRecusando && (acoes.length > 0 || (!s.resposta && !estaRespondendo))
           ? `<div class="sug-card-acoes">
         ${!s.resposta && !estaRespondendo ? `<button type="button" class="btn-acao" onclick="sugAbrirResposta(${s.id})">Responder</button>` : ""}
         ${acoes
           .map(
             (destino) => `
-          <button type="button" class="btn-acao${destino === "recusado" ? " vermelho" : destino === "implementado" ? " verde" : ""}" ${estaSalvando ? "disabled" : ""} onclick="sugMudarStatus(${s.id}, '${destino}')">
+          <button type="button" class="btn-acao${destino === "recusado" ? " vermelho" : destino === "implementado" ? " verde" : ""}" ${estaSalvando ? "disabled" : ""} onclick="${destino === "recusado" ? `sugAbrirRecusa(${s.id})` : `sugMudarStatus(${s.id}, '${destino}')`}">
             ${destino === "pendente" ? "Reabrir" : admLabelStatus(destino)}
           </button>`,
           )
@@ -351,21 +379,52 @@ async function sugEnviarResposta(id) {
   }
 }
 
-async function sugMudarStatus(id, novo) {
+function sugAbrirRecusa(id) {
+  recusandoId = id;
+  textoMotivo = "";
+  renderizar();
+}
+
+function sugCancelarRecusa() {
+  recusandoId = null;
+  textoMotivo = "";
+  renderizar();
+}
+
+async function sugConfirmarRecusa(id) {
+  if (textoMotivo.trim().length < MIN_MOTIVO_RECUSA) {
+    mostrarToast(`Explique o motivo da recusa (pelo menos ${MIN_MOTIVO_RECUSA} caracteres).`, true);
+    return;
+  }
+  if (await sugMudarStatus(id, "recusado", textoMotivo)) {
+    recusandoId = null;
+    textoMotivo = "";
+    renderizar();
+  }
+}
+
+// Devolve true se deu certo, pro campo de motivo saber se fecha.
+async function sugMudarStatus(id, novo, motivo) {
   const sugestao = sugestoes.find((s) => s.id === id);
-  if (!sugestao) return;
-  const anterior = { status: sugestao.status, statusUi: sugestao.statusUi };
+  if (!sugestao) return false;
+  const anterior = { status: sugestao.status, statusUi: sugestao.statusUi, motivoRecusa: sugestao.motivoRecusa };
   salvandoId = id;
   // atualização otimista — a lista responde na hora
-  sugestoes = sugestoes.map((s) => (s.id === id ? { ...s, status: novo, statusUi: novo } : s));
+  sugestoes = sugestoes.map((s) =>
+    s.id === id
+      ? { ...s, status: novo, statusUi: novo, motivoRecusa: novo === "recusado" ? motivo.trim() : null }
+      : s,
+  );
   renderizar();
   try {
-    await admAtualizarStatusSugestao(id, novo);
+    await admAtualizarStatusSugestao(id, novo, motivo);
     mostrarToast(`Marcada como "${admLabelStatus(novo)}".`);
+    return true;
   } catch (e) {
     // desfaz se a API recusar
     sugestoes = sugestoes.map((s) => (s.id === id ? { ...s, ...anterior } : s));
     mostrarToast(`Não foi possível atualizar: ${e.message}`, true);
+    return false;
   } finally {
     salvandoId = null;
     renderizar();

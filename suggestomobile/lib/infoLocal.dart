@@ -406,6 +406,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     final status = ((a['status'] as String?) ?? 'pendente').toLowerCase();
     final comentario = a['comentario'] as String?;
     final resposta = a['resposta'] as String?;
+    final motivoRecusa = a['motivoRecusa'] as String?;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -462,6 +463,15 @@ class _InfoLocalPageState extends State<InfoLocalPage>
             const SizedBox(height: 8),
             Text(comentario, style: const TextStyle(color: Colors.white70, fontSize: 13, fontFamily: 'Poppins', height: 1.4)),
           ],
+          if (motivoRecusa != null && motivoRecusa.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            _buildCaixaResposta(
+              motivoRecusa,
+              titulo: 'MOTIVO DA RECUSA',
+              icone: Icons.block,
+              cor: Cores.vermelho,
+            ),
+          ],
           if (resposta != null && resposta.isNotEmpty) ...[
             const SizedBox(height: 10),
             _buildCaixaResposta(resposta),
@@ -473,17 +483,23 @@ class _InfoLocalPageState extends State<InfoLocalPage>
 
   // Caixa de resposta com destaque: fundo levemente tingido de roxo, barra
   // vertical sólida colada na esquerda e título em roxo claro com ícone de
-  // loja — pra dar hierarquia de "isso é a voz do estabelecimento".
-  Widget _buildCaixaResposta(String resposta) {
+  // loja — pra dar hierarquia de "isso é a voz do estabelecimento". O motivo
+  // da recusa usa a mesma caixa, em vermelho.
+  Widget _buildCaixaResposta(
+    String resposta, {
+    String titulo = 'RESPOSTA DO ESTABELECIMENTO',
+    IconData icone = Icons.storefront_outlined,
+    Color cor = Cores.roxo,
+  }) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        color: Cores.roxo.withOpacity(0.10),
+        color: cor.withOpacity(0.10),
         child: IntrinsicHeight(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(width: 4, color: Cores.roxo),
+              Container(width: 4, color: cor),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
@@ -492,12 +508,12 @@ class _InfoLocalPageState extends State<InfoLocalPage>
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.storefront_outlined, color: Cores.roxo, size: 14),
+                          Icon(icone, color: cor, size: 14),
                           const SizedBox(width: 6),
                           Text(
-                            'RESPOSTA DO ESTABELECIMENTO',
+                            titulo,
                             style: TextStyle(
-                              color: Cores.roxo,
+                              color: cor,
                               fontSize: 10.5,
                               fontFamily: 'PoppinsSemi',
                               fontWeight: FontWeight.w700,
