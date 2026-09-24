@@ -10,6 +10,7 @@ import com.suggesto.backend.repository.ResgateRepository;
 import com.suggesto.backend.repository.UsuarioRepository;
 import com.suggesto.backend.service.CloudinaryService;
 import com.suggesto.backend.service.ConquistaService;
+import com.suggesto.backend.service.ReputacaoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -50,6 +51,9 @@ public class UsuarioController {
 
     @Autowired
     private ConquistaService conquistaService;
+
+    @Autowired
+    private ReputacaoService reputacaoService;
 
     @Autowired
     private CloudinaryService cloudinaryService;
@@ -120,6 +124,20 @@ public class UsuarioController {
     public ResponseEntity<?> listarConquistas(@PathVariable Long id) {
         try {
             return ResponseEntity.ok(conquistaService.listarPorUsuario(id));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
+            ));
+        }
+    }
+
+    // Confiabilidade (0-100): calculada na hora a partir do histórico de
+    // avaliações com visita confirmada. Pública, não expõe dado pessoal.
+    @GetMapping("/{id}/reputacao")
+    public ResponseEntity<?> obterReputacao(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(reputacaoService.calcularConfiabilidade(id));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "success", false,

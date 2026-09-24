@@ -14,6 +14,7 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
   bool carregando = true;
   String? erro;
   Map<String, dynamic>? usuario;
+  Map<String, dynamic>? reputacao;
 
   final List<Map<String, dynamic>> _menuItems = [
     {
@@ -44,6 +45,11 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
     try {
       final dados = await buscarUsuario(Sessao.idUsuario!);
       setState(() => usuario = dados);
+      // Confiabilidade não trava o perfil se falhar — é um complemento.
+      try {
+        final rep = await buscarReputacao(Sessao.idUsuario!);
+        if (mounted) setState(() => reputacao = rep);
+      } catch (_) {}
     } on ApiException catch (e) {
       setState(() => erro = e.mensagem);
     } finally {
@@ -112,6 +118,8 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
             _buildPerfilHeader(),
             SizedBox(height: 14),
             _buildBotaoEditarPerfil(),
+            SizedBox(height: 20),
+            _buildConfiabilidade(),
             SizedBox(height: 32),
             _buildMenuList(),
             /*SizedBox(height: 32),
@@ -293,6 +301,63 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  // Confiabilidade (0-100): das avaliações que o cliente fez com visita
+  // confirmada, quantas foram aceitas. Calculada na hora pelo backend.
+  Widget _buildConfiabilidade() {
+    if (reputacao == null) return const SizedBox.shrink();
+
+    final pontuacao = reputacao!['pontuacao'] as num?;
+    final rotulo = reputacao!['rotulo'] as String?;
+    final componentes = reputacao!['componentes'] as Map<String, dynamic>?;
+
+    final String texto;
+    if (pontuacao != null) {
+      final aceitas = componentes?['aceitas'];
+      final decididas = componentes?['decididas'];
+      texto =
+          '$pontuacao/100 — $aceitas de $decididas avaliações com visita confirmada foram aceitas.';
+    } else {
+      texto = rotulo == 'Novo'
+          ? 'Novo — ainda faltam avaliações decididas com visita confirmada pra calcular sua pontuação.'
+          : (rotulo ?? 'Sem dados suficientes ainda.');
+    }
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Color(0xFF1E0E32),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Color(0xFF2A1A4A), width: 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Confiabilidade',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+                fontFamily: 'PoppinsSemi',
+              ),
+            ),
+            SizedBox(height: 6),
+            Text(
+              texto,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.7),
+                fontSize: 13,
+                fontFamily: 'Poppins',
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

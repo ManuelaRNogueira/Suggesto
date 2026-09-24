@@ -253,6 +253,7 @@ function cartaoHtml(s) {
           <span class="sug-card-avatar">${admIniciais(s.autor)}</span>
           ${admEscapar(s.autor || "Autor desconhecido")}
           ${s.nivelAutor && s.nivelAutor !== "bronze" ? `<span class="sug-nivel nivel-${s.nivelAutor}">${admEscapar(s.nivelAutorNome || "")}</span>` : ""}
+          ${s.confiabilidadeAutor ? `<span class="sug-nivel" title="Confiabilidade: das avaliações com visita confirmada, quantas foram aceitas">${s.confiabilidadeAutor.pontuacao != null ? `Confiabilidade ${s.confiabilidadeAutor.pontuacao}` : admEscapar(s.confiabilidadeAutor.rotulo || "")}</span>` : ""}
         </span>
         <span class="sug-card-sep">·</span>
         <span>${admEscapar(s.categoria || "Sem categoria")}</span>

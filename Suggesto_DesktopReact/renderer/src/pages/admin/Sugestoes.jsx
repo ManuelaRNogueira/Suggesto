@@ -518,6 +518,16 @@ function Cartao({
               {sugestao.nivelAutorNome}
             </span>
           )}
+          {sugestao.confiabilidadeAutor && (
+            <span
+              className="sug-nivel"
+              title="Confiabilidade: das avaliações com visita confirmada, quantas foram aceitas"
+            >
+              {sugestao.confiabilidadeAutor.pontuacao != null
+                ? `Confiabilidade ${sugestao.confiabilidadeAutor.pontuacao}`
+                : sugestao.confiabilidadeAutor.rotulo}
+            </span>
+          )}
         </span>
         <span className="sug-card-sep">·</span>
         <span>{sugestao.categoria || "Sem categoria"}</span>

@@ -45,6 +45,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
 
   bool _carregandoAvaliacoes = true;
   List<Map<String, dynamic>> _avaliacoes = [];
+  Map<String, dynamic>? _reputacao;
 
   @override
   void initState() {
@@ -109,6 +110,18 @@ class _InfoLocalPageState extends State<InfoLocalPage>
 
     _verificarFavorito();
     _carregarAvaliacoes();
+    _carregarTransparencia();
+  }
+
+  // Transparência: calculada na hora pelo backend, não vem junto do local.
+  // Falha silenciosa — a aba "Sobre" simplesmente não mostra o card.
+  Future<void> _carregarTransparencia() async {
+    final id = _idEstabelecimento;
+    if (id == null) return;
+    try {
+      final rep = await buscarTransparencia(id);
+      if (mounted) setState(() => _reputacao = rep);
+    } catch (_) {}
   }
 
   // Confere se esse local já está nos salvos do usuário, só pra deixar o
@@ -582,6 +595,10 @@ class _InfoLocalPageState extends State<InfoLocalPage>
             Text(_sobre!, style: const TextStyle(color: Colors.white60, fontSize: 13, fontFamily: 'Poppins', height: 1.5)),
             const SizedBox(height: 18),
           ],
+          if (_reputacao != null) ...[
+            _buildCardTransparencia(),
+            const SizedBox(height: 10),
+          ],
           _buildCardEndereco(),
           const SizedBox(height: 10),
           _cardSobreItem(Icons.schedule_outlined, 'Horário de funcionamento', _horario, Cores.verde),
@@ -590,6 +607,17 @@ class _InfoLocalPageState extends State<InfoLocalPage>
         ],
       ),
     );
+  }
+
+  // Transparência (0-100): quanto o estabelecimento responde, recusa e a
+  // agilidade nas respostas.
+  Widget _buildCardTransparencia() {
+    final pontuacao = _reputacao!['pontuacao'] as num?;
+    final rotulo = _reputacao!['rotulo'] as String?;
+    final valor = pontuacao != null
+        ? '$pontuacao/100 — responde, não recusa e reage rápido'
+        : (rotulo ?? 'Sem dados suficientes');
+    return _cardSobreItem(Icons.verified_outlined, 'Transparência', valor, Cores.roxo);
   }
 
   Widget _buildCardEndereco() {

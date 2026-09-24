@@ -58,6 +58,9 @@ public class EstabelecimentoController {
     @Autowired
     private com.suggesto.backend.service.GeocodificacaoService geocodificacaoService;
 
+    @Autowired
+    private com.suggesto.backend.service.ReputacaoService reputacaoService;
+
     private static final String ALFABETO_CODIGO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final SecureRandom RANDOM = new SecureRandom();
 
@@ -97,6 +100,18 @@ public class EstabelecimentoController {
                     .orElse(ResponseEntity.notFound().build());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Erro ao buscar detalhes: " + e.getMessage());
+        }
+    }
+
+    // Transparência (0-100): calculada na hora a partir de quanto o
+    // estabelecimento responde, quanto recusa e em quanto tempo reage.
+    // Pública, não expõe dado da equipe.
+    @GetMapping("/{id}/reputacao")
+    public ResponseEntity<?> obterReputacao(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(reputacaoService.calcularTransparencia(id));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
         }
     }
 

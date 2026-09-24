@@ -43,4 +43,17 @@ public interface AvaliacaoRepository extends JpaRepository<Avaliacao, Long> {
     @Query("SELECT a.estabelecimento.idEstabelecimento, AVG(a.nota), COUNT(a) " +
            "FROM Avaliacao a GROUP BY a.estabelecimento.idEstabelecimento")
     List<Object[]> calcularMediaEContagemPorEstabelecimento();
+
+    // Status das avaliações com visita vinculada de uma lista de usuários, numa
+    // única consulta — é o que alimenta a Confiabilidade de vários autores de
+    // uma vez (a listagem de sugestões do painel), sem uma consulta por linha.
+    @Query("SELECT a.usuario.id, LOWER(TRIM(a.status)) FROM Avaliacao a " +
+            "WHERE a.usuario.id IN :idsUsuarios AND a.visita IS NOT NULL")
+    List<Object[]> buscarStatusComVisitaPorUsuarios(@Param("idsUsuarios") List<Long> idsUsuarios);
+
+    // Dados brutos de todas as avaliações de um estabelecimento, pra calcular a
+    // Transparência (taxa de resposta, taxa de recusa, agilidade) na hora.
+    @Query("SELECT a.status, a.dataAvaliacao, a.dataResposta, a.dataDecisao, a.resposta " +
+            "FROM Avaliacao a WHERE a.estabelecimento.idEstabelecimento = :idEstabelecimento")
+    List<Object[]> buscarDadosReputacaoEstabelecimento(@Param("idEstabelecimento") Long idEstabelecimento);
 }

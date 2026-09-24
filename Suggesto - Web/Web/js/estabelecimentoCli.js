@@ -109,9 +109,37 @@ async function carregarEstabelecimento(id) {
 
     preencherHeader();
     verificarStatus();
+    carregarTransparencia(id);
   } catch (erro) {
     console.error('Erro ao carregar estabelecimento:', erro);
     mostrarErroCarregamento();
+  }
+}
+
+// Transparência (0-100): quanto o estabelecimento responde, recusa e a
+// agilidade nas respostas. Calculada na hora pelo backend, não vem junto
+// dos dados do estabelecimento.
+async function carregarTransparencia(id) {
+  const bloco = document.getElementById('resumoTransparencia');
+  const num = document.getElementById('transparenciaNum');
+  const texto = document.getElementById('transparenciaTexto');
+  if (!bloco || !num || !texto) return;
+
+  try {
+    const resposta = await fetch(`${API_BASE}/estabelecimentos/${id}/reputacao`);
+    if (!resposta.ok) throw new Error('Erro ao buscar transparência.');
+    const rep = await resposta.json();
+
+    if (rep.pontuacao !== null && rep.pontuacao !== undefined) {
+      num.textContent = rep.pontuacao;
+      texto.textContent = 'Transparência (responde, não recusa e reage rápido)';
+    } else {
+      num.textContent = '—';
+      texto.textContent = `Transparência: ${rep.rotulo || 'sem dados suficientes'}`;
+    }
+    bloco.style.display = '';
+  } catch (erro) {
+    console.error('Erro ao carregar transparência:', erro);
   }
 }
 

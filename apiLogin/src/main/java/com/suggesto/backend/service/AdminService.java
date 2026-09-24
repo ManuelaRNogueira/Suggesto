@@ -47,6 +47,9 @@ public class AdminService {
     @Autowired
     private MembroEquipeRepository membroEquipeRepository;
 
+    @Autowired
+    private ReputacaoService reputacaoService;
+
     // Atalho: métricas de todos os estabelecimentos da pessoa, sem filtrar um em especial.
     public Map<String, Object> obterMetricas(Long idUsuario, Integer meses) {
         return obterMetricas(idUsuario, meses, null);
@@ -119,10 +122,13 @@ public class AdminService {
         metricas.put("porCategoria", porCategoria);
         metricas.put("meses", janela);
         metricas.put("sugestoesPorMes", calcularSugestoesPorMes(sugestoes, janela));
-        metricas.put("sugestoesRecentes", sugestoes.stream()
+        List<Avaliacao> recentes = sugestoes.stream()
                 .filter(a -> a.getDataAvaliacao() != null && !a.getDataAvaliacao().isBefore(inicioSemanaAtual))
                 .limit(8)
-                .map(this::resumirSugestao)
+                .collect(Collectors.toList());
+        Map<Long, Map<String, Object>> confiabilidadesRecentes = confiabilidadePorAutores(recentes);
+        metricas.put("sugestoesRecentes", recentes.stream()
+                .map(a -> resumirSugestao(a, confiabilidadesRecentes))
                 .collect(Collectors.toList()));
 
         return metricas;
@@ -137,7 +143,19 @@ public class AdminService {
 
         List<Avaliacao> sugestoes = buscarSugestoesPorEstabelecimentos(idUsuario, ids);
 
-        return sugestoes.stream().map(this::resumirSugestao).collect(Collectors.toList());
+        // Confiabilidade de todos os autores da lista numa única consulta, em
+        // vez de uma consulta por sugestão.
+        Map<Long, Map<String, Object>> confiabilidades = confiabilidadePorAutores(sugestoes);
+        return sugestoes.stream().map(a -> resumirSugestao(a, confiabilidades)).collect(Collectors.toList());
+    }
+
+    private Map<Long, Map<String, Object>> confiabilidadePorAutores(List<Avaliacao> sugestoes) {
+        List<Long> idsAutores = sugestoes.stream()
+                .map(a -> a.getUsuario() != null ? a.getUsuario().getId() : null)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        return reputacaoService.calcularConfiabilidadeEmLote(idsAutores);
     }
 
     // Só busca todas as avaliações do sistema quando não há filtro nenhum.
@@ -278,7 +296,7 @@ public class AdminService {
         return resultado;
     }
 
-    private Map<String, Object> resumirSugestao(Avaliacao a) {
+    private Map<String, Object> resumirSugestao(Avaliacao a, Map<Long, Map<String, Object>> confiabilidades) {
         Map<String, Object> item = new LinkedHashMap<>();
         item.put("id", a.getIdAvaliacao());
         item.put("comentario", a.getComentario());
@@ -288,12 +306,15 @@ public class AdminService {
         item.put("dataAvaliacao", a.getDataAvaliacao());
         item.put("categoria", a.getCategoria() != null ? a.getCategoria().getNomeCategoria() : null);
         item.put("autor", a.getUsuario() != null ? a.getUsuario().getNome() : null);
-        item.put("autorId", a.getUsuario() != null ? a.getUsuario().getId() : null);
+        Long idAutor = a.getUsuario() != null ? a.getUsuario().getId() : null;
+        item.put("autorId", idAutor);
         // Nível do autor: define a prioridade de resposta e o selo mostrado na fila.
         Integer pontosAutor = a.getUsuario() != null ? a.getUsuario().getPontosAcumulados() : 0;
         item.put("nivelAutor", NivelUtil.idNivel(pontosAutor));
         item.put("nivelAutorNome", NivelUtil.nomeNivel(pontosAutor));
         item.put("prioridade", NivelUtil.prioridade(pontosAutor));
+        // Confiabilidade do autor (0-100 ou rótulo "Novo"), calculada em lote.
+        item.put("confiabilidadeAutor", idAutor != null ? confiabilidades.get(idAutor) : null);
         item.put("resposta", a.getResposta());
         item.put("respondidoPor", a.getRespondidoPor());
         item.put("dataResposta", a.getDataResposta());

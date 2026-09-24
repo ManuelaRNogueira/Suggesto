@@ -23,6 +23,8 @@
 - Tela de troca de plano: o plano só é escolhido no cadastro do admin e não há rota para mudar (`PlanoController` só tem GET). Quem está no Básico perde itens da sidebar do desktop sem aviso.
 - Limpar código morto: `Suggesto - Web/Web/js/CliSugestoes.js` (órfão) e funções nunca chamadas (`admBuscarUsuario`, `irParaEtapa`/`voltarParaEtapa` sem número, `abrirSugestaoLocal`, `fecharModalSaida`, `abrirCadastroAdm`). Confira se continuam sem uso (inclusive em `onclick=`) antes de remover, e faça um commit por área.
 - Apagar os usuários de teste criados na API de produção (`Email LIKE 'teste.%'`).
+- Trocar a senha do banco (a antiga ficou no histórico do git): trocar no serviço do banco, no Render e no DB_PASSWORD das máquinas.
+- Feature de credibilidade (`.scratch/credibilidade/`): faltam os tickets 07 (visita obrigatória), 08 (transparência do estabelecimento) e 09 (confiabilidade do cliente). Os três já estão liberados (dependências resolvidas).
 
 ## Agent skills
 

@@ -48,6 +48,7 @@ function DetalhesEstabelecimento() {
   const { id } = useParams();
   const [estab, setEstab]               = useState(null);
   const [mediaGeral, setMediaGeral]     = useState(0);
+  const [reputacao, setReputacao]       = useState(null);
   const [carregando, setCarregando]     = useState(true);
   const [sugestoes, setSugestoes]       = useState([]);
   const [filtroSentimento, setFiltroS]  = useState('todos');
@@ -71,6 +72,12 @@ function DetalhesEstabelecimento() {
       const resEstab = await fetch(`${API_BASE}/estabelecimentos/${id}?idSolicitante=${meuId}`);
       if (resEstab.ok) {
           setEstab(await resEstab.json());
+      }
+
+      // Transparência: calculada na hora pela API, não vem junto do estabelecimento.
+      const resReputacao = await fetch(`${API_BASE}/estabelecimentos/${id}/reputacao`);
+      if (resReputacao.ok) {
+          setReputacao(await resReputacao.json());
       }
 
       // 2. Busca as avaliações reais do banco
@@ -266,6 +273,22 @@ function DetalhesEstabelecimento() {
               <div className="media-geral">
                 <Icone d={IC.estrela} size={14} />
                 {mediaGeral} <span className="media-geral-label">/ 5 Média</span>
+              </div>
+            )}
+
+            {reputacao && (
+              <div
+                className="media-geral"
+                title="Transparência: quanto o estabelecimento responde, recusa e a agilidade nas respostas"
+              >
+                {reputacao.pontuacao != null ? (
+                  <>
+                    {reputacao.pontuacao}
+                    <span className="media-geral-label">/ 100 Transparência</span>
+                  </>
+                ) : (
+                  <span className="media-geral-label">Transparência: {reputacao.rotulo}</span>
+                )}
               </div>
             )}
           </div>

@@ -107,6 +107,7 @@ async function carregarDadosUsuario() {
         preencherPerfil(usuarioAtual);
         await carregarAtividadeRecente(idUsuario);
         await carregarConquistas(idUsuario);
+        await carregarConfiabilidade(idUsuario);
 
         if (usuarioAtual.nome) {
             localStorage.setItem("nomeUsuario", usuarioAtual.nome);
@@ -194,6 +195,35 @@ async function carregarConquistas(idUsuario) {
     } catch (error) {
         console.error("Erro ao carregar conquistas:", error);
         grid.innerHTML = `<p class="atividade-vazia">Não foi possível carregar as conquistas.</p>`;
+    }
+}
+
+// Confiabilidade (0-100): quantas das avaliações que o cliente fez com visita
+// confirmada foram aceitas. Calculada na hora pelo backend, não fica salva.
+async function carregarConfiabilidade(idUsuario) {
+    const card = document.getElementById("cardConfiabilidade");
+    const texto = document.getElementById("confiabilidadeTexto");
+    if (!card || !texto) return;
+
+    try {
+        const resposta = await fetch(`${API_BASE}/usuarios/${idUsuario}/reputacao`);
+        if (!resposta.ok) throw new Error("Falha ao carregar confiabilidade.");
+
+        const rep = await resposta.json();
+        card.hidden = false;
+
+        if (rep.pontuacao !== null && rep.pontuacao !== undefined) {
+            const { aceitas, decididas } = rep.componentes || {};
+            texto.textContent =
+                `${rep.pontuacao}/100 — ${aceitas} de ${decididas} avaliações com visita confirmada foram aceitas.`;
+        } else {
+            texto.textContent = rep.rotulo === "Novo"
+                ? "Novo — ainda faltam avaliações decididas com visita confirmada pra calcular sua pontuação."
+                : (rep.rotulo || "Sem dados suficientes ainda.");
+        }
+    } catch (error) {
+        console.error("Erro ao carregar confiabilidade:", error);
+        card.hidden = true;
     }
 }
 

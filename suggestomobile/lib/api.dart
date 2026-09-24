@@ -288,6 +288,12 @@ Future<Map<String, dynamic>> buscarEstabelecimento(int id) {
   return _mapa('GET', '/estabelecimentos/$id');
 }
 
+// Transparência (0-100): quanto o estabelecimento responde, recusa e a
+// agilidade nas respostas. Calculada na hora pelo backend.
+Future<Map<String, dynamic>> buscarTransparencia(int id) {
+  return _mapa('GET', '/estabelecimentos/$id/reputacao');
+}
+
 // Essa função existe pra não repetir o mesmo "quebra-cabeça" em duas telas:
 // busca a lista básica dos estabelecimentos do gerente (se está ativo, o
 // código de acesso, se ele é o dono) e depois busca o detalhe completo
@@ -405,6 +411,12 @@ Future<Map<String, dynamic>> buscarUsuario(int id) {
 // Conquistas (badges) que o usuário já desbloqueou.
 Future<List<dynamic>> buscarConquistas(int id) {
   return _lista('GET', '/usuarios/$id/conquistas');
+}
+
+// Confiabilidade (0-100): das avaliações com visita confirmada, quantas
+// foram aceitas. Calculada na hora pelo backend.
+Future<Map<String, dynamic>> buscarReputacao(int id) {
+  return _mapa('GET', '/usuarios/$id/reputacao');
 }
 
 // Diferente de mandar só texto, aqui a foto vai "dentro de um envelope"
