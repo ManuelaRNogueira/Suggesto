@@ -22,14 +22,6 @@ function escapeHtml(texto) {
   return div.innerHTML;
 }
 
-function normalizarTexto(valor) {
-  return (valor || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .trim();
-}
-
 function diasDesde(dataIso) {
   if (!dataIso) return Infinity;
   const diffMs = Date.now() - new Date(dataIso).getTime();
@@ -154,33 +146,48 @@ function renderizarRecompensas(recompensas) {
   return true;
 }
 
+// Novidades das sugestões do cliente: resposta escrita e decisão (aceita ou
+// recusada, com o motivo), a mais recente primeiro.
 function renderizarRespostas(avaliacoes) {
   const lista = document.getElementById("listaRespostas");
   const vazio = document.getElementById("vazioRespostas");
   lista.innerHTML = "";
 
-  const respondidas = avaliacoes
-    .filter((av) => av.resposta && av.resposta.trim())
-    .sort((a, b) => new Date(b.dataResposta || 0) - new Date(a.dataResposta || 0));
+  const eventos = [];
+  avaliacoes.forEach((av) => {
+    const nomeEstab = escapeHtml(av.estabelecimento ? av.estabelecimento.nome : "Estabelecimento");
+    if (av.resposta && av.resposta.trim()) {
+      eventos.push({ data: av.dataResposta, icone: "fa-reply",
+        titulo: `${nomeEstab} respondeu sua sugestão`, texto: escapeHtml(av.resposta) });
+    }
+    const chave = chaveStatus(av.status);
+    if (chave === "aceita" && av.dataDecisao) {
+      eventos.push({ data: av.dataDecisao, icone: "fa-circle-check",
+        titulo: `${nomeEstab} aceitou sua sugestão`, texto: `+500 pontos · ${escapeHtml(av.comentario)}` });
+    } else if (chave === "recusada" && av.dataDecisao) {
+      eventos.push({ data: av.dataDecisao, icone: "fa-circle-xmark",
+        titulo: `${nomeEstab} recusou sua sugestão`, texto: `Motivo: ${escapeHtml(av.motivoRecusa || "não informado")}` });
+    }
+  });
+  eventos.sort((a, b) => new Date(b.data || 0) - new Date(a.data || 0));
 
-  if (respondidas.length === 0) {
+  if (eventos.length === 0) {
     vazio.style.display = "block";
     return false;
   }
   vazio.style.display = "none";
 
-  respondidas.forEach((av) => {
-    const nomeEstab = av.estabelecimento ? av.estabelecimento.nome : "Estabelecimento";
+  eventos.forEach((ev) => {
     const card = document.createElement("div");
     card.className = "notif-card";
     card.onclick = () => (window.location.href = "sugestoesCli.html");
     card.innerHTML = `
-      <div class="notif-card-icone"><i class="fas fa-reply"></i></div>
+      <div class="notif-card-icone"><i class="fas ${ev.icone}"></i></div>
       <div class="notif-card-corpo">
-        <span class="notif-card-titulo">${escapeHtml(nomeEstab)} respondeu sua sugestão</span>
-        <span class="notif-card-texto">${escapeHtml(av.resposta)}</span>
+        <span class="notif-card-titulo">${ev.titulo}</span>
+        <span class="notif-card-texto">${ev.texto}</span>
       </div>
-      <span class="notif-card-tempo">${tempoRelativo(av.dataResposta)}</span>
+      <span class="notif-card-tempo">${tempoRelativo(ev.data)}</span>
     `;
     lista.appendChild(card);
   });
