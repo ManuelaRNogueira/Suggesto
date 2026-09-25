@@ -2,6 +2,7 @@ package com.suggesto.backend.repository;
 
 import com.suggesto.backend.model.MembroEquipe;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -18,5 +19,7 @@ public interface MembroEquipeRepository extends JpaRepository<MembroEquipe, Long
 
     long countByEstabelecimento_IdGerente(Long idGerente);
 
+    // Delete derivado precisa de transação; sem ela o Spring dá erro 500.
+    @Transactional
     void deleteByUsuario_IdAndEstabelecimento_IdEstabelecimento(Long usuarioId, Long estabelecimentoId);
 }
