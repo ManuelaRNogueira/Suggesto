@@ -404,6 +404,10 @@ function carregarDadosUsuario() {
         fetch(`${window.API_BASE}/usuarios/${idUsuario}`)
             .then((r) => (r.ok ? r.json() : null))
             .then((usuario) => {
+                // Total ganho na vida (resgates não descontam), igual ao nível.
+                const ganhos = usuario?.pontosAcumulados ?? 0;
+                document.getElementById("totalPontosGanhos").innerText =
+                    (ganhos > 0 ? "+" : "") + ganhos.toLocaleString("pt-BR");
                 const urlFoto = resolverUrlFotoUsuario(usuario?.fotoUrl);
                 if (urlFoto && elementoAvatar) {
                     elementoAvatar.innerHTML = `<img src="${urlFoto}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`;
