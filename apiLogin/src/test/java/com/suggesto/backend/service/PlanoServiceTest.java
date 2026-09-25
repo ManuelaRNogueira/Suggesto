@@ -135,4 +135,30 @@ class PlanoServiceTest {
 
         verify(usuarioRepository, never()).save(any());
     }
+
+    // ── Recompensas por plano ────────────────────────────────────────────
+
+    private Estabelecimento estabDoDono(Plano plano) {
+        Usuario u = dono(30L);
+        u.setPlano(plano);
+        when(usuarioRepository.findById(30L)).thenReturn(Optional.of(u));
+        Estabelecimento e = new Estabelecimento();
+        e.setIdGerente(30L);
+        return e;
+    }
+
+    @Test
+    void basicoNaoCadastraRecompensa() {
+        Plano basico = plano("Básico", 1, 1);
+        basico.setPermiteRecompensas(false);
+
+        assertThatThrownBy(() -> planoService.validarRecompensas(estabDoDono(basico)))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("não inclui recompensas");
+    }
+
+    @Test
+    void proCadastraRecompensa() {
+        planoService.validarRecompensas(estabDoDono(plano("Pro", 3, 3)));
+    }
 }

@@ -7,6 +7,7 @@ import com.suggesto.backend.repository.MembroEquipeRepository;
 import com.suggesto.backend.repository.RecompensaRepository;
 import com.suggesto.backend.repository.UsuarioRepository;
 import com.suggesto.backend.service.CloudinaryService;
+import com.suggesto.backend.service.PlanoService;
 import com.suggesto.backend.util.UploadStorage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -36,6 +37,9 @@ public class RecompensaController {
 
     @Autowired
     private CloudinaryService cloudinaryService;
+
+    @Autowired
+    private PlanoService planoService;
 
     // Todas as recompensas de todos os estabelecimentos, sem filtro — usado
     // em telas mais gerais (ex.: vitrine de recompensas do app).
@@ -75,6 +79,7 @@ public class RecompensaController {
 
             Estabelecimento estabelecimento = estabelecimentoRepository.findById(idEstabelecimento)
                     .orElseThrow(() -> new IllegalArgumentException("Estabelecimento não encontrado."));
+            planoService.validarRecompensas(estabelecimento);
 
             Recompensa recompensa = new Recompensa();
             recompensa.setNome(nome);
@@ -87,6 +92,8 @@ public class RecompensaController {
             return ResponseEntity.ok(salva);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("success", false, "message", e.getMessage()));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import Icone, { IC } from "./Icones";
 import {
   buscarMeuPlano,
@@ -39,6 +39,7 @@ function bloqueadoPorPlano(item, plano) {
 }
 
 export default function AdminShell() {
+  const { pathname } = useLocation();
   const [badges, setBadges] = useState({});
   const [usuario, setUsuario] = useState({ nome: "", email: "" });
   const [confirmandoSaida, setConfirmandoSaida] = useState(false);
@@ -90,6 +91,10 @@ export default function AdminShell() {
       vivo = false;
     };
   }, [souDonoDeAlgo]);
+
+  // O menu só tranca o item; aqui a rota também fica fechada pra quem chega
+  // direto pelo endereço (ex.: /estabelecimento/3/recompensas no Básico).
+  const rotaBloqueada = NAV.find((item) => bloqueadoPorPlano(item, plano) && pathname.endsWith(item.para));
 
   const confirmarSair = () => {
     localStorage.clear();
@@ -205,7 +210,20 @@ export default function AdminShell() {
       </aside>
 
       <main className="adm-conteudo">
-        <Outlet />
+        {rotaBloqueada ? (
+          <section className="adm-cartao">
+            <h2 className="adm-cartao-titulo">Disponível no {PLANO_SUGERIDO}</h2>
+            <p className="adm-modal-texto">
+              "{rotaBloqueada.rotulo}" não está incluído no seu plano atual. Faça upgrade
+              para o {PLANO_SUGERIDO} para liberar essa função.
+            </p>
+            <NavLink to="/plano" className="adm-btn adm-btn-principal">
+              Ver planos
+            </NavLink>
+          </section>
+        ) : (
+          <Outlet />
+        )}
       </main>
 
       {confirmandoSaida && (

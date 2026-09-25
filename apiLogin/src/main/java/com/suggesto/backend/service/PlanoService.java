@@ -113,6 +113,16 @@ public class PlanoService {
         }
     }
 
+    // Recompensa é recurso de plano: o dono do estabelecimento precisa ter um
+    // plano que libere (o menu do desktop só esconde; quem barra é aqui).
+    public void validarRecompensas(Estabelecimento estab) {
+        Plano plano = planoEfetivo(idDonoDoEstabelecimento(estab));
+        if (plano != null && !plano.getPermiteRecompensas()) {
+            throw new IllegalStateException(
+                    "O plano " + plano.getNome() + " não inclui recompensas. Faça upgrade para o Pro.");
+        }
+    }
+
     // Troca o plano de quem possui pelo menos um estabelecimento ativo — só
     // esse tipo de conta tem um plano próprio pra trocar. Rebaixar para um
     // plano que não cabe no que já existe (mais estabelecimentos/admins do que o
