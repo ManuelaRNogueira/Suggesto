@@ -116,15 +116,20 @@ public class VisitaService {
         return !LocalDateTime.now().isBefore(expiraEm(visita));
     }
 
-    // Quem faz check-in de novo com uma visita ainda aberta (não usada, dentro
-    // da janela) recebe a mesma: ler o QR duas vezes não gera duas avaliações.
+    // Um check-in por usuário e local a cada JANELA. Quem repete com a visita
+    // ainda aberta (não usada) recebe a mesma; quem já usou a visita da janela
+    // espera ela passar — senão ler o mesmo QR de novo (ou a foto dele) viraria
+    // avaliações ilimitadas.
     private Visita visitaAbertaOuNova(Usuario usuario, Estabelecimento estab, String metodo) {
         LocalDateTime inicioDaJanela = LocalDateTime.now().minus(JANELA);
-        for (Visita aberta : visitaRepository.findByUsuario_IdAndEstabelecimento_IdEstabelecimentoAndDataCheckinAfter(
+        for (Visita recente : visitaRepository.findByUsuario_IdAndEstabelecimento_IdEstabelecimentoAndDataCheckinAfter(
                 usuario.getId(), estab.getIdEstabelecimento(), inicioDaJanela)) {
-            if (!avaliacaoRepository.existsByVisita_Id(aberta.getId())) {
-                return aberta;
+            if (!avaliacaoRepository.existsByVisita_Id(recente.getId())) {
+                return recente;
             }
+            long horas = (long) Math.ceil(Duration.between(LocalDateTime.now(), expiraEm(recente)).toMinutes() / 60.0);
+            throw new IllegalArgumentException("Você já avaliou este local nas últimas 24 horas. "
+                    + "Dá pra avaliar de novo em " + (horas <= 1 ? "1 hora" : horas + " horas") + ".");
         }
 
         Visita nova = new Visita();

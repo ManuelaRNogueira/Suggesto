@@ -103,15 +103,17 @@ class VisitaServiceTest {
     }
 
     @Test
-    void visitaAbertaJaUsadaNaoEReaproveitada() {
+    void visitaJaUsadaNaJanelaBloqueiaNovoCheckin() {
         cenario();
         Visita usada = visita(9L, LocalDateTime.now().minusHours(2));
         when(visitaRepository.findByUsuario_IdAndEstabelecimento_IdEstabelecimentoAndDataCheckinAfter(
                 eq(ID_USUARIO), eq(ID_ESTAB), any())).thenReturn(List.of(usada));
         when(avaliacaoRepository.existsByVisita_Id(9L)).thenReturn(true);
 
-        assertThat(visitaService.checkinPorToken(ID_USUARIO, ID_ESTAB, TOKEN)).isNotSameAs(usada);
-        verify(visitaRepository).save(any());
+        assertThatThrownBy(() -> visitaService.checkinPorToken(ID_USUARIO, ID_ESTAB, TOKEN))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("últimas 24 horas").hasMessageContaining("22 horas");
+        verify(visitaRepository, never()).save(any());
     }
 
     // ── Check-in por localização ─────────────────────────────────────────
