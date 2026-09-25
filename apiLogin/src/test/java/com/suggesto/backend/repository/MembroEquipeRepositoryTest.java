@@ -3,6 +3,7 @@ package com.suggesto.backend.repository;
 import com.suggesto.backend.model.Estabelecimento;
 import com.suggesto.backend.model.MembroEquipe;
 import com.suggesto.backend.model.Usuario;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -25,6 +26,14 @@ class MembroEquipeRepositoryTest {
 
     @Autowired
     private EstabelecimentoRepository estabelecimentoRepository;
+
+    // Sem transação nada é desfeito sozinho; limpa pra não sujar os outros testes.
+    @AfterEach
+    void limpar() {
+        membroEquipeRepository.deleteAll();
+        estabelecimentoRepository.deleteAll();
+        usuarioRepository.deleteAll();
+    }
 
     @Test
     void removeMembroDaEquipeSemTransacaoAberta() {
