@@ -20,6 +20,9 @@ class _SugerirPageState extends State<SugerirPage> {
   final TextEditingController texto = TextEditingController();
   final int maxCaracteres = 500;
   int? idCategoriaSelecionada;
+  // Mesmos três tipos do site (fazerSugestao.html): valor enviado → rótulo.
+  static const tipos = {'sugestao': 'Sugestão', 'critica': 'Crítica', 'elogio': 'Elogio'};
+  String tipoSelecionado = 'sugestao';
   int notaSelecionada = 0; // 0 = nenhuma estrela
   bool enviado = false;
 
@@ -140,6 +143,7 @@ class _SugerirPageState extends State<SugerirPage> {
         idUsuario: Sessao.idUsuario!,
         idEstabelecimento: idEstabelecimento,
         idCategoria: idCategoriaSelecionada!,
+        tipo: tipoSelecionado,
         nota: notaSelecionada,
         comentario: texto.text.trim(),
         idVisita: idVisita,
@@ -216,6 +220,8 @@ class _SugerirPageState extends State<SugerirPage> {
                   SizedBox(height: 12),
                   Visita(),
                   SizedBox(height: 20),
+                  Tipos(),
+                  SizedBox(height: 12),
                   AreaTexto(),
                   SizedBox(height: 20),
                   Estrelas(),
@@ -478,13 +484,32 @@ class _SugerirPageState extends State<SugerirPage> {
 
   Widget CategoriaCard(Map<String, dynamic> categoria) {
     final id = (categoria['idCategoria'] as num).toInt();
-    final label = categoria['nomeCategoria'] as String;
     final isSelected = idCategoriaSelecionada == id;
+    return Opcao(categoria['nomeCategoria'] as String, isSelected, () => setState(() {
+      idCategoriaSelecionada = isSelected ? null : id;
+    }));
+  }
 
+  // TIPO (sugestão, crítica ou elogio) — sempre um marcado.
+  Widget Tipos() {
+    return Row(
+      children: [
+        for (final t in tipos.entries) ...[
+          if (t.key != tipos.keys.first) SizedBox(width: 10),
+          Expanded(
+            child: SizedBox(
+              height: 40,
+              child: Opcao(t.value, tipoSelecionado == t.key, () => setState(() => tipoSelecionado = t.key)),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget Opcao(String label, bool isSelected, VoidCallback onTap) {
     return GestureDetector(
-      onTap: () => setState(() {
-        idCategoriaSelecionada = isSelected ? null : id;
-      }),
+      onTap: onTap,
       child: AnimatedContainer(
         duration: Duration(milliseconds: 200),
         curve: Curves.easeOut,
