@@ -29,7 +29,7 @@ class _SugerirPageState extends State<SugerirPage> {
   bool carregandoCategorias = true;
 
   // Visita (check-in) que vai junto da sugestão e dá o selo "Visita confirmada".
-  // Ainda opcional: sem ela a sugestão sai sem selo (obrigatória no ticket 07).
+  // Obrigatória: sem ela a API recusa a sugestão.
   int? idVisita;
   String? avisoVisita;
   bool fazendoCheckin = false;
@@ -128,6 +128,11 @@ class _SugerirPageState extends State<SugerirPage> {
       return;
     }
 
+    if (idVisita == null) {
+      _pedirCheckin('Confirme sua visita antes de enviar: leia o QR de check-in do local ou toque em "Estou aqui".');
+      return;
+    }
+
     setState(() => enviado = true);
 
     try {
@@ -165,11 +170,29 @@ class _SugerirPageState extends State<SugerirPage> {
       });
     } on ApiException catch (e) {
       if (!mounted) return;
+      // Todas as recusas de visita da API falam em "visita" (expirou, já usada...):
+      // some o selo e volta o botão de check-in, com o motivo.
       setState(() => enviado = false);
+      if (e.mensagem.toLowerCase().contains('visita')) {
+        _pedirCheckin(e.mensagem);
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.mensagem, style: TextStyle(fontFamily: 'Poppins')), backgroundColor: Colors.redAccent),
       );
     }
+  }
+
+  // Tira o selo e volta o botão "Estou aqui" com o motivo (o aviso fica no
+  // topo da tela, por isso repete no SnackBar).
+  void _pedirCheckin(String motivo) {
+    setState(() {
+      idVisita = null;
+      avisoVisita = motivo;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(motivo, style: TextStyle(fontFamily: 'Poppins')), backgroundColor: Colors.redAccent),
+    );
   }
 
   @override

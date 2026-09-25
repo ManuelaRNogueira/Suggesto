@@ -1,6 +1,5 @@
 package com.suggesto.backend.service;
 
-import com.suggesto.backend.config.UsuarioConvidadoSeeder;
 import com.suggesto.backend.dto.AvaliacaoRequestDTO;
 import com.suggesto.backend.model.Avaliacao;
 import com.suggesto.backend.model.Categoria;
@@ -54,16 +53,16 @@ public class AvaliacaoService {
     @Autowired
     private VisitaService visitaService;
 
-    // Cria uma nova sugestão/crítica/elogio. Se não veio um usuário logado
-    // (alguém dando feedback sem estar cadastrado), usa a conta "convidado"
-    // padrão do sistema pra não deixar a avaliação sem dono.
+    // Cria uma nova sugestão/crítica/elogio. Só avalia quem fez check-in no
+    // local: toda avaliação tem um usuário (quem chega pelo QR já ganha um
+    // convidado próprio) e uma visita válida desse usuário nesse local.
     @Transactional
     public void registrarNovaAvaliacao(AvaliacaoRequestDTO dto) {
-        Usuario usuario = dto.getIdUsuario() != null
-                ? usuarioRepository.findById(dto.getIdUsuario())
-                        .orElseThrow(() -> new RuntimeException("Usuário não encontrado. ID: " + dto.getIdUsuario()))
-                : usuarioRepository.findByUsername(UsuarioConvidadoSeeder.USERNAME_CONVIDADO)
-                        .orElseThrow(() -> new RuntimeException("Usuário convidado não encontrado."));
+        if (dto.getIdUsuario() == null) {
+            throw new IllegalArgumentException("Entre na sua conta (ou como convidado) antes de avaliar.");
+        }
+        Usuario usuario = usuarioRepository.findById(dto.getIdUsuario())
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado. ID: " + dto.getIdUsuario()));
 
         Estabelecimento est = estabelecimentoRepository.findById(dto.getIdEstabelecimento())
                 .orElseThrow(() -> new RuntimeException("Estabelecimento não encontrado. ID: " + dto.getIdEstabelecimento()));
@@ -71,12 +70,14 @@ public class AvaliacaoService {
         Categoria categoria = categoriaRepository.findById(dto.getIdCategoria())
                 .orElseThrow(() -> new RuntimeException("Categoria não encontrada com o ID: " + dto.getIdCategoria()));
 
+        if (dto.getIdVisita() == null) {
+            throw new IllegalArgumentException(
+                    "Confirme sua visita antes de avaliar: leia o QR de check-in do local ou use \"Estou aqui\".");
+        }
+        Visita visita = visitaService.validarParaAvaliacao(dto.getIdVisita(), usuario.getId(), est.getIdEstabelecimento());
+
         // O plano do estabelecimento pode limitar quantos feedbacks ele recebe por mês.
         planoService.validarNovoFeedback(est);
-
-        // Visita ainda é opcional (o mobile não manda); quando vem, tem que valer.
-        Visita visita = dto.getIdVisita() == null ? null
-                : visitaService.validarParaAvaliacao(dto.getIdVisita(), usuario.getId(), est.getIdEstabelecimento());
 
         Avaliacao avaliacao = new Avaliacao();
         avaliacao.setTipo(dto.getTipo());
@@ -87,10 +88,8 @@ public class AvaliacaoService {
         avaliacao.setEstabelecimento(est);
         avaliacao.setCategoria(categoria);
         avaliacao.setUsuario(usuario);
-        if (visita != null) {
-            avaliacao.setVisita(visita);
-            avaliacao.setMetodoVisita(visita.getMetodo());
-        }
+        avaliacao.setVisita(visita);
+        avaliacao.setMetodoVisita(visita.getMetodo());
 
         avaliacaoRepository.save(avaliacao);
     }

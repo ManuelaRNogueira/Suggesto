@@ -197,7 +197,7 @@ class AvaliacaoServiceTest {
         assertThat(avaliacaoService.atualizarStatus(1L, "pendente", ID_GERENTE, null).getStatus()).isEqualTo("PENDENTE");
     }
 
-    // ── Enviar avaliação com visita (ainda opcional) ─────────────────────
+    // ── Enviar avaliação: visita obrigatória ─────────────────────────────
 
     private AvaliacaoRequestDTO novaAvaliacao(Long idVisita) {
         Usuario autor = new Usuario();
@@ -246,17 +246,48 @@ class AvaliacaoServiceTest {
         verify(avaliacaoRepository, never()).save(any());
     }
 
-    // Até o ticket 07, quem ainda não manda visita (mobile) continua avaliando.
     @Test
-    void avaliacaoSemVisitaContinuaAceitaSemSelo() {
+    void avaliacaoSemVisitaERecusadaPedindoCheckin() {
         AvaliacaoRequestDTO dto = novaAvaliacao(null);
 
-        avaliacaoService.registrarNovaAvaliacao(dto);
+        assertThatThrownBy(() -> avaliacaoService.registrarNovaAvaliacao(dto))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("check-in");
+        verify(avaliacaoRepository, never()).save(any());
+    }
 
-        org.mockito.ArgumentCaptor<Avaliacao> salva = org.mockito.ArgumentCaptor.forClass(Avaliacao.class);
-        verify(avaliacaoRepository).save(salva.capture());
-        assertThat(salva.getValue().getVisita()).isNull();
-        assertThat(salva.getValue().getMetodoVisita()).isNull();
-        verify(visitaService, never()).validarParaAvaliacao(any(), any(), any());
+    // Sem o fallback pro convidado compartilhado: sem usuário, sem avaliação.
+    @Test
+    void avaliacaoSemUsuarioERecusada() {
+        AvaliacaoRequestDTO dto = new AvaliacaoRequestDTO();
+        dto.setIdEstabelecimento(ID_ESTAB);
+        dto.setIdCategoria(1L);
+        dto.setIdVisita(9L);
+
+        assertThatThrownBy(() -> avaliacaoService.registrarNovaAvaliacao(dto))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Entre na sua conta");
+        verify(avaliacaoRepository, never()).save(any());
+    }
+
+    // O limite do plano só é conferido depois da visita.
+    @Test
+    void visitaInvalidaNemChegaNoLimiteDoPlano() {
+        AvaliacaoRequestDTO dto = novaAvaliacao(9L);
+        when(visitaService.validarParaAvaliacao(9L, 50L, ID_ESTAB))
+                .thenThrow(new IllegalArgumentException("Sua visita expirou."));
+
+        assertThatThrownBy(() -> avaliacaoService.registrarNovaAvaliacao(dto));
+        verify(planoService, never()).validarNovoFeedback(any());
+    }
+
+    @Test
+    void limiteDoPlanoContinuaValendoComVisitaValida() {
+        AvaliacaoRequestDTO dto = novaAvaliacao(9L);
+        when(visitaService.validarParaAvaliacao(9L, 50L, ID_ESTAB)).thenReturn(new Visita());
+        org.mockito.Mockito.doThrow(new IllegalStateException("Limite do mês atingido."))
+                .when(planoService).validarNovoFeedback(any());
+
+        assertThatThrownBy(() -> avaliacaoService.registrarNovaAvaliacao(dto))
+                .isInstanceOf(IllegalStateException.class);
+        verify(avaliacaoRepository, never()).save(any());
     }
 }

@@ -528,7 +528,7 @@ async function entrarComoConvidadoSeNecessario() {
 
 // Registra a visita (prova de que a pessoa está no local) pelo token do QR
 // ({ token }) ou pela localização ({ lat, lng }). Devolve se deu certo.
-// Se falhar, a avaliação ainda sai, só que sem o selo "Visita confirmada".
+// Sem visita confirmada o envio é bloqueado (a API exige).
 async function fazerCheckin(idEstabelecimento, prova) {
     try {
         const r = await fetch(`${window.API_BASE}/estabelecimentos/${idEstabelecimento}/checkin`, {
@@ -739,11 +739,23 @@ function atualizarResumo() {
   document.getElementById('res-nota').textContent = estado.nota ? `${estado.nota}/5` : '—';
 }
 
+// Leva o cliente de volta ao check-in: mostra o motivo e o "Estou aqui".
+function pedirCheckin(texto) {
+  estado.idVisita = null;
+  mostrarAvisoVisita(texto, true);
+  document.getElementById('btn-estou-aqui').hidden = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 async function enviar() {
   const msg = document.getElementById('mensagem').value.trim();
   if (!msg) return;
 
   if (!estado.idEstabelecimento) { alert('Erro: Estabelecimento não foi selecionado!'); return; }
+  if (!estado.idVisita) {
+    pedirCheckin('Confirme sua visita antes de enviar: leia o QR de check-in do local ou toque em "Estou aqui".');
+    return;
+  }
 
   const btn = document.getElementById('btn-enviar'); btn.disabled = true;
   document.getElementById('spinner').style.display = 'block'; document.getElementById('enviar-ico').style.display = 'none';
@@ -753,8 +765,6 @@ async function enviar() {
   const payload = {
     idUsuario: idUsuarioLogado ? parseInt(idUsuarioLogado) : null,
     idEstabelecimento: parseInt(estado.idEstabelecimento),
-    // Se por algum motivo entrarComoConvidadoSeNecessario() falhou (ex: API fora do
-    // ar no load), idUsuario cai como null e o backend usa o convidado padrão.
     idCategoria: parseInt(estado.idCategoria) || 1,
     nota: parseInt(estado.nota), comentario: msg, tipo: estado.tipo,
     idVisita: estado.idVisita
@@ -775,7 +785,9 @@ async function enviar() {
   } catch (err) {
     btn.disabled = false; document.getElementById('spinner').style.display = 'none';
     document.getElementById('enviar-ico').style.display = 'block'; document.getElementById('enviar-txt').textContent = 'Tentar novamente';
-    alert(err.message || 'Erro ao enviar. Verifique se a API está rodando.');
+    // Todas as recusas de visita da API falam em "visita" (expirou, já usada...).
+    if (/visita/i.test(err.message)) pedirCheckin(err.message);
+    else alert(err.message || 'Erro ao enviar. Verifique se a API está rodando.');
   }
 }
 
