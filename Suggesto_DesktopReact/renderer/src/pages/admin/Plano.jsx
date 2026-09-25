@@ -3,7 +3,7 @@ import { Topo } from "../../components/AdminShell";
 import Icone, { IC } from "../../components/Icones";
 import CartaoPagamento from "../../components/CartaoPagamento";
 import { EstadoCarregando, EstadoErro } from "./Inicio";
-import { buscarMeuPlano, listarPlanos, possuoAlgumEstabelecimento, trocarPlano } from "../../api/admin";
+import { buscarMeuPlano, conferirTrocaPlano, listarPlanos, possuoAlgumEstabelecimento, trocarPlano } from "../../api/admin";
 import "./Plano.css";
 
 function limite(n, singular, plural) {
@@ -19,6 +19,10 @@ export default function Plano() {
   const [escolhido, setEscolhido] = useState(null);
   const [trocando, setTrocando] = useState(false);
   const [erroTroca, setErroTroca] = useState(null);
+  // Motivo pelo qual o plano escolhido não cabe (ex: equipe grande demais).
+  // Com ele o cartão nem aparece. null = pode trocar ou ainda conferindo.
+  const [bloqueio, setBloqueio] = useState(null);
+  const [conferindo, setConferindo] = useState(false);
   const [aviso, setAviso] = useState(null);
   // null = ainda não sabemos; "sou dona de algo" agora é por estabelecimento,
   // então precisa ser buscado (não dá mais pra saber só com o localStorage).
@@ -58,6 +62,16 @@ export default function Plano() {
     const t = setTimeout(() => setAviso(null), 3200);
     return () => clearTimeout(t);
   }, [aviso]);
+
+  const abrirTroca = (p) => {
+    setEscolhido(p);
+    setErroTroca(null);
+    setBloqueio(null);
+    setConferindo(true);
+    conferirTrocaPlano(p.nome)
+      .catch((e) => setBloqueio(e.message || "Não foi possível trocar de plano."))
+      .finally(() => setConferindo(false));
+  };
 
   const confirmarTroca = async () => {
     if (!escolhido) return;
@@ -121,7 +135,7 @@ export default function Plano() {
                 type="button"
                 className={`adm-btn${atual ? "" : " adm-btn-principal"} pln-btn`}
                 disabled={atual || principal === false}
-                onClick={() => setEscolhido(p)}
+                onClick={() => abrirTroca(p)}
               >
                 {atual ? "Plano atual" : `Trocar para o ${p.nome}`}
               </button>
@@ -171,13 +185,20 @@ export default function Plano() {
               O plano do estabelecimento passa a ser {escolhido.nome}
               {escolhido.preco ? ` (R$ ${escolhido.preco.toFixed(2).replace(".", ",")}/mês)` : ""}.
             </p>
+            {bloqueio && <div className="adm-erro">{bloqueio}</div>}
             {erroTroca && <div className="adm-erro">{erroTroca}</div>}
 
-            <CartaoPagamento
-              onConfirmar={confirmarTroca}
-              carregando={trocando}
-              textoBotao={`Confirmar assinatura do ${escolhido.nome}`}
-            />
+            {conferindo ? (
+              <p className="adm-modal-texto">Conferindo seu plano...</p>
+            ) : (
+              !bloqueio && (
+                <CartaoPagamento
+                  onConfirmar={confirmarTroca}
+                  carregando={trocando}
+                  textoBotao={`Confirmar assinatura do ${escolhido.nome}`}
+                />
+              )
+            )}
 
             <button
               type="button"

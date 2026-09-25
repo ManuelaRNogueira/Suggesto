@@ -161,4 +161,20 @@ class PlanoServiceTest {
     void proCadastraRecompensa() {
         planoService.validarRecompensas(estabDoDono(plano("Pro", 3, 3)));
     }
+
+    // A conferência usada pelo desktop antes do cartão não pode trocar nada.
+    @Test
+    void conferirTrocaNaoTrocaOPlano() {
+        Usuario usuario = dono(10L);
+        Plano pro = plano("Pro", 3, 3);
+        when(usuarioRepository.findById(10L)).thenReturn(Optional.of(usuario));
+        when(estabelecimentoRepository.existsByIdGerenteAndAtivo(10L, 1)).thenReturn(true);
+        when(planoRepository.findByNome("Pro")).thenReturn(Optional.of(pro));
+        when(estabelecimentoRepository.buscarPorGerenteAtivos(10L)).thenReturn(List.of(new Estabelecimento()));
+        when(membroEquipeRepository.countByEstabelecimento_IdGerente(10L)).thenReturn(1L);
+
+        assertThat(planoService.validarTroca(10L, "Pro")).isEqualTo(pro);
+        assertThat(usuario.getPlano()).isNull();
+        verify(usuarioRepository, never()).save(any());
+    }
 }

@@ -128,6 +128,16 @@ public class PlanoService {
     // plano que não cabe no que já existe (mais estabelecimentos/admins do que o
     // novo limite permite) é bloqueado em vez de deixar o excesso "congelado".
     public Plano trocarPlano(Long idUsuario, String nomePlano) {
+        Plano novoPlano = validarTroca(idUsuario, nomePlano);
+        Usuario usuario = usuarioRepository.findById(idUsuario).orElseThrow();
+        usuario.setPlano(novoPlano);
+        usuarioRepository.save(usuario);
+        return novoPlano;
+    }
+
+    // As checagens da troca, sem trocar: o desktop consulta antes de pedir o
+    // cartão, pra quem não cabe no plano saber o motivo logo de cara.
+    public Plano validarTroca(Long idUsuario, String nomePlano) {
         if (idUsuario == null) {
             throw new IllegalArgumentException("idUsuario é obrigatório.");
         }
@@ -135,7 +145,7 @@ public class PlanoService {
             throw new IllegalArgumentException("Escolha um plano.");
         }
 
-        Usuario usuario = usuarioRepository.findById(idUsuario)
+        usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
 
         if (!estabelecimentoRepository.existsByIdGerenteAndAtivo(idUsuario, 1)) {
@@ -168,8 +178,6 @@ public class PlanoService {
             }
         }
 
-        usuario.setPlano(novoPlano);
-        usuarioRepository.save(usuario);
         return novoPlano;
     }
 

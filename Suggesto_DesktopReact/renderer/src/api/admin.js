@@ -167,6 +167,12 @@ export function listarPlanos() {
 // deixar chegar até aqui se não for, mas o back-end confere de novo do
 // lado dele e recusa a troca se o que a pessoa já tem hoje (mais
 // estabelecimentos, mais gente na equipe...) não couber no plano novo.
+// Pergunta se a troca cabe no plano novo antes de pedir o cartão.
+export function conferirTrocaPlano(nomePlano) {
+  const id = localStorage.getItem("idUsuario");
+  return fetchJson(`${API_BASE}/planos/meu/troca?idUsuario=${id}&plano=${encodeURIComponent(nomePlano)}`);
+}
+
 export function trocarPlano(nomePlano) {
   const id = localStorage.getItem("idUsuario");
   return fetchJson(`${API_BASE}/planos/meu`, {

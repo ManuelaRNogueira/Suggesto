@@ -33,6 +33,19 @@ public class PlanoController {
 
     // Troca o plano do administrador principal. Erros de limite/permissão viram
     // o texto puro da mensagem, no mesmo padrão do POST /api/estabelecimentos.
+    // Confere se a troca pode ser feita, sem trocar (mesmas respostas do PUT).
+    @GetMapping("/meu/troca")
+    public ResponseEntity<?> conferirTroca(@RequestParam Long idUsuario, @RequestParam String plano) {
+        try {
+            planoService.validarTroca(idUsuario, plano);
+            return ResponseEntity.ok(Map.of("pode", true));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PutMapping("/meu")
     public ResponseEntity<?> trocarPlano(@RequestBody Map<String, Object> dados) {
         try {
