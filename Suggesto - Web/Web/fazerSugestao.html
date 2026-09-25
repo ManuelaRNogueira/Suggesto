@@ -542,6 +542,8 @@ async function fazerCheckin(idEstabelecimento, prova) {
         return true;
     } catch (err) {
         mostrarAvisoVisita(err.message || 'Não foi possível confirmar sua visita.', true);
+        // QR recusado (ex: antigo): sobra a localização como saída.
+        document.getElementById('btn-estou-aqui').hidden = false;
         return false;
     }
 }
