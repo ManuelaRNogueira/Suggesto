@@ -28,6 +28,7 @@ function iniciarEventos() {
     document.getElementById("btnEditarFoto")?.addEventListener("click", () => abrirEdicao(true));
     document.getElementById("editFotoFile")?.addEventListener("change", atualizarPreviaFotoSelecionada);
     document.getElementById("btnRemoverFotoSelecionada")?.addEventListener("click", limparSelecaoFoto);
+    iniciarCampoCep();
 
     document.querySelectorAll(".toggle").forEach(toggle => {
         toggle.addEventListener("click", (e) => toggleSwitch(toggle, e));
@@ -63,6 +64,10 @@ function abrirEdicao(selecionarFoto = false) {
     if (editFotoFile) editFotoFile.value = "";
     liberarFotoPreviewTemporaria();
     restaurarPreviaFotoAtual();
+    setValor("editUsername", usuarioAtual.username);
+    setValor("editCep", usuarioAtual.cep);
+    setValor("editCidade", usuarioAtual.cidade);
+    setValor("editEstado", usuarioAtual.estado);
 
     document.getElementById("modalEdicao")?.classList.add("aberto");
 
@@ -76,6 +81,43 @@ function fecharModal(id) {
     if (id === "modalEdicao") {
         liberarFotoPreviewTemporaria();
     }
+}
+
+function setValor(id, valor) {
+    const campo = document.getElementById(id);
+    if (campo) campo.value = valor || "";
+}
+
+// CEP -> cidade e estado pelo ViaCEP, mesma fonte do cadastro.
+function iniciarCampoCep() {
+    const campoCep = document.getElementById("editCep");
+    if (!campoCep) return;
+
+    campoCep.addEventListener("input", async function () {
+        const digitos = this.value.replace(/\D/g, "").substring(0, 8);
+        this.value = digitos.length > 5 ? digitos.substring(0, 5) + "-" + digitos.substring(5) : digitos;
+
+        // Cidade em branco é o que a validação usa para saber que o CEP não foi resolvido.
+        setValor("editCidade", "");
+        setValor("editEstado", "");
+        if (digitos.length < 8) return;
+
+        try {
+            const resposta = await fetch(`https://viacep.com.br/ws/${digitos}/json/`);
+            const dados = await resposta.json();
+
+            if (dados.erro) {
+                mostrarToast("CEP não encontrado. Confira o número digitado.");
+                return;
+            }
+
+            setValor("editCidade", dados.localidade);
+            setValor("editEstado", dados.uf);
+        } catch (error) {
+            console.error("Erro ao buscar CEP:", error);
+            mostrarToast("Não foi possível consultar o CEP agora. Tente de novo.");
+        }
+    });
 }
 
 function logout() {
@@ -105,6 +147,13 @@ async function carregarDadosUsuario() {
 
         usuarioAtual = await resposta.json();
         preencherPerfil(usuarioAtual);
+
+        // Link "Complete seu perfil" da home abre a edição direto.
+        if (location.hash === "#editar") {
+            history.replaceState(null, "", location.pathname + location.search);
+            abrirEdicao();
+        }
+
         await carregarAtividadeRecente(idUsuario);
         await carregarConquistas(idUsuario);
         await carregarConfiabilidade(idUsuario);
@@ -639,6 +688,32 @@ async function salvarEdicao() {
     const formData = new FormData();
     formData.append("nome", document.getElementById("editNome")?.value?.trim() || "");
 
+    const username = document.getElementById("editUsername")?.value?.trim() || "";
+    if (username) {
+        if (!/^[a-zA-Z0-9._]{3,30}$/.test(username)) {
+            mostrarToast("Nome de usuário deve ter de 3 a 30 caracteres e usar apenas letras, números, pontos ou underscores.");
+            return;
+        }
+        formData.append("username", username);
+    }
+
+    // CEP em branco não mexe no endereço já salvo.
+    const cep = document.getElementById("editCep")?.value?.trim() || "";
+    if (cep) {
+        const cidade = document.getElementById("editCidade")?.value?.trim() || "";
+        if (cep.replace(/\D/g, "").length !== 8) {
+            mostrarToast("Digite um CEP válido, com 8 dígitos.");
+            return;
+        }
+        if (!cidade) {
+            mostrarToast("Não encontramos esse CEP. Confira o número digitado.");
+            return;
+        }
+        formData.append("cep", cep);
+        formData.append("cidade", cidade);
+        formData.append("estado", document.getElementById("editEstado")?.value?.trim() || "");
+    }
+
     const arquivoFoto = document.getElementById("editFotoFile")?.files?.[0];
     if (arquivoFoto) {
         const erroFoto = validarArquivoFoto(arquivoFoto);
@@ -666,6 +741,9 @@ async function salvarEdicao() {
 
         if (usuarioAtual.nome) {
             localStorage.setItem("nomeUsuario", usuarioAtual.nome);
+        }
+        if (usuarioAtual.cep && usuarioAtual.cidade) {
+            localStorage.removeItem("avisoCompletarPerfil");
         }
 
         fecharModal("modalEdicao");

@@ -614,8 +614,31 @@
       </div>
 
       <div class="campo-grupo">
+        <label class="campo-label">Nome de usuário</label>
+        <input type="text" class="campo-input" id="editUsername" placeholder="Ex.: joao.silva" maxlength="30">
+      </div>
+
+      <div class="campo-grupo">
         <label class="campo-label">E-mail</label>
         <input type="email" class="campo-input" id="editEmail" placeholder="Seu e-mail" readonly>
+      </div>
+
+      <!-- Cidade e estado saem do CEP (ViaCEP), como no cadastro, para a
+           recomendação por proximidade casar com a do estabelecimento. -->
+      <div class="campo-grupo">
+        <label class="campo-label">CEP</label>
+        <input type="text" class="campo-input" id="editCep" placeholder="00000-000" maxlength="9" inputmode="numeric">
+      </div>
+
+      <div class="campo-linha">
+        <div class="campo-grupo">
+          <label class="campo-label">Cidade</label>
+          <input type="text" class="campo-input" id="editCidade" placeholder="Preenchido pelo CEP" readonly>
+        </div>
+        <div class="campo-grupo">
+          <label class="campo-label">Estado</label>
+          <input type="text" class="campo-input" id="editEstado" placeholder="UF" maxlength="2" readonly>
+        </div>
       </div>
 
       <div class="campo-grupo">

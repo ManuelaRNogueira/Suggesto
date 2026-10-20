@@ -8,6 +8,9 @@ if (modoEquipe) {
     document.getElementById('avisoEquipe').style.display = 'block';
     document.getElementById('tituloCadastro').textContent = 'Crie sua conta de administrador';
     document.getElementById('subtituloCadastro').textContent = 'Depois de criar sua conta, você vai entrar com o código do estabelecimento.';
+} else {
+    // Só clientes entram pelo Google; a conta de administrador da equipe usa senha.
+    configurarLoginGoogle({ containerId: 'botaoGoogle', texto: 'signup_with', mostrarErro: mostrarMensagem });
 }
 
 function mostrarMensagem(mensagem, tipo = 'erro') {

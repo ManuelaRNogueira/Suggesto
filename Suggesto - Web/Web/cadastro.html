@@ -18,6 +18,7 @@
   >
 
   <link rel="stylesheet" href="css/cadastro.css">
+  <link rel="stylesheet" href="css/googleLogin.css">
 </head>
 
 <body>
@@ -205,6 +206,11 @@
 
       </div>
 
+      <div class="login-google" hidden>
+        <div class="login-google-divisor">ou</div>
+        <div class="login-google-botao" id="botaoGoogle"></div>
+      </div>
+
     </div>
 
   </div>
@@ -222,7 +228,9 @@
 
 
   <script src="js/config.js"></script>
+  <script src="js/googleLogin.js"></script>
   <script src="js/cadastro.js" defer></script>
+  <script src="https://accounts.google.com/gsi/client" async defer onload="renderizarBotaoGoogle()"></script>
 
 </body>
 

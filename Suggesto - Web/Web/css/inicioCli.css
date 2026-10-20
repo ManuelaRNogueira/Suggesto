@@ -580,3 +580,61 @@ body {
   .botao-banner { width: 100%; justify-content: center; }
   .modal { padding: 24px 20px; }
 }
+
+/* ===== AVISO DE PERFIL INCOMPLETO ===== */
+.aviso-perfil {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  padding: 14px 16px;
+  border-radius: var(--arredondado);
+  background: rgba(123, 47, 190, 0.1);
+  border: 1px solid var(--cor-borda-roxa);
+}
+
+.aviso-perfil[hidden] { display: none; }
+
+.aviso-perfil-icone {
+  font-size: 18px;
+  color: var(--cor-roxo-claro);
+}
+
+.aviso-perfil-texto {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  color: var(--cor-texto-fraco);
+}
+
+.aviso-perfil-texto strong {
+  font-size: 14px;
+  color: var(--cor-texto);
+}
+
+.aviso-perfil-link {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--cor-roxo);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.aviso-perfil-link:hover { background: #6d28d9; }
+
+.aviso-perfil-fechar {
+  background: none;
+  border: none;
+  color: var(--cor-texto-muito-fraco);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.aviso-perfil-fechar:hover { color: var(--cor-texto); }

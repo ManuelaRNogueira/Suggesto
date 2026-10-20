@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./css/login.css">
+    <link rel="stylesheet" href="./css/googleLogin.css">
 </head>
 <body>
     <div class="login-page">
@@ -34,6 +35,11 @@
                 <button onclick="entrarSuggesto()">Entrar</button>
             </div>
 
+            <div class="login-google" hidden>
+                <div class="login-google-divisor">ou</div>
+                <div class="login-google-botao" id="botaoGoogle"></div>
+            </div>
+
             <div class="extras">
                 <p>Ainda não tem conta? <a href="cadastro.html" id="linkCadastro">Cadastre-se</a></p>
             </div>
@@ -45,6 +51,8 @@
     </div>
 
     <script src="js/config.js"></script>
+    <script src="js/googleLogin.js"></script>
     <script src="js/login.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer onload="renderizarBotaoGoogle()"></script>
 </body>
 </html>

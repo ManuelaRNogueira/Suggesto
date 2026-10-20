@@ -792,6 +792,8 @@ body {
   padding: 36px 32px;
   width: 100%;
   max-width: 460px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -834,6 +836,8 @@ body {
 }
 
 .campo-grupo { display: flex; flex-direction: column; gap: 6px; }
+.campo-linha { display: grid; grid-template-columns: 1fr 90px; gap: 12px; }
+.campo-linha .campo-grupo { min-width: 0; }
 .campo-label { font-size: 13px; font-weight: 500; color: var(--cor-texto-fraco); }
 .campo-input {
   background: var(--cor-fundo-3);

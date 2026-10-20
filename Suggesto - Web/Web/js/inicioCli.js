@@ -19,6 +19,7 @@ function obterIdUsuario() {
 
 document.addEventListener("DOMContentLoaded", () => {
   carregarDadosUsuario();
+  mostrarAvisoPerfilIncompleto();
   iniciarSecoesDeLocais();
   gerarChipsCategoria("filtrosRapidos", "filtro-chip");
 });
@@ -31,6 +32,19 @@ function abrirFiltro() {
   if (!painel) return;
   const aberto = painel.classList.toggle("aberto");
   botao?.classList.toggle("ativo", aberto);
+}
+
+// Conta criada pelo Google vem sem CEP/cidade. O login marca o aviso e ele
+// some quando o cliente fecha ou salva o CEP no perfil.
+function mostrarAvisoPerfilIncompleto() {
+  const aviso = document.getElementById("avisoPerfil");
+  if (!aviso || localStorage.getItem("avisoCompletarPerfil") !== "1") return;
+
+  aviso.hidden = false;
+  document.getElementById("avisoPerfilFechar")?.addEventListener("click", () => {
+    aviso.hidden = true;
+    localStorage.removeItem("avisoCompletarPerfil");
+  });
 }
 
 function abrirSugestao() {

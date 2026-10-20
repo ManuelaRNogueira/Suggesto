@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -36,6 +37,8 @@ public class UsuarioController {
             "image/gif",
             "image/webp"
     );
+    private static final Pattern USERNAME_PATTERN = Pattern.compile("^[a-zA-Z0-9._]{3,30}$");
+    private static final Pattern CEP_PATTERN = Pattern.compile("^\\d{5}-?\\d{3}$");
 
     @Autowired
     private UsuarioRepository repository;
@@ -158,6 +161,9 @@ public class UsuarioController {
             @RequestParam(value = "nome", required = false) String nome,
             @RequestParam(value = "telefone", required = false) String telefone,
             @RequestParam(value = "cidade", required = false) String cidade,
+            @RequestParam(value = "username", required = false) String username,
+            @RequestParam(value = "cep", required = false) String cep,
+            @RequestParam(value = "estado", required = false) String estado,
             @RequestParam(value = "foto", required = false) MultipartFile arquivoFoto) {
         try {
             Optional<Usuario> usuarioOpt = repository.findById(id);
@@ -179,6 +185,27 @@ public class UsuarioController {
             }
             if (cidade != null) {
                 usuario.setCidade(cidade.isBlank() ? null : TextoUtil.normalizarCidade(cidade));
+            }
+            if (cep != null) {
+                if (!cep.isBlank() && !CEP_PATTERN.matcher(cep.trim()).matches()) {
+                    throw new IllegalArgumentException("Digite um CEP válido, com 8 dígitos.");
+                }
+                usuario.setCep(cep.isBlank() ? null : cep.trim());
+            }
+            if (estado != null) {
+                usuario.setEstado(estado.isBlank() ? null : estado.trim().toUpperCase());
+            }
+            if (username != null && !username.isBlank()) {
+                String novoUsername = username.trim();
+                if (!novoUsername.equals(usuario.getUsername())) {
+                    if (!USERNAME_PATTERN.matcher(novoUsername).matches()) {
+                        throw new IllegalArgumentException("Nome de usuário deve ter de 3 a 30 caracteres e usar apenas letras, números, pontos ou underscores.");
+                    }
+                    if (repository.existsByUsername(novoUsername)) {
+                        throw new IllegalArgumentException("Este nome de usuário já está em uso.");
+                    }
+                    usuario.setUsername(novoUsername);
+                }
             }
 
             if (arquivoFoto != null && !arquivoFoto.isEmpty()) {
@@ -229,6 +256,7 @@ public class UsuarioController {
         Map<String, Object> resposta = new HashMap<>();
         resposta.put("id", usuario.getId());
         resposta.put("nome", usuario.getNome() != null ? usuario.getNome() : "");
+        resposta.put("username", usuario.getUsername() != null ? usuario.getUsername() : "");
         if (ehDono) {
             resposta.put("email", usuario.getEmail() != null ? usuario.getEmail() : "");
             resposta.put("telefone", usuario.getTelefone() != null ? usuario.getTelefone() : "");

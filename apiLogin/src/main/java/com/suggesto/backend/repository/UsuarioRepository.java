@@ -16,6 +16,10 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     Optional<Usuario> findByEmail(String email);
 
+    // E-mail é comparado sem diferenciar maiúsculas/minúsculas em todas as rotas
+    // de login/cadastro, para "Maria@x.com" e "maria@x.com" serem a mesma conta.
+    Optional<Usuario> findFirstByEmailIgnoreCaseOrderByIdAsc(String email);
+
     Optional<Usuario> findByUsername(String username);
 
     boolean existsByUsername(String username);

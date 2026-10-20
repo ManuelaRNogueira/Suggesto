@@ -10,3 +10,6 @@ const rodandoLocal = ["localhost", "127.0.0.1", ""].includes(location.hostname);
 
 window.API_ORIGIN = rodandoLocal ? "http://localhost:8080" : API_PRODUCAO;
 window.API_BASE = window.API_ORIGIN + "/api";
+
+// Client ID do "Entrar com Google" (público). Precisa ser o mesmo configurado na API.
+window.GOOGLE_CLIENT_ID = "342563067513-3890o57ajbheevan610o669dldra5g86.apps.googleusercontent.com";

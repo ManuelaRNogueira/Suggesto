@@ -17,6 +17,9 @@ senhaInput.addEventListener('input', () => senhaInput.classList.remove('input-er
 if (new URLSearchParams(window.location.search).get('equipe') === '1') {
     const linkCadastro = document.getElementById('linkCadastro');
     if (linkCadastro) linkCadastro.href = 'cadastro.html?equipe=1';
+} else {
+    // Entrar em equipe exige conta de administrador, que não entra pelo Google.
+    configurarLoginGoogle({ containerId: 'botaoGoogle', texto: 'signin_with', mostrarErro });
 }
 
 function validarCampos() {
@@ -76,20 +79,12 @@ async function entrarSuggesto() {
             }
 
             // 1. Guardamos os dados no navegador para usar nas próximas telas
-            localStorage.setItem("idUsuario", resultado.idUsuario);
-            localStorage.setItem("nomeUsuario", resultado.nome);
-            localStorage.setItem("tipoUsuario", resultado.tipoUsuario);
-            localStorage.setItem("emailUsuario", dadosLogin.email);
+            salvarSessaoLogin(resultado, dadosLogin.email);
 
             // 2. REDIRECIONAMENTO DINÂMICO
-            if (modoEquipe) {
-                window.location.href = "entrarCodigo.html";
-            } else if (resultado.tipoUsuario === "Administrador") {
-                // O Java manda exatamente a string do Enum (ex: "Administrador" ou "Cliente")
-                window.location.href = "inicioAdm.html";
-            } else {
-                window.location.href = "inicioCli.html";
-            }
+            window.location.href = modoEquipe
+                ? "entrarCodigo.html"
+                : paginaInicialPorTipo(resultado.tipoUsuario);
 
         } else {
             // Conta não encontrada, senha errada ou campo vazio (Status 400 ou 401)
