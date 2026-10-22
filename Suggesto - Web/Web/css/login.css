@@ -258,3 +258,86 @@ body {
     border-color: rgba(239, 68, 68, 0.6);
     box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
 }
+
+/* ===== RECUPERAÇÃO DE SENHA ===== */
+.link-esqueci {
+    display: block;
+    margin: -6px 0 6px auto;
+    width: fit-content;
+    font-size: 13px;
+    color: #a78bfa;
+    text-decoration: none;
+}
+
+.link-esqueci:hover {
+    color: #c4b5fd;
+}
+
+.logo-area .subtitulo {
+    margin: -18px 0 24px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: rgba(240, 240, 245, 0.55);
+}
+
+.dica-senha {
+    margin: -6px 0 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    line-height: 1.4;
+    text-align: left;
+    color: rgba(240, 240, 245, 0.45);
+}
+
+/* Caixa que substitui o formulário depois de enviar (sucesso ou link inválido). */
+.mensagem-estado {
+    padding: 18px 16px;
+    border-radius: 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
+    text-align: left;
+    background: rgba(34, 197, 94, 0.08);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    color: #bbf7d0;
+}
+
+.mensagem-estado.erro {
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #fecaca;
+}
+
+.mensagem-estado p + p {
+    margin-top: 10px;
+}
+
+.mensagem-estado strong {
+    color: #f0f0f5;
+}
+
+.botao-link {
+    display: block;
+    margin-top: 18px;
+    padding: 13px;
+    border-radius: 999px;
+    background: #7c3aed;
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+    text-align: center;
+    transition: 0.25s;
+}
+
+.botao-link:hover {
+    background: #6d28d9;
+    box-shadow: 0 10px 25px rgba(124, 58, 237, 0.35);
+}
+
+.form button:disabled {
+    opacity: 0.7;
+    cursor: wait;
+    transform: none;
+    box-shadow: none;
+}

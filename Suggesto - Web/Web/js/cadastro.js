@@ -109,9 +109,10 @@ function validarCampos() {
         return false;
     }
 
-    if (senha.value.length < 4) {
+    const erroSenha = validarSenhaForte(senha.value);
+    if (erroSenha) {
         senha.classList.add('input-erro');
-        mostrarMensagem("A senha deve ter pelo menos 4 caracteres.");
+        mostrarMensagem(erroSenha);
         return false;
     }
 

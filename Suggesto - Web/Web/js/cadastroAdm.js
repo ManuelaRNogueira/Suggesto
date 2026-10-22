@@ -359,8 +359,9 @@ async function cadastrarComContaNova() {
         return;
     }
 
-    if (senha.length < 6) {
-        mostrarMensagem("A senha deve ter pelo menos 6 caracteres.");
+    const erroSenha = validarSenhaForte(senha);
+    if (erroSenha) {
+        mostrarMensagem(erroSenha);
         return;
     }
 

@@ -7,6 +7,7 @@ import com.suggesto.backend.repository.PlanoRepository;
 import com.suggesto.backend.repository.UsuarioRepository;
 import com.suggesto.backend.service.GoogleTokenService;
 import com.suggesto.backend.util.DocumentoValidator;
+import com.suggesto.backend.util.SenhaUtil;
 import com.suggesto.backend.util.TextoUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -104,6 +105,14 @@ public class AuthController {
                 return ResponseEntity.badRequest().body(Map.of(
                         "success", false,
                         "message", "Este e-mail já está em uso."
+                ));
+            }
+
+            String erroSenha = SenhaUtil.validar(senha.trim());
+            if (erroSenha != null) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", erroSenha
                 ));
             }
 
