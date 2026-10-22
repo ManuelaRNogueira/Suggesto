@@ -95,8 +95,17 @@ public class EmailService {
                 } catch (Exception ignorado) {
                 }
                 System.err.println("[email] Brevo recusou o e-mail (status " + resposta.statusCode() + ") " + codigo.trim());
+                return;
             }
-        } catch (Exception e) {
+            // O messageId permite achar o envio nos logs do Brevo (Transacional > Logs).
+            String messageId = "";
+            try {
+                messageId = mapper.readTree(resposta.body()).path("messageId").asText("");
+            } catch (Exception ignorado) {
+            }
+            System.out.println("[email] Brevo aceitou o e-mail (status " + resposta.statusCode() + ") messageId " + messageId);
+        } catch (Throwable e) {
+            // Throwable: dentro do runAsync, um erro não capturado sumiria sem deixar rastro.
             System.err.println("[email] Falha ao chamar o Brevo: " + e.getClass().getSimpleName());
         }
     }
