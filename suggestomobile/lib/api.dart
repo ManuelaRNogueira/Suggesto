@@ -137,6 +137,15 @@ Future<Map<String, dynamic>> login({
   return _mapa('POST', '/login', corpo: {'email': email, 'senha': senha});
 }
 
+// POST /api/senha/esqueci — sempre devolve a mesma mensagem genérica, exista
+// o e-mail ou não (SenhaController.MENSAGEM_PEDIDO), pra não revelar quais
+// contas existem. O link de redefinição vai só por e-mail e abre no
+// navegador (redefinir-senha.html do site) — não existe tela de redefinir
+// aqui no mobile, só o pedido do link.
+Future<Map<String, dynamic>> esqueciSenha(String email) {
+  return _mapa('POST', '/senha/esqueci', corpo: {'email': email});
+}
+
 // Cadastro: cria só a conta mesmo (nome, email, senha, endereço...). Se o
 // usuário for dono de estabelecimento, o plano e o próprio estabelecimento
 // entram depois, em outra etapa — aqui é só "criar o usuário".

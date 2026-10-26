@@ -5,6 +5,7 @@ import 'sessao.dart';
 import 'cadastro.dart';
 import 'entrarEquipe.dart';
 import 'entrarCodigo.dart';
+import 'esqueciSenha.dart';
 
 // Login — mesmos dois campos do site (ver Suggesto - Web/Web/login.html),
 // agora batendo contra a API de verdade (POST /api/login).
@@ -43,7 +44,10 @@ class _LoginState extends State<Login> {
       final idUsuario = (resultado['idUsuario'] as num).toInt();
 
       if (widget.modoEquipe && tipoUsuario != 'Administrador') {
-        setState(() => erroGeral = "Você precisa de uma conta de administrador para entrar em uma equipe.");
+        setState(
+          () => erroGeral =
+              "Você precisa de uma conta de administrador para entrar em uma equipe.",
+        );
         return;
       }
 
@@ -69,7 +73,10 @@ class _LoginState extends State<Login> {
         tipoUsuarioLogado: tipoUsuario ?? 'Cliente',
       );
 
-      Navigator.pushNamed(context, tipoUsuario == 'Administrador' ? '/inicioAdm' : '/home_cliente');
+      Navigator.pushNamed(
+        context,
+        tipoUsuario == 'Administrador' ? '/inicioAdm' : '/home_cliente',
+      );
     } on ApiException catch (e) {
       setState(() => erroGeral = e.mensagem);
     } finally {
@@ -93,9 +100,17 @@ class _LoginState extends State<Login> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Image.asset("assets/images/balaologo.png", width: 46, fit: BoxFit.contain),
+                      Image.asset(
+                        "assets/images/balaologo.png",
+                        width: 46,
+                        fit: BoxFit.contain,
+                      ),
                       const SizedBox(width: 8),
-                      Image.asset("assets/images/escritalogo.png", height: 32, fit: BoxFit.contain),
+                      Image.asset(
+                        "assets/images/escritalogo.png",
+                        height: 32,
+                        fit: BoxFit.contain,
+                      ),
                     ],
                   ),
 
@@ -127,21 +142,32 @@ class _LoginState extends State<Login> {
                           widget.modoEquipe
                               ? "Entre com a conta de administrador para continuar"
                               : "Acesse sua conta para continuar",
-                          style: const TextStyle(color: Colors.white54, fontSize: 13, fontFamily: "Poppins"),
+                          style: const TextStyle(
+                            color: Colors.white54,
+                            fontSize: 13,
+                            fontFamily: "Poppins",
+                          ),
                         ),
 
                         if (widget.modoEquipe) ...[
                           const SizedBox(height: 14),
                           Container(
                             width: double.infinity,
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
                             decoration: BoxDecoration(
                               color: Cores.tag,
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: const Text(
                               "Você está entrando pra depois usar o código de acesso de uma equipe existente.",
-                              style: TextStyle(color: Colors.white70, fontSize: 12, fontFamily: "Poppins"),
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                                fontFamily: "Poppins",
+                              ),
                             ),
                           ),
                         ],
@@ -174,20 +200,50 @@ class _LoginState extends State<Login> {
                           oculto: !senhaVisivel,
                           sufixo: IconButton(
                             icon: Icon(
-                              senhaVisivel ? Icons.visibility : Icons.visibility_off,
+                              senhaVisivel
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
                               color: Colors.white54,
                               size: 20,
                             ),
-                            onPressed: () => setState(() => senhaVisivel = !senhaVisivel),
+                            onPressed: () =>
+                                setState(() => senhaVisivel = !senhaVisivel),
                           ),
-                          validador: (v) => (v == null || v.isEmpty) ? "Informe sua senha." : null,
+                          validador: (v) => (v == null || v.isEmpty)
+                              ? "Informe sua senha."
+                              : null,
+                        ),
+
+                        const SizedBox(height: 10),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: GestureDetector(
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const EsqueciSenha(),
+                              ),
+                            ),
+                            child: const Text(
+                              "Esqueci minha senha",
+                              style: TextStyle(
+                                color: Cores.roxo,
+                                fontSize: 12.5,
+                                fontFamily: "Poppins",
+                              ),
+                            ),
+                          ),
                         ),
 
                         if (erroGeral != null) ...[
                           const SizedBox(height: 14),
                           Text(
                             erroGeral!,
-                            style: const TextStyle(color: Colors.redAccent, fontSize: 13, fontFamily: "Poppins"),
+                            style: const TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 13,
+                              fontFamily: "Poppins",
+                            ),
                           ),
                         ],
 
@@ -200,17 +256,26 @@ class _LoginState extends State<Login> {
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               backgroundColor: Cores.roxoBotao,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                             child: entrando
                                 ? const SizedBox(
                                     width: 18,
                                     height: 18,
-                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
                                   )
                                 : const Text(
                                     "Entrar",
-                                    style: TextStyle(color: Colors.white, fontFamily: "PoppinsBold", fontSize: 15),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontFamily: "PoppinsBold",
+                                      fontSize: 15,
+                                    ),
                                   ),
                           ),
                         ),
@@ -223,12 +288,18 @@ class _LoginState extends State<Login> {
                   GestureDetector(
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => Cadastro(modoEquipe: widget.modoEquipe)),
+                      MaterialPageRoute(
+                        builder: (_) => Cadastro(modoEquipe: widget.modoEquipe),
+                      ),
                     ),
                     child: Text.rich(
                       TextSpan(
                         text: "Não tem conta? ",
-                        style: const TextStyle(color: Colors.white54, fontSize: 13, fontFamily: "Poppins"),
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontSize: 13,
+                          fontFamily: "Poppins",
+                        ),
                         children: [
                           TextSpan(
                             text: "Cadastre-se",
@@ -252,7 +323,11 @@ class _LoginState extends State<Login> {
                       ),
                       child: const Text(
                         "Já faz parte de uma equipe? Entrar com código",
-                        style: TextStyle(color: Colors.white38, fontSize: 12, fontFamily: "Poppins"),
+                        style: TextStyle(
+                          color: Colors.white38,
+                          fontSize: 12,
+                          fontFamily: "Poppins",
+                        ),
                       ),
                     ),
                   ],
@@ -266,7 +341,14 @@ class _LoginState extends State<Login> {
   }
 
   Widget _rotulo(String texto) {
-    return Text(texto, style: const TextStyle(color: Colors.white70, fontSize: 13, fontFamily: "Poppins"));
+    return Text(
+      texto,
+      style: const TextStyle(
+        color: Colors.white70,
+        fontSize: 13,
+        fontFamily: "Poppins",
+      ),
+    );
   }
 
   Widget _campo({
@@ -285,12 +367,22 @@ class _LoginState extends State<Login> {
       style: const TextStyle(color: Colors.white, fontFamily: "Poppins"),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: Colors.white38, fontSize: 13, fontFamily: "Poppins"),
+        hintStyle: const TextStyle(
+          color: Colors.white38,
+          fontSize: 13,
+          fontFamily: "Poppins",
+        ),
         filled: true,
         fillColor: Cores.campo,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         suffixIcon: sufixo,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide.none,
+        ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: Cores.campoFoco, width: 1.5),
@@ -299,7 +391,11 @@ class _LoginState extends State<Login> {
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: Colors.redAccent, width: 1),
         ),
-        errorStyle: const TextStyle(color: Colors.redAccent, fontSize: 11, fontFamily: "Poppins"),
+        errorStyle: const TextStyle(
+          color: Colors.redAccent,
+          fontSize: 11,
+          fontFamily: "Poppins",
+        ),
       ),
     );
   }
