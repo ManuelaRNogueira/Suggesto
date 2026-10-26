@@ -122,8 +122,6 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
             _buildConfiabilidade(),
             SizedBox(height: 32),
             _buildMenuList(),
-            /*SizedBox(height: 32),
-            _buildBuscaUsuarios(),*/
             SizedBox(height: 32),
             _buildSairButton(),
             SizedBox(height: 32),
@@ -444,7 +442,6 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
                   color: const Color.fromARGB(199, 255, 255, 255),
                   fontSize: 15,
                   fontFamily: 'Poppins',
-                  /* fontWeight: FontWeight.w500,*/
                 ),
               ),
             ),
@@ -637,5 +634,3 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
     );
   }
 }
-
-// ─── Sheet de busca de usuários ───────────────────────────────────────────────

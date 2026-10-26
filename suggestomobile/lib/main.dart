@@ -3,7 +3,6 @@ import 'package:suggestomobile/cadastro.dart';
 import 'package:suggestomobile/estabelecimentosAdm.dart';
 import 'package:suggestomobile/infoLocal.dart';
 import 'package:suggestomobile/inicialcli.dart';
-//import 'package:suggestomobile/inicialcli.dart';
 import 'package:suggestomobile/inicio.dart';
 import 'package:suggestomobile/inicioAdm.dart';
 import 'package:suggestomobile/locaisSalvos.dart';

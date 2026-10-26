@@ -333,10 +333,6 @@ class _HomePageState extends State<HomePage> {
               // ── Header agora rola junto com o restante ──────────────────
               _buildHeader(),
 
-              /*const SizedBox(height: 16),
-
-              // Botão "Solicitar algo"
-              _buildSolicitarAlgo(),*/
               const SizedBox(height: 24),
 
               // "Perto de você" — só aparece depois de carregar a lista
@@ -642,44 +638,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
-  // ─────────────────────────────────────────────────────────────────
-  /*Widget _buildSolicitarAlgo() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        width: double.infinity,
-        height: 50,
-        decoration: BoxDecoration(
-          color: const Color(0xFF2A1A4A),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: const Color(0xFF4A2A7A),
-            width: 1,
-          ),
-        ),
-        child: const Row(
-          children: [
-            SizedBox(width: 16),
-            Icon(
-              Icons.notifications_outlined,
-              color: Color(0xFFFFD700),
-              size: 22,
-            ),
-            SizedBox(width: 10),
-            Text(
-              'Solicitar algo',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }*/
 
   // ─────────────────────────────────────────────────────────────────
   Widget _buildDescubraHeader() {
