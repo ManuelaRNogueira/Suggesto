@@ -303,9 +303,11 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
         const SizedBox(height: 16),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          // Calcula quantas colunas cabem na largura disponível e estica os
-          // cards pra preencher a linha (em vez de ficarem travados em 110px
-          // e sobrar um vão vazio à direita em telas maiores).
+          // Calcula quantas colunas cabem na largura disponível (sempre em
+          // torno de 110px por card, como antes) e divide o espaço entre
+          // elas — sem depender de quantos itens existem, senão com poucas
+          // recompensas na faixa os cards ficavam enormes pra preencher a
+          // linha sozinhos.
           child: LayoutBuilder(
             builder: (context, constraints) {
               const espacamento = 14.0;
@@ -313,7 +315,7 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
               final colunas =
                   (constraints.maxWidth / (larguraMinima + espacamento))
                       .floor()
-                      .clamp(1, lista.length);
+                      .clamp(1, 6);
               final largura =
                   (constraints.maxWidth - espacamento * (colunas - 1)) /
                   colunas;
