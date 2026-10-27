@@ -10,8 +10,6 @@ class LojasPontosPage extends StatefulWidget {
 }
 
 class _LojasPontosPageState extends State<LojasPontosPage> {
-  int _faixaSelecionada = 0;
-
   bool carregando = true;
   String? erro;
   List<Map<String, dynamic>> _recompensas = [];
@@ -21,13 +19,6 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
   // uma vez, então elas somem da vitrine (ver ResgateService no backend, que
   // também recusa um segundo resgate mesmo que a tela não tivesse escondido).
   Set<int> _idsResgatados = {};
-
-  final List<String> _faixas = [
-    'Até 6.000 pts',
-    'Até 18.000 pts',
-    'Até 25.000 pts',
-    'Até 45.000 pts',
-  ];
 
   final List<Map<String, dynamic>> _grupos = [
     {'label': 'Até 6.000 pts', 'faixaIndex': 0},
@@ -232,8 +223,6 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
             const SizedBox(height: 24),
             _buildPontosDestaque(),
             const SizedBox(height: 24),
-            _buildFaixasTabs(),
-            const SizedBox(height: 24),
             if (_recompensas.isEmpty)
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -291,49 +280,6 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
       i -= 3;
     }
     return partes.join('.');
-  }
-
-  Widget _buildFaixasTabs() {
-    return SizedBox(
-      height: 30,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: _faixas.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 24),
-        itemBuilder: (context, index) {
-          final isSelected = _faixaSelecionada == index;
-          return GestureDetector(
-            onTap: () => setState(() => _faixaSelecionada = index),
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: isSelected
-                        ? const Color(0xFF4A2A7A)
-                        : Colors.transparent,
-                    width: 2,
-                  ),
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Text(
-                  _faixas[index],
-                  style: TextStyle(
-                    color: isSelected
-                        ? Colors.white
-                        : Colors.white.withOpacity(0.4),
-                    fontSize: 13,
-                    fontFamily: isSelected ? 'PoppinsSemi' : 'Poppins',
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
   }
 
   Widget _buildGrupoRecompensas(String label, int faixaIndex) {
