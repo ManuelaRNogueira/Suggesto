@@ -19,6 +19,20 @@ const String apiBase = String.fromEnvironment(
 // UsuarioController: as imagens sobem pra "/uploads/...", fora do prefixo da API).
 String get apiOrigin => apiBase.replaceFirst('/api', '');
 
+// Endereço do site — é pra lá que o QR de check-in aponta (igual o desktop
+// em Suggesto_DesktopReact/renderer/src/api/admin.js). O check-in em si
+// acontece no navegador, abrindo fazerSugestao.html com o token do QR.
+const String siteUrl = String.fromEnvironment(
+  'SITE_URL',
+  defaultValue: 'https://suggestosite.onrender.com',
+);
+
+// Mesma URL que o QR de check-in gerado no desktop aponta — é por isso que o
+// QR mostrado aqui funciona exatamente igual ao impresso por lá.
+String urlCheckin(int idEstabelecimento, String tokenCheckin) {
+  return '$siteUrl/fazerSugestao.html?id=$idEstabelecimento&t=${Uri.encodeQueryComponent(tokenCheckin)}';
+}
+
 class ApiException implements Exception {
   final String mensagem;
   ApiException(this.mensagem);
@@ -293,8 +307,29 @@ Future<List<dynamic>> buscarEstabelecimentos() {
 }
 
 // Detalhe completo de um estabelecimento específico.
-Future<Map<String, dynamic>> buscarEstabelecimento(int id) {
-  return _mapa('GET', '/estabelecimentos/$id');
+// idSolicitante é opcional e só importa pro dono: é o que faz o backend
+// revelar codigoAcesso/tokenCheckin na resposta (ver
+// Estabelecimento.revelarDadosDoDono no backend). Sem ele (uso do lado
+// cliente), esses dois campos simplesmente não vêm.
+Future<Map<String, dynamic>> buscarEstabelecimento(
+  int id, {
+  int? idSolicitante,
+}) {
+  final query = idSolicitante != null ? '?idSolicitante=$idSolicitante' : '';
+  return _mapa('GET', '/estabelecimentos/$id$query');
+}
+
+// POST /api/estabelecimentos/{id}/token-checkin — troca o token do QR de
+// check-in (só o dono principal). Os QRs já impressos no desktop param de
+// confirmar visita na hora, igual lá.
+Future<Map<String, dynamic>> gerarNovoTokenCheckin(
+  int idEstabelecimento, {
+  required int idSolicitante,
+}) {
+  return _mapa(
+    'POST',
+    '/estabelecimentos/$idEstabelecimento/token-checkin?idSolicitante=$idSolicitante',
+  );
 }
 
 // Transparência (0-100): quanto o estabelecimento responde, recusa e a
@@ -314,7 +349,12 @@ Future<List<Map<String, dynamic>>> buscarEstabelecimentosVinculados({
 }) async {
   final basicos = await buscarEstabelecimentosAdmin(idGerente: idGerente);
   final detalhes = await Future.wait(
-    basicos.map((b) => buscarEstabelecimento((b['id'] as num).toInt())),
+    basicos.map(
+      (b) => buscarEstabelecimento(
+        (b['id'] as num).toInt(),
+        idSolicitante: idGerente,
+      ),
+    ),
   );
   return [
     for (var i = 0; i < basicos.length; i++)
@@ -324,6 +364,7 @@ Future<List<Map<String, dynamic>>> buscarEstabelecimentosVinculados({
         'ativo': paraBool((basicos[i] as Map<String, dynamic>)['ativo']),
         'codigoAcesso': (basicos[i] as Map<String, dynamic>)['codigoAcesso'],
         'souDono': (basicos[i] as Map<String, dynamic>)['souDono'],
+        'tokenCheckin': detalhes[i]['tokenCheckin'],
       },
   ];
 }
