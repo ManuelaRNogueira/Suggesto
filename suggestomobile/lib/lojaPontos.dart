@@ -31,6 +31,7 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
 
   final List<Map<String, dynamic>> _grupos = [
     {'label': 'Até 6.000 pts', 'faixaIndex': 0},
+    {'label': 'Até 18.000 pts', 'faixaIndex': 1},
     {'label': 'Até 25.000 pts', 'faixaIndex': 2},
     {'label': 'Até 45.000 pts', 'faixaIndex': 3},
   ];
