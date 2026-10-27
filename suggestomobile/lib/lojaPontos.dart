@@ -356,10 +356,28 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
         const SizedBox(height: 16),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Wrap(
-            spacing: 14,
-            runSpacing: 16,
-            children: lista.map(_buildRecompensaCard).toList(),
+          // Calcula quantas colunas cabem na largura disponível e estica os
+          // cards pra preencher a linha (em vez de ficarem travados em 110px
+          // e sobrar um vão vazio à direita em telas maiores).
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              const espacamento = 14.0;
+              const larguraMinima = 110.0;
+              final colunas =
+                  (constraints.maxWidth / (larguraMinima + espacamento))
+                      .floor()
+                      .clamp(1, lista.length);
+              final largura =
+                  (constraints.maxWidth - espacamento * (colunas - 1)) /
+                  colunas;
+              return Wrap(
+                spacing: espacamento,
+                runSpacing: 16,
+                children: lista
+                    .map((r) => _buildRecompensaCard(r, largura))
+                    .toList(),
+              );
+            },
           ),
         ),
         const SizedBox(height: 8),
@@ -367,7 +385,7 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
     );
   }
 
-  Widget _buildRecompensaCard(Map<String, dynamic> recompensa) {
+  Widget _buildRecompensaCard(Map<String, dynamic> recompensa, double largura) {
     final estabelecimento =
         recompensa['estabelecimento'] as Map<String, dynamic>?;
     final fotoPath =
@@ -381,13 +399,13 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
     return GestureDetector(
       onTap: () => _mostrarDetalhes(recompensa),
       child: SizedBox(
-        width: 110,
+        width: largura,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              height: 110,
-              width: 110,
+              height: largura,
+              width: largura,
               clipBehavior: Clip.hardEdge,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
