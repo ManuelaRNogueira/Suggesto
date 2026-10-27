@@ -19,6 +19,16 @@ const createLoginWindow = () => {
     });
 
     win.maximize();
+    win.setFullScreen(true);
+
+    // F11 entra/sai da tela cheia (Esc fica para os modais)
+    win.webContents.on('before-input-event', (event, input) => {
+        if (input.type === 'keyDown' && input.key === 'F11') {
+            win.setFullScreen(!win.isFullScreen());
+            event.preventDefault();
+        }
+    });
+
     win.loadURL('http://localhost:5173');
 };
 
