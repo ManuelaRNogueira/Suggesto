@@ -456,7 +456,7 @@ textarea:focus { border-color: var(--purple-glow); background: rgba(167,139,250,
 <script>
 const estado = { 
     tipo: null, categoria: null, idCategoria: null, 
-    nota: null, passoAtual: 1, idEstabelecimento: null, idVisita: null
+    nota: null, passoAtual: 1, idEstabelecimento: null, idVisita: null, exigeVisita: true
 };
 let listaEstabelecimentos = [];
 
@@ -593,8 +593,9 @@ function mostrarTelaDePesquisa() {
 
 function iniciarFormulario(id, nome, oferecerLocalizacao = true) {
     estado.idEstabelecimento = id;
-    document.getElementById('btn-estou-aqui').hidden = true; // confirmar visita não é mais exigido
+    document.getElementById('btn-estou-aqui').hidden = !oferecerLocalizacao;
     estado.idVisita = null; // visita é de um estabelecimento só
+    estado.exigeVisita = true;
     document.getElementById('visita-aviso').hidden = true;
     if (nome) mostrarNomeEstabelecimento(nome);
 
@@ -617,6 +618,12 @@ async function carregarCategoriasDoEstabelecimento(idEstabelecimento) {
     try {
         const est = await fetch(`${window.API_BASE}/estabelecimentos/${idEstabelecimento}`).then(r => r.json());
         tipoEstabelecimento = est?.categoria || '';
+        // Sem localização cadastrada não é um local físico (ex: o Suggesto): não pede visita.
+        if (est && (est.lat == null || est.lng == null)) {
+            estado.exigeVisita = false;
+            document.getElementById('btn-estou-aqui').hidden = true;
+            document.getElementById('visita-aviso').hidden = true;
+        }
         if (est?.nome && !new URLSearchParams(window.location.search).get('nome')) mostrarNomeEstabelecimento(est.nome);
     } catch (err) {
         console.error('Não foi possível identificar o tipo do estabelecimento:', err);
@@ -754,6 +761,10 @@ async function enviar() {
   if (!msg) return;
 
   if (!estado.idEstabelecimento) { alert('Erro: Estabelecimento não foi selecionado!'); return; }
+  if (estado.exigeVisita && !estado.idVisita) {
+    pedirCheckin('Confirme sua visita antes de enviar: leia o QR de check-in do local ou toque em "Estou aqui".');
+    return;
+  }
 
   const btn = document.getElementById('btn-enviar'); btn.disabled = true;
   document.getElementById('spinner').style.display = 'block'; document.getElementById('enviar-ico').style.display = 'none';
@@ -783,7 +794,9 @@ async function enviar() {
   } catch (err) {
     btn.disabled = false; document.getElementById('spinner').style.display = 'none';
     document.getElementById('enviar-ico').style.display = 'block'; document.getElementById('enviar-txt').textContent = 'Tentar novamente';
-    alert(err.message || 'Erro ao enviar. Verifique se a API está rodando.');
+    // Todas as recusas de visita da API falam em "visita" (expirou, já usada...).
+    if (/visita/i.test(err.message)) pedirCheckin(err.message);
+    else alert(err.message || 'Erro ao enviar. Verifique se a API está rodando.');
   }
 }
 
