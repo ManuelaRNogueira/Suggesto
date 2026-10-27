@@ -247,7 +247,18 @@ class AvaliacaoServiceTest {
     }
 
     @Test
-    void avaliacaoSemVisitaESalvaSemSelo() {
+    void avaliacaoSemVisitaEmLocalFisicoERecusadaPedindoCheckin() {
+        AvaliacaoRequestDTO dto = novaAvaliacao(null);
+        estabelecimentoRepository.findById(ID_ESTAB).get().setLat(-22.56);
+        estabelecimentoRepository.findById(ID_ESTAB).get().setLng(-47.40);
+
+        assertThatThrownBy(() -> avaliacaoService.registrarNovaAvaliacao(dto))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("check-in");
+        verify(avaliacaoRepository, never()).save(any());
+    }
+
+    @Test
+    void avaliacaoSemVisitaEmEstabelecimentoSemLocalizacaoESalvaSemSelo() {
         AvaliacaoRequestDTO dto = novaAvaliacao(null);
 
         avaliacaoService.registrarNovaAvaliacao(dto);

@@ -53,8 +53,9 @@ public class AvaliacaoService {
     @Autowired
     private VisitaService visitaService;
 
-    // Cria uma nova sugestão/crítica/elogio. Toda avaliação tem um usuário
-    // (quem chega pelo QR já ganha um convidado próprio); o check-in é opcional.
+    // Cria uma nova sugestão/crítica/elogio. Só avalia quem fez check-in no
+    // local: toda avaliação tem um usuário (quem chega pelo QR já ganha um
+    // convidado próprio) e uma visita válida desse usuário nesse local.
     @Transactional
     public void registrarNovaAvaliacao(AvaliacaoRequestDTO dto) {
         if (dto.getIdUsuario() == null) {
@@ -69,7 +70,13 @@ public class AvaliacaoService {
         Categoria categoria = categoriaRepository.findById(dto.getIdCategoria())
                 .orElseThrow(() -> new RuntimeException("Categoria não encontrada com o ID: " + dto.getIdCategoria()));
 
-        // A visita é opcional: se veio (QR), é conferida e vira o selo; senão a avaliação sai sem ela.
+        // Quem não tem localização cadastrada não é um local físico (ex: o próprio
+        // Suggesto, uma empresa/sistema): não faz sentido exigir visita.
+        boolean localFisico = est.getLat() != null && est.getLng() != null;
+        if (dto.getIdVisita() == null && localFisico) {
+            throw new IllegalArgumentException(
+                    "Confirme sua visita antes de avaliar: leia o QR de check-in do local ou use \"Estou aqui\".");
+        }
         Visita visita = dto.getIdVisita() == null
                 ? null
                 : visitaService.validarParaAvaliacao(dto.getIdVisita(), usuario.getId(), est.getIdEstabelecimento());
