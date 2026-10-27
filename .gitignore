@@ -32,3 +32,8 @@ dist/
 # Uploads de usuário (fallback local; fotos de verdade agora ficam no Cloudinary)
 uploads/
 apiLogin/scripts/reset_dados_teste.sql
+
+# Prints das telas (ficam fora do repo)
+prints-desktop/
+prints-mobile/
+prints-*.zip

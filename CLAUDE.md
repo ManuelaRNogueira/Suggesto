@@ -8,8 +8,8 @@
 # Contexto do projeto
 
 ## Duas máquinas
-- O Diogo alterna entre o PC da escola e o de casa, e a Manuela trabalha em outra máquina. Quando algo funciona numa máquina e não na outra, confira primeiro se a `main` local está atrás do `origin/main` (`git pull`) e se as variáveis de ambiente existem, antes de investigar o código.
-- Variáveis que cada máquina precisa (Windows, via `setx`, depois reabrir o VS Code/terminal): `DB_PASSWORD` (sem ela a API não conecta no banco), `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` (sem elas o upload de foto cai em disco local e a foto quebra). Os valores não ficam no repositório: peça ao Diogo.
+- Só duas máquinas trabalham no projeto: a do Diogo e a da Manuela. Quando algo funciona numa máquina e não na outra, confira primeiro se a `main` local está atrás do `origin/main` (`git pull`) e se as variáveis de ambiente existem, antes de investigar o código.
+- Variáveis que cada máquina precisa (Windows, via `setx`, depois reabrir o VS Code/terminal): `DB_PASSWORD` (sem ela a API não conecta no banco), `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` (sem elas o upload de foto cai em disco local e a foto quebra). Os valores não ficam no repositório: peça ao Diogo. O banco (MySQL da Unicamp, usuário `cl204225`) é conta do Diogo.
 
 ## Hospedagem (Render)
 - API: https://suggesto-api.onrender.com (health check em `/api/ping`). Site: https://suggestosite.onrender.com (sem hífen, diferente do nome no `render.yaml`).

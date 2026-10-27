@@ -79,8 +79,6 @@ export default function Login({ aoLogar }) {
         setTimeout(() => {
           aoLogar();
         }, 500);
-      } else if (resposta.status === 403) {
-        mostrarAviso("Apenas administradores podem logar aqui.", "#ffcdd2");
       } else {
         mostrarAviso(resultado.message || "Erro ao fazer login", "#ffcdd2");
       }
