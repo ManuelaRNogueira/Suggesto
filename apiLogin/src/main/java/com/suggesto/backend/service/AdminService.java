@@ -82,6 +82,12 @@ public class AdminService {
         int implementados = 0;
         int recusados = 0;
         int novasSemana = 0;
+        // Mesma contagem de cima, mas só das sugestões desta semana — alimenta
+        // o resumo da tela Início, que é semanal (o resumo "desde sempre" fica
+        // só no Perfil, com pendentes/implementados/recusados acima).
+        int pendentesSemana = 0;
+        int implementadosSemana = 0;
+        int recusadosSemana = 0;
         Map<String, Integer> porCategoria = new LinkedHashMap<>();
 
         // Pensa numa mesa de correio: em vez de separar as cartas numa pilha e só
@@ -89,14 +95,22 @@ public class AdminService {
         // recusada) e contando ao mesmo tempo, numa única passada pelas sugestões.
         for (Avaliacao a : sugestoes) {
             String grupo = classificarStatus(a.getStatus());
+            boolean destaSemana = a.getDataAvaliacao() != null && !a.getDataAvaliacao().isBefore(inicioSemanaAtual);
             switch (grupo) {
-                case "implementado" -> implementados++;
-                case "recusado" -> recusados++;
-                default -> pendentes++;
+                case "implementado" -> {
+                    implementados++;
+                    if (destaSemana) implementadosSemana++;
+                }
+                case "recusado" -> {
+                    recusados++;
+                    if (destaSemana) recusadosSemana++;
+                }
+                default -> {
+                    pendentes++;
+                    if (destaSemana) pendentesSemana++;
+                }
             }
-            if (a.getDataAvaliacao() != null && !a.getDataAvaliacao().isBefore(inicioSemanaAtual)) {
-                novasSemana++;
-            }
+            if (destaSemana) novasSemana++;
             porCategoria.merge(classificarTipo(a.getTipo()), 1, Integer::sum);
         }
 
@@ -119,6 +133,9 @@ public class AdminService {
         metricas.put("pendentes", pendentes);
         metricas.put("implementados", implementados);
         metricas.put("recusados", recusados);
+        metricas.put("pendentesSemana", pendentesSemana);
+        metricas.put("implementadosSemana", implementadosSemana);
+        metricas.put("recusadosSemana", recusadosSemana);
         metricas.put("porCategoria", porCategoria);
         metricas.put("meses", janela);
         metricas.put("sugestoesPorMes", calcularSugestoesPorMes(sugestoes, janela));

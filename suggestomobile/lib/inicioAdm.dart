@@ -195,12 +195,15 @@ class _InicioAdmState extends State<InicioAdm> {
     );
   }
 
+  // Só as sugestões desta semana — o mesmo critério do "Novas na semana"
+  // acima e das "Sugestões Recentes" abaixo. O resumo com a história inteira
+  // da conta fica no Perfil, pra não repetir a mesma visão nos dois lugares.
   Widget _buildStatusCards(Map<String, dynamic> m) {
     return cartoesStatusAdm(
-      total: (m['totalSugestoes'] as num?)?.toInt() ?? 0,
-      pendentes: (m['pendentes'] as num?)?.toInt() ?? 0,
-      implementados: (m['implementados'] as num?)?.toInt() ?? 0,
-      recusados: (m['recusados'] as num?)?.toInt() ?? 0,
+      total: (m['novasSemana'] as num?)?.toInt() ?? 0,
+      pendentes: (m['pendentesSemana'] as num?)?.toInt() ?? 0,
+      implementados: (m['implementadosSemana'] as num?)?.toInt() ?? 0,
+      recusados: (m['recusadosSemana'] as num?)?.toInt() ?? 0,
     );
   }
 
