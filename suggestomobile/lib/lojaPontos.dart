@@ -96,7 +96,10 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
     if (id == null || Sessao.idUsuario == null) return;
 
     try {
-      final resultado = await resgatar(usuarioId: Sessao.idUsuario!, recompensaId: id);
+      final resultado = await resgatar(
+        usuarioId: Sessao.idUsuario!,
+        recompensaId: id,
+      );
       if (!mounted) return;
       setState(() {
         _meusPontos = (resultado['novoSaldo'] as num?)?.toInt() ?? _meusPontos;
@@ -108,12 +111,18 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
         context: context,
         builder: (_) => AlertDialog(
           backgroundColor: const Color(0xFF1E0E32),
-          title: const Text('Resgate confirmado!', style: TextStyle(color: Colors.white, fontFamily: 'PoppinsBold')),
+          title: const Text(
+            'Resgate confirmado!',
+            style: TextStyle(color: Colors.white, fontFamily: 'PoppinsBold'),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Use o código abaixo no estabelecimento:', style: TextStyle(color: Colors.white70, fontFamily: 'Poppins')),
+              const Text(
+                'Use o código abaixo no estabelecimento:',
+                style: TextStyle(color: Colors.white70, fontFamily: 'Poppins'),
+              ),
               const SizedBox(height: 12),
               Container(
                 width: double.infinity,
@@ -121,12 +130,18 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF9B59D0).withOpacity(0.15),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFF9B59D0).withOpacity(0.4)),
+                  border: Border.all(
+                    color: const Color(0xFF9B59D0).withOpacity(0.4),
+                  ),
                 ),
                 child: Text(
                   codigo,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Color(0xFF9B59D0), fontSize: 16, fontFamily: 'PoppinsBold'),
+                  style: const TextStyle(
+                    color: Color(0xFF9B59D0),
+                    fontSize: 16,
+                    fontFamily: 'PoppinsBold',
+                  ),
                 ),
               ),
             ],
@@ -134,7 +149,10 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Fechar', style: TextStyle(color: Colors.white70, fontFamily: 'Poppins')),
+              child: const Text(
+                'Fechar',
+                style: TextStyle(color: Colors.white70, fontFamily: 'Poppins'),
+              ),
             ),
           ],
         ),
@@ -142,7 +160,13 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
     } on ApiException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.mensagem, style: const TextStyle(fontFamily: 'Poppins')), backgroundColor: Colors.redAccent),
+        SnackBar(
+          content: Text(
+            e.mensagem,
+            style: const TextStyle(fontFamily: 'Poppins'),
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
       );
     }
   }
@@ -158,7 +182,9 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
 
   Widget _corpo() {
     if (carregando) {
-      return const Center(child: CircularProgressIndicator(color: Color(0xFF9B59D0)));
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFF9B59D0)),
+      );
     }
     if (erro != null) {
       return Center(
@@ -167,11 +193,25 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(erro!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent, fontSize: 13, fontFamily: 'Poppins')),
+              Text(
+                erro!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.redAccent,
+                  fontSize: 13,
+                  fontFamily: 'Poppins',
+                ),
+              ),
               const SizedBox(height: 12),
               TextButton(
                 onPressed: _carregar,
-                child: const Text('Tentar de novo', style: TextStyle(color: Color(0xFF9B59D0), fontFamily: 'Poppins')),
+                child: const Text(
+                  'Tentar de novo',
+                  style: TextStyle(
+                    color: Color(0xFF9B59D0),
+                    fontFamily: 'Poppins',
+                  ),
+                ),
               ),
             ],
           ),
@@ -182,7 +222,9 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
       color: const Color(0xFF9B59D0),
       onRefresh: _carregar,
       child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -194,13 +236,21 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
             if (_recompensas.isEmpty)
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                child: Text('Nenhuma recompensa disponível no momento.', style: TextStyle(color: Colors.white54, fontFamily: 'Poppins')),
+                child: Text(
+                  'Nenhuma recompensa disponível no momento.',
+                  style: TextStyle(
+                    color: Colors.white54,
+                    fontFamily: 'Poppins',
+                  ),
+                ),
               )
             else
-              ..._grupos.map((grupo) => _buildGrupoRecompensas(
-                    grupo['label'] as String,
-                    grupo['faixaIndex'] as int,
-                  )),
+              ..._grupos.map(
+                (grupo) => _buildGrupoRecompensas(
+                  grupo['label'] as String,
+                  grupo['faixaIndex'] as int,
+                ),
+              ),
             const SizedBox(height: 24),
           ],
         ),
@@ -258,7 +308,9 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    color: isSelected ? const Color(0xFF4A2A7A) : Colors.transparent,
+                    color: isSelected
+                        ? const Color(0xFF4A2A7A)
+                        : Colors.transparent,
                     width: 2,
                   ),
                 ),
@@ -268,7 +320,9 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
                 child: Text(
                   _faixas[index],
                   style: TextStyle(
-                    color: isSelected ? Colors.white : Colors.white.withOpacity(0.4),
+                    color: isSelected
+                        ? Colors.white
+                        : Colors.white.withOpacity(0.4),
                     fontSize: 13,
                     fontFamily: isSelected ? 'PoppinsSemi' : 'Poppins',
                   ),
@@ -300,14 +354,12 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
           ),
         ),
         const SizedBox(height: 16),
-        SizedBox(
-          height: 145,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: lista.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 14),
-            itemBuilder: (context, index) => _buildRecompensaCard(lista[index]),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Wrap(
+            spacing: 14,
+            runSpacing: 16,
+            children: lista.map(_buildRecompensaCard).toList(),
           ),
         ),
         const SizedBox(height: 8),
@@ -316,8 +368,11 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
   }
 
   Widget _buildRecompensaCard(Map<String, dynamic> recompensa) {
-    final estabelecimento = recompensa['estabelecimento'] as Map<String, dynamic>?;
-    final fotoPath = (recompensa['fotoPath'] as String?) ?? (estabelecimento?['fotoPath'] as String?);
+    final estabelecimento =
+        recompensa['estabelecimento'] as Map<String, dynamic>?;
+    final fotoPath =
+        (recompensa['fotoPath'] as String?) ??
+        (estabelecimento?['fotoPath'] as String?);
     final fotoUrl = urlFotoEstabelecimento(fotoPath);
     final custo = (recompensa['custoPontos'] as num?)?.toInt() ?? 0;
     final titulo = (recompensa['nome'] as String?) ?? 'Recompensa';
@@ -346,18 +401,29 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
                       fotoUrl,
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => const Center(
-                        child: Icon(Icons.card_giftcard, color: Colors.white38, size: 36),
+                        child: Icon(
+                          Icons.card_giftcard,
+                          color: Colors.white38,
+                          size: 36,
+                        ),
                       ),
                     )
                   else
                     const Center(
-                      child: Icon(Icons.card_giftcard, color: Colors.white38, size: 36),
+                      child: Icon(
+                        Icons.card_giftcard,
+                        color: Colors.white38,
+                        size: 36,
+                      ),
                     ),
                   Align(
                     alignment: Alignment.topLeft,
                     child: Container(
                       margin: const EdgeInsets.only(top: 6, left: 6),
-                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.65),
                         borderRadius: BorderRadius.circular(4),
@@ -404,8 +470,11 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
   }
 
   void _mostrarDetalhes(Map<String, dynamic> recompensa) {
-    final estabelecimento = recompensa['estabelecimento'] as Map<String, dynamic>?;
-    final fotoPath = (recompensa['fotoPath'] as String?) ?? (estabelecimento?['fotoPath'] as String?);
+    final estabelecimento =
+        recompensa['estabelecimento'] as Map<String, dynamic>?;
+    final fotoPath =
+        (recompensa['fotoPath'] as String?) ??
+        (estabelecimento?['fotoPath'] as String?);
     final fotoUrl = urlFotoEstabelecimento(fotoPath);
     final titulo = (recompensa['nome'] as String?) ?? 'Recompensa';
     final parceiro = (estabelecimento?['nome'] as String?) ?? '—';
@@ -445,16 +514,22 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
                         errorBuilder: (_, __, ___) => Container(
                           color: const Color(0xFF2A1A4A),
                           child: const Center(
-                            child: Icon(Icons.card_giftcard,
-                                color: Colors.white38, size: 48),
+                            child: Icon(
+                              Icons.card_giftcard,
+                              color: Colors.white38,
+                              size: 48,
+                            ),
                           ),
                         ),
                       )
                     : Container(
                         color: const Color(0xFF2A1A4A),
                         child: const Center(
-                          child: Icon(Icons.card_giftcard,
-                              color: Colors.white38, size: 48),
+                          child: Icon(
+                            Icons.card_giftcard,
+                            color: Colors.white38,
+                            size: 48,
+                          ),
                         ),
                       ),
               ),
@@ -487,12 +562,16 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF9B59D0).withOpacity(0.15),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                        color: const Color(0xFF9B59D0).withOpacity(0.4)),
+                      color: const Color(0xFF9B59D0).withOpacity(0.4),
+                    ),
                   ),
                   child: const Text(
                     'Disponível',
@@ -536,10 +615,7 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
                 ),
                 child: const Text(
                   'Resgatar recompensa',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontFamily: 'PoppinsBold',
-                  ),
+                  style: TextStyle(fontSize: 15, fontFamily: 'PoppinsBold'),
                 ),
               ),
             ),
@@ -549,7 +625,7 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
     );
   }
 
-   int paginaAtual = 2;
+  int paginaAtual = 2;
   Widget barraNavegacao() {
     return Container(
       decoration: BoxDecoration(

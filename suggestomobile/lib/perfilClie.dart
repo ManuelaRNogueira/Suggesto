@@ -22,11 +22,6 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
       'label': 'Locais Salvos',
       'route': '/locais_salvos',
     },
-    {
-      'icon': Icons.chat_bubble_outline,
-      'label': 'Minhas Sugestões',
-      'route': '/minhasSugestoes',
-    },
     {'icon': Icons.person_outline, 'label': 'Sobre Nós', 'route': '/sobrenos'},
     {'icon': Icons.person_outline, 'label': 'O Suggesto', 'route': '/suggesto'},
   ];
@@ -243,7 +238,11 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
                       color: Color(0xFF9B59D0),
                       border: Border.all(color: Color(0xFF12061E), width: 2),
                     ),
-                    child: Icon(Icons.camera_alt, color: Colors.white, size: 12),
+                    child: Icon(
+                      Icons.camera_alt,
+                      color: Colors.white,
+                      size: 12,
+                    ),
                   ),
                 ),
               ],
@@ -324,7 +323,8 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
     if (pontuacao != null) {
       final aceitas = componentes?['aceitas'];
       final decididas = componentes?['decididas'];
-      texto = '$aceitas de $decididas avaliações com visita confirmada foram aceitas.';
+      texto =
+          '$aceitas de $decididas avaliações com visita confirmada foram aceitas.';
     } else {
       texto = rotulo == 'Novo'
           ? 'Novo — ainda faltam avaliações decididas com visita confirmada pra calcular sua pontuação.'
