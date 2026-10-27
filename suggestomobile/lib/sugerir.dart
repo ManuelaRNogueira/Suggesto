@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'api.dart';
 import 'categoriasPorRamo.dart';
+import 'cores.dart';
 import 'geoUtils.dart';
 import 'sessao.dart';
 
@@ -35,6 +36,15 @@ class _SugerirPageState extends State<SugerirPage> {
   int? idVisita;
   String? avisoVisita;
   bool fazendoCheckin = false;
+
+  // Sem localização cadastrada não é um local físico (ex: o Suggesto, que é um
+  // sistema): não pede visita. Se o mapa do local nem traz lat/lng, assume físico
+  // e deixa a API decidir.
+  bool get exigeVisita {
+    final local = widget.local;
+    if (local == null || !local.containsKey('lat') || !local.containsKey('lng')) return true;
+    return local['lat'] != null && local['lng'] != null;
+  }
 
   @override
   void initState() {
@@ -130,6 +140,11 @@ class _SugerirPageState extends State<SugerirPage> {
       return;
     }
 
+    if (exigeVisita && idVisita == null) {
+      _pedirCheckin('Confirme sua visita antes de enviar: leia o QR de check-in do local ou toque em "Estou aqui".');
+      return;
+    }
+
     setState(() => enviado = true);
 
     try {
@@ -168,11 +183,29 @@ class _SugerirPageState extends State<SugerirPage> {
       });
     } on ApiException catch (e) {
       if (!mounted) return;
+      // Todas as recusas de visita da API falam em "visita" (expirou, já usada...):
+      // some o selo e volta o botão de check-in, com o motivo.
       setState(() => enviado = false);
+      if (e.mensagem.toLowerCase().contains('visita')) {
+        _pedirCheckin(e.mensagem);
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.mensagem, style: TextStyle(fontFamily: 'Poppins')), backgroundColor: Colors.redAccent),
       );
     }
+  }
+
+  // Tira o selo e volta o botão "Estou aqui" com o motivo (o aviso fica no
+  // topo da tela, por isso repete no SnackBar).
+  void _pedirCheckin(String motivo) {
+    setState(() {
+      idVisita = null;
+      avisoVisita = motivo;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(motivo, style: TextStyle(fontFamily: 'Poppins')), backgroundColor: Colors.redAccent),
+    );
   }
 
   @override
@@ -193,6 +226,10 @@ class _SugerirPageState extends State<SugerirPage> {
                 children: [
                   SizedBox(height: 8),
                   LocalInfo(local),
+                  if (exigeVisita) ...[
+                    SizedBox(height: 12),
+                    Visita(),
+                  ],
                   SizedBox(height: 20),
                   Tipos(),
                   SizedBox(height: 12),
@@ -285,6 +322,38 @@ class _SugerirPageState extends State<SugerirPage> {
           ),
         ],
       ),
+    );
+  }
+
+  // CHECK-IN: selo quando confirmada; senão o aviso e o botão de GPS.
+  Widget Visita() {
+    if (idVisita != null) {
+      return Row(children: [
+        Icon(Icons.check_circle, color: Cores.verde, size: 18),
+        SizedBox(width: 6),
+        Text('Visita confirmada', style: TextStyle(color: Cores.verde, fontFamily: 'PoppinsSemiBold', fontSize: 13)),
+      ]);
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (avisoVisita != null) ...[
+          Text(avisoVisita!, style: TextStyle(color: Cores.amarelo, fontFamily: 'Poppins', fontSize: 12.5)),
+          SizedBox(height: 8),
+        ],
+        OutlinedButton.icon(
+          onPressed: fazendoCheckin ? null : () => _checkin(),
+          icon: fazendoCheckin
+              ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Cores.verde))
+              : Icon(Icons.location_on, color: Cores.verde, size: 18),
+          label: Text('Estou aqui: confirmar visita',
+              style: TextStyle(color: Cores.verde, fontFamily: 'PoppinsSemiBold', fontSize: 13)),
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(color: Cores.verde.withOpacity(0.5)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+          ),
+        ),
+      ],
     );
   }
 
