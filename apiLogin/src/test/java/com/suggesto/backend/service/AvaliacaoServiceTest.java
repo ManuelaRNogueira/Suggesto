@@ -247,12 +247,15 @@ class AvaliacaoServiceTest {
     }
 
     @Test
-    void avaliacaoSemVisitaERecusadaPedindoCheckin() {
+    void avaliacaoSemVisitaESalvaSemSelo() {
         AvaliacaoRequestDTO dto = novaAvaliacao(null);
 
-        assertThatThrownBy(() -> avaliacaoService.registrarNovaAvaliacao(dto))
-                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("check-in");
-        verify(avaliacaoRepository, never()).save(any());
+        avaliacaoService.registrarNovaAvaliacao(dto);
+
+        org.mockito.ArgumentCaptor<Avaliacao> salva = org.mockito.ArgumentCaptor.forClass(Avaliacao.class);
+        verify(avaliacaoRepository).save(salva.capture());
+        assertThat(salva.getValue().getVisita()).isNull();
+        assertThat(salva.getValue().getMetodoVisita()).isNull();
     }
 
     // Sem o fallback pro convidado compartilhado: sem usuário, sem avaliação.

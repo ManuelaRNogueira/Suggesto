@@ -53,9 +53,8 @@ public class AvaliacaoService {
     @Autowired
     private VisitaService visitaService;
 
-    // Cria uma nova sugestão/crítica/elogio. Só avalia quem fez check-in no
-    // local: toda avaliação tem um usuário (quem chega pelo QR já ganha um
-    // convidado próprio) e uma visita válida desse usuário nesse local.
+    // Cria uma nova sugestão/crítica/elogio. Toda avaliação tem um usuário
+    // (quem chega pelo QR já ganha um convidado próprio); o check-in é opcional.
     @Transactional
     public void registrarNovaAvaliacao(AvaliacaoRequestDTO dto) {
         if (dto.getIdUsuario() == null) {
@@ -70,11 +69,10 @@ public class AvaliacaoService {
         Categoria categoria = categoriaRepository.findById(dto.getIdCategoria())
                 .orElseThrow(() -> new RuntimeException("Categoria não encontrada com o ID: " + dto.getIdCategoria()));
 
-        if (dto.getIdVisita() == null) {
-            throw new IllegalArgumentException(
-                    "Confirme sua visita antes de avaliar: leia o QR de check-in do local ou use \"Estou aqui\".");
-        }
-        Visita visita = visitaService.validarParaAvaliacao(dto.getIdVisita(), usuario.getId(), est.getIdEstabelecimento());
+        // A visita é opcional: se veio (QR), é conferida e vira o selo; senão a avaliação sai sem ela.
+        Visita visita = dto.getIdVisita() == null
+                ? null
+                : visitaService.validarParaAvaliacao(dto.getIdVisita(), usuario.getId(), est.getIdEstabelecimento());
 
         // O plano do estabelecimento pode limitar quantos feedbacks ele recebe por mês.
         planoService.validarNovoFeedback(est);
@@ -89,7 +87,7 @@ public class AvaliacaoService {
         avaliacao.setCategoria(categoria);
         avaliacao.setUsuario(usuario);
         avaliacao.setVisita(visita);
-        avaliacao.setMetodoVisita(visita.getMetodo());
+        avaliacao.setMetodoVisita(visita == null ? null : visita.getMetodo());
 
         avaliacaoRepository.save(avaliacao);
     }
