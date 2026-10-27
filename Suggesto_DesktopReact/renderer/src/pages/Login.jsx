@@ -12,6 +12,22 @@ export default function Login({ aoLogar }) {
   const [fraseIndex, setFraseIndex] = useState(0);
   const [opacity, setOpacity] = useState(1);
   const [isLogado, setIsLogado] = useState(false);
+  // enquanto houver aviso do login, as frases param de girar para não apagá-lo
+  const [aviso, setAviso] = useState(false);
+
+  const mostrarAviso = (texto, cor) => {
+    setAviso(true);
+    setOpacity(1);
+    setMensagem(texto);
+    setMsgColor(cor);
+  };
+
+  const limparAviso = () => {
+    if (!aviso) return;
+    setAviso(false);
+    setMsgColor("#d8c7ff");
+    setMensagem(frases[fraseIndex]);
+  };
 
   const frases = [
     "Monitore, aprenda e evolua com o que dizem por aí.",
@@ -25,16 +41,21 @@ export default function Login({ aoLogar }) {
   ];
 
   useEffect(() => {
+    if (aviso) return;
+    let troca;
     const intervalo = setInterval(() => {
       setOpacity(0);
-      setTimeout(() => {
+      troca = setTimeout(() => {
         setFraseIndex((prev) => (prev + 1) % frases.length);
         setMensagem(frases[(fraseIndex + 1) % frases.length]);
         setOpacity(1);
       }, 1000);
     }, 4000);
-    return () => clearInterval(intervalo);
-  }, [fraseIndex]);
+    return () => {
+      clearInterval(intervalo);
+      clearTimeout(troca);
+    };
+  }, [fraseIndex, aviso]);
 
   const handleLogin = async () => {
     try {
@@ -53,19 +74,18 @@ export default function Login({ aoLogar }) {
         localStorage.setItem("idUsuario", resultado.idUsuario)
         localStorage.setItem("tipoUsuario", resultado.tipoUsuario)
 
-        setMensagem("Conectando...");
-        setMsgColor("#c8e6c9");
+        mostrarAviso("Conectando...", "#c8e6c9");
 
         setTimeout(() => {
           aoLogar();
         }, 500);
+      } else if (resposta.status === 403) {
+        mostrarAviso("Apenas administradores podem logar aqui.", "#ffcdd2");
       } else {
-        setMensagem(resultado.message || "Erro ao fazer login");
-        setMsgColor("#ffcdd2");
+        mostrarAviso(resultado.message || "Erro ao fazer login", "#ffcdd2");
       }
     } catch (error) {
-      setMensagem("Erro de comunicação com o servidor");
-      setMsgColor("#ffcdd2");
+      mostrarAviso("Erro de comunicação com o servidor", "#ffcdd2");
     }
   };
 
@@ -90,14 +110,14 @@ export default function Login({ aoLogar }) {
               type="email"
               placeholder="Digite seu email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => { setEmail(e.target.value); limparAviso(); }}
               autoFocus
             />
             <input
               type="password"
               placeholder="Digite sua senha"
               value={senha}
-              onChange={(e) => setSenha(e.target.value)}
+              onChange={(e) => { setSenha(e.target.value); limparAviso(); }}
             />
             <button id="entrar" onClick={handleLogin}>
               Entrar
