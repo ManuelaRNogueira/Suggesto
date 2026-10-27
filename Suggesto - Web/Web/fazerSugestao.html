@@ -593,7 +593,7 @@ function mostrarTelaDePesquisa() {
 
 function iniciarFormulario(id, nome, oferecerLocalizacao = true) {
     estado.idEstabelecimento = id;
-    document.getElementById('btn-estou-aqui').hidden = !oferecerLocalizacao;
+    document.getElementById('btn-estou-aqui').hidden = true; // confirmar visita não é mais exigido
     estado.idVisita = null; // visita é de um estabelecimento só
     document.getElementById('visita-aviso').hidden = true;
     if (nome) mostrarNomeEstabelecimento(nome);
@@ -754,10 +754,6 @@ async function enviar() {
   if (!msg) return;
 
   if (!estado.idEstabelecimento) { alert('Erro: Estabelecimento não foi selecionado!'); return; }
-  if (!estado.idVisita) {
-    pedirCheckin('Confirme sua visita antes de enviar: leia o QR de check-in do local ou toque em "Estou aqui".');
-    return;
-  }
 
   const btn = document.getElementById('btn-enviar'); btn.disabled = true;
   document.getElementById('spinner').style.display = 'block'; document.getElementById('enviar-ico').style.display = 'none';
@@ -787,9 +783,7 @@ async function enviar() {
   } catch (err) {
     btn.disabled = false; document.getElementById('spinner').style.display = 'none';
     document.getElementById('enviar-ico').style.display = 'block'; document.getElementById('enviar-txt').textContent = 'Tentar novamente';
-    // Todas as recusas de visita da API falam em "visita" (expirou, já usada...).
-    if (/visita/i.test(err.message)) pedirCheckin(err.message);
-    else alert(err.message || 'Erro ao enviar. Verifique se a API está rodando.');
+    alert(err.message || 'Erro ao enviar. Verifique se a API está rodando.');
   }
 }
 
