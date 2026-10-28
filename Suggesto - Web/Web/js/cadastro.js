@@ -1,3 +1,6 @@
+// Cadastro de conta (cliente, ou administrador quando vem com ?equipe=1).
+// Valida tudo no navegador antes de mandar pra POST /api/cadastro.
+
 const toastErro = document.getElementById('toastErro');
 const toastMsgErro = document.getElementById('toastMsgErro');
 
@@ -55,6 +58,7 @@ function isUsernameValido(usuario) {
     return /^[a-zA-Z0-9._]{3,30}$/.test(usuario.trim());
 }
 
+// Confere campo por campo e para no primeiro erro, mostrando a mensagem no toast.
 function validarCampos() {
     limparErros();
 
@@ -126,6 +130,7 @@ function validarCampos() {
     return true;
 }
 
+// Chamado pelo botão "Cadastrar": monta o objeto do usuário e envia pra API.
 async function cadastrar() {
     if (!validarCampos()) return;
 
@@ -229,6 +234,7 @@ if (campoCep) {
 }
 
 
+// Máscara do telefone enquanto digita: (11) 91234-5678.
 const telefone = document.getElementById("telefone");
 
 telefone.addEventListener("input", function() {

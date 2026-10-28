@@ -109,6 +109,7 @@ function montarConta() {
   }
 }
 
+// Carrega as sugestões dos estabelecimentos do admin e confere se o plano permite exportar.
 async function carregar() {
   try {
     sugestoes = (await admBuscarSugestoes()) || [];
@@ -152,6 +153,7 @@ function categoriasComContagem() {
   return [...mapa.entries()].sort((a, b) => b[1] - a[1]);
 }
 
+// Aplica status, categoria e busca, e depois ordena conforme o select.
 function sugestoesFiltradas() {
   const termo = busca.trim().toLowerCase();
   const lista = sugestoes.filter((s) => {
@@ -175,6 +177,7 @@ function sugestoesFiltradas() {
   });
 }
 
+// Redesenha a tela inteira a partir do estado atual (filtros, página, sugestões).
 function renderizar() {
   const filtradas = sugestoesFiltradas();
   const totalPaginas = Math.max(1, Math.ceil(filtradas.length / POR_PAGINA));
@@ -236,6 +239,7 @@ function renderizarLista(visiveis) {
   lista.innerHTML = visiveis.map((s) => cartaoHtml(s)).join("");
 }
 
+// HTML de um cartão de sugestão, com os botões de ação conforme o status.
 function cartaoHtml(s) {
   const acoes = ACOES[s.statusUi] || [];
   const estaSalvando = salvandoId === s.id;
@@ -363,6 +367,7 @@ function sugCancelarResposta() {
   renderizar();
 }
 
+// Envia a resposta escrita pelo admin (o cliente vê em "Minhas sugestões").
 async function sugEnviarResposta(id) {
   const idAdmin = localStorage.getItem("idUsuario");
   enviandoRespostaId = id;
@@ -438,6 +443,7 @@ async function sugMudarStatus(id, novo, motivo) {
   }
 }
 
+// Gera um CSV com as sugestões filtradas e baixa no navegador (recurso do plano Pro).
 function exportarCsv() {
   if (!podeExportar) {
     mostrarToast("Exportar em CSV está disponível no plano Pro.", true);

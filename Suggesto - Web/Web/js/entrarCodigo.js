@@ -1,3 +1,6 @@
+// Funcionário digita o código do estabelecimento pra pedir entrada na equipe.
+// O pedido fica pendente até o admin principal aceitar (ver equipe.js).
+
 const toastErro = document.getElementById('toastErro');
 const toastMsgErro = document.getElementById('toastMsgErro');
 
@@ -39,6 +42,7 @@ async function entrarNaEquipe() {
     botao.disabled = true;
 
     try {
+        // Cria a solicitação de entrada na equipe.
         const resposta = await fetch(`${window.API_BASE}/estabelecimentos/entrar`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

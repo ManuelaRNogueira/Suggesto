@@ -1,3 +1,6 @@
+// Perfil do cliente: dados, nível, conquistas, confiabilidade, atividade
+// recente e o modal de edição (nome, usuário, CEP e foto).
+
 const API_BASE = window.API_BASE;
 let usuarioAtual = null;
 let fotoPreviewObjectUrl = null;
@@ -125,6 +128,7 @@ function logout() {
     window.location.href = "login.html";
 }
 
+// Carrega o usuário da API e, depois, as outras seções do perfil.
 async function carregarDadosUsuario() {
     const idUsuario = localStorage.getItem("idUsuario");
 
@@ -338,6 +342,7 @@ function abrirConquista(id) {
     document.getElementById("modalConquista").classList.add("aberto");
 }
 
+// Joga os dados do usuário na tela (nome, foto, contadores e nível).
 function preencherPerfil(usuario) {
     const nome = usuario.nome || "Usuário";
     const email = usuario.email || "";
@@ -379,6 +384,7 @@ function preencherPerfil(usuario) {
     aplicarNivelPerfil(pontosAcumulados);
 }
 
+// As 5 sugestões mais recentes do usuário.
 async function carregarAtividadeRecente(idUsuario) {
     const container = document.getElementById("atividadeLista");
     if (!container) return;
@@ -463,6 +469,7 @@ function formatarDataRelativa(dataIso) {
     });
 }
 
+// Card de nível: selo, barra de progresso e benefícios do nível atual.
 function aplicarNivelPerfil(pontos) {
     const prog = calcularProgressoNivel(pontos);
 
@@ -575,6 +582,7 @@ function resolverUrlFoto(fotoUrl) {
     return `${window.API_ORIGIN}/uploads/${fotoUrl}`;
 }
 
+// Quando escolhe uma foto: valida, abre o recorte e mostra a prévia no modal.
 async function atualizarPreviaFotoSelecionada(event) {
     const input = event.currentTarget;
     const arquivo = input.files?.[0];
@@ -678,6 +686,8 @@ function formatarTamanhoArquivo(bytes) {
     return `${(bytes / (1024 * 1024)).toFixed(1).replace(".", ",")} MB`;
 }
 
+// Salva o perfil com PUT /api/usuarios/{id}. Usa FormData (e não JSON)
+// porque pode ir junto o arquivo da foto.
 async function salvarEdicao() {
     const idUsuario = localStorage.getItem("idUsuario");
     if (!idUsuario) {

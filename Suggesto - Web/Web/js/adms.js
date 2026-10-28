@@ -1,3 +1,5 @@
+// Página pública "Para empresas" (adms.html): menu, animações e links de navegação.
+
 // ===== NAVBAR: scroll + menu mobile =====
 const navbar = document.getElementById('barraPrincipal');
 const menuBtn = document.getElementById('menuBtn');

@@ -1,3 +1,6 @@
+// Página "Locais salvos" do cliente: lista os favoritos, busca, filtro por
+// categoria, ordenação e remoção.
+
 const API_BASE = window.API_BASE;
 
 function obterIdUsuario() {
@@ -73,6 +76,7 @@ function resolverUrlFotoUsuario(fotoUrl) {
   return `${API_BASE.replace("/api", "")}/uploads/${relativo}`;
 }
 
+// Busca os favoritos do usuário na API e desenha um card pra cada (localCard.js).
 async function carregarLocaisSalvos() {
   const grade = document.getElementById('locaisGrade');
   const vazio = document.getElementById('locaisVazio');
@@ -121,6 +125,7 @@ function criarCardSalvo(estab) {
   return criarCardEstabelecimento(estab, opcoesCardSalvo);
 }
 
+// Busca por texto: só esconde/mostra os cards que já estão na tela.
 function filtrarLocais() {
   const busca = document.getElementById('campoBusca').value.toLowerCase();
   const cards = document.querySelectorAll('#locaisGrade .local-card');
@@ -196,6 +201,7 @@ function ordenarLocais() {
 
 let cardParaRemover = null;
 
+// Abre o modal de confirmação e, ao confirmar, chama DELETE na API e tira o card da tela.
 function confirmarRemover(card) {
   cardParaRemover = card;
   const nome = card.querySelector('.local-nome').textContent;

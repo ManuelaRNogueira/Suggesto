@@ -1,3 +1,6 @@
+// Página de download do app desktop (download.html). O login aqui é só visual
+// (simulado), não chama a API.
+
 // ===== BARRA DE NAVEGAÇÃO =====
 const barraPrincipal = document.getElementById('barraPrincipal');
 const menuBtn = document.getElementById('menuBtn');

@@ -1,3 +1,6 @@
+// Página de mapa de um estabelecimento: mostra os dados (vindos da página
+// anterior pelo sessionStorage) e o local num mapa Leaflet/OpenStreetMap.
+
 const dadosEstab = {
   id:         sessionStorage.getItem('loc_id')         || '',
   nome:       sessionStorage.getItem('loc_nome')       || 'Estabelecimento',
@@ -363,6 +366,7 @@ function ligarPara() {
 
 
 // ── SALVAR LOCAL ─────────────────────────────────────────────────────
+// Favorito desta tela fica só no localStorage do navegador (não vai pra API).
 function salvarLocal() {
   localSalvo = !localSalvo;
 

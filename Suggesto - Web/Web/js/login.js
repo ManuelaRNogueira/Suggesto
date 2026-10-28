@@ -1,3 +1,6 @@
+// Tela de login: valida os campos, chama POST /api/login e redireciona
+// pra área do cliente ou do administrador conforme o tipo da conta.
+
 const emailInput = document.getElementById('email');
 const senhaInput = document.getElementById('senha');
 const toastErro = document.getElementById('toastErro');
@@ -42,6 +45,7 @@ function validarCampos() {
     return true;
 }
 
+// Chamado pelo botão "Entrar" do login.html.
 async function entrarSuggesto() {
     if (!validarCampos()) return;
 

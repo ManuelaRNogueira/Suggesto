@@ -454,6 +454,11 @@ textarea:focus { border-color: var(--purple-glow); background: rgba(167,139,250,
 <script src="js/config.js"></script>
 <script src="js/categoriasPorRamo.js"></script>
 <script>
+// Formulário de sugestão em 3 passos: (1) tipo + categoria, (2) nota,
+// (3) mensagem. Antes de enviar, o cliente precisa confirmar a visita
+// (check-in pelo QR do local ou pela localização).
+
+// Tudo o que o cliente já escolheu no formulário fica guardado aqui.
 const estado = { 
     tipo: null, categoria: null, idCategoria: null, 
     nota: null, passoAtual: 1, idEstabelecimento: null, idVisita: null, exigeVisita: true
@@ -486,6 +491,8 @@ function acaoVoltar() {
     }
 }
 
+// Se veio com ?id= (pelo card ou pelo QR), já abre o formulário daquele local;
+// senão, mostra a busca de estabelecimentos.
 document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(window.location.search);
     const idEstabUrl = params.get('id');
@@ -679,6 +686,7 @@ function filtrarLocais() {
     renderizarGradeLocais(filtrados);
 }
 
+// Botões Voltar/Próximo: troca o passo visível e atualiza o indicador do topo.
 function passo(dir) {
   if (dir === 1 && !validarPasso()) return;
   const prox = estado.passoAtual + dir;
@@ -727,6 +735,7 @@ function selecionarCat(el) {
 
 function hoverEstrela(v) { document.querySelectorAll('.estrela').forEach((e, i) => { e.classList.toggle('hover', i < v); e.classList.remove('ativa'); }); }
 function unhoverEstrela() { document.querySelectorAll('.estrela').forEach((e, i) => { e.classList.remove('hover'); if (estado.nota) e.classList.toggle('ativa', i < estado.nota); }); }
+// Clique nas estrelas: guarda a nota e pinta a barra com a cor correspondente.
 function selecionarNota(v) {
   estado.nota = v;
   const bar = document.getElementById('nota-bar'); const label = document.getElementById('nota-label');
@@ -756,6 +765,7 @@ function pedirCheckin(texto) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// Envia a sugestão com POST /api/avaliacoes (junto vai o idVisita do check-in).
 async function enviar() {
   const msg = document.getElementById('mensagem').value.trim();
   if (!msg) return;

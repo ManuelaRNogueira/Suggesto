@@ -1,3 +1,7 @@
+// Notificações do cliente. Não existe tabela de notificação: a tela monta as
+// novidades a partir de locais novos na cidade, recompensas novas e respostas
+// às sugestões do usuário.
+
 const API_BASE = window.API_BASE;
 const DIAS_NOVO = 30;
 
@@ -36,6 +40,7 @@ function tempoRelativo(dataIso) {
   return `Há ${dias} dias`;
 }
 
+// Faz as 4 requisições ao mesmo tempo (Promise.all) e preenche cada seção.
 async function carregarNotificacoes() {
   const idUsuario = obterIdUsuario();
   if (!idUsuario) {
@@ -63,6 +68,7 @@ async function carregarNotificacoes() {
   }
 }
 
+// Locais cadastrados nos últimos 30 dias na mesma cidade do usuário.
 function renderizarEstabelecimentos(usuario, estabelecimentos) {
   const lista = document.getElementById("listaEstabelecimentos");
   const aviso = document.getElementById("avisoSemCidade");
@@ -112,6 +118,7 @@ function renderizarEstabelecimentos(usuario, estabelecimentos) {
   return true;
 }
 
+// Recompensas da loja de pontos cadastradas nos últimos 30 dias.
 function renderizarRecompensas(recompensas) {
   const lista = document.getElementById("listaRecompensas");
   const vazio = document.getElementById("vazioRecompensas");

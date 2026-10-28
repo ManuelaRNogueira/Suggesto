@@ -1,3 +1,6 @@
+// Loja de pontos do cliente: saldo e nível, vitrine de recompensas, resgate
+// (gera um cupom) e aba de histórico de pontos.
+
 const API_BASE = window.API_BASE;
 const PLACEHOLDER_ESTABELECIMENTO = "imagens/placeholder-local.png";
 
@@ -56,6 +59,7 @@ function aplicarTemaNivel(nivelId) {
   painel.classList.add(`nivel-${nivelId}`);
 }
 
+// Busca o usuário na API pra pegar saldo, pontos acumulados e estatísticas.
 async function carregarDadosUsuario() {
   const idUsuario = obterIdUsuario();
   if (!idUsuario) return;
@@ -122,6 +126,7 @@ function resolverUrlFotoUsuario(fotoUrl) {
   return `${API_BASE.replace("/api", "")}/uploads/${relativo}`;
 }
 
+// Painel do topo: saldo, nível atual e barra de progresso até o próximo nível (pontosNiveis.js).
 function atualizarPainelSaldo(pontos) {
   const prog = calcularProgressoNivel(pontosAcumulados);
   aplicarTemaNivel(prog.atual.id);
@@ -168,6 +173,7 @@ async function carregarIdsResgatados() {
   }
 }
 
+// Lista as recompensas da API, tirando as que o usuário já resgatou.
 async function carregarRecompensas() {
   const area = document.getElementById("mercadoArea");
   if (!area) return;
@@ -207,6 +213,7 @@ function tituloFaixa(faixa) {
   return mapa[faixa] || "Recompensas";
 }
 
+// Agrupa as recompensas por faixa de preço e desenha uma seção pra cada faixa.
 function renderizarMercado(lista) {
   const area = document.getElementById("mercadoArea");
   const vazio = document.getElementById("mercadoVazio");
@@ -346,6 +353,7 @@ function filtrarFaixa(botao, limite) {
   vazio?.classList.toggle("visivel", totalVisivel === 0);
 }
 
+// Abre o modal de confirmação mostrando o saldo antes e depois do resgate.
 function abrirResgate(recompensaId, nome, custo) {
   if (custo > saldoAtual) {
     mostrarToast("Pontos insuficientes para este resgate");
@@ -378,6 +386,7 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") fecharModal();
 });
 
+// POST /api/resgates: a API desconta os pontos e devolve o código do cupom.
 async function confirmarResgate() {
   const idUsuario = obterIdUsuario();
   if (!idUsuario || !resgateAtual.id) return;
@@ -459,6 +468,7 @@ function mostrarAbaPontos(aba) {
   }
 }
 
+// Histórico = resgates (pontos gastos) + sugestões aprovadas (+500 pontos cada), por data.
 async function carregarHistorico() {
   const idUsuario = obterIdUsuario();
   const lista = document.getElementById("historicoLista");

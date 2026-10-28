@@ -25,6 +25,7 @@ function calcularNivel(pontos) {
   return { atual: PONTOS_NIVEIS[0], proximo: PONTOS_NIVEIS[1], pontos: pts };
 }
 
+// Percentual da barra de progresso e quantos pontos faltam pro próximo nível.
 function calcularProgressoNivel(pontos) {
   const { atual, proximo, pontos: pts } = calcularNivel(pontos);
 

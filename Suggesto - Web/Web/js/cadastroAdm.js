@@ -1,6 +1,8 @@
 // ======================================================
 // CADASTRO DO ESTABELECIMENTO - SUGGESTO
 // ======================================================
+// Fluxo em 2 etapas: (1) dados do estabelecimento, (2) responsável (conta
+// nova ou já existente). Só depois disso cria o estabelecimento na API.
 
 let dadosEstabelecimento = {};
 let idUsuarioCriado = null;
@@ -238,6 +240,7 @@ async function planoPermiteEquipe(nomePlano) {
 }
 
 
+// Botão final da etapa 2: escolhe o caminho conforme "criar conta" ou "já tenho conta".
 async function cadastrar() {
     if (modoResponsavel === "existente") {
         await cadastrarComContaExistente();

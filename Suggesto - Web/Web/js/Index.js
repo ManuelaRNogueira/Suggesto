@@ -1,3 +1,5 @@
+// Página inicial pública (index.html): menu, carrossel da vitrine e animações.
+
 // ===== BARRA DE NAVEGAÇÃO: efeito ao rolar + menu mobile =====
 const barraPrincipal = document.getElementById('barraPrincipal');
 const menuBtn = document.getElementById('menuBtn');

@@ -54,6 +54,7 @@ function montarConta() {
 
 let estabelecimentosCache = [];
 
+// Busca os estabelecimentos do admin e as métricas, e monta a tela.
 async function carregar() {
   try {
     const estabelecimentos = await admBuscarEstabelecimentos().catch(() => []);
@@ -80,6 +81,7 @@ function validarSelecaoLocal(estabelecimentos) {
   if (!existe) admDefinirEstabelecimentoSelecionado(null);
 }
 
+// Clique em um local da lista: filtra o resumo só por ele (clicar de novo volta pra "todos").
 async function selecionarLocal(id) {
   if (id === null) {
     admDefinirEstabelecimentoSelecionado(null);
@@ -101,6 +103,7 @@ async function selecionarLocal(id) {
   }
 }
 
+// Monta cada bloco do painel a partir das métricas vindas da API.
 function renderar(metricas, estabelecimentos) {
   const total = metricas.totalSugestoes || 0;
 

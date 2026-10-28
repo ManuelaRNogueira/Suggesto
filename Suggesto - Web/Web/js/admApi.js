@@ -19,6 +19,7 @@ function admVerificarSessao() {
   return true;
 }
 
+// Helpers de requisição: fazem o fetch e lançam erro se a API não responder 2xx.
 async function admFetchJson(url) {
   const resposta = await fetch(url);
   if (!resposta.ok) {
@@ -72,6 +73,7 @@ function admDefinirEstabelecimentoSelecionado(id) {
   else localStorage.removeItem("admEstabelecimentoSelecionado");
 }
 
+// Números do painel (totais, por status, por categoria). Filtra por local se houver um selecionado.
 async function admBuscarMetricas() {
   const base = admQueryGerente();
   const idEstab = admEstabelecimentoSelecionado();

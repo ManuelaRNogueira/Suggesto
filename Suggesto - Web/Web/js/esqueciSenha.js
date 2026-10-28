@@ -1,3 +1,5 @@
+// Tela "Esqueci minha senha": manda o e-mail pra API, que envia o link de redefinição.
+
 const formEsqueci = document.getElementById('formEsqueci');
 const emailInput = document.getElementById('email');
 const toastErro = document.getElementById('toastErro');

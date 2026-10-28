@@ -1,3 +1,5 @@
+// Página "Saiba mais" (saibamais.html): abas "Como funciona", animações e scroll suave.
+
 // ===== BARRA DE NAVEGAÇÃO: efeito ao rolar + menu mobile =====
 const barraPrincipal = document.getElementById('barraPrincipal');
 const menuBtn = document.getElementById('menuBtn');

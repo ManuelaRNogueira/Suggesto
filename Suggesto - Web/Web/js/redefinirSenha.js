@@ -1,3 +1,5 @@
+// Tela aberta pelo link do e-mail: valida a senha nova e envia junto com o token pra API.
+
 const formRedefinir = document.getElementById('formRedefinir');
 const senhaInput = document.getElementById('senha');
 const confirmarInput = document.getElementById('confirmarSenha');

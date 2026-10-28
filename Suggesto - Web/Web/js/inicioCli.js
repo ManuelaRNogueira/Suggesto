@@ -1,3 +1,6 @@
+// Tela inicial do cliente: "Perto de você", "Descubra novos locais",
+// busca, filtro por categoria e favoritar locais.
+
 const API_BASE = window.API_BASE;
 let locaisSalvosIds = new Set();
 
@@ -60,6 +63,7 @@ function irParaPaginaSugestao(nome, id) {
   window.location.href = `./fazerSugestao.html?id=${id}&nome=${encodeURIComponent(nome)}`;
 }
 
+// Guarda os ids dos locais já favoritados pra pintar o ícone de salvo nos cards.
 async function carregarIdsSalvos() {
   const idUsuario = localStorage.getItem("idUsuario");
   if (!idUsuario) return;
@@ -210,6 +214,7 @@ async function buscarRecomendadosPorCidade(rotuloCidade) {
   }
 }
 
+// Salvar/remover favorito: POST /api/locais-salvos pra salvar, DELETE pra remover.
 async function toggleFavorito(estabelecimentoId, btn) {
   const usuarioId = obterIdUsuario();
 
@@ -299,6 +304,7 @@ function resolverUrlFotoUsuario(fotoUrl) {
   return `${API_BASE.replace("/api", "")}/uploads/${relativo}`;
 }
 
+// Busca por nome: esconde os cards que não batem com o texto digitado.
 function filtrarLocais() {
   const busca = document.getElementById("campoBusca").value.toLowerCase();
   const cards = document.querySelectorAll(".local-card");
@@ -312,6 +318,7 @@ function filtrarLocais() {
   });
 }
 
+// Filtro pelos chips de categoria (Restaurante, Bar...).
 function filtrarCategoria(botao, categoria) {
   document
     .querySelectorAll(".filtro-chip")

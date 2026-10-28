@@ -1,3 +1,5 @@
+// Página de planos (planos.html): alterna preço mensal/anual, FAQ e leva pro pagamento.
+
 // ===== BARRA DE NAVEGAÇÃO =====
 const barraPrincipal = document.getElementById('barraPrincipal');
 const menuBtn = document.getElementById('menuBtn');
@@ -89,6 +91,7 @@ document.querySelectorAll('.plano-card, .faq-item').forEach((elemento, indice) =
 
 
 // ===== NAVEGAÇÃO =====
+// Guarda o plano escolhido na sessão e abre o checkout (pagamento.js lê isso).
 function assinarPlano(nomePlano) {
   sessionStorage.setItem("planoEscolhido", nomePlano);
   sessionStorage.setItem("periodoEscolhido", periodoAnual ? "anual" : "mensal");

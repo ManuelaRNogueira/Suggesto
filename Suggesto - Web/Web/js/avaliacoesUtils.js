@@ -48,6 +48,8 @@ function normalizarTexto(valor) {
     .trim();
 }
 
+// O status chega com vários nomes diferentes (aceita, aprovado, resolvido...);
+// aqui tudo vira só "aceita", "recusada" ou "pendente".
 function chaveStatus(status) {
   const s = normalizarTexto(status).replace(/\s+/g, "");
   if (

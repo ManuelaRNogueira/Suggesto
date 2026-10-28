@@ -113,6 +113,7 @@ function atualizarContador(qtd) {
   document.getElementById("totalSolicitacoes").textContent = `${qtd} ${qtd === 1 ? "pendente" : "pendentes"}`;
 }
 
+// Botões Aceitar/Recusar de uma solicitação de entrada na equipe.
 async function responder(id, aceitar) {
   const linha = document.querySelector(`tr[data-id="${id}"]`);
   const botoes = linha ? Array.from(linha.querySelectorAll("button")) : [];

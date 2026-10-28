@@ -1,3 +1,6 @@
+// "Minhas sugestões" do cliente: lista o que ele enviou, com status, resposta
+// do estabelecimento, filtros e exclusão das pendentes.
+
 const API_BASE_URL = `${window.API_BASE}/avaliacoes`;
 
 let todasAsSugestoes = [];
@@ -27,6 +30,7 @@ function escapeHtml(texto) {
   return div.innerHTML;
 }
 
+// Busca todas as sugestões do usuário logado e guarda em todasAsSugestoes.
 async function carregarSugestoesDoUsuario() {
   const idUsuario = localStorage.getItem("idUsuario");
   if (!idUsuario) {
@@ -54,6 +58,8 @@ async function carregarSugestoesDoUsuario() {
   }
 }
 
+// Junta os filtros (texto, tipo, categoria, status) e redesenha a lista.
+// O filtro é feito no navegador, sem chamar a API de novo.
 function aplicarFiltros() {
   filtrosAtuais.texto = document
     .getElementById("campoBusca")
@@ -174,6 +180,7 @@ function limparTudo() {
   aplicarFiltros();
 }
 
+// Monta o HTML de cada card de sugestão.
 function renderizarLista(sugestoes) {
   const container = document.getElementById("sugestoesList");
   const listaVazia = document.getElementById("listaVazia");
@@ -290,6 +297,7 @@ function gerarEstrelas(nota) {
   return estrelas;
 }
 
+// Contadores do topo: total, aprovadas e pendentes.
 function atualizarResumo(sugestoes) {
   const total = sugestoes.length;
   const aprovadas = sugestoes.filter((s) => isStatusAprovado(s.status)).length;

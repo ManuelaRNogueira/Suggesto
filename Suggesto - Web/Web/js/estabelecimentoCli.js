@@ -1,3 +1,6 @@
+// Página de um estabelecimento (estabelecimentoCli.html?id=...): dados, status
+// aberto/fechado, nota média, transparência, avaliações e favoritar.
+
 const API_BASE = window.API_BASE;
 
 let est = null;        // dados reais do estabelecimento carregado da API
@@ -263,6 +266,7 @@ function popularFiltros() {
 
 
 // ── RESUMO DE AVALIAÇÃO (calculado a partir das avaliações reais) ─────
+// Média das notas e as barrinhas de quantas avaliações tem de 5 a 1 estrela.
 function renderizarResumo() {
   const total = avaliacoes.length;
   const soma = avaliacoes.reduce((acc, a) => acc + (Number(a.nota) || 0), 0);
@@ -305,6 +309,7 @@ function renderizarResumo() {
 
 
 // ── RENDERIZAR SUGESTÕES/AVALIAÇÕES REAIS ──────────────────────────────
+// Lista as avaliações (mais recentes primeiro), respeitando o filtro de tipo.
 function renderizarSugestoes() {
   const lista = document.getElementById('listaSugestoes');
   const vazio = document.getElementById('vazio');
