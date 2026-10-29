@@ -1,3 +1,4 @@
+//comunica com o servidor
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
@@ -5,34 +6,27 @@ import 'package:http_parser/http_parser.dart';
 import 'formatacao.dart';
 import 'sessao.dart';
 
-// Camada de acesso à API — porte do que já existe em
-// "Suggesto - Web/Web/js/config.js" e nas outras plataformas (Suggesto_DesktopReact/renderer/src/api/admin.js).
-// Sem "location.hostname" pra detectar ambiente como no navegador, então o
-// padrão aponta direto pro backend hospedado; pra rodar contra um backend
-// local use: flutter run --dart-define=API_BASE=http://10.0.2.2:8080/api
+//endereço da API
 const String apiBase = String.fromEnvironment(
   'API_BASE',
   defaultValue: 'https://suggesto-api.onrender.com/api',
 );
 
-// A base sem "/api" — é onde ficam as fotos (ver EstabelecimentoController /
-// UsuarioController: as imagens sobem pra "/uploads/...", fora do prefixo da API).
+//endereço do servidor sem a API (onde fica as fotos)
 String get apiOrigin => apiBase.replaceFirst('/api', '');
 
-// Endereço do site — é pra lá que o QR de check-in aponta (igual o desktop
-// em Suggesto_DesktopReact/renderer/src/api/admin.js). O check-in em si
-// acontece no navegador, abrindo fazerSugestao.html com o token do QR.
+//endereço do site (onde fica o QR de check-in)
 const String siteUrl = String.fromEnvironment(
   'SITE_URL',
   defaultValue: 'https://suggestosite.onrender.com',
 );
 
-// Mesma URL que o QR de check-in gerado no desktop aponta — é por isso que o
-// QR mostrado aqui funciona exatamente igual ao impresso por lá.
+//monta o link que vai dentro do QR de check-in (o mesmo que o desktop imprime)
 String urlCheckin(int idEstabelecimento, String tokenCheckin) {
   return '$siteUrl/fazerSugestao.html?id=$idEstabelecimento&t=${Uri.encodeQueryComponent(tokenCheckin)}';
 }
 
+//erro com uma mensagem pronta pra mostrar na tela
 class ApiException implements Exception {
   final String mensagem;
   ApiException(this.mensagem);
@@ -41,11 +35,8 @@ class ApiException implements Exception {
   String toString() => mensagem;
 }
 
-// Essa função é a "telefonista" central do app: toda conversa com o
-// servidor passa por aqui, que decide o tipo de pedido (buscar, salvar,
-// apagar) e já trata erro de um jeito parecido, pra não repetir esse
-// código em cada tela.
-
+//função central, todos os pedidos passam por ela
+//faz o GET/POST/PATCH/DELETE e, se não tiver internet, lança erro amigável
 Future<http.Response> _enviar(
   String metodo,
   String caminho, {
@@ -85,8 +76,7 @@ Future<http.Response> _enviar(
   }
 }
 
-// Mensagem de erro pode vir em "message" (a maioria dos endpoints) ou em
-// "erro" (só o POST /api/avaliacoes) — checa os dois.
+//pega a mensagem de erro da resposta (vem em "message" ou "erro")
 String _mensagemDeErro(http.Response resposta) {
   try {
     final dados = jsonDecode(resposta.body);
@@ -98,6 +88,7 @@ String _mensagemDeErro(http.Response resposta) {
   return 'Erro ${resposta.statusCode}.';
 }
 
+//faz o pedido e devolve a resposta como um objeto (Map)
 Future<Map<String, dynamic>> _mapa(
   String metodo,
   String caminho, {
@@ -112,6 +103,7 @@ Future<Map<String, dynamic>> _mapa(
   return decodificado is Map<String, dynamic> ? decodificado : {};
 }
 
+//faz o pedido e devolve a resposta como uma lista
 Future<List<dynamic>> _lista(
   String metodo,
   String caminho, {
@@ -126,6 +118,7 @@ Future<List<dynamic>> _lista(
   return decodificado is List ? decodificado : [];
 }
 
+//faz o pedido e só confere se deu certo (não precisa da resposta)
 Future<void> _vazio(
   String metodo,
   String caminho, {
@@ -137,13 +130,9 @@ Future<void> _vazio(
   }
 }
 
-// ── Autenticação ──────────────────────────────────────────────────────────
-// Funções de entrar e criar conta: mandam email/senha (ou os dados de
-// cadastro) pro servidor conferir/gravar. Validação pesada fica por conta
-// do back-end — aqui é só empacotar os dados e repassar.
+// ── Conta e equipe ────────────────────────────────────────────────────────
 
-// Login: servidor confere email e senha e devolve os dados básicos do
-// usuário (nome, id, tipo de conta) pra guardar na sessão do app.
+//entra na conta: manda email e senha e recebe os dados do usuário pra sessão
 Future<Map<String, dynamic>> login({
   required String email,
   required String senha,
@@ -151,18 +140,13 @@ Future<Map<String, dynamic>> login({
   return _mapa('POST', '/login', corpo: {'email': email, 'senha': senha});
 }
 
-// POST /api/senha/esqueci — sempre devolve a mesma mensagem genérica, exista
-// o e-mail ou não (SenhaController.MENSAGEM_PEDIDO), pra não revelar quais
-// contas existem. O link de redefinição vai só por e-mail e abre no
-// navegador (redefinir-senha.html do site) — não existe tela de redefinir
-// aqui no mobile, só o pedido do link.
+//pede o link de redefinir senha por email
+//a resposta é sempre a mesma, exista o email ou não (pra não revelar contas)
 Future<Map<String, dynamic>> esqueciSenha(String email) {
   return _mapa('POST', '/senha/esqueci', corpo: {'email': email});
 }
 
-// Cadastro: cria só a conta mesmo (nome, email, senha, endereço...). Se o
-// usuário for dono de estabelecimento, o plano e o próprio estabelecimento
-// entram depois, em outra etapa — aqui é só "criar o usuário".
+//cria a conta do usuário (campos opcionais vazios não são enviados)
 Future<Map<String, dynamic>> cadastrar({
   required String nome,
   required String username,
@@ -191,10 +175,8 @@ Future<Map<String, dynamic>> cadastrar({
   );
 }
 
-// Quem tem o código de acesso de um estabelecimento pode pedir pra entrar
-// na equipe dele, mas não entra na hora: isso cria um pedido pendente
-// (SolicitacaoEquipe) que o dono do estabelecimento precisa aprovar depois
-// — é como pedir pra entrar num grupo fechado e esperar alguém liberar.
+//pede pra entrar na equipe de um estabelecimento usando o código de acesso
+//não entra na hora: o dono precisa aprovar o pedido
 Future<Map<String, dynamic>> entrarNaEquipe({
   required int usuarioId,
   required String codigo,
@@ -206,15 +188,12 @@ Future<Map<String, dynamic>> entrarNaEquipe({
   );
 }
 
-// Lista os pedidos de entrada ainda pendentes pros estabelecimentos desse
-// gerente — a "caixa de pedidos" que aparece pro dono aprovar ou recusar.
+//lista os pedidos de entrada na equipe esperando o dono aprovar
 Future<List<dynamic>> buscarSolicitacoesAdmin({required int idGerente}) {
   return _lista('GET', '/estabelecimentos/solicitacoes?idGerente=$idGerente');
 }
 
-// Aceita o pedido: vincula o usuário ao estabelecimento de vez e apaga a
-// solicitação. Só o dono pode aceitar — o servidor confere isso de novo do
-// próprio lado, não confia só no que o app manda.
+//aprova o pedido: o usuário passa a fazer parte da equipe
 Future<Map<String, dynamic>> aceitarSolicitacao(
   int id, {
   required int idGerente,
@@ -226,7 +205,7 @@ Future<Map<String, dynamic>> aceitarSolicitacao(
   );
 }
 
-// Recusa o pedido: só apaga a solicitação, ninguém é vinculado.
+//recusa o pedido: ele é apagado e ninguém entra na equipe
 Future<Map<String, dynamic>> recusarSolicitacao(
   int id, {
   required int idGerente,
@@ -238,13 +217,10 @@ Future<Map<String, dynamic>> recusarSolicitacao(
   );
 }
 
-// ── Painel do administrador ─────────────────────────────────────────────
-// Funções que alimentam as telas de admin: números gerais (métricas), a
-// lista de sugestões recebidas, quais estabelecimentos esse gerente
-// administra, e as ações de responder ou mudar o status de uma sugestão.
+// ── Painel do administrador ───────────────────────────────────────────────
 
-// Monta a query aos poucos porque idGerente e idEstabelecimento são
-// opcionais — só entram na URL se vierem preenchidos.
+//números do painel (gráficos dos últimos meses)
+//filtra por gerente e/ou estabelecimento só se forem passados
 Future<Map<String, dynamic>> buscarMetricasAdmin({
   int? idGerente,
   int meses = 6,
@@ -257,21 +233,20 @@ Future<Map<String, dynamic>> buscarMetricasAdmin({
   return _mapa('GET', '/admin/metricas?${params.join('&')}');
 }
 
-// Lista as sugestões recebidas pelos estabelecimentos desse gerente.
+//sugestões recebidas pelos estabelecimentos do gerente
 Future<List<dynamic>> buscarSugestoesAdmin({int? idGerente}) {
   final query = idGerente != null ? '?idGerente=$idGerente' : '';
   return _lista('GET', '/admin/sugestoes$query');
 }
 
-// Estabelecimentos que esse gerente administra — inclui os inativos, ao
-// contrário da busca pública que o cliente vê.
+//estabelecimentos que o gerente administra (inclusive os inativos)
 Future<List<dynamic>> buscarEstabelecimentosAdmin({int? idGerente}) {
   final query = idGerente != null ? '?idGerente=$idGerente' : '';
   return _lista('GET', '/admin/estabelecimentos$query');
 }
 
-// Muda o status de uma sugestão (ex: pendente → implementado), na tela de
-// Detalhes da sugestão. Recusar exige motivo (mínimo 10 caracteres, a API confere).
+//muda o status de uma sugestão (ex: pendente → implementado)
+//pra recusar precisa de um motivo com pelo menos 10 caracteres
 Future<Map<String, dynamic>> atualizarStatusAvaliacao(
   int id,
   String status, {
@@ -284,7 +259,7 @@ Future<Map<String, dynamic>> atualizarStatusAvaliacao(
   );
 }
 
-// Admin escreve uma resposta pra sugestão que o cliente mandou.
+//o admin responde a sugestão do cliente
 Future<Map<String, dynamic>> responderAvaliacao(
   int id, {
   required int idAdmin,
@@ -297,20 +272,15 @@ Future<Map<String, dynamic>> responderAvaliacao(
   );
 }
 
-// ── Estabelecimentos (navegação do cliente) ─────────────────────────────
-// Funções que o cliente usa pra descobrir e ver estabelecimentos: lista
-// geral, detalhe de um específico, e recomendados pra cidade dele.
+// ── Estabelecimentos ──────────────────────────────────────────────────────
 
-// Todos os estabelecimentos ativos, pra tela Início/Buscar.
+//todos os estabelecimentos ativos (telas Início e Buscar)
 Future<List<dynamic>> buscarEstabelecimentos() {
   return _lista('GET', '/estabelecimentos');
 }
 
-// Detalhe completo de um estabelecimento específico.
-// idSolicitante é opcional e só importa pro dono: é o que faz o backend
-// revelar codigoAcesso/tokenCheckin na resposta (ver
-// Estabelecimento.revelarDadosDoDono no backend). Sem ele (uso do lado
-// cliente), esses dois campos simplesmente não vêm.
+//detalhe de um estabelecimento
+//se idSolicitante for o dono, também vem o código de acesso e o token do QR
 Future<Map<String, dynamic>> buscarEstabelecimento(
   int id, {
   int? idSolicitante,
@@ -319,9 +289,8 @@ Future<Map<String, dynamic>> buscarEstabelecimento(
   return _mapa('GET', '/estabelecimentos/$id$query');
 }
 
-// POST /api/estabelecimentos/{id}/token-checkin — troca o token do QR de
-// check-in (só o dono principal). Os QRs já impressos no desktop param de
-// confirmar visita na hora, igual lá.
+//gera um token novo pro QR de check-in (só o dono)
+//os QRs antigos param de funcionar
 Future<Map<String, dynamic>> gerarNovoTokenCheckin(
   int idEstabelecimento, {
   required int idSolicitante,
@@ -332,18 +301,15 @@ Future<Map<String, dynamic>> gerarNovoTokenCheckin(
   );
 }
 
-// Transparência (0-100): quanto o estabelecimento responde, recusa e a
-// agilidade nas respostas. Calculada na hora pelo backend.
+//nota de transparência do estabelecimento (0 a 100)
+//leva em conta quanto ele responde, recusa e a rapidez das respostas
 Future<Map<String, dynamic>> buscarTransparencia(int id) {
   return _mapa('GET', '/estabelecimentos/$id/reputacao');
 }
 
-// Essa função existe pra não repetir o mesmo "quebra-cabeça" em duas telas:
-// busca a lista básica dos estabelecimentos do gerente (se está ativo, o
-// código de acesso, se ele é o dono) e depois busca o detalhe completo
-// (foto, endereço) de cada um, juntando tudo num objeto só. Usada tanto na
-// lista de Estabelecimentos do admin quanto no resumo de "Estabelecimentos
-// vinculados" do Perfil.
+//estabelecimentos do gerente com todos os dados juntos
+//pega a lista básica (ativo, código, se é dono) e completa com o detalhe de
+//cada um (foto, endereço). Usada na lista de estabelecimentos e no Perfil
 Future<List<Map<String, dynamic>>> buscarEstabelecimentosVinculados({
   int? idGerente,
 }) async {
@@ -369,30 +335,25 @@ Future<List<Map<String, dynamic>>> buscarEstabelecimentosVinculados({
   ];
 }
 
-// Recomendados pro usuário — o servidor decide com base na cidade dele.
+//estabelecimentos recomendados pela cidade do usuário
 Future<Map<String, dynamic>> buscarRecomendados(int idUsuario) {
   return _mapa('GET', '/estabelecimentos/recomendados?idUsuario=$idUsuario');
 }
 
-// ── Avaliações ("sugestões" do lado cliente) ────────────────────────────
-// Funções de ver, criar e apagar avaliações — o que na tela do cliente
-// aparece como "sugestão", crítica ou elogio pra um estabelecimento.
+// ── Sugestões (avaliações) ────────────────────────────────────────────────
 
-// Avaliações que um estabelecimento recebeu (visão de quem administra).
+//sugestões que um estabelecimento recebeu
 Future<List<dynamic>> buscarAvaliacoesEstabelecimento(int idEstabelecimento) {
   return _lista('GET', '/avaliacoes/estabelecimento/$idEstabelecimento');
 }
 
-// Avaliações que o próprio usuário enviou — tela "Minhas Sugestões".
+//sugestões que o usuário enviou (tela Minhas Sugestões)
 Future<List<dynamic>> buscarAvaliacoesUsuario(int idUsuario) {
   return _lista('GET', '/avaliacoes/usuario/$idUsuario');
 }
 
-// Traz todas as categorias de sugestão que existem no sistema (ex:
-// "atendimento", "comida"...). Quem decide quais fazem sentido pra cada
-// tipo de estabelecimento é o próprio app, em categoriasPorRamo.dart — o
-// parâmetro tipoEstabelecimento aqui é só decorativo, o servidor não filtra
-// nada com ele.
+//todas as categorias de sugestão (atendimento, comida...)
+//o servidor ignora tipoEstabelecimento; quem filtra é o categoriasPorRamo.dart
 Future<List<dynamic>> buscarCategorias(String? tipoEstabelecimento) {
   final query = (tipoEstabelecimento != null && tipoEstabelecimento.isNotEmpty)
       ? '?tipoEstabelecimento=${Uri.encodeQueryComponent(tipoEstabelecimento)}'
@@ -400,8 +361,8 @@ Future<List<dynamic>> buscarCategorias(String? tipoEstabelecimento) {
   return _lista('GET', '/categorias$query');
 }
 
-// Cria uma sugestão nova. idCategoria já vem escolhido pelo usuário entre
-// as opções filtradas na tela (ver sugerir.dart).
+//envia uma sugestão nova pra um estabelecimento
+//idVisita é o check-in feito antes (prova que o cliente esteve lá)
 Future<void> criarAvaliacao({
   required int idUsuario,
   required int idEstabelecimento,
@@ -426,9 +387,8 @@ Future<void> criarAvaliacao({
   );
 }
 
-// Check-in (prova de que o cliente está no local): pelo token do QR ou, sem
-// token, pela posição do GPS. Devolve {idVisita, expiraEm}. Repetir com uma
-// visita aberta devolve a mesma.
+//confirma que o cliente está no local, pelo token do QR ou pelo GPS
+//devolve {idVisita, expiraEm}; se já tiver uma visita aberta, devolve ela
 Future<Map<String, dynamic>> fazerCheckin({
   required int idUsuario,
   required int idEstabelecimento,
@@ -443,35 +403,32 @@ Future<Map<String, dynamic>> fazerCheckin({
   );
 }
 
-// Só dá pra apagar enquanto a sugestão ainda estiver pendente de resposta.
+//apaga uma sugestão do usuário (só se ainda estiver pendente)
 Future<void> excluirAvaliacao(int id, int idUsuario) {
   return _vazio('DELETE', '/avaliacoes/$id?idUsuario=$idUsuario');
 }
 
 // ── Perfil ────────────────────────────────────────────────────────────────
-// Dados da tela de Perfil: informações básicas do usuário, conquistas
-// (badges) e a edição do perfil (nome, telefone, cidade, foto).
 
-// Dados do usuário pra tela de Perfil. idSolicitante = quem está logado: o
-// back-end só devolve e-mail/telefone quando ele bate com o id do perfil.
+//dados do usuário pro Perfil
+//email e telefone só vêm se for o perfil de quem está logado
 Future<Map<String, dynamic>> buscarUsuario(int id) {
   return _mapa('GET', '/usuarios/$id?idSolicitante=${Sessao.idUsuario}');
 }
 
-// Conquistas (badges) que o usuário já desbloqueou.
+//conquistas (badges) que o usuário já desbloqueou
 Future<List<dynamic>> buscarConquistas(int id) {
   return _lista('GET', '/usuarios/$id/conquistas');
 }
 
-// Confiabilidade (0-100): das avaliações com visita confirmada, quantas
-// foram aceitas. Calculada na hora pelo backend.
+//nota de confiabilidade do usuário (0 a 100)
+//das sugestões com visita confirmada, quantas foram aceitas
 Future<Map<String, dynamic>> buscarReputacao(int id) {
   return _mapa('GET', '/usuarios/$id/reputacao');
 }
 
-// Diferente de mandar só texto, aqui a foto vai "dentro de um envelope"
-// especial (multipart), porque imagem não cabe dentro de uma mensagem de
-// texto comum como o resto dos dados do perfil.
+//edita o perfil (nome, telefone, cidade e foto)
+//usa multipart porque a foto é um arquivo, não dá pra mandar como JSON
 Future<Map<String, dynamic>> atualizarUsuario(
   int id, {
   String? nome,
@@ -513,17 +470,14 @@ Future<Map<String, dynamic>> atualizarUsuario(
   return decodificado is Map<String, dynamic> ? decodificado : {};
 }
 
-// ── Locais salvos (favoritos) ───────────────────────────────────────────
-// A "estrelinha" de favoritar um estabelecimento: salvar, listar e
-// remover da lista de locais salvos do usuário.
+// ── Locais salvos (favoritos) ─────────────────────────────────────────────
 
-// Locais que o usuário salvou como favoritos.
+//estabelecimentos que o usuário favoritou
 Future<List<dynamic>> buscarLocaisSalvos(int usuarioId) {
   return _lista('GET', '/locais-salvos/usuario/$usuarioId');
 }
 
-// Salva o local como favorito. Se o usuário já tinha salvo antes, não dá
-// erro — só não duplica, é seguro chamar de novo sem se preocupar.
+//favorita um estabelecimento (se já estiver salvo, não duplica)
 Future<void> salvarLocal({
   required int usuarioId,
   required int estabelecimentoId,
@@ -535,7 +489,7 @@ Future<void> salvarLocal({
   );
 }
 
-// Tira o local dos favoritos.
+//tira o estabelecimento dos favoritos
 Future<void> removerLocalSalvo({
   required int usuarioId,
   required int estabelecimentoId,
@@ -543,23 +497,20 @@ Future<void> removerLocalSalvo({
   return _vazio('DELETE', '/locais-salvos/$usuarioId/$estabelecimentoId');
 }
 
-// ── Recompensas e resgates ──────────────────────────────────────────────
-// Vitrine de recompensas disponíveis, histórico de resgates do usuário, e
-// o pedido de resgate em si (trocar pontos por uma recompensa).
+// ── Recompensas ───────────────────────────────────────────────────────────
 
-// Recompensas disponíveis de todos os estabelecimentos, pra vitrine.
+//todas as recompensas disponíveis (vitrine)
 Future<List<dynamic>> buscarRecompensas() {
   return _lista('GET', '/recompensas');
 }
 
-// Histórico de resgates que o usuário já fez.
+//recompensas que o usuário já resgatou
 Future<List<dynamic>> buscarResgates(int idUsuario) {
   return _lista('GET', '/resgates/usuario/$idUsuario');
 }
 
-// Pede pra trocar pontos por uma recompensa. Quem confere se o usuário tem
-// pontos suficientes e desconta é o servidor — o app só faz o pedido e
-// espera a resposta.
+//troca pontos por uma recompensa
+//o servidor confere se tem pontos suficientes e desconta
 Future<Map<String, dynamic>> resgatar({
   required int usuarioId,
   required int recompensaId,
@@ -571,12 +522,9 @@ Future<Map<String, dynamic>> resgatar({
   );
 }
 
-// ── CEP (ViaCEP) ─────────────────────────────────────────────────────────
-// Isso aqui não é a nossa API — é um serviço de fora (ViaCEP) que a gente
-// usa emprestado só pra preencher cidade/estado sozinho quando o usuário
-// digita o CEP no cadastro (mesma ideia da versão web, em
-// "Suggesto - Web/Web/js/cadastro.js").
+// ── Serviços de fora ──────────────────────────────────────────────────────
 
+//busca cidade e estado pelo CEP (ViaCEP), usado no cadastro
 Future<Map<String, dynamic>> buscarCep(String cep) async {
   final digitos = cep.replaceAll(RegExp(r'\D'), '');
   http.Response resposta;
@@ -597,18 +545,9 @@ Future<Map<String, dynamic>> buscarCep(String cep) async {
   return dados;
 }
 
-// ── Geocodificação (Nominatim / OpenStreetMap) ──────────────────────────
-// Sem API paga: Estabelecimento não guarda lat/lng (ver infoLocal.dart), então
-// convertemos o endereço em coordenadas via Nominatim — gratuito, sem chave.
-// Falha (endereço não encontrado, sem internet, etc.) retorna null em vez de
-// lançar exceção: geocodificação é "melhor esforço", a tela cai pro texto do
-// endereço se isso não funcionar.
-//
-// O bairro cadastrado no banco nem sempre bate com o nome que o OSM usa pra
-// aquele trecho — incluir na busca faz a Nominatim não achar nada mesmo com
-// rua/cidade corretos. Por isso não entra na consulta: tenta rua+número
-// primeiro, e se não achar, tenta só rua (às vezes o número não está
-// mapeado, mas a rua está).
+//transforma o endereço em latitude/longitude pro mapa (Nominatim, grátis)
+//tenta rua+número, depois só a rua; o bairro fica de fora porque atrapalha
+//se não achar, devolve null e a tela mostra só o endereço em texto
 Future<Map<String, double>?> buscarCoordenadasEndereco({
   required String rua,
   String? numero,
@@ -629,6 +568,7 @@ Future<Map<String, double>?> buscarCoordenadasEndereco({
   return null;
 }
 
+//faz uma busca no Nominatim e devolve {lat, lng} do primeiro resultado
 Future<Map<String, double>?> _consultarNominatim(String consulta) async {
   final uri = Uri.https('nominatim.openstreetmap.org', '/search', {
     'q': consulta,
@@ -657,13 +597,9 @@ Future<Map<String, double>?> _consultarNominatim(String consulta) async {
 }
 
 // ── Fotos ─────────────────────────────────────────────────────────────────
-// O banco só guarda o nome do arquivo da foto (ou às vezes um link já
-// pronto, se foi pro Cloudinary) — essas funções colam o endereço certo na
-// frente pra virar uma URL que dá pra exibir na tela.
 
-// Foto de estabelecimento/recompensa: pode vir só com o nome do arquivo, ou
-// já pronta como link do Cloudinary — aqui a gente detecta os dois casos e
-// monta a URL certa.
+//monta o link da foto de estabelecimento/recompensa
+//se já for link (Cloudinary) usa direto, senão junta com o endereço do servidor
 String? urlFotoEstabelecimento(String? fotoPath) {
   if (fotoPath == null || fotoPath.isEmpty) return null;
   if (fotoPath.startsWith('http')) return fotoPath;
@@ -671,8 +607,7 @@ String? urlFotoEstabelecimento(String? fotoPath) {
   return '$apiOrigin/uploads/$limpo';
 }
 
-// Foto de usuário já vem do servidor com o "/uploads/..." colado na
-// frente — só falta grudar o endereço base.
+//monta o link da foto do usuário (já vem com "/uploads/...")
 String? urlFotoUsuario(String? fotoUrl) {
   if (fotoUrl == null || fotoUrl.isEmpty) return null;
   if (fotoUrl.startsWith('http')) return fotoUrl;
