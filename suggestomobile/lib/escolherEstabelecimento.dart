@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'localCardCliente.dart';
 import 'sugerir.dart';
 
-// Lista com todos os estabelecimentos pra escolher qual vai receber a
-// sugestão — mesma função do botão "Fazer sugestão" do banner no site (ver
-// abrirSugestao() em js/inicioCli.js), que manda pra uma página com todas as
-// opções em vez de abrir o formulário sem saber de qual local se trata.
+//tela pra escolher o estabelecimento antes de fazer a sugestão
+//(botão "Fazer sugestão" do Início)
 class EscolherEstabelecimentoPage extends StatefulWidget {
   final List<Map<String, dynamic>> locais;
 
@@ -28,8 +26,8 @@ class _EscolherEstabelecimentoPageState
     super.dispose();
   }
 
-  // Mesma lógica de filtro usada na Home: separa o nome por palavras e
-  // compara pelo início de cada uma.
+  //filtro da pesquisa: mostra os locais com alguma palavra do nome
+  //começando com o que foi digitado
   List<Map<String, dynamic>> get _locaisExibidos {
     if (_termoPesquisa.isEmpty) return widget.locais;
     final pesquisa = _termoPesquisa.toLowerCase();
@@ -40,6 +38,7 @@ class _EscolherEstabelecimentoPageState
     }).toList();
   }
 
+  //fecha a pesquisa e limpa o texto
   void _fecharPesquisa() {
     setState(() {
       _pesquisando = false;
@@ -48,6 +47,7 @@ class _EscolherEstabelecimentoPageState
     });
   }
 
+  //rota pra tela de sugerir com o local escolhido
   void _escolher(Map<String, dynamic> local) {
     Navigator.push(
       context,
@@ -63,7 +63,7 @@ class _EscolherEstabelecimentoPageState
     );
   }
 
-  // ─── Header (mesmo padrão de locaisSalvos.dart) ─────────────────────
+  // ─── Topo: voltar, título e botão de pesquisa ───────────────────────
   Widget _buildHeader() {
     return Container(
       width: double.infinity,
@@ -155,6 +155,7 @@ class _EscolherEstabelecimentoPageState
     );
   }
 
+  //campo de pesquisa (aparece no lugar do título)
   Widget _buildCampoPesquisa() {
     return Container(
       height: 36,
@@ -202,7 +203,7 @@ class _EscolherEstabelecimentoPageState
     );
   }
 
-  // ─── Lista de locais (mesmo card usado na Home) ─────────────────────
+  // ─── Lista de locais (vazia / sem resultado / cartões) ──────────────
   Widget _corpo() {
     if (widget.locais.isEmpty) {
       return const Center(

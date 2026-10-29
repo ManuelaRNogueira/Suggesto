@@ -4,6 +4,7 @@ import 'sessao.dart';
 import 'formatacao.dart';
 import 'statusSugestao.dart';
 
+//tela "Minhas Sugestões" do cliente: lista das sugestões enviadas
 class MinhasSugestoes extends StatefulWidget {
   const MinhasSugestoes({super.key});
 
@@ -22,6 +23,7 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
     _carregar();
   }
 
+  //busca as sugestões do usuário
   Future<void> _carregar() async {
     setState(() {
       carregando = true;
@@ -29,15 +31,11 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
     });
     try {
       final lista = (await buscarAvaliacoesUsuario(Sessao.idUsuario!)).cast<Map<String, dynamic>>();
-      // Mais nova primeiro — a API não garante ordem, então ordena aqui pela
-      // data real de criação (dataAvaliacao), não pela ordem de chegada.
+      //ordena: mais nova primeiro
       lista.sort((a, b) {
         final dataA = DateTime.tryParse(a['dataAvaliacao'] as String? ?? '');
         final dataB = DateTime.tryParse(b['dataAvaliacao'] as String? ?? '');
-        // Quando duas sugestões estão sendo comparadas pra ordenar e uma delas
-        // não tem data, a gente decide na mão pra onde ela vai na lista, em vez
-        // de deixar o sistema chutar — senão a ordem podia bagunçar sem a gente
-        // perceber.
+        //sem data vai pro fim da lista
         if (dataA == null && dataB == null) return 0;
         if (dataA == null) return 1;
         if (dataB == null) return -1;
@@ -51,8 +49,8 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
     }
   }
 
-  // Status vem cru do banco (aceita/aprovado/resolvida/recusada/...) —
-  // normaliza pra uma das 3 chaves que statusSugestao.dart entende.
+  //converte o status do banco (aceita, aprovado, resolvida...) pra
+  //pendente, implementado ou recusado
   String _normalizarStatus(String? bruto) {
     final chave = (bruto ?? '').trim().toLowerCase();
     const aceitos = {
@@ -65,6 +63,7 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
     return 'pendente';
   }
 
+  //apagar: pede confirmação e remove do servidor e da lista
   Future<void> removerSugestao(int index) async {
     bool? remover = await showDialog(
       context: context,
@@ -103,7 +102,7 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
     }
   }
 
-  // WIDGET DO CARD
+  //cartão de uma sugestão
   Widget sugestao({
     required String local,
     required String? imagem,
@@ -125,7 +124,7 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // FOTO
+          //foto do estabelecimento
           ClipRRect(
             borderRadius: BorderRadius.circular(15),
             child: imagem != null && imagem.isNotEmpty
@@ -145,7 +144,7 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // LINHA DO TOPO: nome + lixeira/status
+                //topo: nome + lixeira (se pendente) ou status
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -200,7 +199,7 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
 
                 SizedBox(height: 10),
 
-                // ESTRELAS
+                //estrelas da nota
                 Row(
                   children: List.generate(5, (i) {
                     return Icon(
@@ -224,7 +223,7 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
                   ),
                 ),
 
-                // O estabelecimento é obrigado a dizer por que recusou.
+                //motivo da recusa (o estabelecimento é obrigado a dizer)
                 if (motivoRecusa != null && motivoRecusa.isNotEmpty) ...[
                   SizedBox(height: 10),
                   Container(
@@ -268,6 +267,7 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
     );
   }
 
+  //ícone de loja no lugar da foto
   Widget _placeholderImagem() {
     return Container(
       width: 95,
@@ -280,7 +280,8 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
     );
   }
 
-  // BOTTOM NAV
+  //barra de baixo: rotas pro Início, Sugestões, Loja e Perfil
+  //aba marcada (1 = Sugestões)
   int paginaAtual = 1;
   Widget barraNavegacao() {
     return Container(
@@ -334,6 +335,7 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
     );
   }
 
+  //carregando / erro / nenhuma sugestão / lista
   Widget _corpo() {
     if (carregando) {
       return const Padding(
@@ -391,6 +393,7 @@ class _MinhasSugestoesState extends State<MinhasSugestoes> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFF12061E),
+      //puxar pra baixo atualiza
       body: RefreshIndicator(
         color: const Color(0xFF9B59D0),
         onRefresh: _carregar,

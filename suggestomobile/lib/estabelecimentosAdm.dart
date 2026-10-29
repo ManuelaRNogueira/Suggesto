@@ -5,12 +5,7 @@ import 'api.dart';
 import 'detalhesEstabelecimentoAdm.dart';
 import 'cartaoEstabelecimentoAdm.dart';
 
-// Lista dos estabelecimentos do administrador — versão mobile, só de
-// leitura, da seção equivalente do desktop (Dashboard.jsx, rota
-// /estabelecimentos). Sem criar, editar ou excluir: aqui é só consulta.
-// Busca em GET /api/admin/estabelecimentos (quais são) + GET
-// /api/estabelecimentos/{id} pra cada um (foto e endereço completos, que o
-// endpoint de listagem admin não devolve).
+//tela de lista dos estabelecimentos do admin (só consulta, sem editar)
 class EstabelecimentosAdm extends StatefulWidget {
   const EstabelecimentosAdm({super.key});
 
@@ -19,6 +14,7 @@ class EstabelecimentosAdm extends StatefulWidget {
 }
 
 class _EstabelecimentosAdmState extends State<EstabelecimentosAdm> {
+  //aba marcada na barra de baixo (2 = Locais)
   int paginaAtual = 2;
 
   bool carregando = true;
@@ -31,6 +27,7 @@ class _EstabelecimentosAdmState extends State<EstabelecimentosAdm> {
     _carregar();
   }
 
+  //busca os estabelecimentos do gerente logado
   Future<void> _carregar() async {
     setState(() {
       carregando = true;
@@ -48,6 +45,7 @@ class _EstabelecimentosAdmState extends State<EstabelecimentosAdm> {
     }
   }
 
+  //rota pro detalhe do estabelecimento
   void _abrirDetalhes(Map<String, dynamic> estabelecimento) {
     Navigator.push(
       context,
@@ -89,6 +87,7 @@ class _EstabelecimentosAdmState extends State<EstabelecimentosAdm> {
     );
   }
 
+  //carregando / erro com "tentar de novo" / lista vazia / lista (puxar pra baixo atualiza)
   Widget _corpo() {
     if (carregando) {
       return const Center(child: CircularProgressIndicator(color: Cores.roxo));
@@ -151,6 +150,7 @@ class _EstabelecimentosAdmState extends State<EstabelecimentosAdm> {
     );
   }
 
+  //barra de baixo: rotas pro Início, Sugestões, Locais e Perfil
   Widget _buildBarraNavegacao() {
     final abas = [
       _Aba('Início', Icons.home_filled, '/inicioAdm'),
@@ -179,6 +179,7 @@ class _EstabelecimentosAdmState extends State<EstabelecimentosAdm> {
     );
   }
 
+  //um botão da barra (não navega se já está nessa tela)
   Widget _itemNavegacao(_Aba aba, int indice) {
     final ativo = paginaAtual == indice;
     return GestureDetector(
@@ -206,6 +207,7 @@ class _EstabelecimentosAdmState extends State<EstabelecimentosAdm> {
   }
 }
 
+//dados de uma aba: nome, ícone e rota
 class _Aba {
   final String rotulo;
   final IconData icone;

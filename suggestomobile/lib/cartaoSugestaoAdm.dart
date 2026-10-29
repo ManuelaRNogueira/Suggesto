@@ -3,14 +3,12 @@ import 'cores.dart';
 import 'statusSugestao.dart';
 import 'formatacao.dart';
 
-// Card de sugestão do painel admin — usado tanto na tela "Sugestões"
-// (sugestoesAdm.dart) quanto nas "Sugestões Recentes" da tela "Início"
-// (inicioAdm.dart). Uma implementação só: qualquer ajuste de design aqui já
-// vale pras duas telas.
+//cartão de sugestão do admin (usado na tela Sugestões e no Início)
 Widget cartaoSugestaoAdm({
   required Map<String, dynamic> sugestao,
   required VoidCallback onTap,
 }) {
+  //linha de baixo do título: "categoria · estabelecimento"
   final categoria = (sugestao['categoria'] as String?) ?? 'Sem categoria';
   final estabelecimento = sugestao['estabelecimento'] as String?;
   final meta = estabelecimento != null && estabelecimento.isNotEmpty

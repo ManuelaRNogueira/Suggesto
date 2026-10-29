@@ -4,15 +4,9 @@ import 'sessao.dart';
 import 'api.dart';
 import 'cartoesStatusAdm.dart';
 
-// Perfil pessoal do administrador — mesma estrutura do Perfil do mobile
-// cliente (perfilClie.dart: foto, nome, e-mail, menu, sair), mas com dados
-// do próprio usuário logado (GET /api/usuarios/{id}) em vez de um
-// estabelecimento. Código da equipe e solicitações de entrada continuam na
-// tela de detalhes de cada local (ver detalhesEstabelecimentoAdm.dart), já
-// que um admin pode ter vários — aqui entra só a visão geral (métricas
-// somadas de todos os estabelecimentos, GET /api/admin/metricas sem filtro
-// de idEstabelecimento, mesma fonte da tela Início) e a lista de
-// estabelecimentos vinculados à conta.
+//tela de perfil do admin: dados, resumo de todos os estabelecimentos,
+//lista dos estabelecimentos, menu e sair
+//(código da equipe e pedidos de entrada ficam no detalhe de cada estabelecimento)
 class PerfilAdm extends StatefulWidget {
   const PerfilAdm({super.key});
 
@@ -21,6 +15,7 @@ class PerfilAdm extends StatefulWidget {
 }
 
 class _PerfilAdmState extends State<PerfilAdm> {
+  //aba marcada (3 = Perfil)
   int paginaAtual = 3;
 
   bool carregando = true;
@@ -29,6 +24,7 @@ class _PerfilAdmState extends State<PerfilAdm> {
   Map<String, dynamic>? metricasGerais;
   List<Map<String, dynamic>> estabelecimentosVinculados = [];
 
+  //itens do menu: rota pra cada página
   final List<Map<String, dynamic>> _menuItems = [
     {'icon': Icons.info_outline, 'label': 'Sobre Nós', 'route': '/sobrenos'},
     {
@@ -44,6 +40,7 @@ class _PerfilAdmState extends State<PerfilAdm> {
     _carregar();
   }
 
+  //busca usuário, métricas e estabelecimentos ao mesmo tempo
   Future<void> _carregar() async {
     setState(() {
       carregando = true;
@@ -82,6 +79,7 @@ class _PerfilAdmState extends State<PerfilAdm> {
     );
   }
 
+  //carregando / erro / conteúdo
   Widget _corpo() {
     if (carregando) {
       return const Center(child: CircularProgressIndicator(color: Cores.roxo));
@@ -145,6 +143,7 @@ class _PerfilAdmState extends State<PerfilAdm> {
     );
   }
 
+  //iniciais do nome pro avatar sem foto ("Ana Souza" → "AS")
   String _iniciais(String nome) {
     final partes = nome.trim().split(RegExp(r'\s+'));
     if (partes.isEmpty || partes.first.isEmpty) return '?';
@@ -153,6 +152,7 @@ class _PerfilAdmState extends State<PerfilAdm> {
     return (primeira + ultima).toUpperCase();
   }
 
+  //topo: foto, nome e email
   Widget _buildCabecalho(Map<String, dynamic> u) {
     final nome = (u['nome'] as String?)?.trim();
     final email = (u['email'] as String?) ?? '';
@@ -243,6 +243,7 @@ class _PerfilAdmState extends State<PerfilAdm> {
     );
   }
 
+  //avatar com as iniciais (quando não tem foto)
   Widget _iniciaisPlaceholder(String nome) {
     return Container(
       color: Cores.cartao,
@@ -258,6 +259,7 @@ class _PerfilAdmState extends State<PerfilAdm> {
     );
   }
 
+  //cartão de contato (email e telefone)
   Widget _buildCardContato(Map<String, dynamic> u) {
     final telefone = (u['telefone'] as String?)?.trim();
     final cidade = (u['cidade'] as String?)?.trim();
@@ -292,6 +294,7 @@ class _PerfilAdmState extends State<PerfilAdm> {
     );
   }
 
+  //uma linha do cartão de contato
   Widget _linhaContato(IconData icone, String texto, {bool ultima = false}) {
     return Padding(
       padding: EdgeInsets.only(bottom: ultima ? 0 : 14),
@@ -315,9 +318,7 @@ class _PerfilAdmState extends State<PerfilAdm> {
     );
   }
 
-  // Resumo geral da atuação do admin — soma de todos os estabelecimentos
-  // vinculados a ele (mesma fonte da tela Início, só que sem filtrar por
-  // idEstabelecimento), não de um local específico.
+  //visão geral: números somados de todos os estabelecimentos do admin
   Widget _buildVisaoGeral() {
     final m = metricasGerais;
     final total = (m?['totalSugestoes'] as num?)?.toInt() ?? 0;
@@ -388,10 +389,7 @@ class _PerfilAdmState extends State<PerfilAdm> {
     );
   }
 
-  // Versão simples do card "Estabelecimentos vinculados" do perfil do
-  // desktop (Perfil.jsx): só a contagem e o nome de cada local — sem foto,
-  // categoria, endereço ou qualquer ação. É só informativo aqui; os
-  // detalhes de cada estabelecimento ficam na tela de Estabelecimentos.
+  //lista com o nome de cada estabelecimento vinculado (só informativo)
   Widget _buildEstabelecimentosVinculados() {
     final total = estabelecimentosVinculados.length;
 
@@ -448,6 +446,7 @@ class _PerfilAdmState extends State<PerfilAdm> {
     );
   }
 
+  //uma linha da lista de estabelecimentos
   Widget _linhaEstabelecimentoVinculado(
     Map<String, dynamic> e, {
     bool ultima = false,
@@ -474,6 +473,7 @@ class _PerfilAdmState extends State<PerfilAdm> {
     );
   }
 
+  //menu com as rotas (Sobre Nós, O Suggesto)
   Widget _buildMenuList() {
     return Container(
       decoration: BoxDecoration(
@@ -507,6 +507,7 @@ class _PerfilAdmState extends State<PerfilAdm> {
     );
   }
 
+  //um item do menu
   Widget _buildMenuItem({
     required IconData icon,
     required String label,
@@ -538,6 +539,7 @@ class _PerfilAdmState extends State<PerfilAdm> {
     );
   }
 
+  //cartão padrão com título opcional
   Widget _card({required String? titulo, required List<Widget> filhos}) {
     return Container(
       width: double.infinity,
@@ -568,8 +570,7 @@ class _PerfilAdmState extends State<PerfilAdm> {
     );
   }
 
-  // Mesma lógica de confirmação e logout do Perfil do cliente
-  // (perfilClie.dart) — só a tela de origem muda.
+  //sair: pede confirmação, limpa a sessão e volta pro login
   Future<void> _confirmarSaida() async {
     final confirmar = await showDialog<bool>(
       context: context,
@@ -607,6 +608,7 @@ class _PerfilAdmState extends State<PerfilAdm> {
     Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
   }
 
+  //botão Sair
   Widget _buildSairButton() {
     return GestureDetector(
       onTap: _confirmarSaida,
@@ -638,6 +640,7 @@ class _PerfilAdmState extends State<PerfilAdm> {
     );
   }
 
+  //barra de baixo: rotas pro Início, Sugestões, Locais e Perfil
   Widget _buildBarraNavegacao() {
     final abas = [
       _Aba('Início', Icons.home_filled, '/inicioAdm'),
@@ -666,6 +669,7 @@ class _PerfilAdmState extends State<PerfilAdm> {
     );
   }
 
+  //um botão da barra (não navega se já está nessa tela)
   Widget _itemNavegacao(_Aba aba, int indice) {
     final ativo = paginaAtual == indice;
     return GestureDetector(
@@ -692,6 +696,7 @@ class _PerfilAdmState extends State<PerfilAdm> {
   }
 }
 
+//dados de uma aba: nome, ícone e rota
 class _Aba {
   final String rotulo;
   final IconData icone;

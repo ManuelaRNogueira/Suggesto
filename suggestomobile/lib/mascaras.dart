@@ -1,13 +1,11 @@
 import 'package:flutter/services.dart';
 
-// Máscaras feitas à mão (o projeto não tem pacote de máscara nas
-// dependências) — mesmo formato usado nos campos do site: telefone, CPF e CEP.
+//máscaras dos campos: colocam a pontuação enquanto a pessoa digita
 
+//tira tudo que não é número
 String _somenteDigitos(String texto) => texto.replaceAll(RegExp(r'\D'), '');
 
-// Enquanto a pessoa digita o telefone, a gente vai "moldando" os números
-// automaticamente — parêntese, espaço, traço — como um carimbo que
-// empurra a pontuação certa a cada número novo digitado.
+//telefone: (19) 99999-9999 ou (19) 9999-9999
 class TelefoneFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
@@ -34,6 +32,7 @@ class TelefoneFormatter extends TextInputFormatter {
   }
 }
 
+//CPF: 000.000.000-00
 class CpfFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
@@ -58,6 +57,7 @@ class CpfFormatter extends TextInputFormatter {
   }
 }
 
+//CEP: 00000-000
 class CepFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(

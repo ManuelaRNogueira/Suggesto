@@ -6,8 +6,7 @@ import 'sessao.dart';
 import 'cores.dart';
 import 'recorteImagem.dart';
 
-// Editar nome e foto de perfil — mesmos campos do modal "Editar perfil" no
-// site (perfilCli.html: Nome editável, E-mail só leitura, foto com recorte).
+//tela de editar perfil: nome e foto (o email só aparece, não dá pra mudar)
 class EditarPerfilPage extends StatefulWidget {
   final Map<String, dynamic> usuario;
 
@@ -19,7 +18,7 @@ class EditarPerfilPage extends StatefulWidget {
 
 class _EditarPerfilPageState extends State<EditarPerfilPage> {
   late final TextEditingController _nomeController;
-  Uint8List? _fotoBytes; // já recortada, pronta pra enviar
+  Uint8List? _fotoBytes; //foto nova já recortada (null = não trocou)
   bool _salvando = false;
   String? _erro;
 
@@ -37,6 +36,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
     super.dispose();
   }
 
+  //iniciais do nome pro avatar sem foto ("Ana Souza" → "AS")
   String _iniciais(String nome) {
     final partes = nome.trim().split(RegExp(r'\s+'));
     if (partes.isEmpty || partes.first.isEmpty) return '?';
@@ -45,6 +45,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
     return (primeira + ultima).toUpperCase();
   }
 
+  //escolhe uma foto da galeria e abre a tela de recorte
   Future<void> _escolherFoto() async {
     final picker = ImagePicker();
     final XFile? arquivo = await picker.pickImage(
@@ -56,8 +57,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
     final bytesOriginais = await arquivo.readAsBytes();
     if (!mounted) return;
 
-    // Deixa a pessoa escolher qual parte da foto vai aparecer antes de
-    // seguir — mesma etapa do site (ver js/imagemCrop.js).
+    //rota pro recorte, que devolve a foto recortada
     final recortado = await Navigator.push<Uint8List?>(
       context,
       MaterialPageRoute(
@@ -70,8 +70,10 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
     setState(() => _fotoBytes = recortado);
   }
 
+  //salva no servidor, atualiza o nome na sessão e volta pro perfil
   Future<void> _salvar() async {
     final nome = _nomeController.text.trim();
+    //validação: nome vazio
     if (nome.isEmpty) {
       setState(() => _erro = 'O nome não pode ficar vazio.');
       return;
@@ -98,6 +100,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
     }
   }
 
+  //avatar com as iniciais (quando não tem foto)
   Widget _iniciaisAvatar() {
     return Container(
       color: Cores.cartao,
@@ -137,6 +140,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              //foto: a nova, senão a atual, senão as iniciais (tocar troca a foto)
               Center(
                 child: GestureDetector(
                   onTap: _escolherFoto,
@@ -185,6 +189,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                 ),
               ),
               const SizedBox(height: 24),
+              //campo do nome
               const Text(
                 'Nome',
                 style: TextStyle(
@@ -218,6 +223,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                 ),
               ),
               const SizedBox(height: 20),
+              //email (só leitura)
               const Text(
                 'E-mail',
                 style: TextStyle(

@@ -5,10 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'cores.dart';
 import 'api.dart';
 
-// Mapa em tela cheia do estabelecimento — aberto pelo botão "Ver no mapa" na
-// aba Sobre de infoLocal.dart (que não mostra mais mapa embutido). A
-// geocodificação só acontece aqui, sob demanda, em vez de a cada abertura da
-// tela de detalhes.
+//mapa em tela cheia do estabelecimento (botão "Ver no mapa" do infoLocal.dart)
 class MapaLocalPage extends StatefulWidget {
   final String nome;
   final String endereco;
@@ -42,6 +39,7 @@ class _MapaLocalPageState extends State<MapaLocalPage> {
   @override
   void initState() {
     super.initState();
+    //se já veio com coordenadas usa direto, senão busca pelo endereço
     if (widget.lat != null && widget.lng != null) {
       _coords = LatLng(widget.lat!, widget.lng!);
       _carregando = false;
@@ -50,6 +48,7 @@ class _MapaLocalPageState extends State<MapaLocalPage> {
     }
   }
 
+  //transforma o endereço em coordenadas (Nominatim, no api.dart)
   Future<void> _geocodificar() async {
     final coords = await buscarCoordenadasEndereco(
       rua: widget.rua,
@@ -64,6 +63,7 @@ class _MapaLocalPageState extends State<MapaLocalPage> {
     });
   }
 
+  //abre o endereço no Google Maps
   Future<void> _abrirNoMaps() async {
     final uri = Uri.https('www.google.com', '/maps/search/', {'api': '1', 'query': widget.endereco});
     await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -92,6 +92,7 @@ class _MapaLocalPageState extends State<MapaLocalPage> {
     );
   }
 
+  //carregando → bolinha; não achou → endereço em texto; achou → mapa com o pino
   Widget _buildCorpo() {
     if (_carregando) {
       return const Center(child: CircularProgressIndicator(color: Cores.roxo));
@@ -124,10 +125,11 @@ class _MapaLocalPageState extends State<MapaLocalPage> {
       options: MapOptions(initialCenter: coords, initialZoom: 16),
       children: [
         TileLayer(
-          // Tile padrão do OpenStreetMap — gratuito, sem chave de API.
+          //imagens do mapa (OpenStreetMap, grátis)
           urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
           userAgentPackageName: 'com.suggesto.app',
         ),
+        //pino no local
         MarkerLayer(
           markers: [
             Marker(

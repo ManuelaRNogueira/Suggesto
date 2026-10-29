@@ -3,10 +3,8 @@ import 'cores.dart';
 import 'login.dart';
 import 'cadastro.dart';
 
-// Explicação de como entrar numa equipe já existente — versão mobile de
-// "Suggesto - Web/Web/entrarEquipe.html". Só direciona pro login ou cadastro
-// em modo equipe; quem faz a validação do código é a tela seguinte
-// (entrarCodigo.dart), depois de logado.
+//tela que explica como entrar numa equipe e manda pro login ou cadastro
+//o código de acesso é digitado depois, no entrarCodigo.dart
 class EntrarEquipe extends StatelessWidget {
   const EntrarEquipe({super.key});
 
@@ -58,6 +56,7 @@ class EntrarEquipe extends StatelessWidget {
                           style: TextStyle(color: Colors.white54, fontSize: 13, fontFamily: "Poppins", height: 1.5),
                         ),
                         const SizedBox(height: 32),
+                        //rota pro login (modo equipe)
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
@@ -77,6 +76,7 @@ class EntrarEquipe extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 12),
+                        //rota pro cadastro (modo equipe)
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton(

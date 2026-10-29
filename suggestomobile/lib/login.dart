@@ -7,11 +7,9 @@ import 'entrarEquipe.dart';
 import 'entrarCodigo.dart';
 import 'esqueciSenha.dart';
 
-// Login — mesmos dois campos do site (ver Suggesto - Web/Web/login.html),
-// agora batendo contra a API de verdade (POST /api/login).
+//tela de login: confere email e senha na API e manda pra tela certa
 class Login extends StatefulWidget {
-  // Quando true, replica o "?equipe=1" do site: só aceita conta Administrador
-  // e, ao logar, manda pra tela de código de acesso em vez do painel normal.
+  //true = veio do "entrar numa equipe": só aceita administrador e depois vai pro código de acesso
   final bool modoEquipe;
 
   const Login({super.key, this.modoEquipe = false});
@@ -29,6 +27,7 @@ class _LoginState extends State<Login> {
   bool entrando = false;
   String? erroGeral;
 
+  //botão Entrar: valida, faz login e decide a rota
   Future<void> entrar() async {
     setState(() => erroGeral = null);
     if (!_formKey.currentState!.validate()) return;
@@ -43,6 +42,7 @@ class _LoginState extends State<Login> {
       final tipoUsuario = resultado['tipoUsuario'] as String?;
       final idUsuario = (resultado['idUsuario'] as num).toInt();
 
+      //modo equipe: bloqueia quem não é administrador
       if (widget.modoEquipe && tipoUsuario != 'Administrador') {
         setState(
           () => erroGeral =
@@ -53,6 +53,7 @@ class _LoginState extends State<Login> {
 
       if (!mounted) return;
 
+      //modo equipe: rota pro código de acesso (sem salvar a sessão)
       if (widget.modoEquipe) {
         Navigator.pushReplacement(
           context,
@@ -66,6 +67,7 @@ class _LoginState extends State<Login> {
         return;
       }
 
+      //salva quem logou
       Sessao.definir(
         idUsuarioLogado: idUsuario,
         nomeLogado: resultado['nome'] as String? ?? '',
@@ -73,6 +75,7 @@ class _LoginState extends State<Login> {
         tipoUsuarioLogado: tipoUsuario ?? 'Cliente',
       );
 
+      //rota: administrador → início do admin, cliente → início do cliente
       Navigator.pushNamed(
         context,
         tipoUsuario == 'Administrador' ? '/inicioAdm' : '/home_cliente',
@@ -149,6 +152,7 @@ class _LoginState extends State<Login> {
                           ),
                         ),
 
+                        //aviso do modo equipe
                         if (widget.modoEquipe) ...[
                           const SizedBox(height: 14),
                           Container(
@@ -180,6 +184,7 @@ class _LoginState extends State<Login> {
                           controller: emailController,
                           hint: "seuemail@exemplo.com",
                           teclado: TextInputType.emailAddress,
+                          //validação: email vazio ou sem @ e ponto
                           validador: (v) {
                             final valor = v?.trim() ?? "";
                             if (valor.isEmpty) return "Informe seu e-mail.";
@@ -209,12 +214,14 @@ class _LoginState extends State<Login> {
                             onPressed: () =>
                                 setState(() => senhaVisivel = !senhaVisivel),
                           ),
+                          //validação: senha vazia
                           validador: (v) => (v == null || v.isEmpty)
                               ? "Informe sua senha."
                               : null,
                         ),
 
                         const SizedBox(height: 10),
+                        //rota pro "esqueci minha senha"
                         Align(
                           alignment: Alignment.centerRight,
                           child: GestureDetector(
@@ -249,6 +256,7 @@ class _LoginState extends State<Login> {
 
                         const SizedBox(height: 24),
 
+                        //botão Entrar
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
@@ -285,6 +293,7 @@ class _LoginState extends State<Login> {
 
                   const SizedBox(height: 20),
 
+                  //rota pro cadastro
                   GestureDetector(
                     onTap: () => Navigator.push(
                       context,
@@ -314,6 +323,7 @@ class _LoginState extends State<Login> {
                     ),
                   ),
 
+                  //rota pro "entrar numa equipe" (some no modo equipe)
                   if (!widget.modoEquipe) ...[
                     const SizedBox(height: 12),
                     GestureDetector(
@@ -340,6 +350,7 @@ class _LoginState extends State<Login> {
     );
   }
 
+  //texto em cima de cada campo
   Widget _rotulo(String texto) {
     return Text(
       texto,
@@ -351,6 +362,7 @@ class _LoginState extends State<Login> {
     );
   }
 
+  //campo de texto padrão da tela
   Widget _campo({
     required TextEditingController controller,
     required String hint,

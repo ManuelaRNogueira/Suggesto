@@ -4,11 +4,7 @@ import 'statusSugestao.dart';
 import 'formatacao.dart';
 import 'api.dart';
 
-// Detalhe de uma sugestão, com os botões pra trocar o status — versão mobile
-// da mesma ação que existe na tela de Sugestões do desktop
-// (Suggesto_DesktopReact/renderer/src/pages/admin/Sugestoes.jsx, atualizarStatusSugestao).
-// `sugestao` é o mesmo Map recebido de GET /api/admin/sugestoes (ou do bloco
-// "sugestoesRecentes" de GET /api/admin/metricas) — mesma forma nos dois casos.
+//tela de detalhe de uma sugestão (admin), com os botões de mudar o status
 class DetalhesSugestaoAdm extends StatefulWidget {
   final Map<String, dynamic> sugestao;
 
@@ -22,15 +18,15 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
   bool trocandoStatus = false;
   String? erro;
 
-  // Mesmas transições que a API aceita (e que o desktop e o site oferecem).
-  // Implementado é final.
+  //pra quais status dá pra mudar a partir do atual (implementado não muda mais)
   static const _acoes = {
     'pendente': ['implementado', 'recusado'],
     'recusado': ['pendente'],
   };
-  // Mesma regra da API (AvaliacaoService): recusar exige esse mínimo.
+  //mínimo de caracteres do motivo de recusa
   static const _minMotivoRecusa = 10;
 
+  //manda o novo status pra API e atualiza a tela
   Future<void> _mudarStatus(String novoStatus, {String? motivo}) async {
     setState(() {
       trocandoStatus = true;
@@ -51,6 +47,7 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
     }
   }
 
+  //topo, cartão do estabelecimento, detalhes, erro e botões de status
   @override
   Widget build(BuildContext context) {
     final s = widget.sugestao;
@@ -104,6 +101,7 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
                       ),
                       const SizedBox(height: 14),
                     ],
+                    //enquanto troca o status mostra a bolinha, senão os botões
                     if (trocandoStatus)
                       const CircularProgressIndicator(color: Cores.roxo)
                     else
@@ -118,8 +116,7 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
     );
   }
 
-  // Seta de voltar isolada, mesmo padrão de sobrenos.dart/suggesto.dart —
-  // essa tela é um detalhe, sem Bottom Navigation.
+  //botão de voltar
   Widget _buildTopoVoltar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -147,9 +144,7 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
     );
   }
 
-  // Card do estabelecimento — identifica de onde veio o feedback antes do
-  // card de detalhes. Foto e nome reais, vindos da própria sugestão
-  // (estabelecimento/estabelecimentoFotoPath, AdminService.resumirSugestao).
+  //cartão do estabelecimento que recebeu a sugestão (foto e nome)
   Widget _cartaoEstabelecimento(Map<String, dynamic> s) {
     final nome = (s['estabelecimento'] as String?) ?? 'Estabelecimento';
     final fotoUrl = urlFotoEstabelecimento(
@@ -198,6 +193,7 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
     );
   }
 
+  //ícone de loja no lugar da foto
   Widget _placeholderEstabelecimento() {
     return Container(
       color: Cores.tag,
@@ -205,6 +201,7 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
     );
   }
 
+  //selo grande com o status atual
   Widget _seloStatus(String status) {
     final estilo = estiloDoStatus(status);
     return Container(
@@ -232,6 +229,7 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
     );
   }
 
+  //cartão com categoria, nota, texto, autor e data
   Widget _cartaoDetalhe(Map<String, dynamic> s, int? nota) {
     return Container(
       width: double.infinity,
@@ -287,11 +285,13 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
               fontFamily: 'Poppins',
             ),
           ),
+          //motivo da recusa (só se recusada)
           if (s['statusUi'] == 'recusado' &&
               (s['motivoRecusa'] as String?)?.trim().isNotEmpty == true) ...[
             const SizedBox(height: 14),
             _caixaTexto('Motivo da recusa', s['motivoRecusa'] as String),
           ],
+          //resposta do admin (se tiver)
           if (s['resposta'] != null &&
               (s['resposta'] as String).trim().isNotEmpty) ...[
             const SizedBox(height: 14),
@@ -340,6 +340,7 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
     );
   }
 
+  //caixinha com um título e um texto
   Widget _caixaTexto(String rotulo, String texto) {
     return Container(
       width: double.infinity,
@@ -374,7 +375,7 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
     );
   }
 
-  // Recusar pede o motivo antes: ele é obrigatório e fica público pro cliente.
+  //recusar: abre uma janela pedindo o motivo (obrigatório, o cliente vê)
   Future<void> _recusarComMotivo() async {
     final controller = TextEditingController();
     final motivo = await showDialog<String>(
@@ -437,6 +438,7 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
     return primeiras.join();
   }
 
+  //botões dos status possíveis
   Widget _botoesStatus(List<String> statusList) {
     return Wrap(
       spacing: 10,
@@ -446,6 +448,7 @@ class _DetalhesSugestaoAdmState extends State<DetalhesSugestaoAdm> {
     );
   }
 
+  //um botão: recusar abre o motivo, os outros mudam direto
   Widget _botaoStatus(String status) {
     final estilo = estiloDoStatus(status);
     return OutlinedButton.icon(

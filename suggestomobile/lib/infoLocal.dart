@@ -8,6 +8,7 @@ import 'sessao.dart';
 import 'sugerir.dart';
 import 'mapaLocal.dart';
 
+//tela de detalhe do estabelecimento (cliente): abas Sugestões e Sobre
 class InfoLocalPage extends StatefulWidget {
   final Map<String, dynamic> local;
 
@@ -41,12 +42,13 @@ class _InfoLocalPageState extends State<InfoLocalPage>
   double? _lat;
   double? _lng;
 
-  int _abaAtual = 0; // 0 = Sugestões, 1 = Sobre
+  int _abaAtual = 0; //aba aberta: 0 = Sugestões, 1 = Sobre
 
   bool _carregandoAvaliacoes = true;
   List<Map<String, dynamic>> _avaliacoes = [];
   Map<String, dynamic>? _reputacao;
 
+  //lê os dados do local, prepara a animação e busca o resto
   @override
   void initState() {
     super.initState();
@@ -80,19 +82,17 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     _telefone = (local['telefone'] as String?)?.isNotEmpty == true
         ? local['telefone'] as String
         : 'Telefone não informado';
-    // Sem fallback inventado — se o estabelecimento não preencheu, a seção
-    // "Sobre o local" simplesmente não aparece (ver _buildAbaSobre).
+    //"Sobre o local" só aparece se o estabelecimento preencheu
     final sobreBruto = (local['sobre'] as String?)?.trim();
     _sobre = (sobreBruto == null || sobreBruto.isEmpty) ? null : sobreBruto;
 
-    // Sem mapa embutido na tela de detalhes — lat/lng só é usado se o
-    // usuário pedir pra ver o mapa (ver mapaLocal.dart), então só guardamos
-    // aqui, sem geocodificar nada de cara.
+    //coordenadas guardadas pro botão "Ver no mapa"
     final lat = local['lat'];
     final lng = local['lng'];
     _lat = lat == null ? null : (lat as num).toDouble();
     _lng = lng == null ? null : (lng as num).toDouble();
 
+    //animação de entrada (aparece subindo)
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
@@ -113,8 +113,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     _carregarTransparencia();
   }
 
-  // Transparência: calculada na hora pelo backend, não vem junto do local.
-  // Falha silenciosa — a aba "Sobre" simplesmente não mostra o card.
+  //nota de transparência (se falhar, só não mostra o cartão)
   Future<void> _carregarTransparencia() async {
     final id = _idEstabelecimento;
     if (id == null) return;
@@ -124,8 +123,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     } catch (_) {}
   }
 
-  // Confere se esse local já está nos salvos do usuário, só pra deixar o
-  // ícone certo ao abrir a tela — falha silenciosa, não é essencial.
+  //vê se o local já está nos salvos, pra deixar o ícone certo
   Future<void> _verificarFavorito() async {
     if (_idEstabelecimento == null || Sessao.idUsuario == null) return;
     try {
@@ -133,10 +131,11 @@ class _InfoLocalPageState extends State<InfoLocalPage>
       final salvo = salvos.any((e) => (e['idEstabelecimento'] as num?)?.toInt() == _idEstabelecimento);
       if (mounted) setState(() => _isFavorito = salvo);
     } catch (_) {
-      // Ignora — o botão de favorito ainda funciona, só começa desmarcado.
+      //se falhar, o ícone só começa desmarcado
     }
   }
 
+  //salva ou tira dos salvos
   Future<void> _alternarFavorito() async {
     if (_idEstabelecimento == null || Sessao.idUsuario == null) return;
     final novoValor = !_isFavorito;
@@ -156,9 +155,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     }
   }
 
-  // GET /api/avaliacoes/estabelecimento/{id} — mesmas avaliações que
-  // alimentam a aba "Sugestões" da tela equivalente na Web
-  // (estabelecimentoCli.js / renderizarSugestoes).
+  //busca as sugestões do local
   Future<void> _carregarAvaliacoes() async {
     final id = _idEstabelecimento;
     if (id == null) {
@@ -167,11 +164,12 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     }
     try {
       final lista = (await buscarAvaliacoesEstabelecimento(id)).cast<Map<String, dynamic>>();
+      //ordena: mais nova primeiro
       lista.sort((a, b) => (b['dataAvaliacao'] as String? ?? '').compareTo(a['dataAvaliacao'] as String? ?? ''));
       if (!mounted) return;
       setState(() => _avaliacoes = lista);
     } catch (_) {
-      // Falha silenciosa — a aba mostra "nenhuma sugestão" em vez de travar.
+      //se falhar, mostra "nenhuma sugestão"
     } finally {
       if (mounted) setState(() => _carregandoAvaliacoes = false);
     }
@@ -210,6 +208,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     );
   }
 
+  //botão de voltar
   Widget _buildTopoVoltar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
@@ -233,6 +232,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     );
   }
 
+  //topo: logo, nome, categoria e bairro
   Widget _buildTopInfoRow() {
     final subtitulo = [_categoria, _bairro].where((s) => s.isNotEmpty).join(' · ');
     return Padding(
@@ -277,6 +277,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     );
   }
 
+  //ícone no lugar da logo
   Widget _logoPlaceholder() {
     return Container(
       width: 56,
@@ -286,7 +287,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     );
   }
 
-  // ── Seletor de abas (pílulas, mesmo padrão de _chip em sugestoesAdm.dart) ──
+  // ── Botões das abas (Sugestões / Sobre) ────────────────────────────────
 
   Widget _buildAbasSeletor() {
     return Padding(
@@ -301,6 +302,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     );
   }
 
+  //um botão de aba
   Widget _abaPill(String rotulo, int indice) {
     final ativa = _abaAtual == indice;
     return GestureDetector(
@@ -347,6 +349,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     );
   }
 
+  //resumo: nota média e quantidade de sugestões
   Widget _buildResumoNota() {
     final total = _avaliacoes.length;
     final soma = _avaliacoes.fold<double>(0, (acc, a) => acc + ((a['nota'] as num?)?.toDouble() ?? 0));
@@ -392,6 +395,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     );
   }
 
+  //mensagem de nenhuma sugestão
   Widget _buildVazioSugestoes() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 28),
@@ -409,6 +413,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     );
   }
 
+  //cartão de uma sugestão
   Widget _buildCardSugestao(Map<String, dynamic> a) {
     final usuario = a['usuario'] as Map<String, dynamic>?;
     final nomeUsuario = (usuario?['nome'] as String?) ?? 'Usuário';
@@ -495,10 +500,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     );
   }
 
-  // Caixa de resposta com destaque: fundo levemente tingido de roxo, barra
-  // vertical sólida colada na esquerda e título em roxo claro com ícone de
-  // loja — pra dar hierarquia de "isso é a voz do estabelecimento". O motivo
-  // da recusa usa a mesma caixa, em vermelho.
+  //caixa da resposta do estabelecimento (roxa) ou do motivo da recusa (vermelha)
   Widget _buildCaixaResposta(
     String resposta, {
     String titulo = 'RESPOSTA DO ESTABELECIMENTO',
@@ -552,6 +554,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     );
   }
 
+  //etiqueta pequena colorida
   Widget _tagPequena(String texto, Color cor) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -560,8 +563,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     );
   }
 
-  // Tipo do feedback (elogio/crítica/sugestão) — o mesmo conceito de
-  // TIPOS_FEEDBACK em "Suggesto - Web/Web/js/avaliacoesUtils.js".
+  //nome e cor do tipo: elogio, crítica ou sugestão
   (String, Color) _estiloTipo(String tipo) {
     switch (tipo.toLowerCase()) {
       case 'elogio':
@@ -573,6 +575,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     }
   }
 
+  //iniciais do nome pro avatar ("Ana Souza" → "AS")
   String _iniciais(String nome) {
     final partes = nome.trim().split(RegExp(r'\s+'));
     if (partes.isEmpty || partes.first.isEmpty) return '?';
@@ -609,16 +612,14 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     );
   }
 
-  // Vermelho (<50), amarelo (50-79) ou verde (80-100) — mesma faixa usada em
-  // todas as telas que mostram Confiabilidade/Transparência.
+  //cor da nota: vermelho (<50), amarelo (50-79) ou verde (80+)
   Color _corPontuacao(num pontuacao) {
     if (pontuacao >= 80) return const Color(0xFF4ADE80);
     if (pontuacao >= 50) return const Color(0xFFFBBF24);
     return const Color(0xFFF87171);
   }
 
-  // Transparência (0-100): quanto o estabelecimento responde, recusa e a
-  // agilidade nas respostas.
+  //cartão de transparência (0-100): quanto o local responde, recusa e a rapidez
   Widget _buildCardTransparencia() {
     final pontuacao = _reputacao!['pontuacao'] as num?;
     final rotulo = _reputacao!['rotulo'] as String?;
@@ -629,6 +630,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     return _cardSobreItem(Icons.verified_outlined, 'Transparência', valor, cor);
   }
 
+  //cartão de endereço com os botões de mapa
   Widget _buildCardEndereco() {
     final temEndereco = _endereco != 'Endereço não informado';
 
@@ -702,8 +704,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     );
   }
 
-  // Endereço em texto — o Google Maps geocodifica sozinho ao abrir o link,
-  // não precisa da Nominatim aqui (só o mapa embutido usa, ver mapaLocal.dart).
+  //abre o endereço no Google Maps
   Future<void> _abrirNoMaps() async {
     final uri = Uri.https('www.google.com', '/maps/search/', {'api': '1', 'query': _endereco});
     final abriu = await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -714,6 +715,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     }
   }
 
+  //rota pro mapa dentro do app (mapaLocal.dart)
   void _abrirMapaInterno() {
     Navigator.push(
       context,
@@ -732,6 +734,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     );
   }
 
+  //item do "Sobre" (ícone, título e valor)
   Widget _cardSobreItem(IconData icone, String rotulo, String valor, Color cor) {
     return Container(
       width: double.infinity,
@@ -766,7 +769,7 @@ class _InfoLocalPageState extends State<InfoLocalPage>
     );
   }
 
-  // ── Botão fixo no rodapé ──────────────────────────────────────────────
+  // ── Botão fixo no rodapé: rota pra fazer sugestão ─────────────────────
 
   Widget _buildBotaoFixo() {
     return Padding(

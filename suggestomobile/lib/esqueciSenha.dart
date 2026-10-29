@@ -2,14 +2,8 @@ import 'package:flutter/material.dart';
 import 'cores.dart';
 import 'api.dart';
 
-// "Esqueci minha senha" — porte de esqueciSenha.js/esqueciSenha.html do site.
-// Só o pedido do link mora aqui: a redefinição de verdade (digitar a senha
-// nova) continua acontecendo no site, porque é pra lá que o link do e-mail
-// aponta (RecuperacaoSenhaService.solicitar monta
-// "{siteUrl}/redefinir-senha.html?token=..."). Criar uma tela de redefinir
-// aqui também exigiria o app saber abrir esse link direto nele (deep link),
-// o que não existe hoje — então o fluxo simplesmente continua no navegador,
-// igual já aconteceria em qualquer outro dispositivo.
+//tela "Esqueci minha senha": pede o link de redefinição por email
+//a senha nova é digitada no site (o link do email abre no navegador)
 class EsqueciSenha extends StatefulWidget {
   const EsqueciSenha({super.key});
 
@@ -31,8 +25,8 @@ class _EsqueciSenhaState extends State<EsqueciSenha> {
     super.dispose();
   }
 
-  // A API sempre devolve a mesma mensagem genérica, exista o e-mail ou não —
-  // a tela só repete o que ela mandar, sem tentar adivinhar nada.
+  //envia o email e mostra a mensagem que a API devolver
+  //(é sempre a mesma, exista o email ou não)
   Future<void> _enviar() async {
     setState(() => erro = null);
     if (!_formKey.currentState!.validate()) return;
@@ -76,6 +70,7 @@ class _EsqueciSenhaState extends State<EsqueciSenha> {
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: Cores.borda),
                   ),
+                  //já enviou → tela de sucesso, senão → formulário
                   child: mensagemEnviada != null
                       ? _buildSucesso()
                       : _buildFormulario(),
@@ -88,6 +83,7 @@ class _EsqueciSenhaState extends State<EsqueciSenha> {
     );
   }
 
+  //botão de voltar
   Widget _buildTopoVoltar() {
     return GestureDetector(
       onTap: () => Navigator.pop(context),
@@ -104,6 +100,7 @@ class _EsqueciSenhaState extends State<EsqueciSenha> {
     );
   }
 
+  //campo de email + botão de enviar
   Widget _buildFormulario() {
     return Form(
       key: _formKey,
@@ -177,6 +174,7 @@ class _EsqueciSenhaState extends State<EsqueciSenha> {
                 fontFamily: 'Poppins',
               ),
             ),
+            //validação: email vazio ou sem @ e ponto
             validator: (v) {
               final valor = v?.trim() ?? '';
               if (valor.isEmpty) return 'Informe seu e-mail.';
@@ -233,6 +231,7 @@ class _EsqueciSenhaState extends State<EsqueciSenha> {
     );
   }
 
+  //mensagem de "link enviado" + botão de voltar pro login
   Widget _buildSucesso() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

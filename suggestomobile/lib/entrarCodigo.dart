@@ -4,9 +4,8 @@ import 'cores.dart';
 import 'api.dart';
 import 'login.dart';
 
-// Código de acesso do estabelecimento — versão mobile de
-// "Suggesto - Web/Web/entrarCodigo.html" / entrarCodigo.js. Só é alcançada
-// depois de logar com uma conta de administrador (ver login.dart, modoEquipe).
+//tela de digitar o código de acesso pra pedir pra entrar numa equipe
+//só aparece depois do login de administrador em modo equipe
 class EntrarCodigo extends StatefulWidget {
   final int usuarioId;
   final String nomeUsuario;
@@ -29,8 +28,10 @@ class _EntrarCodigoState extends State<EntrarCodigo> {
     super.dispose();
   }
 
+  //envia o código pro servidor; deu certo → mostra a tela de sucesso
   Future<void> _enviar() async {
     final codigo = codigoController.text.trim();
+    //validação: código vazio
     if (codigo.isEmpty) {
       setState(() => erro = "Informe o código de acesso.");
       return;
@@ -71,6 +72,7 @@ class _EntrarCodigoState extends State<EntrarCodigo> {
     );
   }
 
+  //campo do código + botão "Entrar na equipe"
   Widget _telaFormulario() {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -148,6 +150,7 @@ class _EntrarCodigoState extends State<EntrarCodigo> {
     );
   }
 
+  //pedido enviado: avisa que precisa esperar o dono aprovar
   Widget _telaSucesso() {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -173,6 +176,7 @@ class _EntrarCodigoState extends State<EntrarCodigo> {
         const SizedBox(height: 28),
         SizedBox(
           width: double.infinity,
+          //rota pro login (limpa as telas anteriores)
           child: ElevatedButton(
             onPressed: () => Navigator.pushAndRemoveUntil(
               context,
@@ -195,6 +199,7 @@ class _EntrarCodigoState extends State<EntrarCodigo> {
   }
 }
 
+//deixa o que for digitado em maiúsculas
 class UpperCaseTextFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {

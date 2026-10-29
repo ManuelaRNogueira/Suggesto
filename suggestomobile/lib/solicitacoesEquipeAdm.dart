@@ -4,12 +4,8 @@ import 'formatacao.dart';
 import 'sessao.dart';
 import 'api.dart';
 
-// Card "Solicitações de entrada" de um estabelecimento específico — mesma
-// lógica que já existia em perfilAdm.dart (aceitar/recusar por
-// GET/POST /api/estabelecimentos/solicitacoes), só que agora reaproveitada
-// aqui e filtrada pelo estabelecimento sendo visto, já que o admin pode ter
-// vários. A API não filtra por estabelecimento (só por idGerente), então o
-// filtro é feito aqui a partir do campo estabelecimentoId que ela já devolve.
+//cartão "Solicitações de entrada" de um estabelecimento: aceitar ou recusar
+//quem pediu pra entrar na equipe
 class SolicitacoesEquipeAdm extends StatefulWidget {
   final int idEstabelecimento;
   const SolicitacoesEquipeAdm({super.key, required this.idEstabelecimento});
@@ -21,6 +17,7 @@ class SolicitacoesEquipeAdm extends StatefulWidget {
 class _SolicitacoesEquipeAdmState extends State<SolicitacoesEquipeAdm> {
   bool carregando = true;
   List<Map<String, dynamic>> solicitacoes = [];
+  //ids dos pedidos que estão sendo aceitos/recusados agora (trava os botões)
   final Set<int> _processando = {};
 
   @override
@@ -29,6 +26,7 @@ class _SolicitacoesEquipeAdmState extends State<SolicitacoesEquipeAdm> {
     _carregar();
   }
 
+  //busca os pedidos do gerente
   Future<void> _carregar() async {
     final idGerente = Sessao.idUsuario;
     if (idGerente == null) {
@@ -39,6 +37,7 @@ class _SolicitacoesEquipeAdmState extends State<SolicitacoesEquipeAdm> {
     try {
       final todas = await buscarSolicitacoesAdmin(idGerente: idGerente);
       if (!mounted) return;
+      //filtro: só os pedidos deste estabelecimento (a API manda de todos)
       setState(() {
         solicitacoes = todas
             .cast<Map<String, dynamic>>()
@@ -50,12 +49,13 @@ class _SolicitacoesEquipeAdmState extends State<SolicitacoesEquipeAdm> {
             .toList();
       });
     } on ApiException {
-      // Sem solicitações não impede ver o resto da tela.
+      //se der erro, só fica sem a lista (o resto da tela continua)
     } finally {
       if (mounted) setState(() => carregando = false);
     }
   }
 
+  //aceita ou recusa e tira o pedido da lista; erro → aviso vermelho embaixo
   Future<void> _responder(int id, bool aceitar) async {
     final idGerente = Sessao.idUsuario;
     if (idGerente == null) return;
@@ -139,6 +139,7 @@ class _SolicitacoesEquipeAdmState extends State<SolicitacoesEquipeAdm> {
     );
   }
 
+  //um pedido: nome, email, data e botões Recusar / Aceitar
   Widget _linhaSolicitacao(Map<String, dynamic> s) {
     final id = (s['id'] as num).toInt();
     final processando = _processando.contains(id);

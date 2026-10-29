@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'api.dart';
 import 'sessao.dart';
 
+//tela da loja de pontos: troca pontos por recompensas
 class LojasPontosPage extends StatefulWidget {
   const LojasPontosPage({super.key});
 
@@ -15,11 +16,10 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
   List<Map<String, dynamic>> _recompensas = [];
   int _meusPontos = 0;
 
-  // Recompensas que esse cliente já resgatou — cada uma só pode ser resgatada
-  // uma vez, então elas somem da vitrine (ver ResgateService no backend, que
-  // também recusa um segundo resgate mesmo que a tela não tivesse escondido).
+  //recompensas que o cliente já resgatou (cada uma só pode 1 vez, então somem da vitrine)
   Set<int> _idsResgatados = {};
 
+  //faixas de preço que aparecem na tela
   final List<Map<String, dynamic>> _grupos = [
     {'label': 'Até 6.000 pts', 'faixaIndex': 0},
     {'label': 'Até 18.000 pts', 'faixaIndex': 1},
@@ -33,6 +33,7 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
     _carregar();
   }
 
+  //busca recompensas, pontos do usuário e resgates ao mesmo tempo
   Future<void> _carregar() async {
     setState(() {
       carregando = true;
@@ -53,6 +54,7 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
             .map((r) => (r['idRecompensa'] as num?)?.toInt())
             .whereType<int>()
             .toSet();
+        //filtro: tira da vitrine as já resgatadas
         _recompensas = recompensas
             .cast<Map<String, dynamic>>()
             .where((r) => !_idsResgatados.contains((r['id'] as num?)?.toInt()))
@@ -66,9 +68,7 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
     }
   }
 
-  // As "faixas" são só uma forma de agrupar as recompensas na tela por
-  // faixa de custo em pontos — o backend não tem esse conceito, então
-  // calculamos aqui a partir de custoPontos.
+  //qual faixa a recompensa entra pelo custo em pontos
   int _faixaDoCusto(int custoPontos) {
     if (custoPontos <= 6000) return 0;
     if (custoPontos <= 18000) return 1;
@@ -76,6 +76,7 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
     return 3;
   }
 
+  //filtro: recompensas de uma faixa
   List<Map<String, dynamic>> _recompensasDaFaixa(int faixaIndex) {
     return _recompensas.where((r) {
       final custo = (r['custoPontos'] as num?)?.toInt() ?? 0;
@@ -83,6 +84,7 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
     }).toList();
   }
 
+  //resgata: atualiza os pontos, tira da vitrine e mostra a confirmação
   Future<void> _resgatarRecompensa(Map<String, dynamic> recompensa) async {
     final id = (recompensa['id'] as num?)?.toInt();
     if (id == null || Sessao.idUsuario == null) return;
@@ -172,6 +174,7 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
     );
   }
 
+  //carregando / erro / pontos + grupos de recompensas (puxar pra baixo atualiza)
   Widget _corpo() {
     if (carregando) {
       return const Center(
@@ -248,6 +251,7 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
     );
   }
 
+  //cartão com os pontos do usuário
   Widget _buildPontosDestaque() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -282,6 +286,7 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
     return partes.join('.');
   }
 
+  //título da faixa + grade de recompensas
   Widget _buildGrupoRecompensas(String label, int faixaIndex) {
     final lista = _recompensasDaFaixa(faixaIndex);
     if (lista.isEmpty) return const SizedBox();
@@ -303,11 +308,7 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
         const SizedBox(height: 16),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          // Calcula quantas colunas cabem na largura disponível (sempre em
-          // torno de 110px por card, como antes) e divide o espaço entre
-          // elas — sem depender de quantos itens existem, senão com poucas
-          // recompensas na faixa os cards ficavam enormes pra preencher a
-          // linha sozinhos.
+          //cálculo das colunas: quantas cabem na largura (~110px cada)
           child: LayoutBuilder(
             builder: (context, constraints) {
               const espacamento = 14.0;
@@ -334,6 +335,7 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
     );
   }
 
+  //cartão de uma recompensa
   Widget _buildRecompensaCard(Map<String, dynamic> recompensa, double largura) {
     final estabelecimento =
         recompensa['estabelecimento'] as Map<String, dynamic>?;
@@ -436,6 +438,7 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
     );
   }
 
+  //janela de detalhes da recompensa com o botão de resgatar
   void _mostrarDetalhes(Map<String, dynamic> recompensa) {
     final estabelecimento =
         recompensa['estabelecimento'] as Map<String, dynamic>?;
@@ -592,6 +595,7 @@ class _LojasPontosPageState extends State<LojasPontosPage> {
     );
   }
 
+  //barra de baixo: rotas pro Início, Sugestões, Loja e Perfil (2 = Loja)
   int paginaAtual = 2;
   Widget barraNavegacao() {
     return Container(

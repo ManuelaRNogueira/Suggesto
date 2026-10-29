@@ -1,16 +1,12 @@
 import 'dart:math';
 import 'package:geolocator/geolocator.dart';
 
-// Geolocalização do cliente + cálculo de distância — porte de
-// "Suggesto - Web/Web/js/geoUtils.js", usado pra separar "Perto de você"
-// (raio real) de "Descubra Novos Locais" na Home do mobile cliente. Não
-// rastreia localização continuamente: pega a posição uma vez por carregamento
-// da tela.
+//localização do usuário e cálculo de distância
 
-// Raio considerado "perto de você", em km. Único lugar pra mudar esse valor.
+//raio do "Perto de você", em km
 const double raioPertoKm = 5;
 
-// Distância em linha reta entre duas coordenadas (fórmula de Haversine).
+//cálculo: distância em km entre dois pontos (fórmula de Haversine)
 double calcularDistanciaKm(double lat1, double lng1, double lat2, double lng2) {
   const raioTerraKm = 6371.0;
   final dLat = _paraRadianos(lat2 - lat1);
@@ -25,16 +21,17 @@ double calcularDistanciaKm(double lat1, double lng1, double lat2, double lng2) {
   return raioTerraKm * c;
 }
 
+//graus → radianos (usado no cálculo acima)
 double _paraRadianos(double graus) => graus * pi / 180;
 
-// Mesmo formato usado no card do site: "850 m" ou "1,2 km".
+//distância em texto: "850 m" ou "1,2 km"
 String formatarDistancia(double km) {
   if (km < 1) return '${(km * 1000).round()} m';
   return '${km.toStringAsFixed(1).replaceAll('.', ',')} km';
 }
 
-// Posição pro check-in: precisa ser atual e precisa dizer o que deu errado,
-// porque o cliente tem que saber se é pra ligar o GPS, permitir ou usar o QR.
+//localização pro check-in (precisa ser precisa)
+//se falhar, devolve a mensagem dizendo o que fazer (ligar GPS, permitir ou usar o QR)
 Future<({Position? posicao, String? erro})> obterLocalizacaoParaCheckin() async {
   try {
     if (!await Geolocator.isLocationServiceEnabled()) {
@@ -62,10 +59,8 @@ Future<({Position? posicao, String? erro})> obterLocalizacaoParaCheckin() async 
   }
 }
 
-// Pede a localização atual do dispositivo. Nunca lança exceção — permissão
-// negada, GPS desligado, timeout ou qualquer outra falha tudo vira null, pra
-// quem chama só precisar tratar "tenho localização" vs "não tenho" (mesmo
-// comportamento do site, que também resolve null em vez de rejeitar).
+//localização pra mostrar os locais próximos
+//se der qualquer problema devolve null (não lança erro)
 Future<Position?> obterLocalizacaoUsuario() async {
   try {
     final servicoAtivo = await Geolocator.isLocationServiceEnabled();

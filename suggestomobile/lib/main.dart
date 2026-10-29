@@ -23,7 +23,6 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -31,8 +30,10 @@ class MyApp extends StatelessWidget {
       title: 'Suggesto',
       theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.deepPurple)),
 
+      //primeira tela ao abrir o app
       initialRoute: '/login',
 
+      //rotas: nome → tela
       routes: {
         '/login': (context) => Login(),
         '/cadastro': (context) => Cadastro(),

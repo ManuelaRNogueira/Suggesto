@@ -8,16 +8,8 @@ import 'api.dart';
 import 'cartoesStatusAdm.dart';
 import 'solicitacoesEquipeAdm.dart';
 
-// Versão mobile, só de leitura, da tela de detalhes de estabelecimento do
-// desktop (Suggesto_DesktopReact/renderer/src/pages/DetalhesEstabelecimento.jsx)
-// — sem a gestão de sugestões/edição que existe lá, já que isso já tem tela
-// própria no mobile (Sugestões, com filtro por estabelecimento). O card de
-// código da equipe e o resumo de status seguem o mesmo modelo já usado no
-// Perfil do admin (perfilAdm.dart) e na tela Início (cartoesStatusAdm.dart),
-// só que filtrados pra este estabelecimento específico.
-// `estabelecimento` é o mesmo Map de GET /api/estabelecimentos/{id} (mais
-// id/ativo/codigoAcesso/souDono, já mesclados pela lista) — sem chamada
-// extra pra esses dados. Só as métricas de status são buscadas aqui.
+//tela de detalhe de um estabelecimento (admin, só consulta)
+//mostra infos, código da equipe, QR de check-in, pedidos de entrada e números das sugestões
 class DetalhesEstabelecimentoAdm extends StatefulWidget {
   final Map<String, dynamic> estabelecimento;
 
@@ -34,6 +26,7 @@ class _DetalhesEstabelecimentoAdmState
   Map<String, dynamic>? metricas;
   bool codigoCopiado = false;
 
+  //token atual do QR de check-in (muda quando gera um novo)
   late String? _tokenCheckin =
       widget.estabelecimento['tokenCheckin'] as String?;
   bool _gerandoNovoQr = false;
@@ -44,6 +37,7 @@ class _DetalhesEstabelecimentoAdmState
     _carregarMetricas();
   }
 
+  //busca os números das sugestões deste estabelecimento
   Future<void> _carregarMetricas() async {
     final id = (widget.estabelecimento['id'] as num?)?.toInt();
     if (id == null) {
@@ -57,12 +51,13 @@ class _DetalhesEstabelecimentoAdmState
       );
       if (mounted) setState(() => metricas = m);
     } on ApiException {
-      // Sem métricas não impede ver o resto da tela — o resto já veio pronto.
+      //se der erro, só fica sem os números (o resto da tela continua)
     } finally {
       if (mounted) setState(() => carregandoMetricas = false);
     }
   }
 
+  //copia o código da equipe e mostra "copiado" por um tempo
   Future<void> _copiarCodigo(String codigo) async {
     await Clipboard.setData(ClipboardData(text: codigo));
     if (!mounted) return;
@@ -72,8 +67,8 @@ class _DetalhesEstabelecimentoAdmState
     });
   }
 
-  // Mesmo aviso do desktop: QRs já impressos param de confirmar visita na
-  // hora que um novo token é gerado.
+  //gerar novo QR: pede confirmação (os QRs impressos param de funcionar)
+  //e troca o token
   Future<void> _confirmarGerarNovoQr(int idEstabelecimento) async {
     final confirmar = await showDialog<bool>(
       context: context,
@@ -136,6 +131,7 @@ class _DetalhesEstabelecimentoAdmState
     }
   }
 
+  //topo, foto, infos, cartões do dono e números das sugestões
   @override
   Widget build(BuildContext context) {
     final e = widget.estabelecimento;
@@ -280,6 +276,7 @@ class _DetalhesEstabelecimentoAdmState
                       const SizedBox(height: 8),
                       _cardSobre(sobre),
                     ],
+                    //só pro dono: código da equipe, QR de check-in e pedidos de entrada
                     if (souDono &&
                         codigoEquipe != null &&
                         codigoEquipe.isNotEmpty) ...[
@@ -315,6 +312,7 @@ class _DetalhesEstabelecimentoAdmState
                         ),
                       )
                     else
+                      //cartões de status com a %
                       cartoesStatusAdm(
                         total:
                             (metricas?['totalSugestoes'] as num?)?.toInt() ?? 0,
@@ -335,8 +333,7 @@ class _DetalhesEstabelecimentoAdmState
     );
   }
 
-  // Seta de voltar isolada, mesmo padrão de sobrenos.dart/suggesto.dart —
-  // essa tela é um detalhe, sem Bottom Navigation.
+  //botão de voltar
   Widget _buildTopoVoltar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -364,6 +361,7 @@ class _DetalhesEstabelecimentoAdmState
     );
   }
 
+  //ícone de loja no lugar da foto
   Widget _placeholderFoto() {
     return Container(
       color: Cores.cartao,
@@ -371,6 +369,7 @@ class _DetalhesEstabelecimentoAdmState
     );
   }
 
+  //linha com ícone e texto (endereço, telefone...)
   Widget _linhaInfo(IconData icone, String texto) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
@@ -394,6 +393,7 @@ class _DetalhesEstabelecimentoAdmState
     );
   }
 
+  //cartão "Sobre"
   Widget _cardSobre(String sobre) {
     return Container(
       width: double.infinity,
@@ -430,9 +430,8 @@ class _DetalhesEstabelecimentoAdmState
     );
   }
 
-  // Mesmo QR gerado no desktop (QrCheckin.jsx) — mesma URL, mesmo token, só
-  // desenhado aqui em vez de lá. Por isso funciona exatamente igual: quem
-  // lê com a câmera cai na mesma página de avaliação com a visita confirmada.
+  //cartão do QR de check-in: o cliente lê com a câmera pra confirmar a visita
+  //(é o mesmo QR do desktop)
   Widget _cardQrCheckin(int idEstabelecimento) {
     final token = _tokenCheckin;
     final semCoordenadas =
@@ -514,6 +513,7 @@ class _DetalhesEstabelecimentoAdmState
           const SizedBox(height: 14),
           SizedBox(
             width: double.infinity,
+            //botão de gerar novo QR
             child: OutlinedButton(
               onPressed: _gerandoNovoQr
                   ? null
@@ -549,7 +549,7 @@ class _DetalhesEstabelecimentoAdmState
     );
   }
 
-  // Mesmo modelo do card de código da equipe em perfilAdm.dart.
+  //cartão com o código da equipe e botão de copiar
   Widget _cardCodigoEquipe(String codigo) {
     return Container(
       width: double.infinity,

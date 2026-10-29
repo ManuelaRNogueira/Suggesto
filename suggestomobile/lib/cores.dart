@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-// Paleta já usada no restante do app (ver inicialcli.dart, cadastro.dart) —
-// reunida aqui pra não repetir os mesmos Color(0xFF...) em cada tela nova.
+//cores do app num lugar só, pra não repetir o Color(0xFF...) em cada tela
 class Cores {
   static const fundo = Color(0xFF12061E);
   static const cartao = Color(0xFF1E0E32);

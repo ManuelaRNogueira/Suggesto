@@ -6,9 +6,7 @@ import 'api.dart';
 import 'detalhesSugestaoAdm.dart';
 import 'cartaoSugestaoAdm.dart';
 
-// Lista de sugestões do painel admin — versão mobile da tela equivalente do
-// desktop (Suggesto_DesktopReact/renderer/src/pages/admin/Sugestoes.jsx).
-// Busca em GET /api/admin/sugestoes.
+//tela de sugestões do admin, com busca e filtros por status e estabelecimento
 class SugestoesAdm extends StatefulWidget {
   const SugestoesAdm({super.key});
 
@@ -17,6 +15,7 @@ class SugestoesAdm extends StatefulWidget {
 }
 
 class _SugestoesAdmState extends State<SugestoesAdm> {
+  //aba marcada (1 = Sugestões) e filtros escolhidos
   int paginaAtual = 1;
   String filtro = 'todos';
   int? estabelecimentoFiltroId;
@@ -25,8 +24,7 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
   bool carregando = true;
   String? erro;
   List<Map<String, dynamic>> sugestoes = [];
-  // Estabelecimentos reais vinculados a este administrador (GET
-  // /api/admin/estabelecimentos) — usados como opções do filtro.
+  //estabelecimentos do admin (opções do filtro)
   List<Map<String, dynamic>> estabelecimentosAdmin = [];
 
   final List<_Filtro> filtros = const [
@@ -42,6 +40,7 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
     _carregar();
   }
 
+  //busca as sugestões e os estabelecimentos ao mesmo tempo
   Future<void> _carregar() async {
     setState(() {
       carregando = true;
@@ -63,6 +62,7 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
     }
   }
 
+  //filtro: status, estabelecimento e busca pelo título
   List<Map<String, dynamic>> get sugestoesFiltradas {
     return sugestoes.where((s) {
       if (filtro != 'todos' && s['statusUi'] != filtro) return false;
@@ -79,6 +79,7 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
     }).toList();
   }
 
+  //rota pro detalhe da sugestão
   Future<void> _abrirDetalhes(Map<String, dynamic> sugestao) async {
     await Navigator.push(
       context,
@@ -86,8 +87,7 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
         builder: (_) => DetalhesSugestaoAdm(sugestao: sugestao),
       ),
     );
-    // A tela de detalhes pode ter mudado o status (mesmo mapa, por referência) —
-    // atualiza a lista pra refletir isso.
+    //ao voltar, atualiza a lista (o status pode ter mudado)
     setState(() {});
   }
 
@@ -115,6 +115,7 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
                     ),
                   ),
                   const SizedBox(height: 16),
+                  //busca, seletor de estabelecimento e filtros de status
                   _buscaCampo(),
                   if (estabelecimentosAdmin.length > 1) ...[
                     const SizedBox(height: 12),
@@ -137,6 +138,7 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
     );
   }
 
+  //carregando / erro / nenhuma sugestão / lista (puxar pra baixo atualiza)
   Widget _corpo(List<Map<String, dynamic>> lista) {
     if (carregando) {
       return const Center(child: CircularProgressIndicator(color: Cores.roxo));
@@ -199,6 +201,7 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
     );
   }
 
+  //campo de busca
   Widget _buscaCampo() {
     return Container(
       decoration: BoxDecoration(
@@ -227,6 +230,7 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
     );
   }
 
+  //botões de filtro por status (Todos, Pendentes...)
   Widget _filtrosChips() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -238,6 +242,7 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
     );
   }
 
+  //um botão de filtro
   Widget _chip(_Filtro f) {
     return _chipBase(
       rotulo: f.rotulo,
@@ -246,6 +251,7 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
     );
   }
 
+  //nome do estabelecimento escolhido no filtro
   String get _nomeEstabelecimentoFiltro {
     if (estabelecimentoFiltroId == null) return 'Todos os estabelecimentos';
     final encontrado = estabelecimentosAdmin.firstWhere(
@@ -255,9 +261,7 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
     return (encontrado['nome'] as String?) ?? 'Estabelecimento';
   }
 
-  // Seletor compacto de estabelecimento — só aparece quando o admin tem mais
-  // de um (com um só, não há o que filtrar). Mostra direto qual está
-  // selecionado, sem precisar abrir o painel pra saber.
+  //botão do filtro de estabelecimento (só aparece se o admin tiver mais de um)
   Widget _seletorEstabelecimento() {
     final ativo = estabelecimentoFiltroId != null;
     return GestureDetector(
@@ -303,10 +307,7 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
     );
   }
 
-  // Bottom sheet de seleção — mesmo modelo já usado nos outros filtros do
-  // app (fundo Cores.cartao, topo arredondado, alça de arraste). Lista em
-  // vez de chips: nomes de estabelecimento podem ser longos, e uma lista
-  // com a opção marcada fica mais clara que vários botões lado a lado.
+  //painel que sobe de baixo com a lista de estabelecimentos pra escolher
   void _abrirSeletorEstabelecimento() {
     showModalBottomSheet(
       context: context,
@@ -375,6 +376,7 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
     );
   }
 
+  //uma linha do painel (marcada se for a escolhida)
   Widget _linhaEstabelecimento({
     required String nome,
     required bool ativo,
@@ -419,6 +421,7 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
     );
   }
 
+  //visual base dos botões de filtro
   Widget _chipBase({
     required String rotulo,
     required bool ativo,
@@ -446,6 +449,7 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
     );
   }
 
+  //barra de baixo: rotas pro Início, Sugestões, Locais e Perfil
   Widget _buildBarraNavegacao() {
     final abas = [
       _Aba('Início', Icons.home_filled, '/inicioAdm'),
@@ -474,6 +478,7 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
     );
   }
 
+  //um botão da barra (não navega se já está nessa tela)
   Widget _itemNavegacao(_Aba aba, int indice) {
     final ativo = paginaAtual == indice;
     return GestureDetector(
@@ -512,12 +517,14 @@ class _SugestoesAdmState extends State<SugestoesAdm> {
   }
 }
 
+//um filtro: nome que aparece e status que ele filtra
 class _Filtro {
   final String rotulo;
   final String chave;
   const _Filtro(this.rotulo, this.chave);
 }
 
+//dados de uma aba: nome, ícone e rota
 class _Aba {
   final String rotulo;
   final IconData icone;

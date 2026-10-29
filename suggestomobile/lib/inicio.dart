@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'login.dart';
 
+//tela de abertura com a logo
 class Inicio extends StatefulWidget {
   const Inicio({super.key});
 
@@ -15,6 +16,7 @@ class _InicioState extends State<Inicio> {
   void initState() {
     super.initState();
 
+    //depois de 4 segundos vai pro login
     Timer(const Duration(seconds: 4), () {
       Navigator.pushReplacement(
         context,

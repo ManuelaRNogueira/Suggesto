@@ -6,8 +6,7 @@ import 'detalhesSugestaoAdm.dart';
 import 'cartaoSugestaoAdm.dart';
 import 'cartoesStatusAdm.dart';
 
-// Início do painel administrativo — busca em GET /api/admin/metricas e
-// GET /api/admin/estabelecimentos (ver AdminController no backend).
+//tela inicial do admin: sugestões da semana e as mais recentes
 class InicioAdm extends StatefulWidget {
   const InicioAdm({super.key});
 
@@ -16,6 +15,7 @@ class InicioAdm extends StatefulWidget {
 }
 
 class _InicioAdmState extends State<InicioAdm> {
+  //aba marcada na barra de baixo (0 = Início)
   int paginaAtual = 0;
 
   bool carregando = true;
@@ -31,6 +31,7 @@ class _InicioAdmState extends State<InicioAdm> {
     _carregar();
   }
 
+  //busca as métricas e os estabelecimentos ao mesmo tempo
   Future<void> _carregar() async {
     setState(() {
       carregando = true;
@@ -49,6 +50,7 @@ class _InicioAdmState extends State<InicioAdm> {
         metricas = m;
         sugestoesRecentes = ((m['sugestoesRecentes'] as List<dynamic>?) ?? [])
             .cast<Map<String, dynamic>>();
+        //título do topo: nome do estabelecimento, ou quantos são
         if (estabs.length == 1) {
           nomeEstabelecimento =
               estabs.first['nome']?.toString() ?? 'Painel administrativo';
@@ -74,6 +76,7 @@ class _InicioAdmState extends State<InicioAdm> {
     );
   }
 
+  //carregando / erro / conteúdo (puxar pra baixo atualiza)
   Widget _corpo() {
     if (carregando) {
       return const Center(child: CircularProgressIndicator(color: Cores.roxo));
@@ -133,6 +136,7 @@ class _InicioAdmState extends State<InicioAdm> {
     );
   }
 
+  //topo com o nome do estabelecimento
   Widget _buildCabecalho() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,6 +163,7 @@ class _InicioAdmState extends State<InicioAdm> {
     );
   }
 
+  //cartão com o número de sugestões novas na semana
   Widget _buildCartaoNovasSemana(Map<String, dynamic> m) {
     return Container(
       width: double.infinity,
@@ -195,9 +200,7 @@ class _InicioAdmState extends State<InicioAdm> {
     );
   }
 
-  // Só as sugestões desta semana — o mesmo critério do "Novas na semana"
-  // acima e das "Sugestões Recentes" abaixo. O resumo com a história inteira
-  // da conta fica no Perfil, pra não repetir a mesma visão nos dois lugares.
+  //cartões de status só com as sugestões da semana (o total geral fica no Perfil)
   Widget _buildStatusCards(Map<String, dynamic> m) {
     return cartoesStatusAdm(
       total: (m['novasSemana'] as num?)?.toInt() ?? 0,
@@ -207,6 +210,7 @@ class _InicioAdmState extends State<InicioAdm> {
     );
   }
 
+  //lista das sugestões recentes
   Widget _buildSugestoesRecentes() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,6 +242,7 @@ class _InicioAdmState extends State<InicioAdm> {
             cartaoSugestaoAdm(
               sugestao: s,
               onTap: () async {
+                //rota pro detalhe da sugestão (ao voltar, atualiza a tela)
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -251,6 +256,7 @@ class _InicioAdmState extends State<InicioAdm> {
     );
   }
 
+  //barra de baixo: rotas pro Início, Sugestões, Locais e Perfil
   Widget _buildBarraNavegacao() {
     final abas = [
       _Aba('Início', Icons.home_filled, '/inicioAdm'),
@@ -279,6 +285,7 @@ class _InicioAdmState extends State<InicioAdm> {
     );
   }
 
+  //um botão da barra (não navega se já está nessa tela)
   Widget _itemNavegacao(_Aba aba, int indice) {
     final ativo = paginaAtual == indice;
     return GestureDetector(
@@ -316,6 +323,7 @@ class _InicioAdmState extends State<InicioAdm> {
   }
 }
 
+//dados de uma aba: nome, ícone e rota
 class _Aba {
   final String rotulo;
   final IconData icone;

@@ -3,6 +3,7 @@ import 'api.dart';
 import 'sessao.dart';
 import 'editarPerfil.dart';
 
+//tela de perfil do cliente: dados, confiabilidade, menu e sair
 class PerfilCliPage extends StatefulWidget {
   const PerfilCliPage({super.key});
 
@@ -16,6 +17,7 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
   Map<String, dynamic>? usuario;
   Map<String, dynamic>? reputacao;
 
+  //itens do menu: rota pra cada página
   final List<Map<String, dynamic>> _menuItems = [
     {
       'icon': Icons.bookmark_outlined,
@@ -32,6 +34,7 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
     _carregar();
   }
 
+  //busca os dados do usuário e a confiabilidade
   Future<void> _carregar() async {
     setState(() {
       carregando = true;
@@ -40,7 +43,7 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
     try {
       final dados = await buscarUsuario(Sessao.idUsuario!);
       setState(() => usuario = dados);
-      // Confiabilidade não trava o perfil se falhar — é um complemento.
+      //se a confiabilidade falhar, o perfil abre mesmo assim
       try {
         final rep = await buscarReputacao(Sessao.idUsuario!);
         if (mounted) setState(() => reputacao = rep);
@@ -61,6 +64,7 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
     );
   }
 
+  //carregando / erro / conteúdo
   Widget _corpo() {
     if (carregando) {
       return const Center(
@@ -126,6 +130,7 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
     );
   }
 
+  //rota pra editar perfil; ao voltar atualiza os dados
   Future<void> _abrirEdicao() async {
     if (usuario == null) return;
     final atualizado = await Navigator.push<Map<String, dynamic>>(
@@ -137,6 +142,7 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
     }
   }
 
+  //botão "Editar perfil"
   Widget _buildBotaoEditarPerfil() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20),
@@ -177,6 +183,7 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
     return (primeira + ultima).toUpperCase();
   }
 
+  //topo: foto, nome e email
   Widget _buildPerfilHeader() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20),
@@ -302,16 +309,15 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
     );
   }
 
-  // Vermelho (<50), amarelo (50-79) ou verde (80-100) — mesma faixa usada em
-  // todas as telas que mostram Confiabilidade/Transparência.
+  //cor da nota: vermelho (<50), amarelo (50-79) ou verde (80+)
   Color _corPontuacao(num pontuacao) {
     if (pontuacao >= 80) return const Color(0xFF4ADE80);
     if (pontuacao >= 50) return const Color(0xFFFBBF24);
     return const Color(0xFFF87171);
   }
 
-  // Confiabilidade (0-100): das avaliações que o cliente fez com visita
-  // confirmada, quantas foram aceitas. Calculada na hora pelo backend.
+  //cartão de confiabilidade (0-100): das sugestões com visita confirmada,
+  //quantas foram aceitas
   Widget _buildConfiabilidade() {
     if (reputacao == null) return const SizedBox.shrink();
 
@@ -382,6 +388,7 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
     );
   }
 
+  //menu com as rotas (Locais Salvos, Sobre Nós, O Suggesto)
   Widget _buildMenuList() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20),
@@ -421,6 +428,7 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
     );
   }
 
+  //um item do menu
   Widget _buildMenuItem({
     required IconData icon,
     required String label,
@@ -452,6 +460,7 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
     );
   }
 
+  //sair: pede confirmação, limpa a sessão e volta pro login
   Future<void> _confirmarSaida() async {
     final confirmar = await showDialog<bool>(
       context: context,
@@ -483,6 +492,7 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
     Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
   }
 
+  //botão Sair
   Widget _buildSairButton() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20),
@@ -517,6 +527,7 @@ class _PerfilCliPageState extends State<PerfilCliPage> {
     );
   }
 
+  //barra de baixo: rotas pro Início, Sugestões, Loja e Perfil (3 = Perfil)
   int paginaAtual = 3;
   Widget barraNavegacao() {
     return Container(

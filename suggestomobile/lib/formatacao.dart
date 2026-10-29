@@ -1,9 +1,6 @@
-// Formatação de texto usada nas telas de sugestão — porte de
-// Suggesto_DesktopReact/renderer/src/api/admin.js (tituloSugestao / formatarData),
-// pra ficar igual em todas as plataformas.
+//funções pra formatar textos (título, data, endereço)
 
-// A sugestão não tem campo de título no banco — só "comentario". Usamos a
-// primeira parte do texto como título, igual o painel admin do desktop faz.
+//título da sugestão: os primeiros 90 caracteres do comentário
 String tituloSugestao(String? comentario) {
   final texto = comentario?.trim() ?? '';
   if (texto.isEmpty) return 'Sugestão sem descrição';
@@ -11,11 +8,8 @@ String tituloSugestao(String? comentario) {
   return limpo.length > 90 ? '${limpo.substring(0, 90)}…' : limpo;
 }
 
-// "2026-08-14T10:00:00Z" -> "há 2h" / "há 3d" / "14/08/2026".
-// O servidor sempre manda a data no horário de Greenwich (UTC) — tipo o
-// horário "de fábrica". Aqui a gente converte pro horário local do
-// celular antes de mostrar, senão a hora apareceria errada pra quem está
-// usando o app.
+//data relativa: "agora", "há 2h", "há 3d" ou "14/08/2026"
+//converte do horário do servidor (UTC) pro horário do celular
 String formatarData(String? iso) {
   if (iso == null || iso.isEmpty) return '—';
   final data = DateTime.tryParse(iso)?.toLocal();
@@ -28,7 +22,7 @@ String formatarData(String? iso) {
   return '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}';
 }
 
-// "2026-08-14T10:00:00Z" -> "14/08/2026 | 10:00", usado na tela de detalhes.
+//data completa: "14/08/2026 | 10:00"
 String formatarDataHora(String? iso) {
   final data = iso == null ? null : DateTime.tryParse(iso)?.toLocal();
   if (data == null) return '—';
@@ -39,9 +33,7 @@ String formatarDataHora(String? iso) {
   return '$dd/$mm/${data.year} | $hh:$min';
 }
 
-// O campo "ativo" do estabelecimento vem do banco como tinyint — a API
-// devolve às vezes 1/0 (num), às vezes true/false (bool), dependendo do
-// endpoint. Normaliza pros dois casos pra não quebrar o cast no Flutter Web.
+//converte pra true/false (a API às vezes manda 1/0, às vezes true/false)
 bool? paraBool(dynamic valor) {
   if (valor == null) return null;
   if (valor is bool) return valor;
@@ -49,8 +41,7 @@ bool? paraBool(dynamic valor) {
   return null;
 }
 
-// Mesmo formato usado no card de estabelecimento do painel admin no desktop
-// (Dashboard.jsx/CardEstab): "Rua, Número - Bairro (Cidade/Estado)".
+//endereço numa linha: "Rua, Número - Bairro (Cidade/Estado)"
 String formatarEndereco(Map<String, dynamic> estabelecimento) {
   final rua = (estabelecimento['rua'] as String?) ?? '';
   final numero = (estabelecimento['numero'] as String?) ?? '';

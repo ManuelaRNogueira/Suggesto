@@ -3,21 +3,16 @@ import 'cores.dart';
 import 'api.dart';
 import 'geoUtils.dart';
 
-// Card de estabelecimento da visão do cliente — usado na Home
-// (inicialcli.dart) e em Locais Salvos (locaisSalvos.dart). Uma
-// implementação só: qualquer ajuste de design aqui já vale pras duas telas.
-// A única diferença entre elas é o estado do favorito — em Locais Salvos
-// nasce sempre preenchido, já que é exatamente essa lista.
+//cartão de estabelecimento do cliente (usado no Início e nos Locais Salvos)
 Widget cardEstabelecimentoCliente({
   required Map<String, dynamic> local,
   required VoidCallback onTap,
   required bool salvo,
   VoidCallback? onToggleFavorito,
-  // Distância real até o usuário, em km — some ao endereço (ex: "· 1,2 km"),
-  // igual ao card do site (localCard.js). Só é passada em "Perto de você",
-  // onde a distância é uma medida real por coordenadas.
+  //distância até o usuário, só no "Perto de você" (aparece "· 1,2 km")
   double? distanciaKm,
 }) {
+  //monta "bairro, cidade · distância" e a nota média
   final fotoUrl = urlFotoEstabelecimento(local['fotoPath'] as String?);
   final cidade = (local['cidade'] as String?) ?? '';
   final bairro = (local['bairro'] as String?) ?? '';
@@ -49,7 +44,7 @@ Widget cardEstabelecimentoCliente({
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Imagem
+          //foto com sombra escura embaixo
           Stack(
             children: [
               SizedBox(
@@ -80,13 +75,13 @@ Widget cardEstabelecimentoCliente({
             ],
           ),
 
-          // Infos
+          //infos
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Nome e bairro
+                //nome e localização
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -113,7 +108,7 @@ Widget cardEstabelecimentoCliente({
 
                 const SizedBox(width: 8),
 
-                // Coluna direita
+                //direita: categoria, nota e botão de favoritar
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -187,6 +182,7 @@ Widget cardEstabelecimentoCliente({
   );
 }
 
+//ícone de loja no lugar da foto
 Widget _placeholderImagem() {
   return Container(
     color: const Color(0xFF2A1A4A),

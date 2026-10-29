@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+//tela "Sobre Nós": cartão de cada integrante da equipe
 class Sobrenos extends StatefulWidget {
   const Sobrenos({super.key});
 
@@ -8,6 +9,7 @@ class Sobrenos extends StatefulWidget {
 }
 
 class _SobrenosState extends State<Sobrenos> {
+  //botão de voltar
   Widget _buildTopoVoltar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -75,10 +77,10 @@ class _SobrenosState extends State<Sobrenos> {
                             47,
                             4,
                             116,
-                          ), // cor do container
+                          ), //cor de fundo
                           borderRadius: BorderRadius.circular(
                             20,
-                          ), // borda arredondada
+                          ), //cantos arredondados
                         ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -147,10 +149,10 @@ class _SobrenosState extends State<Sobrenos> {
                             47,
                             4,
                             116,
-                          ), // cor do container
+                          ), //cor de fundo
                           borderRadius: BorderRadius.circular(
                             20,
-                          ), // borda arredondada
+                          ), //cantos arredondados
                         ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -219,10 +221,10 @@ class _SobrenosState extends State<Sobrenos> {
                             47,
                             4,
                             116,
-                          ), // cor do container
+                          ), //cor de fundo
                           borderRadius: BorderRadius.circular(
                             20,
-                          ), // borda arredondada
+                          ), //cantos arredondados
                         ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,

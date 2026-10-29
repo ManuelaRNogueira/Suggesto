@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 import 'cores.dart';
 
-// Três cards por status (Pendente/Implementado/Recusado) — mesmo modelo do
-// painel admin no desktop (.ini-kpi em Inicio.jsx/Inicio.css): barrinha
-// colorida no topo, rótulo, número grande na cor do status e "% do total"
-// embaixo. Usado na tela Início (métricas gerais) e no detalhe de um
-// estabelecimento específico (métricas filtradas por idEstabelecimento).
+//3 cartões lado a lado: pendentes, implementadas e recusadas, com a %
+//usado no Início do admin e no detalhe do estabelecimento
 Widget cartoesStatusAdm({
   required int total,
   required int pendentes,
   required int implementados,
   required int recusados,
 }) {
+  //cálculo de porcentagem: quanto cada status é do total
   double pct(int qtd) => total > 0 ? (qtd / total) * 100 : 0;
 
   return Row(
@@ -46,6 +44,7 @@ Widget cartoesStatusAdm({
   );
 }
 
+//um cartão: barrinha colorida, nome, quantidade e "% do total"
 Widget _cartaoStatus(
   String rotulo,
   int quantidade,

@@ -4,6 +4,7 @@ import 'api.dart';
 import 'sessao.dart';
 import 'localCardCliente.dart';
 
+//tela de locais salvos (favoritos) do cliente
 class LocaisSalvosPage extends StatefulWidget {
   const LocaisSalvosPage({super.key});
 
@@ -16,8 +17,7 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
   String? erro;
   List<Map<String, dynamic>> locais = [];
 
-  // Busca inline no lugar da lupa — mesma estrutura da tela inicial, sem
-  // navegar pra outra tela.
+  //pesquisa no lugar do título (sem abrir outra tela)
   bool _pesquisando = false;
   final TextEditingController _pesquisaController = TextEditingController();
   String _termoPesquisa = '';
@@ -34,8 +34,8 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
     super.dispose();
   }
 
-  // Mesma lógica de filtro usada na Home: separa o nome por palavras e
-  // compara pelo início de cada uma.
+  //filtro da pesquisa: mostra os locais com alguma palavra do nome
+  //começando com o que foi digitado
   List<Map<String, dynamic>> get _locaisExibidos {
     if (_termoPesquisa.isEmpty) return locais;
     final pesquisa = _termoPesquisa.toLowerCase();
@@ -46,6 +46,7 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
     }).toList();
   }
 
+  //fecha a pesquisa e limpa o texto
   void _fecharPesquisa() {
     setState(() {
       _pesquisando = false;
@@ -54,6 +55,7 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
     });
   }
 
+  //busca os locais salvos do usuário
   Future<void> _carregar() async {
     setState(() {
       carregando = true;
@@ -69,6 +71,7 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
     }
   }
 
+  //tira dos favoritos (no servidor e na lista); erro → aviso vermelho
   Future<void> _removerSalvo(int index) async {
     final idEstabelecimento = (locais[index]['idEstabelecimento'] as num?)?.toInt();
     if (idEstabelecimento == null || Sessao.idUsuario == null) return;
@@ -96,6 +99,7 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
     );
   }
 
+  //carregando / erro / nenhum salvo / sem resultado na pesquisa / lista
   Widget _corpo() {
     if (carregando) {
       return const Center(child: CircularProgressIndicator(color: Color(0xFF9B59D0)));
@@ -149,7 +153,7 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
     );
   }
 
-  // ─── Header ────────────────────────────────────────────────────────
+  // ─── Topo: voltar, título e botão de pesquisa ───────────────────────
   Widget _buildHeader(BuildContext context) {
     return Container(
       width: double.infinity,
@@ -241,7 +245,7 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
     );
   }
 
-  // Campo de pesquisa — ocupa o espaço do título enquanto ativo.
+  //campo de pesquisa (aparece no lugar do título)
   Widget _buildCampoPesquisa() {
     return Container(
       height: 36,
@@ -298,7 +302,7 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
     );
   }
 
-  // ─── Lista de locais (mesmo card e estrutura da Home) ──────────────
+  // ─── Lista de locais ───────────────────────────────────────────────
   Widget _buildLocaisGrid() {
     final exibidos = _locaisExibidos;
     return Column(
@@ -309,11 +313,11 @@ class _LocaisSalvosPageState extends State<LocaisSalvosPage> {
     );
   }
 
-  // ─── Card do local — componente compartilhado com a Home ───────────
+  // ─── Cartão do local (tocar abre o detalhe, marcador tira dos salvos) ─
   Widget _buildLocalCard(Map<String, dynamic> local, int index) {
     return cardEstabelecimentoCliente(
       local: local,
-      salvo: true, // tudo aqui já está salvo, por definição da tela
+      salvo: true, //aqui todos estão salvos
       onTap: () {
         Navigator.push(
           context,

@@ -3,10 +3,8 @@ import 'cores.dart';
 import 'formatacao.dart';
 import 'api.dart';
 
-// Card de estabelecimento do painel admin — foto, categoria, "Inativo" (se
-// for o caso), nome e endereço. Usado na lista de Estabelecimentos
-// (estabelecimentosAdm.dart) e no resumo de "Estabelecimentos vinculados" do
-// Perfil (perfilAdm.dart), pra manter o mesmo visual nos dois lugares.
+//cartão de estabelecimento do admin: foto, categoria, "Inativo", nome e endereço
+//usado na lista de Estabelecimentos e no Perfil
 Widget cartaoEstabelecimentoAdm(
   Map<String, dynamic> e, {
   required VoidCallback onTap,
@@ -30,6 +28,7 @@ Widget cartaoEstabelecimentoAdm(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          //foto (ou ícone se não tiver)
           SizedBox(
             width: double.infinity,
             height: 120,
@@ -46,6 +45,7 @@ Widget cartaoEstabelecimentoAdm(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                //categoria à esquerda, "Inativo" à direita
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -121,6 +121,7 @@ Widget cartaoEstabelecimentoAdm(
   );
 }
 
+//ícone de loja no lugar da foto
 Widget _placeholderFoto() {
   return Container(
     color: Cores.borda,

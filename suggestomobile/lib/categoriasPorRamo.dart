@@ -1,13 +1,6 @@
-// Config central: define quais categorias de sugestão aparecem pra cada ramo
-// de estabelecimento (sugerir.dart). A chave precisa bater exatamente com o
-// valor salvo em estabelecimento.categoria. Mesmo conteúdo do
-// "Suggesto - Web/Web/js/categoriasPorRamo.js" — mantenha os dois em sincronia.
-//
-// Pra adicionar um ramo novo ou mudar as categorias de um já existente, só
-// mexer aqui — nada mais na tela precisa mudar. Se o nome de uma categoria
-// daqui não existir na tabela `categoria` do banco, ela simplesmente não
-// aparece (ver filtrarCategoriasPorRamo) — categorias novas entram via
-// apiLogin/scripts/adicionar_categorias_por_ramo.sql.
+//categorias de sugestão que aparecem pra cada ramo de estabelecimento
+//o nome do ramo tem que ser igual ao salvo no banco
+//manter igual ao categoriasPorRamo.js do site
 const Map<String, List<String>> categoriasPorRamo = {
   'Restaurante': ['Atendimento', 'Cardápio', 'Qualidade da comida', 'Higiene', 'Preço', 'Ambiente'],
   'Bar': ['Atendimento', 'Cardápio', 'Qualidade da comida', 'Higiene', 'Preço', 'Ambiente'],
@@ -45,9 +38,7 @@ const Map<String, List<String>> categoriasPorRamo = {
   'Espaço para Eventos': ['Atendimento', 'Estrutura', 'Limpeza', 'Organização', 'Preço', 'Equipamentos'],
   'Banco / Serviços Financeiros': ['Atendimento', 'Agilidade', 'Preço', 'Organização', 'Suporte', 'Segurança'],
 
-  // Apresentação do Suggesto (feira/demo) — não é um espaço físico comercial,
-  // então avalia tanto o app em si (design, uso, funcionalidades...) quanto a
-  // apresentação/equipe. Lista fechada, só estas 12.
+  //apresentação do Suggesto (feira): avalia o app e a equipe
   'Apresentação': [
     'Design e interface',
     'Facilidade de uso',
@@ -65,13 +56,11 @@ const Map<String, List<String>> categoriasPorRamo = {
   'Evento': ['Atendimento', 'Organização', 'Estrutura', 'Ambiente', 'Preço', 'Outro'],
 };
 
-// Usado pro ramo "Outro" e pra qualquer ramo ainda não configurado acima.
+//categorias pra ramos que não estão na lista acima
 const List<String> categoriasPadrao = ['Atendimento', 'Qualidade do produto', 'Preço', 'Estrutura', 'Ambiente', 'Outro'];
 
-// Pega a lista de categorias que veio do servidor e cruza com a lista de
-// categorias esperadas pra esse tipo de estabelecimento, mostrando só
-// quem está nas duas listas — e na ordem da lista de referência, não a
-// do servidor.
+//filtro: das categorias que vieram do servidor, deixa só as do ramo
+//(na ordem da lista acima)
 List<Map<String, dynamic>> filtrarCategoriasPorRamo(
   List<Map<String, dynamic>> disponiveis,
   String? ramo,

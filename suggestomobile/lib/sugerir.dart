@@ -5,9 +5,10 @@ import 'cores.dart';
 import 'geoUtils.dart';
 import 'sessao.dart';
 
+//tela de fazer sugestão: check-in, texto, nota, categoria e tipo
 class SugerirPage extends StatefulWidget {
   final Map<String, dynamic>? local;
-  // Token do QR de check-in, quando a tela foi aberta pelo leitor.
+  //token do QR de check-in (quando veio pelo leitor de QR)
   final String? tokenCheckin;
 
   const SugerirPage({super.key, this.local, this.tokenCheckin});
@@ -20,26 +21,22 @@ class _SugerirPageState extends State<SugerirPage> {
   final TextEditingController texto = TextEditingController();
   final int maxCaracteres = 500;
   int? idCategoriaSelecionada;
-  // Mesmos três tipos do site (fazerSugestao.html): valor enviado → rótulo.
+  //tipos: valor enviado → nome na tela
   static const tipos = {'sugestao': 'Sugestão', 'critica': 'Crítica', 'elogio': 'Elogio'};
   String tipoSelecionado = 'sugestao';
-  int notaSelecionada = 0; // 0 = nenhuma estrela
+  int notaSelecionada = 0; //0 = nenhuma estrela
   bool enviado = false;
 
-  // Carregadas do backend em initState — filtradas pelo ramo do
-  // estabelecimento usando o config central em categoriasPorRamo.dart.
+  //categorias do servidor, filtradas pelo ramo do estabelecimento
   List<Map<String, dynamic>> categorias = [];
   bool carregandoCategorias = true;
 
-  // Visita (check-in) que vai junto da sugestão e dá o selo "Visita confirmada".
-  // Obrigatória: sem ela a API recusa a sugestão.
+  //visita (check-in) obrigatória pra enviar; dá o selo "Visita confirmada"
   int? idVisita;
   String? avisoVisita;
   bool fazendoCheckin = false;
 
-  // Sem localização cadastrada não é um local físico (ex: o Suggesto, que é um
-  // sistema): não pede visita. Se o mapa do local nem traz lat/lng, assume físico
-  // e deixa a API decidir.
+  //só pede visita se o local tiver localização (o Suggesto, por ex., não tem)
   bool get exigeVisita {
     final local = widget.local;
     if (local == null || !local.containsKey('lat') || !local.containsKey('lng')) return true;
@@ -51,12 +48,13 @@ class _SugerirPageState extends State<SugerirPage> {
     super.initState();
     texto.addListener(() => setState(() {}));
     _carregarCategorias();
+    //veio pelo QR: já faz o check-in
     if (widget.tokenCheckin != null && widget.tokenCheckin!.isNotEmpty) {
       _checkin(token: widget.tokenCheckin);
     }
   }
 
-  // Com token confirma pelo QR; sem token pede o GPS.
+  //check-in: com token usa o QR, sem token usa o GPS
   Future<void> _checkin({String? token}) async {
     final idEstabelecimento = (widget.local?['idEstabelecimento'] as num?)?.toInt();
     if (idEstabelecimento == null || Sessao.idUsuario == null) return;
@@ -98,6 +96,7 @@ class _SugerirPageState extends State<SugerirPage> {
     }
   }
 
+  //busca as categorias e filtra pelo ramo do estabelecimento
   Future<void> _carregarCategorias() async {
     try {
       final tipoEstabelecimento = widget.local?['categoria'] as String?;
@@ -120,12 +119,14 @@ class _SugerirPageState extends State<SugerirPage> {
     super.dispose();
   }
 
+  //validação: só libera o botão com texto, categoria e nota
   bool get podeEnviar =>
       texto.text.trim().isNotEmpty &&
       idCategoriaSelecionada != null &&
       notaSelecionada > 0 &&
       !enviado;
 
+  //envia a sugestão; deu certo → mensagem e volta pra tela anterior
   Future<void> _enviar() async {
     if (!podeEnviar) return;
 
@@ -140,6 +141,7 @@ class _SugerirPageState extends State<SugerirPage> {
       return;
     }
 
+    //validação: precisa de check-in
     if (exigeVisita && idVisita == null) {
       _pedirCheckin('Confirme sua visita antes de enviar: leia o QR de check-in do local ou toque em "Estou aqui".');
       return;
@@ -183,8 +185,7 @@ class _SugerirPageState extends State<SugerirPage> {
       });
     } on ApiException catch (e) {
       if (!mounted) return;
-      // Todas as recusas de visita da API falam em "visita" (expirou, já usada...):
-      // some o selo e volta o botão de check-in, com o motivo.
+      //erro de visita (expirou, já usada...): volta o botão de check-in
       setState(() => enviado = false);
       if (e.mensagem.toLowerCase().contains('visita')) {
         _pedirCheckin(e.mensagem);
@@ -196,8 +197,7 @@ class _SugerirPageState extends State<SugerirPage> {
     }
   }
 
-  // Tira o selo e volta o botão "Estou aqui" com o motivo (o aviso fica no
-  // topo da tela, por isso repete no SnackBar).
+  //tira o selo e mostra de novo o botão "Estou aqui" com o motivo
   void _pedirCheckin(String motivo) {
     setState(() {
       idVisita = null;
@@ -250,7 +250,7 @@ class _SugerirPageState extends State<SugerirPage> {
     );
   }
 
-  // APPBAR
+  //topo com voltar e título
   Widget AppBar(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
@@ -289,7 +289,7 @@ class _SugerirPageState extends State<SugerirPage> {
     );
   }
 
-  // INFORMACOES DO LOCAL
+  //foto, nome e endereço do local
   Widget LocalInfo(Map<String, dynamic> local) {
     final fotoUrl = urlFotoEstabelecimento(local['fotoPath'] as String?);
     return Container(
@@ -325,7 +325,7 @@ class _SugerirPageState extends State<SugerirPage> {
     );
   }
 
-  // CHECK-IN: selo quando confirmada; senão o aviso e o botão de GPS.
+  //check-in: selo se confirmado, senão aviso + botões de QR e GPS
   Widget Visita() {
     if (idVisita != null) {
       return Row(children: [
@@ -369,7 +369,7 @@ class _SugerirPageState extends State<SugerirPage> {
     );
   }
 
-  // CAMPO DE TEXTO
+  //campo de texto com contador de caracteres
   Widget AreaTexto() {
     final charCount = texto.text.length;
     final isNearLimit = charCount > (maxCaracteres * 0.8);
@@ -420,7 +420,7 @@ class _SugerirPageState extends State<SugerirPage> {
     );
   }
 
-  // ESTRELAS
+  //estrelas da nota (1 a 5)
   Widget Estrelas() {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -462,7 +462,7 @@ class _SugerirPageState extends State<SugerirPage> {
     );
   }
 
-  // CATEGORIAS
+  //botões de categoria
   Widget Categorias() {
     if (carregandoCategorias) {
       return Center(
@@ -501,7 +501,7 @@ class _SugerirPageState extends State<SugerirPage> {
     }));
   }
 
-  // TIPO (sugestão, crítica ou elogio) — sempre um marcado.
+  //tipo: sugestão, crítica ou elogio (sempre um marcado)
   Widget Tipos() {
     return Row(
       children: [
@@ -551,7 +551,7 @@ class _SugerirPageState extends State<SugerirPage> {
     );
   }
 
-  // BOTÃO ENVIAR
+  //botão Enviar (apagado até poder enviar)
   Widget botaoEnviar() {
     return AnimatedOpacity(
       opacity: podeEnviar ? 1.0 : 0.45,
@@ -594,7 +594,7 @@ class _SugerirPageState extends State<SugerirPage> {
     );
   }
 
-  // BOTTOM NAV
+  //barra de baixo: rotas pro Início, Sugestões, Loja e Perfil (1 = Sugestões)
   int paginaAtual = 1;
   Widget barraNavegacao() {
     return Container(

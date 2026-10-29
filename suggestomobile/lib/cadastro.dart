@@ -5,10 +5,8 @@ import 'mascaras.dart';
 import 'api.dart';
 import 'login.dart';
 
-// Cadastro (ver Suggesto - Web/Web/cadastro.html). Os campos são os mesmos
-// pra Cliente e pra quem está entrando numa equipe (modoEquipe) — só o
-// "tipoUsuario" enviado pra API muda; quem cria um estabelecimento de
-// verdade (plano + dados do local) continua fazendo isso pelo site.
+//tela de cadastro (cliente ou quem vai entrar numa equipe)
+//quem quer cadastrar um estabelecimento faz isso pelo site
 class Cadastro extends StatefulWidget {
   final bool modoEquipe;
 
@@ -60,6 +58,7 @@ class _CadastroState extends State<Cadastro> {
     super.dispose();
   }
 
+  //quando o CEP fica completo, preenche cidade e estado sozinho (ViaCEP)
   Future<void> _aoAlterarCep() async {
     final digitos = cepController.text.replaceAll(RegExp(r'\D'), '');
     if (digitos.length < 8) {
@@ -90,6 +89,7 @@ class _CadastroState extends State<Cadastro> {
     }
   }
 
+  //botão Criar conta: valida, cadastra e vai pro login
   Future<void> criar() async {
     setState(() => erroGeral = null);
     if (!_formKey.currentState!.validate()) return;
@@ -117,8 +117,7 @@ class _CadastroState extends State<Cadastro> {
         ),
       );
 
-      // O site não loga direto depois do cadastro — manda pra tela de login
-      // (aqui, carregando o modo equipe adiante, se for o caso).
+      //rota pro login (não entra direto depois do cadastro)
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => Login(modoEquipe: widget.modoEquipe)),
@@ -198,6 +197,7 @@ class _CadastroState extends State<Cadastro> {
 
                         const SizedBox(height: 20),
 
+                        //campos do formulário
                         _rotulo("Nome de usuário"),
                         const SizedBox(height: 8),
                         _campo(
@@ -327,6 +327,7 @@ class _CadastroState extends State<Cadastro> {
                           validador: (v) => v != senhaController.text ? "As senhas não coincidem." : null,
                         ),
 
+                        //erro do servidor
                         if (erroGeral != null) ...[
                           const SizedBox(height: 14),
                           Text(
@@ -337,6 +338,7 @@ class _CadastroState extends State<Cadastro> {
 
                         const SizedBox(height: 24),
 
+                        //botão Criar conta
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
@@ -364,6 +366,7 @@ class _CadastroState extends State<Cadastro> {
 
                   const SizedBox(height: 20),
 
+                  //rota de volta pro login
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: const Text.rich(
@@ -392,10 +395,12 @@ class _CadastroState extends State<Cadastro> {
     );
   }
 
+  //texto em cima de cada campo
   Widget _rotulo(String texto) {
     return Text(texto, style: const TextStyle(color: Colors.white70, fontSize: 13, fontFamily: "Poppins"));
   }
 
+  //campo de texto padrão da tela
   Widget _campo({
     required TextEditingController controller,
     required String hint,
@@ -442,11 +447,11 @@ class _CadastroState extends State<Cadastro> {
     );
   }
 
-  // ── Validações — mesmas regras usadas no formulário web (ver cadastro.js
-  //    e AuthController.java no backend) ───────────────────────────────────
+  // ── Validações dos campos ─────────────────────────────────────────────
 
   String? _obrigatorio(String? v) => (v == null || v.trim().isEmpty) ? "Campo obrigatório." : null;
 
+  //usuário: 3 a 30 letras, números, ponto ou _
   String? _usuarioValidador(String? v) {
     final valor = v?.trim() ?? "";
     if (valor.isEmpty) return "Informe um nome de usuário.";
@@ -456,6 +461,7 @@ class _CadastroState extends State<Cadastro> {
     return null;
   }
 
+  //email: precisa ter @ e ponto
   String? _emailValidador(String? v) {
     final valor = v?.trim() ?? "";
     if (valor.isEmpty) return "Informe seu e-mail.";
@@ -463,6 +469,7 @@ class _CadastroState extends State<Cadastro> {
     return null;
   }
 
+  //telefone: DDD + número de celular ou fixo
   String? _telefoneValidador(String? v) {
     final digitos = (v ?? "").replaceAll(RegExp(r'\D'), '');
     if (digitos.isEmpty) return "Informe seu telefone.";
@@ -472,6 +479,7 @@ class _CadastroState extends State<Cadastro> {
     return null;
   }
 
+  //CEP: 8 números
   String? _cepValidador(String? v) {
     final digitos = (v ?? "").replaceAll(RegExp(r'\D'), '');
     if (digitos.isEmpty) return "Informe o CEP.";
@@ -479,12 +487,14 @@ class _CadastroState extends State<Cadastro> {
     return null;
   }
 
+  //estado: sigla de 2 letras
   String? _estadoValidador(String? v) {
     final valor = v?.trim() ?? "";
     if (valor.length != 2) return "UF deve ter 2 letras.";
     return null;
   }
 
+  //senha: mínimo de 6 caracteres
   String? _senhaValidador(String? v) {
     final valor = v ?? "";
     if (valor.isEmpty) return "Crie uma senha.";

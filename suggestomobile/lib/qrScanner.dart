@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+//tela da câmera que lê o QR code e devolve o texto lido
 class QrScannerPage extends StatefulWidget {
   const QrScannerPage({super.key});
 
@@ -9,6 +10,7 @@ class QrScannerPage extends StatefulWidget {
 }
 
 class _QrScannerPageState extends State<QrScannerPage> {
+  //câmera de trás, só QR code, sem ler o mesmo código duas vezes
   final MobileScannerController _controller = MobileScannerController(
     detectionSpeed: DetectionSpeed.noDuplicates,
     facing: CameraFacing.back,
@@ -17,6 +19,7 @@ class _QrScannerPageState extends State<QrScannerPage> {
 
   bool _finalizado = false;
 
+  //leu um QR: fecha a tela e devolve o conteúdo (só a primeira leitura vale)
   void _aoDetectar(BarcodeCapture captura) {
     if (_finalizado || captura.barcodes.isEmpty) return;
 
@@ -43,6 +46,7 @@ class _QrScannerPageState extends State<QrScannerPage> {
           MobileScanner(
             controller: _controller,
             onDetect: _aoDetectar,
+            //sem permissão ou câmera com problema: mostra aviso
             errorBuilder: (context, erro) => Center(
               child: Padding(
                 padding: const EdgeInsets.all(32),
@@ -61,6 +65,7 @@ class _QrScannerPageState extends State<QrScannerPage> {
             ),
           ),
           Container(color: const Color(0x33000000)),
+          //botão de fechar
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -78,6 +83,7 @@ class _QrScannerPageState extends State<QrScannerPage> {
               ),
             ),
           ),
+          //moldura roxa no meio (só visual)
           Center(
             child: Container(
               width: 250,

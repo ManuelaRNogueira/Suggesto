@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+//tela "Sobre o Projeto": missão, visão, valores e tecnologias
 class Suggesto extends StatefulWidget {
   const Suggesto({super.key});
 
@@ -8,12 +9,12 @@ class Suggesto extends StatefulWidget {
 }
 
 class _SuggestoState extends State<Suggesto> {
-  //cria o modelo do bloco, depois só precisa colocar os valoers lá em baixo
+  //modelo de bloco (ícone, título, texto e tags), os valores vão lá embaixo
   static Widget bloco({
     required String titulo,
     required IconData icone,
     required String texto,
-    List<String>? tags, // assim que faz um parametro ser opcional
+    List<String>? tags, //opcional (o ? deixa ser null)
   }) {
     return Container(
       width: 400,
@@ -26,10 +27,10 @@ class _SuggestoState extends State<Suggesto> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           SizedBox(height: 25),
-          //edita o icone
+          //ícone
           Icon(icone, color: Color.fromARGB(255, 147, 100, 236), size: 32),
           SizedBox(height: 10),
-          //edita o titulo
+          //título
           Text(
             titulo,
             style: TextStyle(
@@ -47,7 +48,7 @@ class _SuggestoState extends State<Suggesto> {
             endIndent: 4,
           ),
 
-          //edita o texto
+          //texto
           Text(
             texto,
             textAlign: TextAlign.center,
@@ -57,7 +58,7 @@ class _SuggestoState extends State<Suggesto> {
             ),
           ),
 
-          // onde verifica se no bloco lá em baixo a lista de tags vai ter alguma ocisa pra passar
+          //tags: só aparecem se o bloco tiver alguma
           if (tags != null && tags.isNotEmpty) ...[
             SizedBox(height: 14),
             Row(
@@ -91,6 +92,7 @@ class _SuggestoState extends State<Suggesto> {
     );
   }
 
+  //botão de voltar
   Widget _buildTopoVoltar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -150,6 +152,7 @@ class _SuggestoState extends State<Suggesto> {
 
                       SizedBox(height: 40),
 
+                      //missão, visão e valores
                       bloco(
                         titulo: "Missão",
                         icone: Icons.flag_outlined,
@@ -174,6 +177,7 @@ class _SuggestoState extends State<Suggesto> {
                       ),
                       SizedBox(height: 30),
 
+                      //tecnologias de cada plataforma
                       bloco(
                         icone: Icons.desktop_windows_outlined,
                         titulo: "Desktop (Windows)",

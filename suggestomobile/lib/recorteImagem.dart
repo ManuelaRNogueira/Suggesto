@@ -4,13 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'cores.dart';
 
-// Deixa a pessoa escolher qual parte da foto vai aparecer antes de usar —
-// mesma ideia do recorte no site (ver js/imagemCrop.js) e no desktop
-// (RecorteImagem.jsx), só que sem depender de nenhum plugin nativo: arrasta
-// e dá zoom na imagem dentro de uma área fixa, e só o que estiver visível
-// ali é capturado. "redondo" é só a moldura mostrada durante o ajuste — a
-// saída sempre é um PNG quadrado (o círculo vem do jeito que o avatar já é
-// exibido depois, com borda arredondada).
+//tela de recortar foto: arrasta e dá zoom, e o que aparece no quadrado vira a foto
+//"redondo" só muda a moldura; a foto final é sempre um PNG quadrado
 class RecorteImagemPage extends StatefulWidget {
   final Uint8List bytesOriginais;
   final bool redondo;
@@ -31,10 +26,7 @@ class _RecorteImagemPageState extends State<RecorteImagemPage> {
   final GlobalKey _boundaryKey = GlobalKey();
   bool _processando = false;
 
-  // Em vez de calcular matematicamente qual pedaço da foto foi selecionado,
-  // a gente tira uma espécie de "print" exato do que está aparecendo dentro
-  // do quadradinho de recorte na tela — como uma captura de tela só daquela
-  // área.
+  //botão "Usar foto": tira um print da área de recorte e devolve como PNG
   Future<void> _confirmar() async {
     setState(() => _processando = true);
     try {
@@ -83,6 +75,7 @@ class _RecorteImagemPageState extends State<RecorteImagemPage> {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
+                    //área que vira a foto (arrastar e zoom até 4x)
                     RepaintBoundary(
                       key: _boundaryKey,
                       child: ClipRect(
@@ -102,7 +95,7 @@ class _RecorteImagemPageState extends State<RecorteImagemPage> {
                         ),
                       ),
                     ),
-                    // Moldura só de referência visual — não entra na foto final.
+                    //moldura só visual, não entra na foto
                     IgnorePointer(
                       child: Container(
                         width: _tamanhoArea,

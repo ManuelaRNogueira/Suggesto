@@ -8,6 +8,7 @@ import 'sugerir.dart';
 import 'escolherEstabelecimento.dart';
 import 'geoUtils.dart';
 
+//tela inicial do cliente: Perto de você, Descubra Novos Locais, busca, filtro e QR
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -21,10 +22,7 @@ class _HomePageState extends State<HomePage> {
   List<Map<String, dynamic>> locais = [];
   Set<int> locaisSalvosIds = {};
 
-  // "Perto de você" — carrega separado da lista principal (mesmo fluxo do
-  // site em inicioCli.js): a Home não trava esperando a permissão de
-  // localização, "Descubra Novos Locais" já aparece com tudo, e essa seção
-  // vem depois, quando a localização (ou o fallback por cidade) resolver.
+  //"Perto de você": carrega depois da lista principal (não trava a tela esperando o GPS)
   bool carregandoPertoDeVoce = true;
   bool localizacaoDisponivel = false;
   String? cidadeRecomendada;
@@ -32,14 +30,15 @@ class _HomePageState extends State<HomePage> {
   Map<int, double> distanciasPertoDeVoce = {};
   Set<int> idsPertoDeVoce = {};
 
-  // Busca inline no lugar do botão da lupa — sem navegar pra outra tela.
+  //pesquisa no lugar do botão da lupa
   bool _pesquisando = false;
   final TextEditingController _pesquisaController = TextEditingController();
   String _termoPesquisa = '';
 
-  // Filtro de categorias — usa as categorias reais dos locais já carregados.
+  //categorias marcadas no filtro
   final Set<String> _categoriasSelecionadas = {};
 
+  //busca os locais ao abrir a tela
   @override
   void initState() {
     super.initState();
@@ -52,16 +51,15 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  // Mesma lógica que existia na tela "Achar um estabelecimento": separa o
-  // nome por palavras e compara pelo início de cada uma.
+  //filtros da lista "Descubra Novos Locais"
   List<Map<String, dynamic>> get _locaisExibidos {
-    // Um estabelecimento nunca aparece nas duas seções — quem já está em
-    // "Perto de você" sai daqui.
+    //tira os que já aparecem em "Perto de você"
     Iterable<Map<String, dynamic>> resultado = locais.where(
       (local) => !idsPertoDeVoce.contains(
         (local['idEstabelecimento'] as num?)?.toInt(),
       ),
     );
+    //filtro por categoria
     if (_categoriasSelecionadas.isNotEmpty) {
       resultado = resultado.where(
         (local) => _categoriasSelecionadas.contains(
@@ -69,6 +67,7 @@ class _HomePageState extends State<HomePage> {
         ),
       );
     }
+    //filtro da pesquisa: alguma palavra do nome começa com o que foi digitado
     if (_termoPesquisa.isNotEmpty) {
       final pesquisa = _termoPesquisa.toLowerCase();
       resultado = resultado.where((local) {
@@ -80,8 +79,7 @@ class _HomePageState extends State<HomePage> {
     return resultado.toList();
   }
 
-  // Categorias reais existentes entre os locais já carregados — usadas
-  // como opções no filtro, sem depender de nenhuma lista fixa.
+  //categorias que existem nos locais carregados (opções do filtro)
   List<String> get _categoriasDisponiveis {
     final categorias = <String>{};
     for (final local in locais) {
@@ -92,6 +90,7 @@ class _HomePageState extends State<HomePage> {
     return lista;
   }
 
+  //fecha a pesquisa e limpa o texto
   void _fecharPesquisa() {
     setState(() {
       _pesquisando = false;
@@ -100,6 +99,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  //botão de QR: abre a câmera, acha o estabelecimento e vai pra tela de sugerir
   Future<void> _abrirScannerQr() async {
     final conteudo = await Navigator.of(
       context,
@@ -113,6 +113,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     Map<String, dynamic>? local;
+    //procura primeiro nos locais já carregados, senão busca na API
     for (final item in locais) {
       if ((item['idEstabelecimento'] as num?)?.toInt() == idEstabelecimento) {
         local = item;
@@ -128,13 +129,14 @@ class _HomePageState extends State<HomePage> {
     }
 
     if (!mounted) return;
-    // QR de check-in (gerado no desktop) leva o token em "t"; QR antigo não.
+    //QR de check-in traz o token no "t"; rota pra sugerir já com o check-in
     final token = Uri.tryParse(conteudo.trim())?.queryParameters['t'];
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => SugerirPage(local: local, tokenCheckin: token)),
     );
   }
 
+  //tira o id do estabelecimento do texto do QR (número puro, ?id=, /id no fim...)
   int? _extrairIdEstabelecimento(String conteudo) {
     final valor = conteudo.trim();
     final idDireto = int.tryParse(valor);
@@ -162,6 +164,7 @@ class _HomePageState extends State<HomePage> {
     return int.tryParse(correspondencia?.group(1) ?? '');
   }
 
+  //mostra erro do QR em vermelho embaixo
   void _mostrarErroQr(String mensagem) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -171,6 +174,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  //busca os locais e os salvos do usuário ao mesmo tempo
   Future<void> _carregar() async {
     setState(() {
       carregando = true;
@@ -199,14 +203,12 @@ class _HomePageState extends State<HomePage> {
     } finally {
       if (mounted) setState(() => carregando = false);
     }
-    // Não espera a localização pra liberar a tela — "Descubra Novos Locais"
-    // já mostra tudo, "Perto de você" some por cima quando resolver.
+    //"Perto de você" carrega depois, sem travar a tela
     _carregarPertoDeVoce();
   }
 
-  // Tenta a localização real do dispositivo primeiro; se não conseguir
-  // (permissão negada, GPS desligado, sem coordenadas cadastradas), cai pra
-  // recomendação por cidade do perfil — mesmo comportamento do site.
+  //"Perto de você": com GPS mostra os locais no raio (mais perto primeiro);
+  //sem GPS usa a recomendação pela cidade do perfil
   Future<void> _carregarPertoDeVoce() async {
     setState(() => carregandoPertoDeVoce = true);
 
@@ -218,6 +220,7 @@ class _HomePageState extends State<HomePage> {
 
     if (posicao != null) {
       final comDistancia = <MapEntry<Map<String, dynamic>, double>>[];
+      //cálculo: distância de cada local e fica com os que estão no raio
       for (final estab in locais) {
         final lat = (estab['lat'] as num?)?.toDouble();
         final lng = (estab['lng'] as num?)?.toDouble();
@@ -232,6 +235,7 @@ class _HomePageState extends State<HomePage> {
           comDistancia.add(MapEntry(estab, distancia));
         }
       }
+      //ordena: mais perto primeiro
       comDistancia.sort((a, b) => a.value.compareTo(b.value));
       proximos = comDistancia.map((e) => e.key).toList();
       for (final entrada in comDistancia) {
@@ -239,6 +243,7 @@ class _HomePageState extends State<HomePage> {
         if (id != null) distancias[id] = entrada.value;
       }
     } else {
+      //sem GPS: recomendados pela cidade
       final idUsuario = Sessao.idUsuario;
       if (idUsuario != null) {
         try {
@@ -254,6 +259,7 @@ class _HomePageState extends State<HomePage> {
 
     if (!mounted) return;
     setState(() {
+      //mostra no máximo 6
       pertoDeVoce = proximos.take(6).toList();
       distanciasPertoDeVoce = distancias;
       idsPertoDeVoce = pertoDeVoce
@@ -266,8 +272,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  // Mesmas chamadas que infoLocal.dart já usa pro botão de favorito lá —
-  // sem duplicar lógica, só reaproveitando a API existente.
+  //favoritar / tirar dos favoritos
   Future<void> _alternarFavorito(int idEstabelecimento) async {
     final idUsuario = Sessao.idUsuario;
     if (idUsuario == null) return;
@@ -318,7 +323,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF12061E),
-      // ── Agora a tela inteira é rolável ─────────────────────────────
+      // ── Tela inteira rolável ─────────────────────────────────────────
       body: RefreshIndicator(
         color: const Color(0xFF9B59D0),
         onRefresh: _carregar,
@@ -330,24 +335,23 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Header agora rola junto com o restante ──────────────────
+              // ── Topo ─────────────────────────────────────────────────────
               _buildHeader(),
 
               const SizedBox(height: 24),
 
-              // "Perto de você" — só aparece depois de carregar a lista
-              // principal, já que depende dela pra calcular distância.
+              //"Perto de você" (só depois de carregar a lista principal)
               if (!carregando && erro == null) ...[
                 _buildPertoDeVoce(),
                 const SizedBox(height: 24),
               ],
 
-              // Título + filtro
+              //título + filtro
               _buildDescubraHeader(),
 
               const SizedBox(height: 12),
 
-              // Lista de locais
+              //lista de locais
               _buildCorpoLista(),
 
               const SizedBox(height: 20),
@@ -356,11 +360,12 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
 
-      // ── Bottom Navigation Bar ─────────────────────────────────────
+      // ── Barra de baixo ───────────────────────────────────────────────
       bottomNavigationBar: barraNavegacao(),
     );
   }
 
+  //lista "Descubra": carregando / erro / vazia / sem resultado / cartões
   Widget _buildCorpoLista() {
     if (carregando) {
       return const Padding(
@@ -421,7 +426,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────
+  // ── Topo: saudação, botões de QR e pesquisa, banner "Fazer sugestão" ─
   Widget _buildHeader() {
     return SafeArea(
       bottom: false,
@@ -484,9 +489,7 @@ class _HomePageState extends State<HomePage> {
                     borderRadius: BorderRadius.circular(999),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(999),
-                      // Mesma função do botão do banner no site (abrirSugestao
-                      // em js/inicioCli.js): manda pra uma página com todas as
-                      // opções de estabelecimento, não só abre a busca inline.
+                      //rota pra escolher o estabelecimento e fazer a sugestão
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -559,8 +562,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Botão de lupa — ao tocar, vira campo de pesquisa no mesmo lugar (sem
-  // navegar pra outra tela).
+  //botão de lupa (vira campo de pesquisa ao tocar)
   Widget _buildBotaoPesquisa() {
     return GestureDetector(
       onTap: () => setState(() => _pesquisando = true),
@@ -590,7 +592,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Campo de pesquisa — mesmo tamanho/formato do botão que ele substitui.
+  //campo de pesquisa (mesmo tamanho do botão)
   Widget _buildCampoPesquisa() {
     return Container(
       height: 56,
@@ -639,7 +641,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────
+  // ── Título "Descubra Novos Locais" + botão de filtro ───────────────
   Widget _buildDescubraHeader() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -672,9 +674,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Filtro por categoria — bottom sheet igual ao já usado em lojaPontos.dart,
-  // com os chips no mesmo estilo dos filtros do painel adm (sugestoesAdm.dart).
-  // Aplica o filtro em tempo real na lista, sem abrir nova tela.
+  //filtro por categoria: painel que sobe de baixo, filtra na hora
   void _abrirFiltro() {
     final categorias = _categoriasDisponiveis;
     showModalBottomSheet(
@@ -807,7 +807,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────
+  // ── Cartão do local: rota pro detalhe ─────────────────────────────
   Widget _buildLocalCard(Map<String, dynamic> local, {double? distanciaKm}) {
     final idEstabelecimento = (local['idEstabelecimento'] as num?)?.toInt();
     final salvo =
@@ -830,11 +830,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────
-  // "Perto de você" — raio real (com localização) ou recomendação por
-  // cidade (fallback), nunca as duas coisas ao mesmo tempo. Segue mostrando
-  // a seção mesmo vazia, com uma mensagem explicando o motivo (mesmo padrão
-  // do site).
+  // ── "Perto de você": por GPS (com distância) ou pela cidade ─────────
+  //aparece mesmo vazia, com uma mensagem explicando o motivo
   Widget _buildPertoDeVoce() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -912,7 +909,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────
+  // ── Barra de baixo: rotas pro Início, Sugestões, Loja e Perfil (0 = Início) ─
   int paginaAtual = 0;
   Widget barraNavegacao() {
     return Container(
