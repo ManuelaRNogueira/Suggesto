@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'cores.dart';
 import 'formatacao.dart';
 import 'sessao.dart';
@@ -9,7 +8,7 @@ import 'cartoesStatusAdm.dart';
 import 'solicitacoesEquipeAdm.dart';
 
 //tela de detalhe de um estabelecimento (admin, só consulta)
-//mostra infos, código da equipe, QR de check-in, pedidos de entrada e números das sugestões
+//mostra infos, código da equipe, pedidos de entrada e números das sugestões
 class DetalhesEstabelecimentoAdm extends StatefulWidget {
   final Map<String, dynamic> estabelecimento;
 
@@ -25,11 +24,6 @@ class _DetalhesEstabelecimentoAdmState
   bool carregandoMetricas = true;
   Map<String, dynamic>? metricas;
   bool codigoCopiado = false;
-
-  //token atual do QR de check-in (muda quando gera um novo)
-  late String? _tokenCheckin =
-      widget.estabelecimento['tokenCheckin'] as String?;
-  bool _gerandoNovoQr = false;
 
   @override
   void initState() {
@@ -65,70 +59,6 @@ class _DetalhesEstabelecimentoAdmState
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => codigoCopiado = false);
     });
-  }
-
-  //gerar novo QR: pede confirmação (os QRs impressos param de funcionar)
-  //e troca o token
-  Future<void> _confirmarGerarNovoQr(int idEstabelecimento) async {
-    final confirmar = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Cores.cartao,
-        title: const Text(
-          'Gerar novo QR?',
-          style: TextStyle(color: Colors.white, fontFamily: 'PoppinsSemi'),
-        ),
-        content: const Text(
-          'Os QRs já impressos param de confirmar visitas na hora. Você vai precisar imprimir e trocar todos.',
-          style: TextStyle(color: Colors.white70, fontFamily: 'Poppins'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(color: Colors.white70, fontFamily: 'Poppins'),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              'Gerar novo QR',
-              style: TextStyle(
-                color: Colors.redAccent,
-                fontFamily: 'PoppinsSemi',
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (confirmar != true || !mounted) return;
-
-    final idGerente = Sessao.idUsuario;
-    if (idGerente == null) return;
-    setState(() => _gerandoNovoQr = true);
-    try {
-      final resultado = await gerarNovoTokenCheckin(
-        idEstabelecimento,
-        idSolicitante: idGerente,
-      );
-      if (!mounted) return;
-      setState(() => _tokenCheckin = resultado['tokenCheckin'] as String?);
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            e.mensagem,
-            style: const TextStyle(fontFamily: 'Poppins'),
-          ),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _gerandoNovoQr = false);
-    }
   }
 
   //topo, foto, infos, cartões do dono e números das sugestões
@@ -276,16 +206,12 @@ class _DetalhesEstabelecimentoAdmState
                       const SizedBox(height: 8),
                       _cardSobre(sobre),
                     ],
-                    //só pro dono: código da equipe, QR de check-in e pedidos de entrada
+                    //só pro dono: código da equipe e pedidos de entrada
                     if (souDono &&
                         codigoEquipe != null &&
                         codigoEquipe.isNotEmpty) ...[
                       const SizedBox(height: 16),
                       _cardCodigoEquipe(codigoEquipe),
-                    ],
-                    if (souDono && idEstabelecimento != null) ...[
-                      const SizedBox(height: 16),
-                      _cardQrCheckin(idEstabelecimento),
                     ],
                     if (souDono && idEstabelecimento != null) ...[
                       const SizedBox(height: 16),
@@ -423,125 +349,6 @@ class _DetalhesEstabelecimentoAdmState
               fontSize: 13,
               fontFamily: 'Poppins',
               height: 1.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  //cartão do QR de check-in: o cliente lê com a câmera pra confirmar a visita
-  //(é o mesmo QR do desktop)
-  Widget _cardQrCheckin(int idEstabelecimento) {
-    final token = _tokenCheckin;
-    final semCoordenadas =
-        widget.estabelecimento['lat'] == null ||
-        widget.estabelecimento['lng'] == null;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Cores.cartao,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Cores.borda),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'QR de check-in',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontFamily: 'PoppinsSemi',
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Imprima e coloque nas mesas ou no balcão. Quem ler com a câmera do celular confirma que esteve aqui e já cai na página de avaliação.',
-            style: TextStyle(
-              color: Colors.white54,
-              fontSize: 12,
-              fontFamily: 'Poppins',
-              height: 1.4,
-            ),
-          ),
-          if (semCoordenadas) ...[
-            const SizedBox(height: 10),
-            const Text(
-              'Este estabelecimento ainda não tem localização no mapa, então o check-in pela localização do celular não vai funcionar. Por enquanto, só o QR confirma visitas.',
-              style: TextStyle(
-                color: Cores.amarelo,
-                fontSize: 11,
-                fontFamily: 'Poppins',
-                height: 1.4,
-              ),
-            ),
-          ],
-          const SizedBox(height: 16),
-          Center(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: token != null && token.isNotEmpty
-                  ? QrImageView(
-                      data: urlCheckin(idEstabelecimento, token),
-                      size: 180,
-                      backgroundColor: Colors.white,
-                    )
-                  : const SizedBox(
-                      width: 180,
-                      height: 180,
-                      child: Center(
-                        child: Text(
-                          'QR indisponível',
-                          style: TextStyle(
-                            color: Colors.black45,
-                            fontFamily: 'Poppins',
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            //botão de gerar novo QR
-            child: OutlinedButton(
-              onPressed: _gerandoNovoQr
-                  ? null
-                  : () => _confirmarGerarNovoQr(idEstabelecimento),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                side: const BorderSide(color: Cores.borda),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: _gerandoNovoQr
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Cores.roxo,
-                      ),
-                    )
-                  : const Text(
-                      'Gerar novo QR',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontFamily: 'PoppinsSemi',
-                        fontSize: 13,
-                      ),
-                    ),
             ),
           ),
         ],

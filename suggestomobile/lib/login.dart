@@ -5,7 +5,6 @@ import 'sessao.dart';
 import 'cadastro.dart';
 import 'entrarEquipe.dart';
 import 'entrarCodigo.dart';
-import 'esqueciSenha.dart';
 
 //tela de login: confere email e senha na API e manda pra tela certa
 class Login extends StatefulWidget {
@@ -218,28 +217,6 @@ class _LoginState extends State<Login> {
                           validador: (v) => (v == null || v.isEmpty)
                               ? "Informe sua senha."
                               : null,
-                        ),
-
-                        const SizedBox(height: 10),
-                        //rota pro "esqueci minha senha"
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: GestureDetector(
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const EsqueciSenha(),
-                              ),
-                            ),
-                            child: const Text(
-                              "Esqueci minha senha",
-                              style: TextStyle(
-                                color: Cores.roxo,
-                                fontSize: 12.5,
-                                fontFamily: "Poppins",
-                              ),
-                            ),
-                          ),
                         ),
 
                         if (erroGeral != null) ...[
